@@ -68,6 +68,3 @@
 [user]
 	name = Ben Swift
 	email = # briefcase(email)
-[github]
-	user = benswift
-	oauth-token = # briefcase(oauth-token)
