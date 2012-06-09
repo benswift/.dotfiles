@@ -1,0 +1,24 @@
+# set up path
+export PATH="/Users/ben/.rbenv/shims:/Users/ben/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin"
+
+# make emacs the default editor
+export EDITOR="emacs"
+
+# don't clear the screen after quitting a manual page
+export MANPAGER="less -X"
+
+# set up rbenv
+rbenv rehash 2>/dev/null
+rbenv() {
+  command="$1"
+  if [ "$#" -gt 0 ]; then
+    shift
+  fi
+
+  case "$command" in
+  shell)
+    eval `rbenv "sh-$command" "$@"`;;
+  *)
+    command rbenv "$command" "$@";;
+  esac
+}

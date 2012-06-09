@@ -1,0 +1,21 @@
+Host simstim
+    HostName mai.anu.edu.au
+    User ben
+
+Host lonyx
+    HostName 192.168.11.129
+    User ben
+
+Host simlonyx
+    ProxyCommand ssh -q simstim nc -q0 %h 22
+    HostName 192.168.11.129
+    User ben
+
+Host flanny     
+    HostName 192.168.11.109
+    User ben
+
+Host simflanny
+    ProxyCommand ssh -q simstim nc -q0 %h 22
+    HostName 192.168.11.109
+    User ben

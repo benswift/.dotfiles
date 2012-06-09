@@ -1,0 +1,52 @@
+# Make sure we’re using the latest Homebrew, and upgrade any already-installed formulae
+brew update && brew upgrade
+
+# my packages
+brew install ack
+brew install aspell
+brew install cmake
+brew install ctags
+brew install emacs --HEAD --use-git-head --cocoa
+brew install enca
+brew install faac
+brew install faad2
+brew install ffmpeg
+brew install flac
+brew install gettext
+brew install gfortran
+brew install ghostscript
+brew install git
+brew install glib
+brew install gnutls
+brew install hub
+brew install imagemagick
+brew install lame
+brew install latex2rtf
+brew install maven
+brew install mftrace
+brew install mplayer
+brew install multimarkdown
+brew install parallel
+brew install pdfgrep
+brew install pdfjam
+brew install poppler
+brew install r
+brew install rbenv
+brew install readline
+brew install rsnapshot
+brew install ruby-build
+brew install sox
+brew install sqlite
+brew install ssh-copy-id
+brew install texinfo
+brew install theora
+brew install tmux
+brew install transmission
+brew install tree
+brew install unrar
+brew install vimeo-downloader
+brew install w3m
+brew install x264
+brew install xvid
+brew install xz
+brew install youtube-dl
