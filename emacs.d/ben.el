@@ -7,6 +7,11 @@
 (setenv "PATH" "/Users/ben/.rbenv/shims:/Users/ben/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin")
 (setq exec-path '("/Users/ben/.rbenv/shims" "/usr/local/bin" "/usr/bin" "/bin" "/usr/local/sbin" "/usr/sbin" "/sbin" "/usr/X11/bin" "/usr/texbin" "/usr/local/Library/Contributions/examples" "/private/tmp/homebrew-emacs-HEAD-fekR/lib-src" "/usr/local/Cellar/emacs/HEAD/libexec/emacs/24.0.94/i386-apple-darwin11.3.0"))
 
+;; customisation
+
+(setq custom-file "~/.emacs.d/custom.el")
+(load custom-file)
+
 ;; one-liners
 
 (global-auto-revert-mode t)
