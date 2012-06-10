@@ -54,12 +54,6 @@
   (when (not (package-installed-p p))
     (package-install p)))
 
-;; deft
-
-(setq deft-extension "txt")
-(setq deft-directory "~/Dropbox/notes")
-(setq deft-text-mode 'markdown-mode)
-
 ;; yasnippet
 
 (setq yas/root-directory (concat user-emacs-directory "snippets"))
