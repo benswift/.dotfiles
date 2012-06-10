@@ -28,6 +28,31 @@
 
 (add-to-list 'package-archives
              '("marmalade" . "http://marmalade-repo.org/packages/"))
+(package-initialize)
+
+(when (null package-archive-contents)
+  (package-refresh-contents))
+
+(defvar my-packages '(starter-kit
+                      starter-kit-lisp
+                      starter-kit-eshell
+                      monokai-theme
+                      solarized-theme
+                      clojure-mode
+                      clojure-test-mode
+                      markdown-mode
+                      yaml-mode
+                      yasnippet
+                      yasnippet-bundle
+                      ess
+                      auctex
+                      gist
+                      dired+
+                      marmalade))
+
+(dolist (p my-packages)
+  (when (not (package-installed-p p))
+    (package-install p)))
 
 ;; deft
 
