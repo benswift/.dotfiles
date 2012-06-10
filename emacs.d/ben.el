@@ -28,12 +28,8 @@
 
 (add-to-list 'package-archives
              '("marmalade" . "http://marmalade-repo.org/packages/"))
-(package-initialize)
 
-(when (null package-archive-contents)
-  (package-refresh-contents))
-
-(defvar my-packages '(starter-kit
+(defvar ben-packages '(starter-kit
                       starter-kit-lisp
                       starter-kit-eshell
                       monokai-theme
@@ -50,9 +46,15 @@
                       dired+
                       marmalade))
 
-(dolist (p my-packages)
-  (when (not (package-installed-p p))
-    (package-install p)))
+(defun install-ben-packages ()
+  "Install all the packages in the `ben-packages'"
+  (interactive)
+  (package-initialize)
+  (when (null package-archive-contents)
+    (package-refresh-contents))
+  (dolist (p ben-packages)
+    (when (not (package-installed-p p))
+      (package-install p))))
 
 ;; yasnippet
 
