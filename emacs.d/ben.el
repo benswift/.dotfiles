@@ -29,22 +29,24 @@
 (add-to-list 'package-archives
              '("marmalade" . "http://marmalade-repo.org/packages/"))
 
-(defvar ben-packages '(starter-kit
-                      starter-kit-lisp
-                      starter-kit-eshell
-                      monokai-theme
-                      solarized-theme
-                      clojure-mode
-                      clojure-test-mode
-                      markdown-mode
-                      yaml-mode
-                      yasnippet
-                      yasnippet-bundle
-                      ess
-                      auctex
-                      gist
-                      dired+
-                      marmalade))
+(defvar ben-packages
+  "a list of my 'nice to have' packages"
+  '(starter-kit
+    starter-kit-lisp
+    starter-kit-eshell
+    monokai-theme
+    solarized-theme
+    clojure-mode
+    clojure-test-mode
+    markdown-mode
+    yaml-mode
+    yasnippet
+    yasnippet-bundle
+    ess
+    auctex
+    gist
+    dired+
+    marmalade))
 
 (defun install-ben-packages ()
   "Install all the packages in the `ben-packages'"
