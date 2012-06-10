@@ -87,7 +87,6 @@
 ;;;;;;;;;;;;;;;;;
 
 (global-set-key (kbd "<f5>") 'magit-status)
-(global-set-key (kbd "<f8>") 'deft)
 
 (global-set-key (kbd "<S-s-return>") 'ns-toggle-fullscreen)
 
