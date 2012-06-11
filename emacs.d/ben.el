@@ -173,6 +173,7 @@
 (setq org-publish-project-alist
    '(("blog" .  (:base-directory "~/Documents/blog/source/org-posts/"
                  :base-extension "org"
+                 :exclude "drafts/*"                
                  :publishing-directory "~/Documents/blog/source/_posts/"
                  :sub-superscript ""
                  :recursive t
