@@ -16,7 +16,6 @@
 
 (global-auto-revert-mode t)
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
-;; (remove-hook 'text-mode-hook 'tabbar-mode)
 (add-hook 'text-mode-hook 'auto-fill-mode)
 (setq shift-select-mode t)
 
