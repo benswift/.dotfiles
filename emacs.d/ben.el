@@ -26,35 +26,30 @@
 
 ;; elpa
 
+(require 'package)
 (add-to-list 'package-archives
              '("marmalade" . "http://marmalade-repo.org/packages/"))
 
-(defvar ben-packages
-  "a list of my 'nice to have' packages"
-  '(starter-kit
-    starter-kit-lisp
-    starter-kit-eshell
-    monokai-theme
-    solarized-theme
-    clojure-mode
-    clojure-test-mode
-    markdown-mode
-    yaml-mode
-    yasnippet
-    yasnippet-bundle
-    ess
-    auctex
-    gist
-    dired+
-    marmalade))
-
 (defun install-ben-packages ()
-  "Install all the packages in the `ben-packages'"
+  "Install some handy packages"
   (interactive)
   (package-initialize)
   (when (null package-archive-contents)
     (package-refresh-contents))
-  (dolist (p ben-packages)
+  (dolist (p '(starter-kit
+	       starter-kit-lisp
+	       starter-kit-eshell
+	       monokai-theme
+	       solarized-theme
+	       markdown-mode
+	       yaml-mode
+	       yasnippet
+	       yasnippet-bundle
+	       ess
+	       auctex
+	       gist
+	       dired+
+	       marmalade))
     (when (not (package-installed-p p))
       (package-install p))))
 
