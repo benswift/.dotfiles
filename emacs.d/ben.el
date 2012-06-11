@@ -21,7 +21,9 @@
 (setq browse-default-macosx-browser "/Applications/Safari.app")
 (ispell-change-dictionary "en_GB" t)
 
-;; elpa
+;;;;;;;;;;
+;; elpa ;;
+;;;;;;;;;;
 
 (require 'package)
 (add-to-list 'package-archives
@@ -49,10 +51,6 @@
 	       marmalade))
     (when (not (package-installed-p p))
       (package-install p))))
-
-;; yasnippet
-
-(setq yas/root-directory (concat user-emacs-directory "snippets"))
 
 ;;;;;;;;;;;;;;;;
 ;; appearance ;;
@@ -337,6 +335,12 @@
 ;;;;;;;;;;
 
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+
+;;;;;;;;;;;;;;;
+;; yasnippet ;;
+;;;;;;;;;;;;;;;
+
+(setq yas/root-directory (concat user-emacs-directory "snippets"))
 
 ;;;;;;;;;
 ;; git ;;
