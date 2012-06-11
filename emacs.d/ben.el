@@ -323,9 +323,9 @@
 
 (autoload 'extempore-mode "/Users/ben/Code/extempore/extras/extempore.el" "" t)
 
-;;;;;;;;;;;;;;;;;;;
-;; markdown mode ;;
-;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;
+;; markdown ;;
+;;;;;;;;;;;;;;
 
 (add-to-list 'auto-mode-alist '("\\.md" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.markdown" . markdown-mode))
