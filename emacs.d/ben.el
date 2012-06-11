@@ -18,10 +18,8 @@
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 (add-hook 'text-mode-hook 'auto-fill-mode)
 (setq shift-select-mode t)
-
-;; set up browser
-
 (setq browse-default-macosx-browser "/Applications/Safari.app")
+(ispell-change-dictionary "en_GB" t)
 
 ;; elpa
 
@@ -55,10 +53,6 @@
 ;; yasnippet
 
 (setq yas/root-directory (concat user-emacs-directory "snippets"))
-
-;; aspell
-
-(ispell-change-dictionary "en_GB" t)
 
 ;;;;;;;;;;;;;;;;
 ;; appearance ;;
