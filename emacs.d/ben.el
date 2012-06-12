@@ -25,13 +25,15 @@
 ;; elpa ;;
 ;;;;;;;;;;
 
-(require 'package)
-(add-to-list 'package-archives
-             '("marmalade" . "http://marmalade-repo.org/packages/"))
+(defun add-marmalade-repo ()
+  (if (boundp 'package-archives)
+      (add-to-list 'package-archives
+                   '("marmalade" . "http://marmalade-repo.org/packages/"))))
 
 (defun install-ben-packages ()
   "Install some handy packages"
   (interactive)
+  (add-marmalade-repo)
   (package-initialize)
   (when (null package-archive-contents)
     (package-refresh-contents))
