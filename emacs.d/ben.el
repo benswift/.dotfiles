@@ -29,6 +29,7 @@
   (if (boundp 'package-archives)
       (add-to-list 'package-archives
                    '("marmalade" . "http://marmalade-repo.org/packages/"))))
+(add-marmalade-repo)
 
 (defun install-ben-packages ()
   "Install some handy packages"
