@@ -9,3 +9,20 @@ Thumbs.db
 # Files that might appear on external disks
 .Spotlight-V100
 .Trashes
+
+# R
+
+.Rhistory
+.RData
+
+# LaTeX
+
+*.aux
+*.rel
+*.log
+auto/
+
+# emacs
+
+*~
+.\#*
