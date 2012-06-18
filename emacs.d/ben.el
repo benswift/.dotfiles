@@ -9,6 +9,7 @@
 
 ;; customisation
 
+(setq user-init-file "~/.emacs.d/ben.el")
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file)
 
@@ -355,7 +356,7 @@
 ;; R ;;
 ;;;;;;;
 
-(require 'ess-site)
+; (require 'ess-site)
 (add-hook 'ess-mode-hook
           '(lambda()
              (setq-default ess-language "R")
