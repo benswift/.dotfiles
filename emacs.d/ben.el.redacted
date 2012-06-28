@@ -185,6 +185,14 @@
                  :html-extension "markdown"
                  :body-only t))))
 
+;;;;;;;;;
+;; erc ;;
+;;;;;;;;;
+
+(erc-services-mode 1)
+(setq erc-nick "benswift")
+(setq erc-password # briefcase(freenode-password))
+
 ;;;;;;;;;;;
 ;; LaTeX ;;
 ;;;;;;;;;;;
