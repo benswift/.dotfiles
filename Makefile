@@ -8,7 +8,6 @@ link:
 	# git
 	ln -sfF $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sfF $(DOTFILES_DIR)/gitignore ~/.gitignore
-	ln -sfF $(DOTFILES_DIR)/gitattributes ~/.gitattributes
 	# emacs
 	ln -sfF $(DOTFILES_DIR)/emacs.d ~/.emacs.d
 	# misc

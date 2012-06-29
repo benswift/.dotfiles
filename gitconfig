@@ -62,7 +62,10 @@
 	insteadOf = "gist:"
 [user]
 	name = Ben Swift
-	email = # briefcase(email)
+	email = benjamin.j.swift@gmail.com
 [github]
 	user = benswift
-	oauth-token = # briefcase(oauth-token)
+
+;; Local Variables:
+;; mode: conf-unix
+;; End:
