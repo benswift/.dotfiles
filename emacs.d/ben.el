@@ -191,7 +191,7 @@
 
 (erc-services-mode 1)
 (setq erc-nick "benswift")
-(setq erc-password # briefcase(freenode-password))
+(load "~/.secrets/ercpass")
 
 ;;;;;;;;;;;
 ;; LaTeX ;;

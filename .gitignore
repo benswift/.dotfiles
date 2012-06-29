@@ -1,5 +1,5 @@
 gitconfig
 emacs.d/*
-!emacs.d/ben.el.redacted
+!emacs.d/ben.el
 !emacs.d/custom.el
 !emacs.d/eshell/alias
