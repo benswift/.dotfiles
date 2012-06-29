@@ -131,6 +131,8 @@
 (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
 (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
 
+(global-set-key (kbd "C-c s") 'eshell)
+
 (defun base-name (path)
   "Returns the base name of the given path."
   (let ((path (abbreviate-file-name path)))
