@@ -364,7 +364,8 @@
 ;; git ;;
 ;;;;;;;;;
 
-(add-to-list 'auto-mode-alist '("\\.gitconfig$" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '(".*gitconfig$" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '(".*gitignore$" . conf-unix-mode))
 
 ;;;;;;;
 ;; R ;;
