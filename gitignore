@@ -10,6 +10,10 @@ Thumbs.db
 .Spotlight-V100
 .Trashes
 
+# ignore secrets dir
+
+secrets/
+
 # R
 
 .Rhistory
