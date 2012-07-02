@@ -414,7 +414,3 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
       (comment-dwim arg)))
 
 (global-set-key (kbd "s-'") 'comment-dwim-line)
-
-;; Local Variables:
-;; mode: emacs-lisp
-;; End:
