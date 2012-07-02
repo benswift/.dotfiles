@@ -194,6 +194,8 @@
 (erc-services-mode 1)
 (setq erc-nick "benswift")
 (load "~/.secrets/ercpass")
+(setq erc-prompt-for-password nil)
+(setq erc-prompt-for-nickserv-password nil)
 
 ;;;;;;;;;;;
 ;; LaTeX ;;
