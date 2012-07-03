@@ -68,8 +68,14 @@
 
 ;; faces
 
-(set-face-attribute 'default nil :height 200 :family "Inconsolata")
-(set-face-attribute 'variable-pitch nil :height 200 :family "Lucida Grande")
+(setq base-face-height
+      (case system-type
+        ("gnu/linux" 160)
+        ("darwin" 200)
+        (otherwise 160)))
+
+(set-face-attribute 'default nil :height base-face-height :family "Inconsolata")
+(set-face-attribute 'variable-pitch nil :height base-face-height :family "Lucida Grande")
 
 ;; time and date
 
