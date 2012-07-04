@@ -2,15 +2,46 @@
 ;: ben swift's .emacs ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; path
+;; cross-platform setup
 
-(setenv "PATH" "/Users/ben/.rbenv/shims:/Users/ben/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin")
-(setq exec-path '("/Users/ben/.rbenv/shims" "/usr/local/bin" "/usr/bin" "/bin" "/usr/local/sbin" "/usr/sbin" "/sbin" "/usr/X11/bin" "/usr/texbin" "/usr/local/Library/Contributions/examples" "/usr/local/Cellar/emacs/HEAD/libexec/emacs/24.1.50/i386-apple-darwin11.4.0/"))
+(setq ben-home-dir (substitute-in-file-name "$HOME"))
+
+(defun nix-specific-setup ()
+  (setq ben-path (append (list
+                          (concat ben-home-dir  "/.rbenv/shims")
+                          (concat ben-home-dir  "/bin")
+                          "/usr/local/bin" "/usr/bin" "/bin"
+                          "/usr/local/sbin" "/usr/sbin" "/sbin"
+                          "/usr/X11/bin" "/usr/texbin")
+                         ben-path))
+  (setenv "PATH" (mapconcat 'identity ben-path ":"))
+  (setq exec-path ben-path))
+
+(defun linux-specific-setup ()
+  (setq base-face-height 160)
+  (setq ben-path '())
+  (nix-specific-setup))
+
+(defun osx-specific-setup ()
+  (setq base-face-height 200)
+  (setq browse-default-macosx-browser "/Applications/Safari.app")
+  (setq ben-path
+        '("/usr/local/Library/Contributions/examples"
+          "/usr/local/Cellar/emacs/HEAD/libexec/emacs/24.1.50/i386-apple-darwin11.4.0/"))
+  (nix-specific-setup))
+
+(defun windows-specific-setup ()
+  (setq base-face-height 160))
+
+(cond ((string-equal system-type "gnu/linux") (linux-specific-setup))
+      ((string-equal system-type "darwin") (osx-specific-setup))
+      ((string-equal system-type "windows-nt") (windows-specific-setup))
+      (t (message "Unknown operating system")))
 
 ;; customisation
 
-(setq user-init-file "~/.emacs.d/ben.el")
-(setq custom-file "~/.emacs.d/custom.el")
+(setq user-init-file (concat user-emacs-directory "ben.el"))
+(setq custom-file (concat user-emacs-directory "custom.el"))
 (load custom-file)
 
 ;; one-liners
@@ -19,7 +50,6 @@
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 (add-hook 'text-mode-hook 'auto-fill-mode)
 (setq shift-select-mode t)
-(setq browse-default-macosx-browser "/Applications/Safari.app")
 (ispell-change-dictionary "en_GB" t)
 
 ;;;;;;;;;;
@@ -67,12 +97,6 @@
 (setq special-display-regexps nil)
 
 ;; faces
-
-(setq base-face-height
-      (case system-type
-        ("gnu/linux" 160)
-        ("darwin" 200)
-        (otherwise 160)))
 
 (set-face-attribute 'default nil :height base-face-height :family "Inconsolata")
 (set-face-attribute 'variable-pitch nil :height base-face-height :family "Lucida Grande")
