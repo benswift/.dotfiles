@@ -31,7 +31,9 @@
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
-  (setq base-face-height 160))
+ (setq base-face-height 160)
+ (setq w32-pass-lwindow-to-system nil)
+ (setq w32-lwindow-modifier 'super))
 
 (cond ((string-equal system-type "gnu/linux") (linux-specific-setup))
       ((string-equal system-type "darwin") (osx-specific-setup))
