@@ -44,7 +44,8 @@
 
 (setq user-init-file (concat user-emacs-directory "ben.el"))
 (setq custom-file (concat user-emacs-directory "custom.el"))
-(load custom-file)
+(if (file-readable-p custom-file)
+    (load custom-file))
 
 ;; one-liners
 
@@ -52,7 +53,9 @@
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 (add-hook 'text-mode-hook 'auto-fill-mode)
 (setq shift-select-mode t)
-(ispell-change-dictionary "en_GB" t)
+
+(if (definedp ispell-dictionary)
+    (ispell-change-dictionary "en_GB" t))
 
 ;;;;;;;;;;
 ;; elpa ;;
