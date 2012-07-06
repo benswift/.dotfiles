@@ -47,12 +47,17 @@
 (if (file-readable-p custom-file)
     (load custom-file))
 
+;; time and date
+
+(setq display-time-day-and-date 1)
+(display-time-mode 1)
+
 ;; one-liners
 
 (global-auto-revert-mode t)
-(remove-hook 'text-mode-hook 'smart-spacing-mode)
-(add-hook 'text-mode-hook 'auto-fill-mode)
 (setq shift-select-mode t)
+(setq special-display-regexps nil)
+(remove-hook 'text-mode-hook 'smart-spacing-mode)
 
 ;;;;;;;;;;
 ;; elpa ;;
@@ -84,25 +89,12 @@
     (when (not (package-installed-p p))
       (package-install p))))
 
-;;;;;;;;;;;;;;;;
-;; appearance ;;
-;;;;;;;;;;;;;;;;
-
-; (load-theme 'deeper-blue t)
-
-;; frames
-
-(setq special-display-regexps nil)
-
-;; faces
+;;;;;;;;;;;
+;; faces ;;
+;;;;;;;;;;;
 
 (set-face-attribute 'default nil :height base-face-height :family "Inconsolata")
 (set-face-attribute 'variable-pitch nil :height base-face-height :family "Lucida Grande")
-
-;; time and date
-
-(setq display-time-day-and-date 1)
-(display-time-mode 1)
 
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
@@ -162,18 +154,16 @@
              (define-key eshell-mode-map (kbd "<C-down>") 'eshell-next-matching-input-from-input)
              (define-key eshell-mode-map (kbd "<up>") 'previous-line)
              (define-key eshell-mode-map (kbd "<down>") 'next-line)
+             ;;faces
+             (set-face-attribute 'eshell-prompt nil :inherit font-lock-function-name-face)
              ;; prompt helpers
              (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
              (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
              (setq eshell-prompt-function
-      (lambda ()
-        (concat (user-login-name)
-                "@"
-                (host-name)
-                " "
-                (base-name (eshell/pwd))
-                (if (= (user-uid) 0) " # " " $ "))))
-))
+                   (lambda ()
+                     (concat (user-login-name) "@" (host-name) " "
+                             (base-name (eshell/pwd))
+                             (if (= (user-uid) 0) " # " " $ "))))))
 
 (global-set-key (kbd "C-c s") 'eshell)
 
@@ -194,14 +184,6 @@
                  (string-match "^[^.]+" hostname)
                  (match-end 0)))))
 
-;;;;;;;;;;;;
-;; ispell ;;
-;;;;;;;;;;;;
-
-(if (boundp ispell-dictionary)
-    (ispell-change-dictionary "en_GB" t))
-
-
 ;;;;;;;;;;;;;;
 ;; org mode ;;
 ;;;;;;;;;;;;;;
@@ -213,7 +195,12 @@
              (define-key org-mode-map (kbd "<M-right>") 'forward-word)
              (define-key org-mode-map (kbd "<C-left>") 'org-metaleft)
              (define-key org-mode-map (kbd "<C-right>") 'org-metaright)
-             (setq org-support-shift-select 'always)))
+             (setq org-support-shift-select 'always)
+             ;;faces
+             (set-face-attribute 'outline-3 nil :inherit font-lock-type-face)
+             (set-face-attribute 'outline-4 nil :inherit font-lock-string-face)
+             (set-face-attribute 'outline-5 nil :inherit font-lock-constant-face)
+             (set-face-attribute 'outline-6 nil :inherit font-lock-comment-face)))
 
 ;; for octopress blogging
 ;; taken from http://jaderholm.com/blog/blogging-with-org-mode-and-octopress
@@ -234,11 +221,17 @@
 ;; erc ;;
 ;;;;;;;;;
 
-(erc-services-mode 1)
-(setq erc-nick "benswift")
-(load "~/.dotfiles/secrets/ercpass")
-(setq erc-prompt-for-password nil)
-(setq erc-prompt-for-nickserv-password nil)
+(add-hook 'erc-mode-hook
+          '(lambda ()
+             (erc-services-mode 1)
+             (setq erc-nick "benswift")
+             (load "~/.dotfiles/secrets/ercpass")
+             (setq erc-prompt-for-password nil)
+             (setq erc-prompt-for-nickserv-password nil)
+             ;; faces
+             (set-face-attribute 'erc-input-face nil :inherit font-lock-string-face)
+             (set-face-attribute 'erc-my-nick-face nil :inherit font-lock-keyword-face)
+             (set-face-attribute 'erc-notice-face nil :inherit font-lock-warning-face)))
 
 ;;;;;;;;;;;
 ;; LaTeX ;;
