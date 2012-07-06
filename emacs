@@ -4,9 +4,8 @@
 
 ;; cross-platform setup
 
-(setq ben-home-dir (substitute-in-file-name "$HOME"))
-
 (defun nix-specific-setup ()
+  (setq ben-home-dir (substitute-in-file-name "$HOME"))
   (setq ben-path (append (list
                           (concat ben-home-dir  "/.rbenv/shims")
                           (concat ben-home-dir  "/bin")
@@ -150,6 +149,8 @@
 
 (add-hook 'eshell-mode-hook
           '(lambda ()
+             (setq eshell-aliases-file "~/.dotfiles/eshell-alias")
+             ;; keybindings
              (define-key eshell-mode-map (kbd "<C-up>") 'eshell-previous-matching-input-from-input)
              (define-key eshell-mode-map (kbd "<C-down>") 'eshell-next-matching-input-from-input)
              (define-key eshell-mode-map (kbd "<up>") 'previous-line)
@@ -373,7 +374,7 @@
 ;; extempore ;;
 ;;;;;;;;;;;;;;;
 
-(autoload 'extempore-mode (concat ben-home-dir "/Code/extempore/extras/extempore.el") "" t)
+;(autoload 'extempore-mode (concat ben-home-dir "/Code/extempore/extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-hook 'extempore-mode-hook 'esk-turn-on-paredit)
 (setq extempore-tab-completion nil)

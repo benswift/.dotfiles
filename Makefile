@@ -9,7 +9,7 @@ link:
 	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
 	# emacs
-	ln -sf $(DOTFILES_DIR)/emacs.d/ ~/.emacs.d
+	ln -sf $(DOTFILES_DIR)/emacs ~/.emacs
 	# misc
 	ln -sf $(DOTFILES_DIR)/osx ~/.osx
 	ln -sf $(DOTFILES_DIR)/brew ~/.brew
