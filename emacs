@@ -222,13 +222,14 @@
 ;; erc ;;
 ;;;;;;;;;
 
+(erc-services-mode 1)
+(setq erc-nick "benswift")
+(load "~/.dotfiles/secrets/ercpass")
+(setq erc-prompt-for-password nil)
+(setq erc-prompt-for-nickserv-password nil)
+
 (add-hook 'erc-mode-hook
           '(lambda ()
-             (erc-services-mode 1)
-             (setq erc-nick "benswift")
-             (load "~/.dotfiles/secrets/ercpass")
-             (setq erc-prompt-for-password nil)
-             (setq erc-prompt-for-nickserv-password nil)
              ;; faces
              (set-face-attribute 'erc-input-face nil :inherit font-lock-string-face)
              (set-face-attribute 'erc-my-nick-face nil :inherit font-lock-keyword-face)
