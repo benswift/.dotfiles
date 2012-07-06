@@ -54,26 +54,19 @@
 (add-hook 'text-mode-hook 'auto-fill-mode)
 (setq shift-select-mode t)
 
-(if (definedp ispell-dictionary)
-    (ispell-change-dictionary "en_GB" t))
-
 ;;;;;;;;;;
 ;; elpa ;;
 ;;;;;;;;;;
 
-(defun add-marmalade-repo ()
-  (if (boundp 'package-archives)
-      (add-to-list 'package-archives
-                   '("marmalade" . "http://marmalade-repo.org/packages/"))))
-(add-marmalade-repo)
+(setq package-archives
+      '(("gnu" . "http://elpa.gnu.org/packages/")
+	("marmalade" . "http://marmalade-repo.org/packages/")))
 
-(defun install-ben-packages ()
-  "Install some handy packages"
+(defun ben-install-packages ()
+  "Install some handy packages from marmalade."
   (interactive)
-  (add-marmalade-repo)
   (package-initialize)
-  (when (null package-archive-contents)
-    (package-refresh-contents))
+  (package-refresh-contents)
   (dolist (p '(starter-kit
 	       starter-kit-lisp
 	       starter-kit-eshell
@@ -163,8 +156,24 @@
 ;; eshell ;;
 ;;;;;;;;;;;;
 
-(setq eshell-directory-name (concat user-emacs-directory "eshell/"))
-(setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
+(add-hook 'eshell-mode-hook
+          '(lambda ()
+             (define-key eshell-mode-map (kbd "<C-up>") 'eshell-previous-matching-input-from-input)
+             (define-key eshell-mode-map (kbd "<C-down>") 'eshell-next-matching-input-from-input)
+             (define-key eshell-mode-map (kbd "<up>") 'previous-line)
+             (define-key eshell-mode-map (kbd "<down>") 'next-line)
+             ;; prompt helpers
+             (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
+             (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
+             (setq eshell-prompt-function
+      (lambda ()
+        (concat (user-login-name)
+                "@"
+                (host-name)
+                " "
+                (base-name (eshell/pwd))
+                (if (= (user-uid) 0) " # " " $ "))))
+))
 
 (global-set-key (kbd "C-c s") 'eshell)
 
@@ -185,14 +194,13 @@
                  (string-match "^[^.]+" hostname)
                  (match-end 0)))))
 
-(setq eshell-prompt-function
-      (lambda ()
-        (concat (user-login-name)
-                "@"
-                (host-name)
-                " "
-                (base-name (eshell/pwd))
-                (if (= (user-uid) 0) " # " " $ "))))
+;;;;;;;;;;;;
+;; ispell ;;
+;;;;;;;;;;;;
+
+(if (boundp ispell-dictionary)
+    (ispell-change-dictionary "en_GB" t))
+
 
 ;;;;;;;;;;;;;;
 ;; org mode ;;
