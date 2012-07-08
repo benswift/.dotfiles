@@ -1,4 +1,1 @@
-emacs.d/*
-!emacs.d/ben.el
-!emacs.d/custom.el
-!emacs.d/eshell/alias
+emacs.d/
