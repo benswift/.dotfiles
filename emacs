@@ -164,9 +164,9 @@
                    (lambda ()
                      (concat (user-login-name) "@" (host-name) " "
                              (base-name (eshell/pwd))
-			     (if (= (user-uid) 0) " # " " $ "))))
-	     ;; helpful modes
-	     (turn-on-eldoc-mode)))
+                             (if (= (user-uid) 0) " # " " $ "))))
+             ;; helpful modes
+             (turn-on-eldoc-mode)))
 
 (global-set-key (kbd "C-c s") 'eshell)
 
@@ -229,6 +229,7 @@
 (load "~/.dotfiles/secrets/ercpass")
 (setq erc-prompt-for-password nil)
 (setq erc-prompt-for-nickserv-password nil)
+(setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
 
 (add-hook 'erc-mode-hook
           '(lambda ()
