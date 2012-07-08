@@ -147,9 +147,10 @@
 ;; eshell ;;
 ;;;;;;;;;;;;
 
+(setq eshell-aliases-file "~/.dotfiles/eshell-alias")
+
 (add-hook 'eshell-mode-hook
           '(lambda ()
-             (setq eshell-aliases-file "~/.dotfiles/eshell-alias")
              ;; keybindings
              (define-key eshell-mode-map (kbd "<C-up>") 'eshell-previous-matching-input-from-input)
              (define-key eshell-mode-map (kbd "<C-down>") 'eshell-next-matching-input-from-input)
