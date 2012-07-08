@@ -414,6 +414,8 @@
 ;; R ;;
 ;;;;;;;
 
+(add-to-list 'load-path  ; not sure why this is necessary
+             "/Users/ben/.emacs.d/elpa/ess-5.14")
 (require 'ess-site)
 (add-hook 'ess-mode-hook
           '(lambda()
