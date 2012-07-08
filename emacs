@@ -164,7 +164,9 @@
                    (lambda ()
                      (concat (user-login-name) "@" (host-name) " "
                              (base-name (eshell/pwd))
-                             (if (= (user-uid) 0) " # " " $ "))))))
+			     (if (= (user-uid) 0) " # " " $ "))))
+	     ;; helpful modes
+	     (turn-on-eldoc-mode)))
 
 (global-set-key (kbd "C-c s") 'eshell)
 
