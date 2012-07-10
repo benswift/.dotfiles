@@ -54,7 +54,6 @@
 ;; one-liners
 
 (global-auto-revert-mode t)
-(setq shift-select-mode t)
 (setq special-display-regexps nil)
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 (setq bidi-display-reordering nil)
