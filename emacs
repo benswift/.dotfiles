@@ -389,12 +389,12 @@
 ;;;;;;;;;;;;;
 
 (add-hook 'paredit-mode-hook
-          '(lambda ())
-          (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
-          (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
-          (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-split-sexp)
-          (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-join-sexps)
-          (define-key paredit-mode-map (kbd "<s-M-up>") 'paredit-convolute-sexp))
+	  '(lambda ()
+	     (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
+	     (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
+	     (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-split-sexp)
+	     (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-join-sexps)
+	     (define-key paredit-mode-map (kbd "<s-M-up>") 'paredit-convolute-sexp)))
 
 ;;;;;;;;;;;;;;
 ;; markdown ;;
