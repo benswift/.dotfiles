@@ -382,6 +382,9 @@
 (autoload 'extempore-mode (concat ben-home-dir "/Code/extempore/extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-hook 'extempore-mode-hook 'esk-turn-on-paredit)
+
+(setq extempore-path (concat ben-home-dir "/Code/extempore"))
+(setq extempore-process-args "--device 2")
 (setq extempore-tab-completion nil)
 
 ;;;;;;;;;;;;;
@@ -389,12 +392,12 @@
 ;;;;;;;;;;;;;
 
 (add-hook 'paredit-mode-hook
-	  '(lambda ()
-	     (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
-	     (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
-	     (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-split-sexp)
-	     (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-join-sexps)
-	     (define-key paredit-mode-map (kbd "<s-M-up>") 'paredit-convolute-sexp)))
+          '(lambda ()
+             (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
+             (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
+             (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-split-sexp)
+             (define-key paredit-mode-map (kbd "<M-S-right>") 'paredit-join-sexps)
+             (define-key paredit-mode-map (kbd "<s-M-up>") 'paredit-convolute-sexp)))
 
 ;;;;;;;;;;;;;;
 ;; markdown ;;
