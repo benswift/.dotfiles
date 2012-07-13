@@ -188,6 +188,12 @@
                  (string-match "^[^.]+" hostname)
                  (match-end 0)))))
 
+;;;;;;;;;;;
+;; magit ;;
+;;;;;;;;;;;
+
+(setq magit-save-some-buffers nil)
+
 ;;;;;;;;;;;;;;
 ;; org mode ;;
 ;;;;;;;;;;;;;;
