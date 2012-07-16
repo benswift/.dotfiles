@@ -26,7 +26,7 @@
   (setq browse-default-macosx-browser "/Applications/Safari.app")
   (setq ben-path
         '("/usr/local/Library/Contributions/examples"
-          "/usr/local/Cellar/emacs/HEAD/libexec/emacs/24.1.50/i386-apple-darwin11.4.0/"))
+          "/usr/local/Cellar/emacs/HEAD/libexec/emacs/24.1.50/i386-apple-darwin11.4.0"))
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
