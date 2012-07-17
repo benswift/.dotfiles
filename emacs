@@ -108,8 +108,6 @@
 		       (interactive)
 		       (kill-visual-line 0)))
 
-(global-set-key (kbd "C-c w") 'count-words)
-
 (global-set-key (kbd "C-x u") 'find-grep)
 
 ;; Mac OS X-like
