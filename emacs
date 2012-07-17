@@ -482,3 +482,24 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
       (comment-dwim arg)))
 
 (global-set-key (kbd "s-'") 'comment-dwim-line)
+
+;; from
+;; http://stackoverflow.com/questions/88399/how-do-i-duplicate-a-whole-line-in-emacs
+
+(defun duplicate-line ()
+  "Clone line at cursor, leaving the latter intact."
+  (interactive "*")
+  (save-excursion
+    ;; The last line of the buffer cannot be killed
+    ;; if it is empty. Instead, simply add a new line.
+    (if (and (eobp) (bolp))
+        (newline)
+      ;; Otherwise kill the whole line, and yank it back.
+      (let ((kill-read-only-ok t)
+            deactivate-mark)
+        (toggle-read-only 1)
+        (kill-whole-line)
+        (toggle-read-only 0)
+        (yank)))))
+
+(global-set-key (kbd "C-c d") 'duplicate-line)
