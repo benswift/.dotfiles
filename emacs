@@ -110,6 +110,8 @@
 
 (global-set-key (kbd "C-c w") 'count-words)
 
+(global-set-key (kbd "C-x u") 'find-grep)
+
 ;; Mac OS X-like
 
 (global-set-key (kbd "s-[") (lambda ()
