@@ -205,10 +205,10 @@
              (define-key org-mode-map (kbd "<M-right>") 'forward-word)
              (define-key org-mode-map (kbd "<C-left>") 'org-metaleft)
              (define-key org-mode-map (kbd "<C-right>") 'org-metaright)
-             (setq org-support-shift-select 'always)
              ;;faces
+             (set-face-attribute 'outline-2 nil :inherit font-lock-string-face)
              (set-face-attribute 'outline-3 nil :inherit font-lock-type-face)
-             (set-face-attribute 'outline-4 nil :inherit font-lock-string-face)
+             (set-face-attribute 'outline-4 nil :inherit font-lock-keyword-face)
              (set-face-attribute 'outline-5 nil :inherit font-lock-constant-face)
              (set-face-attribute 'outline-6 nil :inherit font-lock-comment-face)))
 
@@ -394,7 +394,7 @@
 
 (cond ((string-equal (system-name) "cyril.local")
        (progn (setq extempore-path (concat ben-home-dir "/Code/extempore"))
-              (setq extempore-process-args "--device 2"))))
+              (setq extempore-process-args "--device 3")))) ; Soundflower
 
 ;;;;;;;;;;;;;
 ;; paredit ;;
