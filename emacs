@@ -2,6 +2,8 @@
 ;: ben swift's .emacs ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
+(package-initialize)
+
 ;; cross-platform setup
 
 (defun nix-specific-setup ()
