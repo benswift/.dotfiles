@@ -429,7 +429,7 @@
 ;;;;;;;;;;;;;;;
 
 (setq yas/root-directory "~/.dotfiles/yasnippets")
-;(yas/load-directory yas/root-directory)
+(yas/load-directory yas/root-directory)
 
 ;;;;;;;;;
 ;; git ;;
