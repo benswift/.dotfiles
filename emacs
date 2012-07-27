@@ -80,7 +80,6 @@
 	       markdown-mode
 	       yaml-mode
 	       yasnippet
-	       yasnippet-bundle
                org
 	       ess
 	       auctex
