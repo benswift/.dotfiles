@@ -440,7 +440,7 @@
 ;;;;;;;
 
 (add-to-list 'load-path
-	     "/Users/ben/.emacs.d/elpa/ess-20120718")
+	     "/Users/ben/.emacs.d/elpa/ess-20120718/lisp")
 (require 'ess-site)
 
 (add-hook 'ess-mode-hook
