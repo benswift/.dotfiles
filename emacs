@@ -426,7 +426,8 @@
 ;; yasnippet ;;
 ;;;;;;;;;;;;;;;
 
-(setq yas/root-directory (concat user-emacs-directory "snippets"))
+(setq yas/root-directory "~/.dotfiles/yasnippets")
+(yas/load-directory yas/root-directory)
 
 ;;;;;;;;;
 ;; git ;;
