@@ -64,7 +64,8 @@
 
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
-	("marmalade" . "http://marmalade-repo.org/packages/")))
+	("marmalade" . "http://marmalade-repo.org/packages/")
+        ("melpa" . "http://melpa.milkbox.net/packages/")))
 
 (defun ben-install-packages ()
   "Install some handy packages from marmalade."
@@ -80,11 +81,11 @@
 	       yaml-mode
 	       yasnippet
 	       yasnippet-bundle
+               org
 	       ess
 	       auctex
 	       gist
-	       dired+
-	       marmalade))
+	       dired+))
     (when (not (package-installed-p p))
       (package-install p))))
 
@@ -439,7 +440,7 @@
 ;;;;;;;
 
 (add-to-list 'load-path  ; not sure why this is necessary
-             "/Users/ben/.emacs.d/elpa/ess-5.14")
+	     "/Users/ben/.emacs.d/elpa/ess-5.14")
 (require 'ess-site)
 (add-hook 'ess-mode-hook
           '(lambda()
