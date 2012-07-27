@@ -388,7 +388,7 @@
 
 (autoload 'extempore-mode (concat ben-home-dir "/Code/extempore/extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
-(add-hook 'extempore-mode-hook 'esk-turn-on-paredit)
+(add-hook 'extempore-mode-hook 'enable-paredit-mode)
 (setq extempore-tab-completion nil)
 
 ;; on cyril
