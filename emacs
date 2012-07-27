@@ -439,9 +439,10 @@
 ;; R ;;
 ;;;;;;;
 
-(add-to-list 'load-path  ; not sure why this is necessary
-	     "/Users/ben/.emacs.d/elpa/ess-5.14")
+(add-to-list 'load-path
+	     "/Users/ben/.emacs.d/elpa/ess-20120718")
 (require 'ess-site)
+
 (add-hook 'ess-mode-hook
           '(lambda()
              (setq-default ess-language "R")
