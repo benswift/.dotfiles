@@ -299,8 +299,7 @@
 
 (defun ben-latex-keybindings ()
   (define-key LaTeX-mode-map (kbd "C-c t") 'switch-to-toc-other-frame)
-  (define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count)
-  (define-key LaTeX-mode-map (kbd "C-c s") 'ispell-buffer))
+  (define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count))
 
 (defun ben-reftex-setup ()  
   (turn-on-reftex)
