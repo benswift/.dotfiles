@@ -83,11 +83,14 @@
 	       yaml-mode
 	       yasnippet
                yasnippet-bundle
+               htmlize
                org
 	       ess
 	       auctex
 	       gist
-	       dired+))
+               icicles
+	       dired+
+               bookmark+))
     (when (not (package-installed-p p))
       (package-install p))))
 
@@ -96,6 +99,7 @@
 ;;;;;;;;;;;
 
 (load-theme 'monokai t)
+(add-to-list 'default-frame-alist '(background-mode . dark))
 
 ;;;;;;;;;;;
 ;; faces ;;
