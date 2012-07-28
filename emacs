@@ -92,6 +92,12 @@
       (package-install p))))
 
 ;;;;;;;;;;;
+;; theme ;;
+;;;;;;;;;;;
+
+(load-theme 'monokai t)
+
+;;;;;;;;;;;
 ;; faces ;;
 ;;;;;;;;;;;
 
