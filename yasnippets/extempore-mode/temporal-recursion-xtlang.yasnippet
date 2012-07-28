@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: temporal-recursion-xtlang
+# key: trx
+# --
+(bind-func ${1:fun-name}
+  (lambda (beat dur)
+    (callback (*metro* (+ beat (* .5 dur))) $1 (+ beat dur) dur)))
+
+($1 (*metro* 'get-beat 4) 4)
