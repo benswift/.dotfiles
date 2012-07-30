@@ -4,6 +4,7 @@
 # --
 (bind-func ${1:fun-name}
   (lambda (beat dur)
+    $0
     (callback (*metro* (+ beat (* .5 dur))) $1 (+ beat dur) dur)))
 
 ($1 (*metro* 'get-beat 4) 4)
