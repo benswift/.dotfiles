@@ -87,10 +87,7 @@
                org
 	       ess
 	       auctex
-	       gist
-               icicles
-	       dired+
-               bookmark+))
+	       gist))
     (when (not (package-installed-p p))
       (package-install p))))
 
