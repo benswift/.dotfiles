@@ -120,7 +120,7 @@
 
 (global-set-key (kbd "C-x u") 'find-grep)
 
-;; Mac OS X-like
+;; window navigation
 
 (global-set-key (kbd "s-[") (lambda ()
                               (interactive)
@@ -128,6 +128,11 @@
 (global-set-key (kbd "s-]") (lambda ()
                               (interactive)
                               (other-window 1)))
+(global-set-key (kbd "s-{") 'shrink-window-horizontally)
+(global-set-key (kbd "s-}") 'enlarge-window-horizontally)
+
+;; Mac OS X-like
+
 (global-set-key (kbd "<s-left>") (lambda ()
                                    (interactive)
                                    (move-beginning-of-line 1)))
