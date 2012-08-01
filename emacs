@@ -204,6 +204,12 @@
                  (match-end 0)))))
 
 ;;;;;;;;;;;
+;; dired ;;
+;;;;;;;;;;;
+
+(setq dired-listing-switches "-alh")
+
+;;;;;;;;;;;
 ;; magit ;;
 ;;;;;;;;;;;
 
