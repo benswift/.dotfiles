@@ -422,9 +422,9 @@
 
 (add-hook 'paredit-mode-hook
           '(lambda ()
-             (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-convolute-sexp)
+             (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
              (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
-             (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-raise-sexp)
+             (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
              (define-key paredit-mode-map (kbd "<M-S-right>") 'transpose-sexps)))
 
 ;;;;;;;;;;;;;;
