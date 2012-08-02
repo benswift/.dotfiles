@@ -447,6 +447,10 @@
 
 (setq yas/root-directory "~/.dotfiles/yasnippets")
 (yas/load-directory yas/root-directory)
+(setq yas/prompt-functions '(yas/ido-prompt
+                             yas/dropdown-prompt
+                             yas/completing-prompt
+                             yas/no-prompt))
 
 ;;;;;;;;;
 ;; git ;;
