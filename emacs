@@ -413,8 +413,7 @@
 ;; on cyril
 
 (cond ((string-equal (system-name) "cyril.local")
-       (progn (setq extempore-path (concat ben-home-dir "/Code/extempore"))
-              (setq extempore-process-args "--device 3")))) ; Soundflower
+       (setq extempore-path (concat ben-home-dir "/Code/extempore"))))
 
 ;;;;;;;;;;;;;
 ;; paredit ;;
