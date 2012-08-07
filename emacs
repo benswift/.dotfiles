@@ -119,6 +119,7 @@
 		       (kill-visual-line 0)))
 
 (global-set-key (kbd "C-x u") 'find-grep)
+(global-set-key (kbd "C-c b") 'browse-url-at-point)
 
 ;; window navigation
 
