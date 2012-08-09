@@ -219,6 +219,8 @@
 ;; org mode ;;
 ;;;;;;;;;;;;;;
 
+(setq org-completion-use-ido t)
+
 (add-hook 'org-mode-hook
           '(lambda ()
              ;; keymappings
