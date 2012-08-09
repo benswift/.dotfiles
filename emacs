@@ -43,7 +43,6 @@
 
 ;; customisation
 
-(setq user-init-file (concat user-emacs-directory "ben.el"))
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (if (file-readable-p custom-file)
     (load custom-file))
