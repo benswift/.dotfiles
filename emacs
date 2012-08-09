@@ -463,7 +463,6 @@
 ;; R ;;
 ;;;;;;;
 
-(add-to-list 'load-path "/Users/ben/.emacs.d/elpa/ess-20120808/lisp")
 (require 'ess-site)
 
 (add-hook 'ess-mode-hook
