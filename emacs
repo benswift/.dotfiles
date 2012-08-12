@@ -109,6 +109,7 @@
 ;;;;;;;;;;;;;;;;;
 
 (global-set-key (kbd "<f5>") 'magit-status)
+(global-set-key (kbd "<f6>") 'compile)
 
 (global-set-key (kbd "<S-s-return>") 'ns-toggle-fullscreen)
 
