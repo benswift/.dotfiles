@@ -2,6 +2,7 @@ alias ff find-file $1
 alias d dired $1
 alias simbk ~/Code/Scripts/backup-scripts/simstim-backup.sh
 alias la ls -la
+alias bu brew update; brew outdated
 alias eject-buddy diskutil eject /Volumes/Buddy/
 alias radios-on blueutil power 1; networksetup -setairportpower en1 on
 alias radios-off blueutil power 0; networksetup -setairportpower en1 off
