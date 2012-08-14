@@ -4,7 +4,9 @@
 
 (package-initialize)
 
-;; cross-platform setup
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; cross-platform setup ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun nix-specific-setup ()
   (setq ben-home-dir (substitute-in-file-name "$HOME"))
@@ -41,18 +43,24 @@
       ((string-equal system-type "windows-nt") (windows-specific-setup))
       (t (message "Unknown operating system")))
 
-;; customisation
+;;;;;;;;;;;;;;;;;;;
+;; customisation ;;
+;;;;;;;;;;;;;;;;;;;
 
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (if (file-readable-p custom-file)
     (load custom-file))
 
-;; time and date
+;;;;;;;;;;;;;;;;;;;
+;; time and date ;;
+;;;;;;;;;;;;;;;;;;;
 
 (setq display-time-day-and-date 1)
 (display-time-mode 1)
 
-;; one-liners
+;;;;;;;;;;;;;;;;
+;; one-liners ;;
+;;;;;;;;;;;;;;;;
 
 (global-auto-revert-mode t)
 (setq special-display-regexps nil)
@@ -108,16 +116,11 @@
 ;; keybindings ;;
 ;;;;;;;;;;;;;;;;;
 
+;; handy shortcuts
+
 (global-set-key (kbd "<f5>") 'magit-status)
 (global-set-key (kbd "<f6>") 'compile)
-
 (global-set-key (kbd "<S-s-return>") 'ns-toggle-fullscreen)
-
-(global-set-key (kbd "<A-backspace>")
-		     (lambda () 
-		       (interactive)
-		       (kill-visual-line 0)))
-
 (global-set-key (kbd "C-x u") 'find-grep)
 (global-set-key (kbd "C-c b") 'browse-url-at-point)
 
@@ -158,6 +161,10 @@
 (global-set-key (kbd "<s-kp-delete>") (lambda ()
                                         (interactive)
                                         (kill-visual-line)))
+(global-set-key (kbd "<A-backspace>")
+		     (lambda () 
+		       (interactive)
+		       (kill-visual-line 0)))
 
 ;;;;;;;;;;;;
 ;; eshell ;;
