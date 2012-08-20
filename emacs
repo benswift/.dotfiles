@@ -280,6 +280,13 @@
          :publishing-function org-publish-attachment)
         ("biott" :components ("biott-posts" "biott-images"))))
 
+(setq org-export-html-mathjax-options
+      '((path "http://orgmode.org/mathjax/MathJax.js")
+        (scale "100")
+        (align "center")
+        (indent "2em")
+        (mathml t)))
+
 ;;;;;;;;;
 ;; erc ;;
 ;;;;;;;;;
