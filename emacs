@@ -247,17 +247,38 @@
 ;; for octopress blogging
 ;; taken from http://jaderholm.com/blog/blogging-with-org-mode-and-octopress
 
+;; (setq org-publish-project-alist
+;;    '(("blog" .  (:base-directory "~/Documents/blog/source/_org-posts/"
+;;                  :base-extension "org"
+;;                  :exclude "drafts/*"                
+;;                  :publishing-directory "~/Documents/blog/source/_posts/"
+;;                  :sub-superscript ""
+;;                  :recursive t
+;;                  :publishing-function org-publish-org-to-html
+;;                  :headline-levels 4
+;;                  :html-extension "html"
+;;                  :body-only t))))
+
 (setq org-publish-project-alist
-   '(("blog" .  (:base-directory "~/Documents/blog/source/_org-posts/"
-                 :base-extension "org"
-                 :exclude "drafts/*"                
-                 :publishing-directory "~/Documents/blog/source/_posts/"
-                 :sub-superscript ""
-                 :recursive t
-                 :publishing-function org-publish-org-to-html
-                 :headline-levels 4
-                 :html-extension "html"
-                 :body-only t))))
+      '(("biott-posts"
+         ;; Path to your org files.
+         :base-directory "~/Documents/biott/posts/"
+         :base-extension "org"
+         :exclude "drafts/*"
+         ;; Path to your Jekyll project.
+         :publishing-directory "~/Code/octopress/source/_posts/"
+         :recursive t
+         :publishing-function org-publish-org-to-html
+         :headline-levels 4
+         :html-extension "html"
+         :body-only t)
+        ("biott-images"
+         :base-directory "~/Documents/biott/images/"
+         :base-extension "png\\|jpg\\|pdf"
+         :publishing-directory "/Users/ben/Code/octopress/source/images/"
+         :recursive t
+         :publishing-function org-publish-attachment)
+        ("biott" :components ("biott-posts" "biott-images"))))
 
 ;;;;;;;;;
 ;; erc ;;
