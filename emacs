@@ -66,6 +66,7 @@
 (setq special-display-regexps nil)
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 (setq bidi-display-reordering nil)
+(setq ispell-dictionary "en_GB")
 
 ;;;;;;;;;;
 ;; elpa ;;
@@ -247,7 +248,7 @@
 ;; taken from http://jaderholm.com/blog/blogging-with-org-mode-and-octopress
 
 (setq org-publish-project-alist
-   '(("blog" .  (:base-directory "~/Documents/blog/source/org-posts/"
+   '(("blog" .  (:base-directory "~/Documents/blog/source/_org-posts/"
                  :base-extension "org"
                  :exclude "drafts/*"                
                  :publishing-directory "~/Documents/blog/source/_posts/"
@@ -255,7 +256,7 @@
                  :recursive t
                  :publishing-function org-publish-org-to-html
                  :headline-levels 4
-                 :html-extension "markdown"
+                 :html-extension "html"
                  :body-only t))))
 
 ;;;;;;;;;
