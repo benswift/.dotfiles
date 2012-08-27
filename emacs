@@ -262,11 +262,11 @@
 (setq org-publish-project-alist
       '(("biott-posts"
          ;; Path to your org files.
-         :base-directory "~/Documents/biott/posts/"
+         :base-directory "~/Documents/biott/org/"
          :base-extension "org"
          :exclude "drafts/*"
          ;; Path to your Jekyll project.
-         :publishing-directory "~/Code/octopress/source/_posts/"
+         :publishing-directory "~/Code/octopress/source/"
          :recursive t
          :publishing-function org-publish-org-to-html
          :headline-levels 4
