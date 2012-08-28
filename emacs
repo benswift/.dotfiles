@@ -10,27 +10,22 @@
 
 (defun nix-specific-setup ()
   (setq ben-home-dir (substitute-in-file-name "$HOME"))
-  (setq ben-path (append (list
-                          (concat ben-home-dir  "/.rbenv/shims")
-                          (concat ben-home-dir  "/bin")
-                          "/usr/local/bin" "/usr/bin" "/bin"
-                          "/usr/local/sbin" "/usr/sbin" "/sbin"
-                          "/usr/X11/bin" "/usr/texbin")
-                         ben-path))
-  (setenv "PATH" (mapconcat 'identity ben-path ":"))
+  (setq ben-path (list
+                  (concat ben-home-dir  "/.rbenv/shims")
+                  (concat ben-home-dir  "/bin")
+                  "/usr/local/bin" "/usr/bin" "/bin"
+                  "/usr/local/sbin" "/usr/sbin" "/sbin"
+                  "/usr/X11/bin" "/usr/texbin"))
+  (setenv "PATH" ben-path)
   (setq exec-path ben-path))
 
 (defun linux-specific-setup ()
   (setq base-face-height 160)
-  (setq ben-path '())
   (nix-specific-setup))
 
 (defun osx-specific-setup ()
   (setq base-face-height 200)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
-  (setq ben-path
-        '("/usr/local/Library/Contributions/examples"
-          "/usr/local/Cellar/emacs/HEAD/libexec/emacs/24.1.50/i386-apple-darwin11.4.0"))
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
