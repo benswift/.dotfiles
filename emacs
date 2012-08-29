@@ -133,12 +133,8 @@
 
 ;; Mac OS X-like
 
-(global-set-key (kbd "<s-left>") (lambda ()
-                                   (interactive)
-                                   (paredit-backward-up 1)))
-(global-set-key (kbd "<s-right>") (lambda ()
-                                    (interactive)
-                                    (paredit-forward-up 1)))
+(global-set-key (kbd "<s-left>") 'paredit-backward-up)
+(global-set-key (kbd "<s-right>") 'paredit-forward-up)
 (global-set-key (kbd "<s-up>") (lambda ()
                                  (interactive)
                                  (goto-char (point-min))))
