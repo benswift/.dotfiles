@@ -87,6 +87,7 @@
 	       yasnippet
                yasnippet-bundle
                htmlize
+               magit
                org
 	       ess
 	       auctex
