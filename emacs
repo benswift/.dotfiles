@@ -134,11 +134,15 @@
 
 ;; Mac OS X-like
 
-(global-set-key (kbd "<s-left>") 'paredit-backward-up)
-(global-set-key (kbd "<s-right>") 'paredit-forward-up)
+(global-set-key (kbd "<s-left>") (lambda ()
+				   (interactive)
+				   (move-beginning-of-line 1)))
+(global-set-key (kbd "<s-right>") (lambda ()
+				    (interactive)
+				    (move-end-of-line 1)))
 (global-set-key (kbd "<s-up>") (lambda ()
-                                 (interactive)
-                                 (goto-char (point-min))))
+				 (interactive)
+				 (goto-char (point-min))))
 (global-set-key (kbd "<s-down>") (lambda ()
                                    (interactive)
                                    (goto-char (point-max))))
@@ -452,6 +456,10 @@
 
 (add-hook 'paredit-mode-hook
           '(lambda ()
+             (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-up)
+             (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-down)
+             (define-key paredit-mode-map (kbd "<s-S-right>") 'paredit-forward-up)
+             (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-down)
              (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
              (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
              (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
