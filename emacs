@@ -135,10 +135,10 @@
 
 (global-set-key (kbd "<s-left>") (lambda ()
                                    (interactive)
-                                   (move-beginning-of-line 1)))
+                                   (paredit-backward-up 1)))
 (global-set-key (kbd "<s-right>") (lambda ()
                                     (interactive)
-                                    (move-end-of-line 1)))
+                                    (paredit-forward-up 1)))
 (global-set-key (kbd "<s-up>") (lambda ()
                                  (interactive)
                                  (goto-char (point-min))))
