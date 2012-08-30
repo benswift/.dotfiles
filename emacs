@@ -10,22 +10,27 @@
 
 (defun nix-specific-setup ()
   (setq ben-home-dir (substitute-in-file-name "$HOME"))
-  (setq ben-path (list
-                  (concat ben-home-dir  "/.rbenv/shims")
-                  (concat ben-home-dir  "/bin")
-                  "/usr/local/bin" "/usr/bin" "/bin"
-                  "/usr/local/sbin" "/usr/sbin" "/sbin"
-                  "/usr/X11/bin" "/usr/texbin"))
-  (setenv "PATH" ben-path)
+  (setq ben-path (append (list
+			  (concat ben-home-dir  "/.rbenv/shims")
+			  (concat ben-home-dir  "/bin")
+			  "/usr/local/bin" "/usr/bin" "/bin"
+			  "/usr/local/sbin" "/usr/sbin" "/sbin"
+			  "/usr/X11/bin" "/usr/texbin")
+			 ben-path))
+  (setenv "PATH" (mapconcat 'identity ben-path ":"))
   (setq exec-path ben-path))
 
 (defun linux-specific-setup ()
   (setq base-face-height 160)
+  (setq ben-path '())
   (nix-specific-setup))
 
 (defun osx-specific-setup ()
   (setq base-face-height 200)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
+  (setq ben-path
+	'("/usr/local/Library/Contributions/examples"
+	  "/usr/local/Cellar/emacs/24.2/libexec/emacs/24.2/x86_64-apple-darwin12.1.0"))
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
@@ -456,10 +461,10 @@
 
 (add-hook 'paredit-mode-hook
           '(lambda ()
-	     (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-up)
-	     (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-down)
-	     (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-up)
-	     (define-key paredit-mode-map (kbd "<s-S-right>") 'paredit-forward-down)
+             (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-up)
+             (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-down)
+             (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-up)
+             (define-key paredit-mode-map (kbd "<s-S-right>") 'paredit-forward-down)
              (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
              (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
              (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
