@@ -2,4 +2,7 @@
 # name: if-mod-xtlang
 # key: imx
 # --
-(= (modulo (/ time SAMPLERATE) ${1:1}) ${2:0})
+(if (= (modulo (/ time SAMPLERATE)
+               ${1:1.0})
+       ${2:0.0})
+    $0)
