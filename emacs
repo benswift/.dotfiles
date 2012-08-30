@@ -456,10 +456,10 @@
 
 (add-hook 'paredit-mode-hook
           '(lambda ()
-             (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-up)
-             (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-down)
-             (define-key paredit-mode-map (kbd "<s-S-right>") 'paredit-forward-up)
-             (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-down)
+	     (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-up)
+	     (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-down)
+	     (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-up)
+	     (define-key paredit-mode-map (kbd "<s-S-right>") 'paredit-forward-down)
              (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
              (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
              (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
