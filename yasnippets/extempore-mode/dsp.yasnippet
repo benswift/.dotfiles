@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: dsp
+# key: dsp
+# --
+(bind-func dsp:DSP
+  (lambda (in time chan dat)
+    (+ (${1:sampler} in time chan dat)
+       (${2:synth} in time chan dat))))
