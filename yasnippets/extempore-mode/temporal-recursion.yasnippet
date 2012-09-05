@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: temporal-recursion
+# key: tr
+# --
+(${1:$$(yas/choose-value '("define" "bind-func"))} ${2:fun-name}
+  (lambda (beat dur)
+    $0
+    (callback (*metro* (+ beat (* .5 dur))) '$2 (+ beat dur) dur)))
+
+($2 (*metro* 'get-beat 4) 1/4)

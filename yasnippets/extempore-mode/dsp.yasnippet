@@ -4,7 +4,9 @@
 # --
 (bind-func dsp:DSP
   (lambda (in time chan dat)
-    (+ (${1:sampler} in time chan dat)
-       (${2:synth} in time chan dat))))
+    (cond ((< chan 2.0)
+           (+ (${1:sampler} in time chan dat)
+              (${2:synth} in time chan dat)))
+          (else 0.0))))
 
 (dsp:set! dsp)
