@@ -225,6 +225,12 @@
 
 (setq magit-save-some-buffers nil)
 
+;;;;;;;;;;;;;
+;; cc-mode ;;
+;;;;;;;;;;;;;
+
+(setq c-default-style "k&r")
+
 ;;;;;;;;;;;;;;
 ;; org mode ;;
 ;;;;;;;;;;;;;;
