@@ -1,8 +1,8 @@
 # -*- mode: snippet -*-
 # name: temporal-recursion
-# key: tr
+# key: trx
 # --
-(define ${1:fun-name}
+(bind-func ${1:fun-name}
   (lambda (beat dur)
     $0
     (callback (*metro* (+ beat (* .5 dur))) '$1 (+ beat dur) dur)))
