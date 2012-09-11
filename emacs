@@ -124,7 +124,7 @@
 (global-set-key (kbd "<f6>") '(lambda ()
                                 (interactive)
                                 (if (get-buffer "*compilation*")
-                                    (display-buffer "*compilation*")
+                                    (switch-to-buffer "*compilation*")
                                   (call-interactively 'compile))))
 
 (global-set-key (kbd "<S-s-return>") 'ns-toggle-fullscreen)
