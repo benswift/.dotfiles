@@ -169,7 +169,7 @@
                                         (interactive)
                                         (kill-visual-line)))
 (global-set-key (kbd "<A-backspace>")
-		     (lambda () 
+		     (lambda ()
 		       (interactive)
 		       (kill-visual-line 0)))
 
@@ -260,10 +260,12 @@
 ;; blogging ;;
 ;;;;;;;;;;;;;;
 
+(setq biott-path "~/Documents/biott")
+
 (setq org-publish-project-alist
       '(("biott-posts"
          ;; Path to your org files.
-         :base-directory "~/Documents/biott/org/"
+         :base-directory (concat biott-path "/org/")
          :base-extension "org"
          :exclude "drafts/*"
          ;; Path to your Jekyll project.
@@ -274,7 +276,7 @@
          :html-extension "html"
          :body-only t)
         ("biott-images"
-         :base-directory "~/Documents/biott/images/"
+         :base-directory (concat biott-path "/images/")
          :base-extension "png\\|jpg\\|pdf"
          :publishing-directory "/Users/ben/Code/octopress/source/images/"
          :recursive t
@@ -287,6 +289,24 @@
         (align "center")
         (indent "2em")
         (mathml t)))
+
+(defun biott-new-post (post-name)
+  (interactive "sPost title: ")
+  (find-file (concat biott-path "/org/_posts/drafts/"
+                     (format-time-string "%Y-%m-%d-")
+                     (downcase (subst-char-in-string 32 45 post-name))
+                     ".org"))
+  (insert (concat
+           "#+begin_html
+---
+layout: post
+title: \"" post-name "\"
+date: " (format-time-string "%Y-%m-%d %R") "
+comments: true
+categories:
+---
+#+end_html
+")))
 
 ;;;;;;;;;
 ;; erc ;;
@@ -353,7 +373,7 @@
   (define-key LaTeX-mode-map (kbd "C-c t") 'switch-to-toc-other-frame)
   (define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count))
 
-(defun ben-reftex-setup ()  
+(defun ben-reftex-setup ()
   (turn-on-reftex)
   (setq reftex-enable-partial-scans t)
   (setq reftex-save-parse-info t)
@@ -378,9 +398,9 @@
           ("footcites" "[{")
           ("parencite" "[{")
           ("textcite" "[{")
-          ("fullcite" "[{") 
-          ("citetitle" "[{") 
-          ("citetitles" "[{") 
+          ("fullcite" "[{")
+          ("citetitle" "[{")
+          ("citetitles" "[{")
           ("headlessfullcite" "[{"))))
 
 (defun latex-word-count ()
@@ -408,13 +428,13 @@
              (delete-window)))
   (switch-to-buffer-other-window "*toc*"))
 
-(add-hook 'LaTeX-mode-hook 'ben-latex-setup) 
-(add-hook 'LaTeX-mode-hook 'ben-latex-keybindings) 
+(add-hook 'LaTeX-mode-hook 'ben-latex-setup)
+(add-hook 'LaTeX-mode-hook 'ben-latex-keybindings)
 (add-hook 'LaTeX-mode-hook 'ben-reftex-setup)
 
 ;; Biber under AUCTeX
 (defun TeX-run-Biber (name command file)
-  "Create a process for NAME using COMMAND to format FILE with Biber." 
+  "Create a process for NAME using COMMAND to format FILE with Biber."
   (let ((process (TeX-run-command name command file)))
     (setq TeX-sentinel-function 'TeX-Biber-sentinel)
     (if TeX-process-asynchronous
@@ -523,10 +543,10 @@
 ;; bits and pieces ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
-(defun read-lines (fpath) 
-  "Return a list of lines of a file at at FPATH." 
-  (with-temp-buffer 
-    (insert-file-contents fpath) 
+(defun read-lines (fpath)
+  "Return a list of lines of a file at at FPATH."
+  (with-temp-buffer
+    (insert-file-contents fpath)
     (split-string (buffer-string) "\n" t)))
 
 (defun what-face (pos)
