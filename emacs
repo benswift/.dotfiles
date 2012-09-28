@@ -256,20 +256,9 @@
              (set-face-attribute 'outline-5 nil :inherit font-lock-constant-face)
              (set-face-attribute 'outline-6 nil :inherit font-lock-comment-face)))
 
-;; for octopress blogging
-;; taken from http://jaderholm.com/blog/blogging-with-org-mode-and-octopress
-
-;; (setq org-publish-project-alist
-;;    '(("blog" .  (:base-directory "~/Documents/blog/source/_org-posts/"
-;;                  :base-extension "org"
-;;                  :exclude "drafts/*"                
-;;                  :publishing-directory "~/Documents/blog/source/_posts/"
-;;                  :sub-superscript ""
-;;                  :recursive t
-;;                  :publishing-function org-publish-org-to-html
-;;                  :headline-levels 4
-;;                  :html-extension "html"
-;;                  :body-only t))))
+;;;;;;;;;;;;;;
+;; blogging ;;
+;;;;;;;;;;;;;;
 
 (setq org-publish-project-alist
       '(("biott-posts"
