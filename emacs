@@ -260,12 +260,10 @@
 ;; blogging ;;
 ;;;;;;;;;;;;;;
 
-(setq biott-path "~/Documents/biott")
-
 (setq org-publish-project-alist
       '(("biott-posts"
          ;; Path to your org files.
-         :base-directory (concat biott-path "/org/")
+         :base-directory "~/Documents/biott/org/"
          :base-extension "org"
          :exclude "drafts/*"
          ;; Path to your Jekyll project.
@@ -276,7 +274,7 @@
          :html-extension "html"
          :body-only t)
         ("biott-images"
-         :base-directory (concat biott-path "/images/")
+         :base-directory "~/Documents/biott/images/"
          :base-extension "png\\|jpg\\|pdf"
          :publishing-directory "/Users/ben/Code/octopress/source/images/"
          :recursive t
@@ -292,7 +290,7 @@
 
 (defun biott-new-post (post-name)
   (interactive "sPost title: ")
-  (find-file (concat biott-path "/org/_posts/drafts/"
+  (find-file (concat "~/Documents/biott/org/_posts/drafts/"
                      (format-time-string "%Y-%m-%d-")
                      (downcase (subst-char-in-string 32 45 post-name))
                      ".org"))
