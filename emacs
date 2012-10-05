@@ -187,7 +187,7 @@
              (define-key eshell-mode-map (kbd "<up>") 'previous-line)
              (define-key eshell-mode-map (kbd "<down>") 'next-line)
              ;;faces
-             (set-face-attribute 'eshell-prompt nil :inherit font-lock-function-name-face)
+             (set-face-attribute 'eshell-prompt nil :foreground nil :inherit font-lock-function-name-face)
              ;; prompt helpers
              (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
              (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
