@@ -51,12 +51,13 @@
 (if (file-readable-p custom-file)
     (load custom-file))
 
-;;;;;;;;;;;;;;;;;;;
-;; time and date ;;
-;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;
+;; smex ;;
+;;;;;;;;;;
 
-(setq display-time-day-and-date 1)
-(display-time-mode 1)
+(setq smex-save-file (concat user-emacs-directory ".smex-items"))
+(smex-initialize)
+(global-set-key (kbd "M-x") 'smex)
 
 ;;;;;;;;;;;;;;;;
 ;; one-liners ;;
@@ -67,6 +68,64 @@
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 (setq bidi-display-reordering nil)
 (setq ispell-dictionary "en_GB")
+
+;;;;;;;;;;;;;;
+;; from ESK ;;
+;;;;;;;;;;;;;;
+
+(setq save-place t)
+(hl-line-mode t)
+
+(setq visible-bell t
+      inhibit-startup-message t
+      color-theme-is-global t
+      sentence-end-double-space nil
+      shift-select-mode nil
+      mouse-yank-at-point t
+      uniquify-buffer-name-style 'forward
+      whitespace-style '(face trailing lines-tail tabs)
+      whitespace-line-column 80
+      ediff-window-setup-function 'ediff-setup-windows-plain
+      save-place-file (concat user-emacs-directory "places")
+      backup-directory-alist `(("." . ,(concat user-emacs-directory "backups")))
+      diff-switches "-u")
+
+(add-to-list 'safe-local-variable-values '(lexical-binding . t))
+(add-to-list 'safe-local-variable-values '(whitespace-line-column . 80))
+
+;; Set this to whatever browser you use
+;; (setq browse-url-browser-function 'browse-url-firefox)
+;; (setq browse-url-browser-function 'browse-default-macosx-browser)
+;; (setq browse-url-browser-function 'browse-default-windows-browser)
+;; (setq browse-url-browser-function 'browse-default-kde)
+;; (setq browse-url-browser-function 'browse-default-epiphany)
+;; (setq browse-url-browser-function 'browse-default-w3m)
+;; (setq browse-url-browser-function 'browse-url-generic
+;;       browse-url-generic-program "~/src/conkeror/conkeror")
+
+;; Highlight matching parentheses when the point is on them.
+(show-paren-mode 1)
+
+;; ido-mode is like magic pixie dust!
+(ido-mode t)
+(ido-ubiquitous t)
+(setq ido-enable-prefix nil
+      ido-enable-flex-matching t
+      ido-auto-merge-work-directories-length nil
+      ido-create-new-buffer 'always
+      ido-use-filename-at-point 'guess
+      ido-use-virtual-buffers t
+      ido-handle-duplicate-virtual-buffers 2
+      ido-max-prospects 10)
+
+(set-default 'indent-tabs-mode nil)
+(set-default 'indicate-empty-lines t)
+(set-default 'imenu-auto-rescan t)
+
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
+(add-hook 'text-mode-hook 'turn-on-flyspell)
+
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 ;;;;;;;;;;
 ;; elpa ;;
@@ -82,30 +141,43 @@
   (interactive)
   (package-initialize)
   (package-refresh-contents)
-  (dolist (p '(starter-kit
-	       starter-kit-lisp
-	       starter-kit-eshell
-	       monokai-theme
-	       solarized-theme
-	       markdown-mode
-	       yaml-mode
-	       yasnippet
-               yasnippet-bundle
-               htmlize
-               magit
-               org
-	       ess
-	       auctex
+  (dolist (p '(monokai-theme solarized-theme
+	       markdown-mode yaml-mode
+	       yasnippet yasnippet-bundle
+               htmlize paredit smex ido-ubiquitous
+               magit org ess auctex
 	       gist))
     (when (not (package-installed-p p))
       (package-install p))))
 
-;;;;;;;;;;;
-;; theme ;;
-;;;;;;;;;;;
+;;;;;;;;;;;;;;;;
+;; appearance ;;
+;;;;;;;;;;;;;;;;
 
 (load-theme 'monokai t)
 (add-to-list 'default-frame-alist '(background-mode . dark))
+
+(dolist (mode '(menu-bar-mode tool-bar-mode scroll-bar-mode))
+  (when (fboundp mode) (funcall mode -1)))
+
+(when window-system
+  (setq frame-title-format '(buffer-file-name "%f" ("%b")))
+  (tooltip-mode -1)
+  (mouse-wheel-mode t)
+  (blink-cursor-mode -1))
+
+(setq display-time-day-and-date 1)
+(display-time-mode 1)
+
+;; pretty lambdas
+
+(add-hook 'prog-mode-hook
+          '(lambda ()
+             (font-lock-add-keywords
+              nil `(("(?\\(lambda\\>\\)"
+                     (0 (progn (compose-region (match-beginning 1) (match-end 1)
+                                               ,(make-char 'greek-iso8859-7 107))
+                               nil)))))))
 
 ;;;;;;;;;;;
 ;; faces ;;
@@ -178,6 +250,12 @@
 ;;;;;;;;;;;;
 
 (setq eshell-aliases-file "~/.dotfiles/eshell-alias")
+(global-set-key (kbd "C-c s") 'eshell)
+
+(setq eshell-cmpl-cycle-completions nil
+      eshell-save-history-on-exit t
+      eshell-buffer-shorthand t
+      eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'")
 
 (add-hook 'eshell-mode-hook
           '(lambda ()
@@ -196,10 +274,13 @@
                      (concat (user-login-name) "@" (host-name) " "
                              (base-name (eshell/pwd))
                              (if (= (user-uid) 0) " # " " $ "))))
-             ;; helpful modes
-             (turn-on-eldoc-mode)))
-
-(global-set-key (kbd "C-c s") 'eshell)
+             ;; helpful bits and pieces
+             (turn-on-eldoc-mode)
+             (add-to-list 'eshell-command-completions-alist
+                          '("gunzip" "gz\\'"))
+             (add-to-list 'eshell-command-completions-alist
+                          '("tar" "\\(\\.tar|\\.tgz\\|\\.tar\\.gz\\)\\'"))
+             (add-to-list 'eshell-visual-commands "ssh")))
 
 (defun base-name (path)
   "Returns the base name of the given path."
@@ -217,6 +298,12 @@
       (substring hostname
                  (string-match "^[^.]+" hostname)
                  (match-end 0)))))
+
+;;;;;;;;;;;
+;; elisp ;;
+;;;;;;;;;;;
+
+(add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
 
 ;;;;;;;;;;;
 ;; dired ;;
@@ -465,7 +552,6 @@ categories:
 
 (autoload 'extempore-mode (concat ben-home-dir "/Code/extempore/extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
-(add-hook 'extempore-mode-hook 'enable-paredit-mode)
 (setq extempore-tab-completion nil)
 
 ;; on cyril
@@ -477,6 +563,13 @@ categories:
 ;; paredit ;;
 ;;;;;;;;;;;;;
 
+(defface paredit-paren-face
+  '((((class color) (background dark))
+     (:foreground "grey50"))
+    (((class color) (background light))
+     (:foreground "grey55")))
+  "Face for parentheses.  Taken from ESK.")
+
 (add-hook 'paredit-mode-hook
           '(lambda ()
              (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-up)
@@ -487,6 +580,13 @@ categories:
              (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
              (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
              (define-key paredit-mode-map (kbd "<M-S-right>") 'transpose-sexps)))
+
+(dolist (mode '(scheme emacs-lisp lisp clojure clojurescript extempore))
+  (when (> (display-color-cells) 8)
+    (font-lock-add-keywords (intern (concat (symbol-name mode) "-mode"))
+                            '(("(\\|)" . 'paredit-paren-face))))
+  (add-hook (intern (concat (symbol-name mode) "-mode-hook"))
+            'paredit-mode))
 
 ;;;;;;;;;;;;;;
 ;; markdown ;;
@@ -537,9 +637,9 @@ categories:
                                                       ess-my-extra-R-function-keywords 'enc-paren) "\\>")
                                        'font-lock-function-name-face))))))
 
-;;;;;;;;;;;;;;;;;;;;;
-;; bits and pieces ;;
-;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;
+;; misc ;;
+;;;;;;;;;;
 
 (defun read-lines (fpath)
   "Return a list of lines of a file at at FPATH."
