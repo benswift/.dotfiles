@@ -125,6 +125,8 @@
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 
+(define-key lisp-mode-shared-map (kbd "RET") 'reindent-then-newline-and-indent)
+
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 ;;;;;;;;;;
