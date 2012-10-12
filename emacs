@@ -21,12 +21,12 @@
   (setq exec-path ben-path))
 
 (defun linux-specific-setup ()
-  (setq base-face-height 160)
+  (setq base-face-height 180)
   (setq ben-path '())
   (nix-specific-setup))
 
 (defun osx-specific-setup ()
-  (setq base-face-height 200)
+  (setq base-face-height 220)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
   (setq ben-path
 	'("/usr/local/Library/Contributions/examples"
@@ -34,7 +34,7 @@
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
- (setq base-face-height 160)
+ (setq base-face-height 180)
  (setq w32-pass-lwindow-to-system nil)
  (setq w32-lwindow-modifier 'super))
 
@@ -185,8 +185,8 @@
 ;; faces ;;
 ;;;;;;;;;;;
 
-(set-face-attribute 'default nil :height base-face-height :family "Inconsolata")
-(set-face-attribute 'variable-pitch nil :height base-face-height :family "Lucida Grande")
+(set-face-attribute 'default nil :height base-face-height :family "Ubuntu Mono")
+(set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
 
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
