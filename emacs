@@ -569,7 +569,7 @@ categories:
   (let ((base-path (concat "~/Code/xtm/sessions/" name "/")))
     (make-directory base-path)
     (dolist (fname '("setup" "practice" "gig"))
-      (save-buffer (find-file (concat base-path fname ".xtm")))))))
+      (save-buffer (find-file (concat base-path fname ".xtm"))))))
 
 ;;;;;;;;;;;;;
 ;; paredit ;;
