@@ -561,6 +561,16 @@ categories:
 (cond ((string-equal (system-name) "cyril.local")
        (setq extempore-path (concat ben-home-dir "/Code/extempore"))))
 
+;; session setup
+
+(defun ben-new-xtm-session (name)
+  "Set up the directory structure and files for a new extempore session/gig."
+  (interactive "sSession name: ")
+  (let ((base-path (concat "~/Code/xtm/sessions/" name "/")))
+    (make-directory base-path)
+    (dolist (fname '("setup" "practice" "gig"))
+      (save-buffer (find-file (concat base-path fname ".xtm")))))))
+
 ;;;;;;;;;;;;;
 ;; paredit ;;
 ;;;;;;;;;;;;;
