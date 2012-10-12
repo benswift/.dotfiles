@@ -411,7 +411,7 @@ categories:
              ;; faces
              (set-face-attribute 'erc-input-face nil :foreground nil :inherit font-lock-string-face)
              (set-face-attribute 'erc-my-nick-face nil :foreground nil :inherit font-lock-keyword-face)
-             (set-face-attribute 'erc-notice-face nil :foreground nil :inherit font-lock-warning-face)))
+             (set-face-attribute 'erc-notice-face nil :foreground nil :inherit font-lock-comment-face)))
 
 ;;;;;;;;;;;
 ;; LaTeX ;;
