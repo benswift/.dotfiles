@@ -196,12 +196,7 @@
 ;; handy shortcuts
 
 (global-set-key (kbd "<f5>") 'magit-status)
-(global-set-key (kbd "<f6>") '(lambda ()
-				(interactive)
-				(if (get-buffer "*compilation*")
-				    (switch-to-buffer "*compilation*")
-				  (call-interactively 'compile))))
-
+(global-set-key (kbd "<f6>") 'compile)
 (global-set-key (kbd "<S-s-return>") 'ns-toggle-fullscreen)
 (global-set-key (kbd "C-x u") 'find-grep)
 (global-set-key (kbd "C-c b") 'browse-url-at-point)
