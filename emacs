@@ -197,10 +197,10 @@
 
 (global-set-key (kbd "<f5>") 'magit-status)
 (global-set-key (kbd "<f6>") '(lambda ()
-                                (interactive)
-                                (if (get-buffer "*compilation*")
-                                    (switch-to-buffer "*compilation*")
-                                  (call-interactively 'compile))))
+				(interactive)
+				(if (get-buffer "*compilation*")
+				    (switch-to-buffer "*compilation*")
+				  (call-interactively 'compile))))
 
 (global-set-key (kbd "<S-s-return>") 'ns-toggle-fullscreen)
 (global-set-key (kbd "C-x u") 'find-grep)
@@ -208,45 +208,65 @@
 
 ;; window navigation
 
-(global-set-key (kbd "s-[") (lambda ()
-                              (interactive)
-                              (other-window -1)))
-(global-set-key (kbd "s-]") (lambda ()
-                              (interactive)
-                              (other-window 1)))
+(global-set-key (kbd "s-[")
+                (lambda ()
+                  (interactive)
+                  (other-window -1)))
+
+(global-set-key (kbd "s-]")
+                (lambda ()
+                  (interactive)
+                  (other-window 1)))
+
 (global-set-key (kbd "s-{") 'shrink-window-horizontally)
 (global-set-key (kbd "s-}") 'enlarge-window-horizontally)
 
 ;; Mac OS X-like
 
-(global-set-key (kbd "<s-left>") (lambda ()
-				   (interactive)
-				   (move-beginning-of-line 1)))
-(global-set-key (kbd "<s-right>") (lambda ()
-				    (interactive)
-				    (move-end-of-line 1)))
-(global-set-key (kbd "<s-up>") (lambda ()
-				 (interactive)
-				 (goto-char (point-min))))
-(global-set-key (kbd "<s-down>") (lambda ()
-                                   (interactive)
-                                   (goto-char (point-max))))
-(global-set-key (kbd "<M-kp-delete>") (lambda ()
-                                        (interactive)
-                                        (kill-word 1)))
-(global-set-key (kbd "<M-backspace>") (lambda ()
-                                        (interactive)
-                                        (backward-kill-word 1)))
-(global-set-key (kbd "<s-backspace>") (lambda ()
-                                        (interactive)
-                                        (kill-visual-line 0)))
-(global-set-key (kbd "<s-kp-delete>") (lambda ()
-                                        (interactive)
-                                        (kill-visual-line)))
+(global-set-key (kbd "<s-left>")
+                (lambda ()
+                  (interactive)
+                  (move-beginning-of-line 1)))
+
+(global-set-key (kbd "<s-right>")
+                (lambda ()
+                  (interactive)
+                  (move-end-of-line 1)))
+
+(global-set-key (kbd "<s-up>")
+                (lambda ()
+                  (interactive)
+                  (goto-char (point-min))))
+
+(global-set-key (kbd "<s-down>")
+                (lambda ()
+                  (interactive)
+                  (goto-char (point-max))))
+
+(global-set-key (kbd "<M-kp-delete>")
+                (lambda ()
+                  (interactive)
+                  (kill-word 1)))
+
+(global-set-key (kbd "<M-backspace>")
+                (lambda ()
+                  (interactive)
+                  (backward-kill-word 1)))
+
+(global-set-key (kbd "<s-backspace>")
+                (lambda ()
+                  (interactive)
+                  (kill-visual-line 0)))
+
+(global-set-key (kbd "<s-kp-delete>")
+                (lambda ()
+                  (interactive)
+                  (kill-visual-line)))
+
 (global-set-key (kbd "<A-backspace>")
-		     (lambda ()
-		       (interactive)
-		       (kill-visual-line 0)))
+                (lambda ()
+                  (interactive)
+                  (kill-visual-line 0)))
 
 ;;;;;;;;;;;;
 ;; eshell ;;
