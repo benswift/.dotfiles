@@ -34,9 +34,9 @@
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
- (setq base-face-height 180)
- (setq w32-pass-lwindow-to-system nil)
- (setq w32-lwindow-modifier 'super))
+  (setq base-face-height 180)
+  (setq w32-pass-lwindow-to-system nil)
+  (setq w32-lwindow-modifier 'super))
 
 (cond ((string-equal system-type "gnu/linux") (linux-specific-setup))
       ((string-equal system-type "darwin") (osx-specific-setup))
@@ -143,12 +143,21 @@
   (interactive)
   (package-initialize)
   (package-refresh-contents)
-  (dolist (p '(monokai-theme solarized-theme
-	       markdown-mode yaml-mode
-	       yasnippet yasnippet-bundle
-               htmlize paredit smex ido-ubiquitous
-               magit org ess auctex
-	       gist))
+  (dolist (p '(monokai-theme
+               solarized-theme
+               markdown-mode
+               yaml-mode
+               yasnippet
+               yasnippet-bundle
+               htmlize
+               paredit
+               smex
+               ido-ubiquitous
+               magit
+               org
+               ess
+               auctex
+               gist))
     (when (not (package-installed-p p))
       (package-install p))))
 
@@ -304,9 +313,9 @@
   "Returns the base name of the given path."
   (let ((path (abbreviate-file-name path)))
     (if (string-match "\\(.*\\)/\\(.*\\)$" path)
- (if (= 0 (length (match-string 1 path)))
-     (concat "/" (match-string 2 path))
-   (match-string 2 path))
+        (if (= 0 (length (match-string 1 path)))
+            (concat "/" (match-string 2 path))
+          (match-string 2 path))
       path)))
 
 (defun host-name ()
@@ -448,7 +457,7 @@ categories:
   (setq TeX-auto-save t) ; Enable parse on save.
   (setq TeX-view-program-selection '(output-pdf "Skim"))
   (add-to-list 'TeX-command-list
-                  '("Biber" "biber %s" TeX-run-Biber nil t :help "Run Biber"))
+               '("Biber" "biber %s" TeX-run-Biber nil t :help "Run Biber"))
   (add-to-list 'TeX-command-list
                '("Glossary" "makeglossaries %s" TeX-run-command nil t :help "Create glossaries"))
   (setq ispell-tex-skip-alists
@@ -681,9 +690,9 @@ categories:
     (split-string (buffer-string) "\n" t)))
 
 (defun what-face (pos)
-    (interactive "d")
-        (let ((face (or (get-char-property (point) 'read-face-name)
-            (get-char-property (point) 'face))))
+  (interactive "d")
+  (let ((face (or (get-char-property (point) 'read-face-name)
+                  (get-char-property (point) 'face))))
     (if face (message "Face: %s" face) (message "No face at %d" pos))))
 
 ;; from http://www.emacswiki.org/emacs/CommentingCode
@@ -692,11 +701,11 @@ categories:
 If no region is selected and current line is not blank and we are not at the end of the line,
 then comment current line.
 Replaces default behaviour of `comment-dwim', when it inserts comment at the end of the line."
-    (interactive "*P")
-    (comment-normalize-vars)
-    (if (and (not (region-active-p)) (not (looking-at "[ \t]*$")))
-        (comment-or-uncomment-region (line-beginning-position) (line-end-position))
-      (comment-dwim arg)))
+  (interactive "*P")
+  (comment-normalize-vars)
+  (if (and (not (region-active-p)) (not (looking-at "[ \t]*$")))
+      (comment-or-uncomment-region (line-beginning-position) (line-end-position))
+    (comment-dwim arg)))
 
 (global-set-key (kbd "s-'") 'comment-dwim-line)
 
