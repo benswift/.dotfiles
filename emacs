@@ -26,7 +26,7 @@
   (nix-specific-setup))
 
 (defun osx-specific-setup ()
-  (setq base-face-height 220)
+  (setq base-face-height 200)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
   (setq ben-path
 	'("/usr/local/Library/Contributions/examples"
@@ -187,6 +187,7 @@
 
 (set-face-attribute 'default nil :height base-face-height :family "Ubuntu Mono")
 (set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
+(set-face-attribute 'highlight nil :background "#141411")
 
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
@@ -318,6 +319,11 @@
 ;;;;;;;;;;;
 
 (setq magit-save-some-buffers nil)
+
+(eval-after-load 'magit
+  '(progn
+     (set-face-foreground 'magit-diff-add "green4")
+     (set-face-foreground 'magit-diff-del "red3")))
 
 ;;;;;;;;;;;;;
 ;; cc-mode ;;
