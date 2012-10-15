@@ -598,7 +598,7 @@ categories:
   (interactive "sSession name: ")
   (let ((base-path (concat "~/Code/xtm/sessions/" name "/")))
     (make-directory base-path)
-    (dolist (fname '("setup" "practice" "gig"))
+    (dolist (fname '("practice" "gig" "setup"))
       (save-buffer (find-file (concat base-path fname ".xtm"))))))
 
 ;;;;;;;;;;;;;
