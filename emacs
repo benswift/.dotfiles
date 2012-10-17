@@ -596,10 +596,21 @@ categories:
 (defun ben-new-xtm-session (name)
   "Set up the directory structure and files for a new extempore session/gig."
   (interactive "sSession name: ")
-  (let ((base-path (concat "~/Code/xtm/sessions/" name "/")))
+  (let ((base-path (concat ben-home-dir "/Code/xtm/sessions/" name "/")))
     (make-directory base-path)
-    (dolist (fname '("practice" "gig" "setup"))
-      (save-buffer (find-file (concat base-path fname ".xtm"))))))
+    ;; practice
+    (find-file (concat base-path "practice.xtm"))
+    (insert (concat "(load \"" base-path "setup.xtm\")\n"))
+    (save-buffer)
+    ;; gig
+    (save-buffer (find-file (concat base-path "gig.xtm")))
+    (insert (concat "(load \"" base-path "setup.xtm\")\n"))
+    (save-buffer)
+    ;; setup
+    (find-file (concat base-path "setup" ".xtm"))
+    (insert "(load \"libs/core/audio_dsp.xtm\")\n")
+    (insert (concat "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"))
+    (save-buffer)))
 
 ;;;;;;;;;;;;;
 ;; paredit ;;
