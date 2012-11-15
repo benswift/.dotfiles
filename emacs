@@ -492,6 +492,7 @@ categories:
 
 (defun ben-reftex-setup ()
   (turn-on-reftex)
+  (setq reftex-default-bibliography '("papers.bib"))
   (setq reftex-enable-partial-scans t)
   (setq reftex-save-parse-info t)
   (setq reftex-use-multiple-selection-buffers t)
