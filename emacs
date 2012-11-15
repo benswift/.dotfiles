@@ -583,14 +583,10 @@ categories:
 ;; extempore ;;
 ;;;;;;;;;;;;;;;
 
-(autoload 'extempore-mode (concat ben-home-dir "/Code/extempore/extras/extempore.el") "" t)
+(setq extempore-path (concat ben-home-dir "/Code/extempore"))
+(autoload 'extempore-mode (concat extempore-path "/extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (setq extempore-tab-completion nil)
-
-;; on cyril
-
-(cond ((string-equal (system-name) "cyril.local")
-       (setq extempore-path (concat ben-home-dir "/Code/extempore"))))
 
 ;; session setup
 
