@@ -2,6 +2,36 @@
 ;: ben swift's .emacs ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; dotfiles repo: https://github.com/benswift/.dotfiles
+
+;;;;;;;;;;
+;; elpa ;;
+;;;;;;;;;;
+
+(setq package-archives
+      '(("gnu" . "http://elpa.gnu.org/packages/")
+	("marmalade" . "http://marmalade-repo.org/packages/")
+        ("melpa" . "http://melpa.milkbox.net/packages/")))
+
+(package-refresh-contents)
+(dolist (p '(monokai-theme
+             solarized-theme
+             markdown-mode
+             yaml-mode
+             yasnippet
+             yasnippet-bundle
+             htmlize
+             paredit
+             smex
+             ido-ubiquitous
+             magit
+             org
+             ess
+             auctex
+             gist))
+  (when (not (package-installed-p p))
+    (package-install p)))
+
 (package-initialize)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -128,38 +158,6 @@
 (define-key lisp-mode-shared-map (kbd "RET") 'reindent-then-newline-and-indent)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
-
-;;;;;;;;;;
-;; elpa ;;
-;;;;;;;;;;
-
-(setq package-archives
-      '(("gnu" . "http://elpa.gnu.org/packages/")
-	("marmalade" . "http://marmalade-repo.org/packages/")
-        ("melpa" . "http://melpa.milkbox.net/packages/")))
-
-(defun ben-install-packages ()
-  "Install some handy packages from marmalade."
-  (interactive)
-  (package-initialize)
-  (package-refresh-contents)
-  (dolist (p '(monokai-theme
-               solarized-theme
-               markdown-mode
-               yaml-mode
-               yasnippet
-               yasnippet-bundle
-               htmlize
-               paredit
-               smex
-               ido-ubiquitous
-               magit
-               org
-               ess
-               auctex
-               gist))
-    (when (not (package-installed-p p))
-      (package-install p))))
 
 ;;;;;;;;;;;;;;;;
 ;; appearance ;;
