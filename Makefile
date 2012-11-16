@@ -1,7 +1,7 @@
 DOTFILES_DIR=$(shell pwd)
 
 nix:
-	ln -sf $(DOTFILES_DIR)/zshrc ~/.zshrc
+	ln -sf $(DOTFILES_DIR)/profile ~/.profile
 	ln -sf $(DOTFILES_DIR)/exports ~/.exports
 	ln -sf $(DOTFILES_DIR)/aliases ~/.aliases
 
