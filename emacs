@@ -8,12 +8,16 @@
 ;; elpa ;;
 ;;;;;;;;;;
 
+(require 'package)
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
 	("marmalade" . "http://marmalade-repo.org/packages/")
         ("melpa" . "http://melpa.milkbox.net/packages/")))
+(package-initialize)
 
-(package-refresh-contents)
+(when (null package-archive-contents)
+  (package-refresh-contents))
+
 (dolist (p '(monokai-theme
              solarized-theme
              markdown-mode
@@ -29,10 +33,8 @@
              ess
              auctex
              gist))
-  (when (not (package-installed-p p))
-    (package-install p)))
-
-(package-initialize)
+  (if (not (package-installed-p p))
+      (package-install p)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cross-platform setup ;;
