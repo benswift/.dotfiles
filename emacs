@@ -40,8 +40,9 @@
 ;; cross-platform setup ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(setq ben-home-dir (getenv "HOME"))
+
 (defun nix-specific-setup ()
-  (setq ben-home-dir (substitute-in-file-name "$HOME"))
   (setq ben-path (append (list
 			  (concat ben-home-dir  "/.rbenv/shims")
 			  (concat ben-home-dir  "/bin")
@@ -66,7 +67,6 @@
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
-  (setq ben-home-dir (getenv "HOME"))
   (setq base-face-height 180)
   (setq w32-pass-lwindow-to-system nil)
   (setq w32-lwindow-modifier 'super))
