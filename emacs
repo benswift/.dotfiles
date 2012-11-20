@@ -66,6 +66,7 @@
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
+  (setq ben-home-dir (getenv "HOME"))
   (setq base-face-height 180)
   (setq w32-pass-lwindow-to-system nil)
   (setq w32-lwindow-modifier 'super))
