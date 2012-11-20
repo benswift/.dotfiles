@@ -227,6 +227,8 @@
 
 ;; Mac OS X-like
 
+(global-set-key (kbd "s-z") 'undo)
+
 (global-set-key (kbd "<s-left>")
                 (lambda ()
                   (interactive)
