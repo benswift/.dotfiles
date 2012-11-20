@@ -67,7 +67,7 @@
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
-  (setq base-face-height 180)
+  (setq base-face-height 160)
   (setq w32-pass-lwindow-to-system nil)
   (setq w32-lwindow-modifier 'super))
 
