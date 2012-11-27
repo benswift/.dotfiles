@@ -5,5 +5,5 @@
 (cond ((= chan 0.0)
        ${1:out})
       ((= chan 1.0)
-       $1)
+       ${1:$(replace-regexp-in-string "l\\\\>" "r" text)})
       (else 0.0))
