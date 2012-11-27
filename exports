@@ -7,6 +7,10 @@ export EDITOR="emacs"
 # don't clear the screen after quitting a manual page
 export MANPAGER="less -X"
 
+# for debian packaging
+export DEBEMAIL="benjamin.j.swift@gmail.com"
+export DEBFULLNAME="Ben Swift"
+
 # set up rbenv
 rbenv rehash 2>/dev/null
 rbenv() {
