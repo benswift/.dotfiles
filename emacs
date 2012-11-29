@@ -54,7 +54,7 @@
   (setq exec-path ben-path))
 
 (defun linux-specific-setup ()
-  (setq base-face-height 160)
+  (setq base-face-height 140)
   (setq ben-path '())
   (nix-specific-setup))
 
