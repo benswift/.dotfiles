@@ -704,6 +704,14 @@ categories:
         '("\\.ttl" . ttl-mode))
        auto-mode-alist))
 
+;;;;;;;;;;;;;;
+;; lilypond ;;
+;;;;;;;;;;;;;;
+
+(autoload 'LilyPond-mode "lilypond-mode")
+(add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
+(add-hook 'LilyPond-mode-hook 'turn-on-font-lock)
+
 ;;;;;;;;;;
 ;; misc ;;
 ;;;;;;;;;;
