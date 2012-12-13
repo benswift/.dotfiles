@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: create-instrument
+# key: cinst
+# --
+(define-instrument ${1:inst} $1_note_c $1_fx)
+
+($1.attack 200.0)
+($1.decay 200.0)
+($1.release 1000.0)
+($1.sustain 0.6)
