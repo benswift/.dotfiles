@@ -18,21 +18,24 @@
 (when (null package-archive-contents)
   (package-refresh-contents))
 
-(dolist (p '(monokai-theme
-             solarized-theme
+(dolist (p '(auctex
+             ess
+             gist
+             htmlize
+             ido-ubiquitous
+             iedit
+             magit
              markdown-mode
+             monokai-theme
+             org
+             paredit
+             scss-mode
+             smex
+             ttl-mode
+             unfill
              yaml-mode
              yasnippet
-             yasnippet-bundle
-             htmlize
-             paredit
-             smex
-             ido-ubiquitous
-             magit
-             org
-             ess
-             auctex
-             gist))
+             yasnippet-bundle))
   (if (not (package-installed-p p))
       (package-install p)))
 
@@ -706,6 +709,14 @@ categories:
 (autoload 'LilyPond-mode "lilypond-mode")
 (add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
 (add-hook 'LilyPond-mode-hook 'turn-on-font-lock)
+
+;;;;;;;;;
+;; abc ;;
+;;;;;;;;;
+
+(add-to-list 'auto-mode-alist '("\\.abc\\'"  . abc-mode))
+(add-to-list 'auto-mode-alist '("\\.abp\\'"  . abc-mode))
+(autoload 'abc-mode "abc-mode" "abc music files" t)
 
 ;;;;;;;;;;
 ;; misc ;;
