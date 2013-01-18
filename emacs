@@ -4,6 +4,12 @@
 
 ;; dotfiles repo: https://github.com/benswift/.dotfiles
 
+;;;;;;;;;;;;;;;;;;
+;; emacs server ;;
+;;;;;;;;;;;;;;;;;;
+
+(server-start)
+
 ;;;;;;;;;;
 ;; elpa ;;
 ;;;;;;;;;;
