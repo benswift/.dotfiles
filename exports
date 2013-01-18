@@ -26,3 +26,7 @@ rbenv() {
     command rbenv "$command" "$@";;
   esac
 }
+
+# Local Variables:
+# major-mode: sh-mode
+# End:
