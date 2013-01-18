@@ -28,5 +28,5 @@ rbenv() {
 }
 
 # Local Variables:
-# major-mode: sh-mode
+# mode: sh
 # End:

@@ -50,3 +50,7 @@ brew install x264
 brew install xvid
 brew install xz
 brew install youtube-dl
+
+# Local Variables:
+# mode: sh
+# End:

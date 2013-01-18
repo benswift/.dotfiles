@@ -38,3 +38,7 @@ dump.function.names <- function(){
               row.names=FALSE,
               col.names=FALSE)
 }
+
+# Local Variables:
+# mode: R
+# End:
