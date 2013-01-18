@@ -2,7 +2,7 @@
 export PATH="/Users/ben/.rbenv/shims:/Users/ben/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin"
 
 # make emacs the default editor
-export EDITOR="emacs"
+export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 
 # don't clear the screen after quitting a manual page
 export MANPAGER="less -X"
