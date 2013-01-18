@@ -298,6 +298,8 @@
 
 (add-hook 'eshell-mode-hook
           '(lambda ()
+             ;; environment vars
+             (setenv "EDITOR" "export EDITOR=\"emacsclient --alternate-editor=emacs --no-wait\"")
              ;; keybindings
              (define-key eshell-mode-map (kbd "<C-up>") 'eshell-previous-matching-input-from-input)
              (define-key eshell-mode-map (kbd "<C-down>") 'eshell-next-matching-input-from-input)
