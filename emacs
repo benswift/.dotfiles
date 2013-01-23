@@ -105,6 +105,7 @@
 ;; one-liners ;;
 ;;;;;;;;;;;;;;;;
 
+(column-number-mode 1)
 (global-auto-revert-mode t)
 (setq special-display-regexps nil)
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
