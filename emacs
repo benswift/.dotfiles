@@ -465,6 +465,7 @@ categories:
 (add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
 
 (defun ben-latex-setup ()
+  (setq TeX-master 't)
   (setq TeX-engine 'xetex)
   (setq TeX-PDF-mode t)
   (setq TeX-auto-untabify t)
