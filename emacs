@@ -370,6 +370,16 @@
 
 (setq c-default-style "k&r")
 
+;;;;;;;;;;;;;
+;; ebrowse ;;
+;;;;;;;;;;;;;
+
+(add-hook 'ebrowse-tree-mode
+          '(lambda ()
+             (set-face-attribute 'ebrowse-root-class nil :foreground nil :inherit font-lock-type-face)
+             (set-face-attribute 'ebrowse-member-class nil :foreground nil :inherit font-lock-function-name-face)
+             (set-face-attribute 'ebrowse-member-attribute nil :foreground nil :inherit font-lock-string-face)))
+
 ;;;;;;;;;;;;;;
 ;; org mode ;;
 ;;;;;;;;;;;;;;
