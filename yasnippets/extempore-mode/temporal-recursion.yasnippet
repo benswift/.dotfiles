@@ -5,6 +5,6 @@
 (define ${1:fun-name}
   (lambda (beat dur$2)
     $0
-    (callback (*metro* (+ beat (* .5 dur))) '$1 (+ beat dur) dur$2)))
+    (callback (*metro* (+ beat (* .5 ${3:dur}))) '$1 (+ beat $3) dur$2)))
 
-($1 (*metro* 'get-beat 4) ${3:1/4})
+($1 (*metro* 'get-beat 4) ${4:1/4})
