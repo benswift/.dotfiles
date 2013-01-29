@@ -10,3 +10,10 @@
 (bind-func $1_fx
   (lambda (in:double time:double chan:double dat:double*)
     ))
+
+(define-instrument $1 $1_note_c $1_fx)
+
+($1.attack 200.0)
+($1.decay 200.0)
+($1.release 1000.0)
+($1.sustain 0.6)
