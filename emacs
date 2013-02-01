@@ -623,11 +623,11 @@ categories:
     (make-directory base-path)
     ;; practice
     (find-file (concat base-path "practice.xtm"))
-    (insert (concat "(load \"" base-path "setup.xtm\")\n"))
+    (insert (concat "(ipc:new \"music\" 7095)\n(ipc:load \"music\" \"" base-path "setup.xtm\")\n"))
     (save-buffer)
     ;; gig
     (save-buffer (find-file (concat base-path "gig.xtm")))
-    (insert (concat "(load \"" base-path "setup.xtm\")\n"))
+    (insert (concat "(ipc:new \"music\" 7095)\n(ipc:load \"music\" \"" base-path "setup.xtm\")\n"))
     (save-buffer)
     ;; setup
     (find-file (concat base-path "setup" ".xtm"))
