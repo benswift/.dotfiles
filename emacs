@@ -614,6 +614,12 @@ categories:
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (setq extempore-tab-completion nil)
 
+(add-hook 'extempore-mode-hook
+          '(lambda ()
+             (turn-on-eldoc-mode)
+             (setq eldoc-documentation-function
+                   'extempore-eldoc-documentation-function)))
+
 ;; session setup
 
 (defun ben-new-xtm-session (name)
