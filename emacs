@@ -220,6 +220,7 @@
 (global-set-key (kbd "<S-s-return>") 'ns-toggle-fullscreen)
 (global-set-key (kbd "C-x u") 'find-grep)
 (global-set-key (kbd "C-c b") 'browse-url-at-point)
+(global-set-key (kbd "C-x i") 'imenu)
 
 ;; window navigation
 
