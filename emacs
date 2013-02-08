@@ -4,11 +4,46 @@
 
 ;; dotfiles repo: https://github.com/benswift/.dotfiles
 
-;;;;;;;;;;;;;;;;;;
-;; emacs server ;;
-;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;
+;; cedet ;;
+;;;;;;;;;;;
 
-(server-start)
+;; Load CEDET.
+;; See cedet/common/cedet.info for configuration details.
+;; IMPORTANT: For Emacs >= 23.2, you must place this *before* any
+;; CEDET component (including EIEIO) gets activated by another
+;; package (Gnus, auth-source, ...).
+(load-file "~/.emacs.d/cedet/cedet-devel-load.el")
+
+;; Add further minor-modes to be enabled by semantic-mode.
+;; See doc-string of `semantic-default-submodes' for other things
+;; you can use here.
+(add-to-list 'semantic-default-submodes 'global-semantic-idle-summary-mode t)
+(add-to-list 'semantic-default-submodes 'global-semantic-idle-completions-mode t)
+
+;; Enable Semantic
+(semantic-mode 1)
+
+(require 'semantic/bovine/clang)
+
+(add-hook 'c-mode-common-hook
+          '(lambda ()
+             (local-set-key [(control return)] 'semantic-ia-complete-symbol)
+             (local-set-key "\C-c?" 'semantic-ia-complete-symbol-menu)
+             (local-set-key "\C-c>" 'semantic-complete-analyze-inline)
+             (local-set-key "\C-cp" 'semantic-analyze-proto-impl-toggle)
+             (local-set-key "." 'semantic-complete-self-insert)
+             (local-set-key ">" 'semantic-complete-self-insert)))
+
+;; Enable EDE (Project Management) features
+(global-ede-mode 1)
+
+(ede-cpp-root-project "Extempore"
+                :name "Extempore"
+                :file "~/Code/extempore/README.md"
+                :web-site-url "http://extempore.moso.com.au"
+                ;; :spp-table '(("isUnix" . ""))
+                )
 
 ;;;;;;;;;;
 ;; elpa ;;
@@ -795,3 +830,9 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
         (yank)))))
 
 (global-set-key (kbd "C-c d") 'duplicate-line)
+
+;;;;;;;;;;;;;;;;;;
+;; emacs server ;;
+;;;;;;;;;;;;;;;;;;
+
+(server-start)
