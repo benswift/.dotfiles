@@ -146,6 +146,7 @@
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 (setq bidi-display-reordering nil)
 (setq ispell-dictionary "en_GB")
+(setq recentf-max-saved-items 100)
 
 ;;;;;;;;;;;;;;
 ;; from ESK ;;
