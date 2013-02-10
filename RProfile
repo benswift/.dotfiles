@@ -20,24 +20,24 @@ print.size.in.mb <- function(obj) {
   print(object.size(obj), units="Mb")
 }
 
-dump.function.names <- function(){
-  obj.names <- do.call("c",
-                       sapply(c("package:base",
-                                "package:stats",
-                                "package:utils",
-                                "package:plyr",
-                                "package:ggplot2",
-                                "package:reshape2",
-                                "package:randomForest"),
-                              objects,
-                              all.names=TRUE))
-  obj.names <- obj.names[-grep("(^[^.[:alpha:][:digit:]]|<-|__)", obj.names)] # to remove "weird" functions
-  write.table(obj.names,
-              "~/.emacs.d/R-function-names.txt",
-              quote=FALSE,
-              row.names=FALSE,
-              col.names=FALSE)
-}
+## dump.function.names <- function(){
+##   obj.names <- do.call("c",
+##                        sapply(c("package:base",
+##                                 "package:stats",
+##                                 "package:utils",
+##                                 "package:plyr",
+##                                 "package:ggplot2",
+##                                 "package:reshape2",
+##                                 "package:randomForest"),
+##                               objects,
+##                               all.names=TRUE))
+##   obj.names <- obj.names[-grep("(^[^.[:alpha:][:digit:]]|<-|__)", obj.names)] # to remove "weird" functions
+##   write.table(obj.names,
+##               "~/.emacs.d/R-function-names.txt",
+##               quote=FALSE,
+##               row.names=FALSE,
+##               col.names=FALSE)
+## }
 
 # Local Variables:
 # mode: R
