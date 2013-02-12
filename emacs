@@ -8,6 +8,10 @@
 ;; cedet ;;
 ;;;;;;;;;;;
 
+;; On Windows (where there's no make), you can install CEDET by cdíng
+;; into the directory and running (e.g.)
+;; "C:\Program Files (x86)\emacs-24.2\bin\emacs" emacs -Q -l cedet-build.el -f cedet-build
+
 ;; Load CEDET.
 ;; See cedet/common/cedet.info for configuration details.
 ;; IMPORTANT: For Emacs >= 23.2, you must place this *before* any
