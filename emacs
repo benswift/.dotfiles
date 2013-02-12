@@ -32,10 +32,11 @@
 
 (add-hook 'c-mode-common-hook
           '(lambda ()
-             (local-set-key [(control return)] 'semantic-ia-complete-symbol)
-             (local-set-key "\C-c?" 'semantic-ia-complete-symbol-menu)
-             (local-set-key "\C-c>" 'semantic-complete-analyze-inline)
-             (local-set-key "\C-cp" 'semantic-analyze-proto-impl-toggle)
+	     (local-set-key (kbd "C-<return>") 'semantic-ia-complete-symbol)
+	     (local-set-key (kbd "C-c ?") 'semantic-ia-complete-symbol-menu)
+	     (local-set-key (kbd "C-c >") 'semantic-complete-analyze-inline)
+	     (local-set-key (kbd "C-c p") 'semantic-analyze-proto-impl-toggle)
+	     (local-set-key (kbd "C-c j") 'semantic-ia-fast-jump)
              (local-set-key "." 'semantic-complete-self-insert)
              (local-set-key ">" 'semantic-complete-self-insert)))
 
@@ -46,8 +47,7 @@
                 :name "Extempore"
                 :file "~/Code/extempore/README.md"
                 :web-site-url "http://extempore.moso.com.au"
-                ;; :spp-table '(("isUnix" . ""))
-                )
+		:spp-table '(("TARGET_OS_MAC" . "")))
 
 ;;;;;;;;;;
 ;; elpa ;;
@@ -409,7 +409,7 @@
 ;; cc-mode ;;
 ;;;;;;;;;;;;;
 
-(setq c-default-style "k&r")
+;; (setq c-default-style "k&r")
 
 ;;;;;;;;;;;;;
 ;; ebrowse ;;
