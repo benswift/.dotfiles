@@ -662,6 +662,10 @@ categories:
              (setq eldoc-documentation-function
                    'extempore-eldoc-documentation-function)))
 
+;; syntax highlighting for LLVM IR files
+(load-file (concat extempore-path "/extras/llvm-mode.el"))
+(add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode))
+
 ;; session setup
 
 (defun ben-new-xtm-session (name)
