@@ -249,6 +249,10 @@
 (set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
 (set-face-attribute 'highlight nil :background "#141411")
 
+;; ANSI color escape codes for dark background
+
+(setq ansi-color-names-vector ["#595959" "#AE81FF" "A6E22A" "#E6DB74" "#89BDFF" "#F92672" "#A6E22E" "white"])
+
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
 ;;;;;;;;;;;;;;;;;
