@@ -249,9 +249,19 @@
 (set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
 (set-face-attribute 'highlight nil :background "#141411")
 
-;; ANSI color escape codes for dark background
+;; ANSI colors in terminal (based on monokai theme)
 
-(setq ansi-color-names-vector ["#595959" "#AE81FF" "A6E22A" "#E6DB74" "#89BDFF" "#F92672" "#A6E22E" "white"])
+(defun ben-set-monokai-term-colors ()
+  (set-face-attribute 'term-color-black nil :background "#141411" :foreground "#141411")
+  (set-face-attribute 'term-color-blue nil :background "#89BDFF" :foreground "#89BDFF")
+  (set-face-attribute 'term-color-cyan nil :background "#A6E22E" :foreground "#A6E22E")
+  (set-face-attribute 'term-color-green nil :background "#A6E22A" :foreground "#A6E22A")
+  (set-face-attribute 'term-color-magenta nil :background "#FD5FF1" :foreground "#FD5FF1")
+  (set-face-attribute 'term-color-red nil :background "#F92672" :foreground "#F92672")
+  (set-face-attribute 'term-color-white nil :background "#595959" :foreground "#595959")
+  (set-face-attribute 'term-color-yellow nil :background "#E6DB74" :foreground "#E6DB74"))
+
+(add-hook 'term-hook 'ben-set-monokai-term-colors)
 
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
@@ -354,6 +364,7 @@
              (define-key eshell-mode-map (kbd "<down>") 'next-line)
              ;;faces
              (set-face-attribute 'eshell-prompt nil :foreground nil :inherit font-lock-function-name-face)
+             (ben-set-monokai-term-colors)
              ;; prompt helpers
              (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
              (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
