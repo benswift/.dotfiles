@@ -353,7 +353,21 @@
       eshell-buffer-shorthand t
       eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'")
 
-(add-hook 'eshell-mode-hook
+(defun ben-set-eshell-faces ()
+  (set-face-attribute 'eshell-ls-archive nil :foreground nil :inherit 'font-lock-warning-face)
+  (set-face-attribute 'eshell-ls-backup nil :foreground nil :inherit 'font-lock-constant-face)
+  (set-face-attribute 'eshell-ls-clutter nil :foreground nil :inherit 'font-lock-comment-face)
+  (set-face-attribute 'eshell-ls-directory nil :foreground nil :inherit 'font-lock-type-face)
+  (set-face-attribute 'eshell-ls-executable nil :foreground nil :inherit 'font-lock-function-name-face)
+  (set-face-attribute 'eshell-ls-missing nil :foreground nil :inherit 'font-lock-warning-face)
+  (set-face-attribute 'eshell-ls-product nil :foreground nil :inherit 'font-lock-comment-face)
+  (set-face-attribute 'eshell-ls-readonly nil :foreground nil :inherit 'font-lock-string-face)
+  (set-face-attribute 'eshell-ls-special nil :foreground nil :inherit 'font-lock-keyword-face)
+  (set-face-attribute 'eshell-ls-symlink nil :foreground nil :inherit 'font-lock-string-face)
+  (set-face-attribute 'eshell-ls-unreadable nil :foreground nil :inherit 'font-lock-comment-face))
+
+(add-hook '
+ eshell-mode-hook
           '(lambda ()
              ;; environment vars
              (setenv "EDITOR" "export EDITOR=\"emacsclient --alternate-editor=emacs --no-wait\"")
@@ -364,7 +378,7 @@
              (define-key eshell-mode-map (kbd "<down>") 'next-line)
              ;;faces
              (set-face-attribute 'eshell-prompt nil :foreground nil :inherit font-lock-function-name-face)
-             (ben-set-monokai-term-colors)
+             (ben-set-eshell-faces)
              ;; prompt helpers
              (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
              (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
