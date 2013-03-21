@@ -3,7 +3,7 @@
 # key: dinst
 # --
 (bind-func ${1:name}_note_c
-  (lambda ()
+  (lambda (nargs:i64 dargs:double*)
     (lambda (time:double chan:double freq:double amp:double)
       $0)))
 
