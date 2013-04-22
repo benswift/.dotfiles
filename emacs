@@ -852,7 +852,7 @@ categories:
 ;; R ;;
 ;;;;;;;
 
-(require 'ess-site)
+;; (require 'ess-site)
 
 (add-hook 'ess-mode-hook
           '(lambda()
