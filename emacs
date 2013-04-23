@@ -775,11 +775,17 @@ categories:
   (let ((base-path (concat ben-home-dir "/Code/xtm/sessions/" name "/")))
     (make-directory base-path)
     ;; practice
-    (find-file (concat base-path "practice.xtm"))
+    (find-file (concat base-path "practice-scm.xtm"))
+    (insert (concat "(ipc:load \"primary\" \"" base-path "setup.xtm\")\n"))
+    (save-buffer)
+    (find-file (concat base-path "practice-xtlang.xtm"))
     (insert (concat "(load \"" base-path "setup.xtm\")\n"))
     (save-buffer)
     ;; gig
-    (save-buffer (find-file (concat base-path "gig.xtm")))
+    (save-buffer (find-file (concat base-path "gig-scm.xtm")))
+    (insert (concat "(ipc:load \"primary\" \"" base-path "setup.xtm\")\n"))
+    (save-buffer)
+    (save-buffer (find-file (concat base-path "gig-xtlang.xtm")))
     (insert (concat "(load \"" base-path "setup.xtm\")\n"))
     (save-buffer)
     ;; setup
