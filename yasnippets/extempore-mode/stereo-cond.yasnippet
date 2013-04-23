@@ -2,8 +2,8 @@
 # name: stereo-cond
 # key: scond
 # --
-(cond ((= chan 0.0)
+(cond ((< chan 0.5)
        ${1:out})
-      ((= chan 1.0)
+      ((< chan 1.5)
        ${1:$(replace-regexp-in-string "l\\\\>" "r" text)})
       (else 0.0))
