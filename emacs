@@ -774,21 +774,23 @@ categories:
   (interactive "sSession name: ")
   (let ((base-path (concat ben-home-dir "/Code/xtm/sessions/" name "/")))
     (make-directory base-path)
-    ;; practice
+    ;; practice files
     (find-file (concat base-path "practice-scm.xtm"))
+    (insert ";-*- mode: Extempore; extempore-default-port: 7098; -*-\n")
     (insert (concat "(ipc:load \"primary\" \"" base-path "setup.xtm\")\n"))
-    (save-buffer)
+    (insert (concat "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"))    (save-buffer)
     (find-file (concat base-path "practice-xtlang.xtm"))
     (insert (concat "(load \"" base-path "setup.xtm\")\n"))
     (save-buffer)
-    ;; gig
+    ;; gig files
     (save-buffer (find-file (concat base-path "gig-scm.xtm")))
+    (insert ";-*- mode: Extempore; extempore-default-port: 7098; -*-\n")
     (insert (concat "(ipc:load \"primary\" \"" base-path "setup.xtm\")\n"))
-    (save-buffer)
+    (insert (concat "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"))    (save-buffer)
     (save-buffer (find-file (concat base-path "gig-xtlang.xtm")))
     (insert (concat "(load \"" base-path "setup.xtm\")\n"))
     (save-buffer)
-    ;; setup
+    ;; setup file
     (find-file (concat base-path "setup" ".xtm"))
     (insert "(load \"libs/core/audio_dsp.xtm\")\n")
     (insert (concat "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"))
