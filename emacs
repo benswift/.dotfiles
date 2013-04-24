@@ -283,6 +283,7 @@
                                                  face1 'l))
 
                                 (powerline-major-mode face1 'l)
+                                (powerline-raw " " face1)
                                 (powerline-process face1)
                                 ;; (powerline-minor-modes face1 'l)
                                 ;; (powerline-narrow face1 'l)
