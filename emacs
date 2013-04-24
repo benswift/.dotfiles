@@ -755,6 +755,7 @@ categories:
 (autoload 'extempore-mode (concat extempore-path "/extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (setq extempore-tab-completion nil)
+(setq extempore-eldoc-active t)
 
 (add-hook 'extempore-mode-hook
           '(lambda ()
