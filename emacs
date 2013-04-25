@@ -27,6 +27,7 @@
 
 ;; Enable Semantic
 (semantic-mode 1)
+(semanticdb-enable-cscope-databases)
 
 (require 'semantic/bovine/clang)
 
