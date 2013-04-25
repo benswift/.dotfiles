@@ -859,7 +859,7 @@ categories:
 
 (require 'auto-complete-config)
 
-(ac-set-trigger-key "<tab>")
+;; (ac-set-trigger-key "<tab>")
 (add-to-list 'ac-dictionary-directories (concat ben-home-dir "/.emacs.d/ac-dict"))
 (setq ac-auto-start 2)
 (ac-config-default)
