@@ -28,6 +28,7 @@
 ;; Enable Semantic
 (semantic-mode 1)
 (semanticdb-enable-cscope-databases)
+(setq semantic-imenu-bucketize-file nil)
 
 (require 'semantic/bovine/clang)
 
