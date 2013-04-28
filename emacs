@@ -34,11 +34,11 @@
 
 (add-hook 'c-mode-common-hook
           '(lambda ()
-	     (local-set-key (kbd "C-<return>") 'semantic-ia-complete-symbol)
-	     (local-set-key (kbd "C-c ?") 'semantic-ia-complete-symbol-menu)
-	     (local-set-key (kbd "C-c >") 'semantic-complete-analyze-inline)
-	     (local-set-key (kbd "C-c p") 'semantic-analyze-proto-impl-toggle)
-	     (local-set-key (kbd "C-c j") 'semantic-ia-fast-jump)
+             (local-set-key (kbd "C-<return>") 'semantic-ia-complete-symbol)
+             (local-set-key (kbd "C-c ?") 'semantic-ia-complete-symbol-menu)
+             (local-set-key (kbd "C-c >") 'semantic-complete-analyze-inline)
+             (local-set-key (kbd "C-c p") 'semantic-analyze-proto-impl-toggle)
+             (local-set-key (kbd "C-c j") 'semantic-ia-fast-jump)
              (local-set-key "." 'semantic-complete-self-insert)
              (local-set-key ">" 'semantic-complete-self-insert)))
 
@@ -46,10 +46,10 @@
 (global-ede-mode 1)
 
 (ede-cpp-root-project "Extempore"
-                :name "Extempore"
-                :file "~/Code/extempore/README.md"
-                :web-site-url "http://extempore.moso.com.au"
-		:spp-table '(("TARGET_OS_MAC" . "")))
+                      :name "Extempore"
+                      :file "~/Code/extempore/README.md"
+                      :web-site-url "http://extempore.moso.com.au"
+                      :spp-table '(("TARGET_OS_MAC" . "")))
 
 ;;;;;;;;;;
 ;; elpa ;;
@@ -58,7 +58,7 @@
 (require 'package)
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
-	("marmalade" . "http://marmalade-repo.org/packages/")
+        ("marmalade" . "http://marmalade-repo.org/packages/")
         ("melpa" . "http://melpa.milkbox.net/packages/")))
 (package-initialize)
 
@@ -94,12 +94,12 @@
 
 (defun nix-specific-setup ()
   (setq ben-path (append (list
-			  (concat ben-home-dir  "/.rbenv/shims")
-			  (concat ben-home-dir  "/bin")
-			  "/usr/local/bin" "/usr/bin" "/bin"
-			  "/usr/local/sbin" "/usr/sbin" "/sbin"
-			  "/usr/X11/bin" "/usr/texbin")
-			 ben-path))
+                          (concat ben-home-dir  "/.rbenv/shims")
+                          (concat ben-home-dir  "/bin")
+                          "/usr/local/bin" "/usr/bin" "/bin"
+                          "/usr/local/sbin" "/usr/sbin" "/sbin"
+                          "/usr/X11/bin" "/usr/texbin")
+                         ben-path))
   (setenv "PATH" (mapconcat 'identity ben-path ":"))
   (setq exec-path ben-path))
 
@@ -438,8 +438,7 @@
   (set-face-attribute 'eshell-ls-symlink nil :foreground nil :inherit 'font-lock-string-face)
   (set-face-attribute 'eshell-ls-unreadable nil :foreground nil :inherit 'font-lock-comment-face))
 
-(add-hook '
- eshell-mode-hook
+(add-hook 'eshell-mode-hook
           '(lambda ()
              ;; environment vars
              (setenv "EDITOR" "export EDITOR=\"emacsclient --alternate-editor=emacs --no-wait\"")
