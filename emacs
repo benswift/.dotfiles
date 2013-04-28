@@ -111,9 +111,7 @@
 (defun osx-specific-setup ()
   (setq base-face-height 160)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
-  (setq ben-path
-	'("/usr/local/Library/Contributions/examples"
-	  "/usr/local/Cellar/emacs/24.2/libexec/emacs/24.2/x86_64-apple-darwin12.1.0"))
+  (setq ben-path '())
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
