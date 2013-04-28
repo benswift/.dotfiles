@@ -109,7 +109,7 @@
   (nix-specific-setup))
 
 (defun osx-specific-setup ()
-  (setq base-face-height 200)
+  (setq base-face-height 160)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
   (setq ben-path
 	'("/usr/local/Library/Contributions/examples"
@@ -320,7 +320,7 @@
 ;; faces ;;
 ;;;;;;;;;;;
 
-(set-face-attribute 'default nil :height base-face-height :family "Ubuntu Mono")
+(set-face-attribute 'default nil :height base-face-height :family "Source Code Pro")
 (set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
 (set-face-attribute 'highlight nil :background "#141411")
 
