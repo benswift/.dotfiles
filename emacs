@@ -96,6 +96,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq ben-home-dir (getenv "HOME"))
+(setq source-directory (concat ben-home-dir "/Code/emacs-24.3"))
 
 (defun nix-specific-setup ()
   (setq ben-path (append (list
