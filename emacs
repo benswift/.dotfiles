@@ -23,12 +23,17 @@
 ;; See doc-string of `semantic-default-submodes' for other things
 ;; you can use here.
 (add-to-list 'semantic-default-submodes 'global-semantic-idle-summary-mode t)
+
+;; this one messes with autocomplete?
 (add-to-list 'semantic-default-submodes 'global-semantic-idle-completions-mode t)
 
 ;; Enable Semantic
 (semantic-mode 1)
+
+;; customize Semantic
 (semanticdb-enable-cscope-databases)
 (setq semantic-imenu-bucketize-file nil)
+(setq semantic-complete-inline-analyzer-idle-displayor-class nil)
 
 (require 'semantic/bovine/clang)
 
