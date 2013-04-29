@@ -753,6 +753,7 @@ categories:
 (setq extempore-path (concat ben-home-dir "/Code/extempore"))
 (autoload 'extempore-mode (concat extempore-path "/extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
+(add-to-list 'auto-mode-alist '("\\.xtmh$" . extempore-mode))
 (setq extempore-tab-completion nil)
 (setq extempore-eldoc-active t)
 
