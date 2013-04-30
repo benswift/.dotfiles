@@ -17,6 +17,8 @@
 
 ;; Enable Semantic
 (semantic-mode 1)
+(semanticdb-enable-gnu-global-databases 'c-mode)
+(semanticdb-enable-gnu-global-databases 'c++-mode)
 
 ;; customize Semantic
 (setq semantic-imenu-bucketize-file nil)
