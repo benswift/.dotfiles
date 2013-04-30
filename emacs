@@ -8,34 +8,19 @@
 ;; cedet ;;
 ;;;;;;;;;;;
 
-;; On Windows (where there's no make), you can install CEDET by 'cd'ing
-;; into the directory and running (e.g.)
-;; "C:\Program Files (x86)\emacs-24.2\bin\emacs" emacs -Q -l cedet-build.el -f cedet-build
+;; uses Emacs-supplied CEDET (for Emacs >= 24)
 
-;; Load CEDET.
-;; See cedet/common/cedet.info for configuration details.
-;; IMPORTANT: For Emacs >= 23.2, you must place this *before* any
-;; CEDET component (including EIEIO) gets activated by another
-;; package (Gnus, auth-source, ...).
-;; (load-file "~/.emacs.d/cedet/cedet-devel-load.el")
-
-;; Add further minor-modes to be enabled by semantic-mode.
 ;; See doc-string of `semantic-default-submodes' for other things
 ;; you can use here.
 (add-to-list 'semantic-default-submodes 'global-semantic-idle-summary-mode t)
-
-;; this one messes with autocomplete?
 (add-to-list 'semantic-default-submodes 'global-semantic-idle-completions-mode t)
 
 ;; Enable Semantic
 (semantic-mode 1)
 
 ;; customize Semantic
-;; (semanticdb-enable-cscope-databases)
 (setq semantic-imenu-bucketize-file nil)
 (setq semantic-complete-inline-analyzer-idle-displayor-class nil)
-
-;; (require 'semantic/bovine/clang)
 
 (add-hook 'c-mode-common-hook
           '(lambda ()
