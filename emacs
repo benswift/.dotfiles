@@ -17,7 +17,7 @@
 ;; IMPORTANT: For Emacs >= 23.2, you must place this *before* any
 ;; CEDET component (including EIEIO) gets activated by another
 ;; package (Gnus, auth-source, ...).
-(load-file "~/.emacs.d/cedet/cedet-devel-load.el")
+;; (load-file "~/.emacs.d/cedet/cedet-devel-load.el")
 
 ;; Add further minor-modes to be enabled by semantic-mode.
 ;; See doc-string of `semantic-default-submodes' for other things
@@ -31,11 +31,11 @@
 (semantic-mode 1)
 
 ;; customize Semantic
-(semanticdb-enable-cscope-databases)
+;; (semanticdb-enable-cscope-databases)
 (setq semantic-imenu-bucketize-file nil)
 (setq semantic-complete-inline-analyzer-idle-displayor-class nil)
 
-(require 'semantic/bovine/clang)
+;; (require 'semantic/bovine/clang)
 
 (add-hook 'c-mode-common-hook
           '(lambda ()
@@ -761,7 +761,7 @@ categories:
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-to-list 'auto-mode-alist '("\\.xtmh$" . extempore-mode))
 (setq extempore-tab-completion nil)
-(setq extempore-eldoc-active t)
+(setq extempore-eldoc-active nil)
 
 (add-hook 'extempore-mode-hook
           '(lambda ()
