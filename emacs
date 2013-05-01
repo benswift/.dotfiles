@@ -486,6 +486,7 @@
 ;;;;;;;;;;;
 
 (setq dired-listing-switches "-alh")
+(setq dired-auto-revert-buffer t)
 
 ;;;;;;;;;;;
 ;; magit ;;
