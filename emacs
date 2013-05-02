@@ -749,7 +749,6 @@ categories:
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-to-list 'auto-mode-alist '("\\.xtmh$" . extempore-mode))
 (setq extempore-tab-completion nil)
-(setq extempore-eldoc-active nil)
 
 (add-hook 'extempore-mode-hook
           '(lambda ()
