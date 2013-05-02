@@ -812,6 +812,8 @@ categories:
              (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
              (define-key paredit-mode-map (kbd "<M-S-right>") 'transpose-sexps)))
 
+;; turn on paredit by default in all 'lispy' modes
+
 (dolist (mode '(scheme emacs-lisp lisp clojure clojurescript extempore))
   (when (> (display-color-cells) 8)
     (font-lock-add-keywords (intern (concat (symbol-name mode) "-mode"))
