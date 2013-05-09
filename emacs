@@ -907,6 +907,12 @@ categories:
 (add-to-list 'auto-mode-alist '("\\.ttl" . ttl-mode))
 (add-hook 'ttl-mode-hook 'turn-on-font-lock)
 
+;;;;;;;;;;;;;
+;; Nyquist ;;
+;;;;;;;;;;;;;
+
+(add-to-list 'auto-mode-alist '("\\.ny" . lisp-mode))
+
 ;;;;;;;;;;;;;;
 ;; lilypond ;;
 ;;;;;;;;;;;;;;
