@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: build-multi-chan
+# key: bmc2
+# --
+(if *build-multi-chan*
+    (bind-func ${1:name}_mc_c
+      (lambda (nchan:i64$2)
+        (let (($1_buf:[$3]** (zalloc nchan))
+	      (i:i64 0))
+          (dotimes (i nchan) (pset! $1_buf i ($1_c$2)))
+	  (lambda (chan${4:osc-args})
+	    ((pref $1_buf (dtoi64 chan))$4))))))

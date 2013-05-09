@@ -6,7 +6,7 @@
     (bind-func ${1:name}_mc_c
       (lambda ($2)
         (let ((val 0.0)
-	      ($1 ($1_c $2)))
+	      ($1 ($1_c$2)))
 	  (lambda (chan${3:osc-args})
 	    (if (< chan 1.0) (set! val ($1$3)))
 	    val)))))
