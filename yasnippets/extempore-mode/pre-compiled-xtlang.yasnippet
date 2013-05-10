@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: pre-compiled-xtlang
+# key: pcxt
+# --
+(define libdir "`default-directory`")
+(llvm:export-module (string-append libdir "${1:libname}.bc"))
+
+;; shell command to generate dylib
+;; ~/Code/lib/llvm/build/bin/llc -relocation-model=pic -tailcallopt $1.bc && clang -v -dynamic -undefined dynamic_lookup $1.s -o $1.dylib
+
+(define $1 (sys:open-dylib (string-append libdir "$1.dylib")))
+
+;; once you've prepared the header
+(load (string-append libdir "$1.xtmh"))
