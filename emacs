@@ -747,6 +747,7 @@ categories:
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-to-list 'auto-mode-alist '("\\.xtmh$" . extempore-mode))
 (setq extempore-tab-completion nil)
+(setq extempore-default-device-number 2)
 
 (add-hook 'extempore-mode-hook
           '(lambda ()
