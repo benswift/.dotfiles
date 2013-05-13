@@ -2,4 +2,4 @@
 # name: nargs-test
 # key: ifnargs
 # --
-(if (> nargs ${1:0}) (pref dargs $1) ${2:else-val})
+(if (>= nargs ${1:0}) (pref dargs $1) ${2:else-val})
