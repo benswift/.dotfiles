@@ -761,38 +761,46 @@ categories:
 
 ;; session setup
 
-(defun ben-new-xtm-session (name)
+(defun ben-create-extempore-template-file (base-path filename header)
+  (unless (file-exists-p (concat base-path filename))
+    (progn
+      (find-file (concat base-path filename))
+      (insert header)
+      (save-buffer)
+      (kill-buffer))))
+
+(defun ben-create-extempore-template-dir (name)
   "Set up the directory structure and files for a new extempore session/gig."
   (interactive "sSession name: ")
-  (let ((base-path (concat ben-home-dir "/Code/xtm/sessions/" name "/")))
+  (let* ((base-path (concat ben-home-dir "/Code/xtm/sessions/" name "/"))
+         (setup-header
+          (concat ";;; setup.xtm --- setup file for " name "\n"
+                  "(load \"libs/core/instruments.xtm\")\n"
+                  "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"))
+         (scm-header
+          (concat ";-*- mode: Extempore; extempore-default-port: 7098; -*-\n"
+                  "(ipc:load \"primary\" \"" base-path "setup.xtm\")\n"
+                   "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
+                   "(load \"libs/core/pc_ivl.xtm\")\n"))
+         (xtlang-header
+          (concat "(load \"" base-path "setup.xtm\")\n")))
+    (if (file-exists-p base-path)
+        (error "Cannot create xtm session: directory \"%s\" already exists" base-path))
     (make-directory base-path)
     ;; practice files
-    (find-file (concat base-path "practice-scm.xtm"))
-    (insert ";-*- mode: Extempore; extempore-default-port: 7098; -*-\n")
-    (insert (concat "(ipc:load \"primary\" \"" base-path "setup.xtm\")\n"))
-    (insert (concat "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"))
-    (insert (concat "(load \"" extempore-path "/libs/core/pc_ivl.xtm\")\n"))
-    (save-buffer)
-    (save-buffer)
-    (find-file (concat base-path "practice-xtlang.xtm"))
-    (insert (concat "(load \"" base-path "setup.xtm\")\n"))
-    (save-buffer)
+    (ben-create-extempore-template-file
+     base-path "practice-scm.xtm" scm-header)
+    (ben-create-extempore-template-file
+     base-path "practice-xtlang.xtm" xtlang-header)
     ;; gig files
-    (save-buffer (find-file (concat base-path "gig-scm.xtm")))
-    (insert ";-*- mode: Extempore; extempore-default-port: 7098; -*-\n")
-    (insert (concat "(ipc:load \"primary\" \"" base-path "setup.xtm\")\n"))
-    (insert (concat "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"))
-    (insert (concat "(load \"" extempore-path "/libs/core/pc_ivl.xtm\")\n"))
-    (save-buffer)
-    (save-buffer (find-file (concat base-path "gig-xtlang.xtm")))
-    (insert (concat "(load \"" base-path "setup.xtm\")\n"))
-    (save-buffer)
+    (ben-create-extempore-template-file
+     base-path "gig-scm.xtm" scm-header)
+    (ben-create-extempore-template-file
+     base-path "gig-xtlang.xtm" xtlang-header)
     ;; setup file
-    (find-file (concat base-path "setup" ".xtm"))
-    (insert (concat ";;; setup.xtm -- setup file for " name))
-    (insert "(load \"libs/core/audio_dsp.xtm\")\n")
-    (insert (concat "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"))
-    (save-buffer)))
+    (ben-create-extempore-template-file
+     base-path "setup.xtm" setup-header)
+    (dired base-path)))
 
 ;;;;;;;;;;;;;
 ;; paredit ;;
