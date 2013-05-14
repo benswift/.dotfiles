@@ -66,15 +66,19 @@
              magit
              markdown-mode
              monokai-theme
+             noctilux-theme
+             solarized-theme
              org
              paredit
              scss-mode
              smex
              ttl-mode
-             unfill
              yaml-mode
              yasnippet
-             yasnippet-bundle))
+             yasnippet-bundle
+             powerline
+             auto-complete
+             auto-complete-clang))
   (if (not (package-installed-p p))
       (package-install p)))
 
