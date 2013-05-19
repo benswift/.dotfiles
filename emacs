@@ -67,7 +67,6 @@
              markdown-mode
              monokai-theme
              noctilux-theme
-             solarized-theme
              org
              paredit
              scss-mode
