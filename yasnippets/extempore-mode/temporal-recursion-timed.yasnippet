@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: temporal-recursion-timed
+# key: trt
+# --
+(define ${1:fun-name}
+  (lambda (time delta-t$2)
+    $0
+    (callback (+ time (* *second* delta-t) 0.5)
+              '$1
+              (+ time (* *second* delta-t)) 
+              delta-t$2)))
+
+($1 (now) ${4:1})
