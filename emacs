@@ -107,7 +107,7 @@
 (defun osx-specific-setup ()
   (setq base-face-height 160)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
-  (setq ben-path '())
+  (setq ben-path '("/Applications/Emacs.app/Contents/MacOS/bin"))
   (nix-specific-setup))
 
 (defun windows-specific-setup ()
@@ -1055,4 +1055,5 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 ;; emacs server ;;
 ;;;;;;;;;;;;;;;;;;
 
-(server-start)
+(unless (server-running-p)
+  (server-start))
