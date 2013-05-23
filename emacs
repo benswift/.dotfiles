@@ -315,21 +315,57 @@
 
 (set-face-attribute 'default nil :height base-face-height :family "Source Code Pro")
 (set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
-(set-face-attribute 'highlight nil :background "#141411")
 
-;; ANSI colors in terminal (based on monokai theme)
+;; colors taken from monokai v0.0.10
+(defmacro with-monokai-colors-bound (form)
+  `(let ((monokai-blue-light "#89BDFF")
+         (monokai-gray "#595959")
+         (monokai-gray-darker "#383830")
+         (monokai-gray-darkest "#141411")
+         (monokai-gray-lightest "#595959")
+         (monokai-gray-light "#E6E6E6")
+         (monokai-green "#A6E22A")
+         (monokai-green-light "#A6E22E")
+         (monokai-grey-dark "#272822")
+         (monokai-magenta "#F92672")
+         (monokai-purple "#AE81FF")
+         (monokai-purple-light "#FD5FF1")
+         (monokai-yellow "#E6DB74")
+         (monokai-yellow-dark "#75715E")
+         (monokai-yellow-light "#F8F8F2"))
+     ,form))
+
+(with-monokai-colors-bound
+ (set-face-attribute 'highlight nil :background monokai-gray-darkest))
+
+;; get colours right in terminal (and related) modes
 
 (defun ben-set-monokai-term-colors ()
-  (set-face-attribute 'term-color-black nil :background "#141411" :foreground "#141411")
-  (set-face-attribute 'term-color-blue nil :background "#89BDFF" :foreground "#89BDFF")
-  (set-face-attribute 'term-color-cyan nil :background "#A6E22E" :foreground "#A6E22E")
-  (set-face-attribute 'term-color-green nil :background "#A6E22A" :foreground "#A6E22A")
-  (set-face-attribute 'term-color-magenta nil :background "#FD5FF1" :foreground "#FD5FF1")
-  (set-face-attribute 'term-color-red nil :background "#F92672" :foreground "#F92672")
-  (set-face-attribute 'term-color-white nil :background "#595959" :foreground "#595959")
-  (set-face-attribute 'term-color-yellow nil :background "#E6DB74" :foreground "#E6DB74"))
+  (with-monokai-colors-bound
+   (progn
+     (set-face-attribute 'term-color-black nil :background nil :foreground monokai-gray-darkest)
+     (set-face-attribute 'term-color-blue nil :background nil :foreground monokai-blue-light)
+     (set-face-attribute 'term-color-cyan nil :background nil :foreground monokai-green-light)
+     (set-face-attribute 'term-color-green nil :background nil :foreground monokai-green)
+     (set-face-attribute 'term-color-magenta nil :background nil :foreground monokai-purple-light)
+     (set-face-attribute 'term-color-red nil :background nil :foreground monokai-magenta)
+     (set-face-attribute 'term-color-white nil :background nil :foreground monokai-gray-lightest)
+     (set-face-attribute 'term-color-yellow nil :background nil :foreground monokai-yellow))))
 
 (add-hook 'term-hook 'ben-set-monokai-term-colors)
+
+(require 'ansi-color)
+
+(with-monokai-colors-bound
+ (setq ansi-color-names-vector (vector monokai-gray
+                                       monokai-purple-light
+                                       monokai-green
+                                       monokai-yellow-light
+                                       monokai-blue-light
+                                       monokai-magenta
+                                       monokai-green-light
+                                       monokai-gray-lightest)
+       ansi-color-map (ansi-color-make-color-map)))
 
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
