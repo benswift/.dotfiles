@@ -22,7 +22,6 @@
 
 ;; customize Semantic
 (setq semantic-imenu-bucketize-file nil)
-;; (setq semantic-complete-inline-analyzer-idle-displayor-class nil)
 
 (add-hook 'c-mode-common-hook
           '(lambda ()
