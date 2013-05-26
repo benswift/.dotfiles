@@ -357,7 +357,7 @@
 (require 'ansi-color)
 
 (with-monokai-colors-bound
- (setq ansi-color-names-vector (vector monokai-gray
+ (setq ansi-color-names-vector (vector monokai-gray-light
                                        monokai-purple-light
                                        monokai-green
                                        monokai-yellow-light
