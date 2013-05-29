@@ -31,3 +31,11 @@ auto/
 *~
 .\#*
 *.elc
+
+# Sublime Text
+
+sublime-text-user-dir/SublimeREPLHistory
+sublime-text-user-dir/Default (Linux).sublime-keymap
+sublime-text-user-dir/Default (OSX).sublime-keymap
+sublime-text-user-dir/Default (Windows).sublime-keymap
+sublime-text-user-dir/Package Control.*

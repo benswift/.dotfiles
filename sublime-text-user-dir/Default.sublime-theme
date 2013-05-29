@@ -1,0 +1,13 @@
+[
+    {
+        "class": "label_control",
+        "font.size": 16
+    },
+    {
+        "class": "quick_panel",
+        "row_padding": [10, 10],
+        "layer0.tint": [25, 25, 25],
+        "layer0.opacity": 1.0,
+        "dark_content": false
+    }
+]
