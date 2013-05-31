@@ -10,21 +10,24 @@
 
 ;; uses Emacs-supplied CEDET (for Emacs >= 24)
 
-;; See doc-string of `semantic-default-submodes' for other things
-;; you can use here.
-(add-to-list 'semantic-default-submodes 'global-semantic-idle-summary-mode t)
-(add-to-list 'semantic-default-submodes 'global-semantic-idle-completions-mode t)
+;; Enable Semantic for C/C++ modes only
 
-;; Enable Semantic
-(semantic-mode 1)
-(semanticdb-enable-gnu-global-databases 'c-mode)
-(semanticdb-enable-gnu-global-databases 'c++-mode)
+;; Haven't really tested out if this works properly---need to do that
+;; next time I'm coding in C/C++
 
-;; customize Semantic
 (setq semantic-imenu-bucketize-file nil)
+(setq semantic-default-submodes nil)
 
 (add-hook 'c-mode-common-hook
           '(lambda ()
+             ;; turn on semantic mode
+             (semantic-mode 1)
+             ;; turn on the appropriate minor modes
+             (semantic-add-minor-mode 'semantic-idle-scheduler-mode)
+             (semantic-add-minor-mode 'semanticdb-minor-mode)
+             (semantic-add-minor-mode 'semantic-idle-summary-mode)
+             (semantic-add-minor-mode 'semantic-idle-completions-mode)
+             ;; set up some keybindings
              (local-set-key (kbd "C-<return>") 'semantic-ia-complete-symbol)
              (local-set-key (kbd "C-c ?") 'semantic-ia-complete-symbol-menu)
              (local-set-key (kbd "C-c >") 'semantic-complete-analyze-inline)
