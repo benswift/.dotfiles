@@ -202,6 +202,7 @@
       ido-max-prospects 10)
 
 (set-default 'indent-tabs-mode nil)
+(set-default 'tab-width 2)
 (set-default 'indicate-empty-lines t)
 (set-default 'imenu-auto-rescan t)
 
@@ -964,6 +965,8 @@ categories:
 
 (elpy-enable)
 (elpy-use-ipython)
+
+(setq python-indent-offset 2)
 
 ;; (setq python-shell-interpreter "ipython"
 ;;       python-shell-interpreter-args ""
