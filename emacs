@@ -579,6 +579,75 @@
              (set-face-attribute 'outline-5 nil :inherit font-lock-constant-face)
              (set-face-attribute 'outline-6 nil :inherit font-lock-comment-face)))
 
+;; org-latex export
+
+(setq org-format-latex-header
+      "\\documentclass[12pt,a4paper]{scrartcl}
+\\usepackage{libertineotf}
+\\usepackage{fontspec}
+\\setmonofont[Scale=MatchLowercase,Mapping=tex-text]{Source Code Pro}
+
+\\usepackage{booktabs}
+\\usepackage{tabularx}
+\\renewcommand{\\arraystretch}{1.2}
+
+% biblatex
+
+\\usepackage[%
+backend=biber,
+natbib=true,
+backref=true,
+citecounter=true,
+dashed=false,
+backrefstyle=three,
+citestyle=authoryear-icomp,
+firstinits=true,
+maxcitenames=2,
+maxbibnames=10,
+uniquename=mininit,
+bibstyle=authoryear,
+% refsegment=chapter,
+% ibidtracker=strict,
+url=false,
+doi=false]{biblatex}
+
+% to use year-only bib format
+\\AtEveryBibitem{\\clearfield{month}}
+\\AtEveryCitekey{\\clearfield{month}}
+
+% specify the bib file here
+\\addbibresource{papers.bib}
+
+% IMPORTANT: to actually print the bibliography in the document,
+% insert the command: \\printbibliography[title=References]
+
+% csquotes
+
+\\usepackage[english=british,threshold=15,thresholdtype=words]{csquotes}
+\\SetCiteCommand{\\parencite}
+
+\\newenvironment*{smallquote}
+  {\\quote\\small}
+  {\\endquote}
+\\SetBlockEnvironment{smallquote}
+
+% hyperref & bookmark
+
+\\usepackage[svgnames,hyperref]{xcolor}
+
+\\usepackage[%
+unicode=true,
+hyperindex=true,
+bookmarks=true,
+colorlinks=true, % change to false for final
+pdfborder=0,
+allcolors=DarkBlue,
+% plainpages=false,
+pdfpagelabels,
+hyperfootnotes=true]{hyperref}
+
+")
+
 ;;;;;;;;;;;;;;
 ;; blogging ;;
 ;;;;;;;;;;;;;;
