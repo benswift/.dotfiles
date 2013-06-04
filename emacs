@@ -18,23 +18,25 @@
 (setq semantic-imenu-bucketize-file nil)
 (setq semantic-default-submodes nil)
 
-(add-hook 'c-mode-common-hook
-          '(lambda ()
-             ;; turn on semantic mode
-             (semantic-mode 1)
-             ;; turn on the appropriate minor modes
-             (semantic-add-minor-mode 'semantic-idle-scheduler-mode)
-             (semantic-add-minor-mode 'semanticdb-minor-mode)
-             (semantic-add-minor-mode 'semantic-idle-summary-mode)
-             (semantic-add-minor-mode 'semantic-idle-completions-mode)
-             ;; set up some keybindings
-             (local-set-key (kbd "C-<return>") 'semantic-ia-complete-symbol)
-             (local-set-key (kbd "C-c ?") 'semantic-ia-complete-symbol-menu)
-             (local-set-key (kbd "C-c >") 'semantic-complete-analyze-inline)
-             (local-set-key (kbd "C-c p") 'semantic-analyze-proto-impl-toggle)
-             (local-set-key (kbd "C-c j") 'semantic-ia-fast-jump)
-             (local-set-key "." 'semantic-complete-self-insert)
-             (local-set-key ">" 'semantic-complete-self-insert)))
+(defun ben-c-mode-common-hook ()
+  (lambda ()
+    ;; turn on semantic mode
+    (semantic-mode 1)
+    ;; turn on the appropriate minor modes
+    (semantic-add-minor-mode 'semantic-idle-scheduler-mode)
+    (semantic-add-minor-mode 'semanticdb-minor-mode)
+    (semantic-add-minor-mode 'semantic-idle-summary-mode)
+    (semantic-add-minor-mode 'semantic-idle-completions-mode)
+    ;; set up some keybindings
+    (local-set-key (kbd "C-<return>") 'semantic-ia-complete-symbol)
+    (local-set-key (kbd "C-c ?") 'semantic-ia-complete-symbol-menu)
+    (local-set-key (kbd "C-c >") 'semantic-complete-analyze-inline)
+    (local-set-key (kbd "C-c p") 'semantic-analyze-proto-impl-toggle)
+    (local-set-key (kbd "C-c j") 'semantic-ia-fast-jump)
+    (local-set-key "." 'semantic-complete-self-insert)
+    (local-set-key ">" 'semantic-complete-self-insert)))
+
+(add-hook 'c-mode-common-hook 'ben-c-mode-common-hook)
 
 ;; Enable EDE (Project Management) features
 (global-ede-mode 1)
@@ -454,12 +456,39 @@
 (setq eshell-aliases-file "~/.dotfiles/eshell-alias")
 (global-set-key (kbd "C-c s") 'eshell)
 
-(setq eshell-cmpl-cycle-completions nil
-      eshell-save-history-on-exit t
-      eshell-buffer-shorthand t
-      eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'")
+(defun ben-eshell-mode-hook ()
+  (lambda ()
+    ;; config vars
+    (setq eshell-cmpl-cycle-completions nil)
+    (setq eshell-save-history-on-exit t)
+    (setq eshell-buffer-shorthand t)
+    (setq eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'")
+    ;; environment vars
+    (setenv "EDITOR" "export EDITOR=\"emacsclient --alternate-editor=emacs --no-wait\"")
+    ;; keybindings
+    (define-key eshell-mode-map (kbd "<C-up>") 'eshell-previous-matching-input-from-input)
+    (define-key eshell-mode-map (kbd "<C-down>") 'eshell-next-matching-input-from-input)
+    (define-key eshell-mode-map (kbd "<up>") 'previous-line)
+    (define-key eshell-mode-map (kbd "<down>") 'next-line)
+    ;;faces
+    (set-face-attribute 'eshell-prompt nil :foreground nil :inherit font-lock-function-name-face)
+    ;; prompt helpers
+    (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
+    (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
+    (setq eshell-prompt-function
+          (lambda ()
+            (concat (user-login-name) "@" (host-name) " "
+                    (base-name (eshell/pwd))
+                    (if (= (user-uid) 0) " # " " $ "))))
+    ;; helpful bits and pieces
+    (turn-on-eldoc-mode)
+    (add-to-list 'eshell-command-completions-alist
+                 '("gunzip" "gz\\'"))
+    (add-to-list 'eshell-command-completions-alist
+                 '("tar" "\\(\\.tar|\\.tgz\\|\\.tar\\.gz\\)\\'"))
+    (add-to-list 'eshell-visual-commands "ssh")))
 
-(defun ben-set-eshell-faces ()
+(defun ben-eshell-set-faces ()
   (set-face-attribute 'eshell-ls-archive nil :foreground nil :inherit 'font-lock-warning-face)
   (set-face-attribute 'eshell-ls-backup nil :foreground nil :inherit 'font-lock-constant-face)
   (set-face-attribute 'eshell-ls-clutter nil :foreground nil :inherit 'font-lock-comment-face)
@@ -472,33 +501,8 @@
   (set-face-attribute 'eshell-ls-symlink nil :foreground nil :inherit 'font-lock-string-face)
   (set-face-attribute 'eshell-ls-unreadable nil :foreground nil :inherit 'font-lock-comment-face))
 
-(add-hook 'eshell-mode-hook
-          '(lambda ()
-             ;; environment vars
-             (setenv "EDITOR" "export EDITOR=\"emacsclient --alternate-editor=emacs --no-wait\"")
-             ;; keybindings
-             (define-key eshell-mode-map (kbd "<C-up>") 'eshell-previous-matching-input-from-input)
-             (define-key eshell-mode-map (kbd "<C-down>") 'eshell-next-matching-input-from-input)
-             (define-key eshell-mode-map (kbd "<up>") 'previous-line)
-             (define-key eshell-mode-map (kbd "<down>") 'next-line)
-             ;;faces
-             (set-face-attribute 'eshell-prompt nil :foreground nil :inherit font-lock-function-name-face)
-             (ben-set-eshell-faces)
-             ;; prompt helpers
-             (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
-             (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
-             (setq eshell-prompt-function
-                   (lambda ()
-                     (concat (user-login-name) "@" (host-name) " "
-                             (base-name (eshell/pwd))
-                             (if (= (user-uid) 0) " # " " $ "))))
-             ;; helpful bits and pieces
-             (turn-on-eldoc-mode)
-             (add-to-list 'eshell-command-completions-alist
-                          '("gunzip" "gz\\'"))
-             (add-to-list 'eshell-command-completions-alist
-                          '("tar" "\\(\\.tar|\\.tgz\\|\\.tar\\.gz\\)\\'"))
-             (add-to-list 'eshell-visual-commands "ssh")))
+(add-hook 'eshell-mode-hook 'ben-eshell-mode-hook)
+(add-hook 'eshell-mode-hook 'ben-eshell-set-faces)
 
 (defun base-name (path)
   "Returns the base name of the given path."
@@ -551,11 +555,13 @@
 ;; ebrowse ;;
 ;;;;;;;;;;;;;
 
-(add-hook 'ebrowse-tree-mode
-          '(lambda ()
-             (set-face-attribute 'ebrowse-root-class nil :foreground nil :inherit font-lock-type-face)
-             (set-face-attribute 'ebrowse-member-class nil :foreground nil :inherit font-lock-function-name-face)
-             (set-face-attribute 'ebrowse-member-attribute nil :foreground nil :inherit font-lock-string-face)))
+(defun ben-ebrowse-set-faces ()
+  (lambda ()
+    (set-face-attribute 'ebrowse-root-class nil :foreground nil :inherit font-lock-type-face)
+    (set-face-attribute 'ebrowse-member-class nil :foreground nil :inherit font-lock-function-name-face)
+    (set-face-attribute 'ebrowse-member-attribute nil :foreground nil :inherit font-lock-string-face)))
+
+(add-hook 'ebrowse-tree-mode 'ben-ebrowse-set-faces)
 
 ;;;;;;;;;;;;;;
 ;; org mode ;;
@@ -563,19 +569,21 @@
 
 (setq org-completion-use-ido t)
 
-(add-hook 'org-mode-hook
-          '(lambda ()
-             ;; keymappings
-             (define-key org-mode-map (kbd "<M-left>") 'backward-word)
-             (define-key org-mode-map (kbd "<M-right>") 'forward-word)
-             (define-key org-mode-map (kbd "<C-left>") 'org-metaleft)
-             (define-key org-mode-map (kbd "<C-right>") 'org-metaright)
-             ;;faces
-             (set-face-attribute 'outline-2 nil :inherit font-lock-string-face)
-             (set-face-attribute 'outline-3 nil :inherit font-lock-type-face)
-             (set-face-attribute 'outline-4 nil :inherit font-lock-keyword-face)
-             (set-face-attribute 'outline-5 nil :inherit font-lock-constant-face)
-             (set-face-attribute 'outline-6 nil :inherit font-lock-comment-face)))
+(defun ben-org-mode-hook ()
+  (lambda ()
+    ;; keymappings
+    (define-key org-mode-map (kbd "<M-left>") 'backward-word)
+    (define-key org-mode-map (kbd "<M-right>") 'forward-word)
+    (define-key org-mode-map (kbd "<C-left>") 'org-metaleft)
+    (define-key org-mode-map (kbd "<C-right>") 'org-metaright)
+    ;;faces
+    (set-face-attribute 'outline-2 nil :inherit font-lock-string-face)
+    (set-face-attribute 'outline-3 nil :inherit font-lock-type-face)
+    (set-face-attribute 'outline-4 nil :inherit font-lock-keyword-face)
+    (set-face-attribute 'outline-5 nil :inherit font-lock-constant-face)
+    (set-face-attribute 'outline-6 nil :inherit font-lock-comment-face)))
+
+(add-hook 'org-mode-hook 'ben-org-mode-hook)
 
 ;; org-latex export
 
@@ -707,12 +715,13 @@ categories:
 (setq erc-prompt-for-nickserv-password nil)
 (setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
 
-(add-hook 'erc-mode-hook
-          '(lambda ()
-             ;; faces
-             (set-face-attribute 'erc-input-face nil :foreground nil :inherit font-lock-string-face)
-             (set-face-attribute 'erc-my-nick-face nil :foreground nil :inherit font-lock-keyword-face)
-             (set-face-attribute 'erc-notice-face nil :foreground nil :inherit font-lock-comment-face)))
+(defun ben-erc-set-faces ()
+  (lambda ()
+    (set-face-attribute 'erc-input-face nil :foreground nil :inherit font-lock-string-face)
+    (set-face-attribute 'erc-my-nick-face nil :foreground nil :inherit font-lock-keyword-face)
+    (set-face-attribute 'erc-notice-face nil :foreground nil :inherit font-lock-comment-face)))
+
+(add-hook 'erc-mode-hook 'ben-erc-set-faces)
 
 ;;;;;;;;;;;
 ;; LaTeX ;;
@@ -720,7 +729,7 @@ categories:
 
 (add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
 
-(defun ben-latex-setup ()
+(defun ben-latex-mode-hook ()
   (setq TeX-master 't)
   (setq TeX-engine 'xetex)
   (setq TeX-PDF-mode t)
@@ -818,7 +827,7 @@ categories:
              (delete-window)))
   (switch-to-buffer-other-window "*toc*"))
 
-(add-hook 'LaTeX-mode-hook 'ben-latex-setup)
+(add-hook 'LaTeX-mode-hook 'ben-latex-mode-hook)
 (add-hook 'LaTeX-mode-hook 'ben-latex-keybindings)
 (add-hook 'LaTeX-mode-hook 'ben-reftex-setup)
 
@@ -862,11 +871,14 @@ categories:
 (setq extempore-tab-completion nil)
 (setq extempore-default-device-number 2)
 
-(add-hook 'extempore-mode-hook
-          '(lambda ()
-             (turn-on-eldoc-mode)
-             (setq eldoc-documentation-function
-                   'extempore-eldoc-documentation-function)))
+(defun ben-extempore-mode-hook ()
+  (lambda ()
+    (turn-on-eldoc-mode)
+    (setq eldoc-documentation-function
+          'extempore-eldoc-documentation-function)
+    (extempore-logger-mode 1)))
+
+(add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
 ;; syntax highlighting for LLVM IR files
 (load-file (concat extempore-path "/extras/llvm-mode.el"))
@@ -926,16 +938,18 @@ categories:
      (:foreground "grey55")))
   "Face for parentheses.  Taken from ESK.")
 
-(add-hook 'paredit-mode-hook
-          '(lambda ()
-             (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-up)
-             (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-down)
-             (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-up)
-             (define-key paredit-mode-map (kbd "<s-S-right>") 'paredit-forward-down)
-             (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
-             (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
-             (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
-             (define-key paredit-mode-map (kbd "<M-S-right>") 'transpose-sexps)))
+(defun ben-paredit-mode-hook ()
+  (lambda ()
+    (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-up)
+    (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-down)
+    (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-up)
+    (define-key paredit-mode-map (kbd "<s-S-right>") 'paredit-forward-down)
+    (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
+    (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
+    (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
+    (define-key paredit-mode-map (kbd "<M-S-right>") 'transpose-sexps)))
+
+(add-hook 'paredit-mode-hook 'ben-paredit-mode-hook)
 
 ;; turn on paredit by default in all 'lispy' modes
 
