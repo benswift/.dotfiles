@@ -260,8 +260,6 @@
 ;; a modified version of powerline-default-theme
 
 (defun powerline-ben-theme ()
-  ;; (set-face-attribute 'powerline-active1 nil :background "grey40")
-  ;; (set-face-attribute 'powerline-active2 nil :background "grey60")
   (setq-default mode-line-format
                 '("%e"
                   (:eval
