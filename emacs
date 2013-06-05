@@ -381,6 +381,14 @@
 (add-to-list 'sml/replacer-regexp-list '("^~/Code/xtm/" ":xtm:"))
 (add-to-list 'sml/replacer-regexp-list '("^~/Documents/School/postdoc/papers/" ":papers:"))
 
+;; monokai-ize the smart-mode-line
+(monokai-with-color-variables
+  (setq sml/active-foreground-color monokai-fg)
+  (setq sml/active-background-color monokai-bg+2)
+  (setq sml/inactive-foreground-color monokai-fg-1)
+  (setq sml/inactive-background-color monokai-bg-1)
+  (set-face-attribute 'sml/global nil :foreground monokai-fg))
+
 (add-hook 'after-init-hook 'sml/setup)
 
 ;;;;;;;;;;;;
