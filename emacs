@@ -383,11 +383,16 @@
 
 ;; monokai-ize the smart-mode-line
 (monokai-with-color-variables
+  ;; modeline foreground/background
   (setq sml/active-foreground-color monokai-fg)
   (setq sml/active-background-color monokai-bg+2)
   (setq sml/inactive-foreground-color monokai-fg-1)
   (setq sml/inactive-background-color monokai-bg-1)
-  (set-face-attribute 'sml/global nil :foreground monokai-fg))
+  (set-face-attribute 'sml/global nil :foreground monokai-fg)
+  ;; other faces
+  (set-face-attribute 'sml/time nil :foreground monokai-yellow)
+  (set-face-attribute 'sml/filename nil :foreground monokai-yellow)
+  (set-face-attribute 'sml/prefix nil :foreground monokai-green))
 
 (add-hook 'after-init-hook 'sml/setup)
 
