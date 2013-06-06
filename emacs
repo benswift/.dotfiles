@@ -818,7 +818,8 @@ categories:
   (turn-on-eldoc-mode)
   (setq eldoc-documentation-function
         'extempore-eldoc-documentation-function)
-  (extempore-logger-mode 1))
+  (if (yes-or-no-p "Do you want to log this session?")
+      (extempore-logger-mode 1)))
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
