@@ -217,10 +217,12 @@
 ;; appearance ;;
 ;;;;;;;;;;;;;;;;
 
-(load-theme 'monokai t)
-(add-to-list 'default-frame-alist '(background-mode . dark))
+(if (display-graphic-p)
+    (progn (load-theme 'monokai t)
+           (add-to-list 'default-frame-alist
+                        '(background-mode . dark))
 
-(set-cursor-color "white")
+           (set-cursor-color "white")))
 
 (dolist (mode '(menu-bar-mode tool-bar-mode scroll-bar-mode))
   (when (fboundp mode) (funcall mode -1)))
@@ -266,20 +268,22 @@
    (set-face-attribute 'term-color-white nil :background nil :foreground monokai-fg)
    (set-face-attribute 'term-color-yellow nil :background nil :foreground monokai-yellow)))
 
-(add-hook 'term-hook 'ben-set-monokai-term-colors)
+(if (display-graphic-p)
+    (add-hook 'term-hook 'ben-set-monokai-term-colors))
 
 (require 'ansi-color)
 
-(monokai-with-color-variables
- (setq ansi-color-names-vector (vector monokai-fg-1
-                                       monokai-purple
-                                       monokai-green
-                                       monokai-yellow
-                                       monokai-blue
-                                       monokai-magenta
-                                       monokai-green
-                                       monokai-fg)
-       ansi-color-map (ansi-color-make-color-map)))
+(if (display-graphic-p)
+    (monokai-with-color-variables
+      (setq ansi-color-names-vector (vector monokai-fg-1
+                                            monokai-purple
+                                            monokai-green
+                                            monokai-yellow
+                                            monokai-blue
+                                            monokai-magenta
+                                            monokai-green
+                                            monokai-fg)
+            ansi-color-map (ansi-color-make-color-map))))
 
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
@@ -362,38 +366,42 @@
 ;; smart mode line ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
-(require 'smart-mode-line)
+;; only works in a graphical frame
 
-(setq sml/name-width 40)
-(setq sml/shorten-modes t)
+(if (display-graphic-p)
+    (progn
+      (require 'smart-mode-line)
+      
+      (setq sml/name-width 40)
+      (setq sml/shorten-modes t)
 
-(setq sml/show-time t)
-(setq sml/time-format " %H:%M  ")
+      (setq sml/show-time t)
+      (setq sml/time-format " %H:%M  ")
 
-(add-to-list 'sml/hidden-modes " ElDoc")
-(add-to-list 'sml/hidden-modes " Paredit")
-(add-to-list 'sml/hidden-modes " AC")
-(add-to-list 'sml/hidden-modes " yas")
+      (add-to-list 'sml/hidden-modes " ElDoc")
+      (add-to-list 'sml/hidden-modes " Paredit")
+      (add-to-list 'sml/hidden-modes " AC")
+      (add-to-list 'sml/hidden-modes " yas")
 
-;; directory shorteners
-(add-to-list 'sml/replacer-regexp-list '("^~/Code/extempore/" ":extempore:"))
-(add-to-list 'sml/replacer-regexp-list '("^~/Code/xtm/" ":xtm:"))
-(add-to-list 'sml/replacer-regexp-list '("^~/Documents/School/postdoc/papers/" ":papers:"))
+      ;; directory shorteners
+      (add-to-list 'sml/replacer-regexp-list '("^~/Code/extempore/" ":extempore:"))
+      (add-to-list 'sml/replacer-regexp-list '("^~/Code/xtm/" ":xtm:"))
+      (add-to-list 'sml/replacer-regexp-list '("^~/Documents/School/postdoc/papers/" ":papers:"))
 
-;; monokai-ize the smart-mode-line
-(monokai-with-color-variables
-  ;; modeline foreground/background
-  (setq sml/active-foreground-color monokai-fg)
-  (setq sml/active-background-color monokai-bg+2)
-  (setq sml/inactive-foreground-color monokai-fg-1)
-  (setq sml/inactive-background-color monokai-bg-1)
-  (set-face-attribute 'sml/global nil :foreground monokai-fg)
-  ;; other faces
-  (set-face-attribute 'sml/time nil :foreground monokai-yellow)
-  (set-face-attribute 'sml/filename nil :foreground monokai-yellow)
-  (set-face-attribute 'sml/prefix nil :foreground monokai-green))
+      ;; monokai-ize the smart-mode-line
+      (monokai-with-color-variables
+        ;; modeline foreground/background
+        (setq sml/active-foreground-color monokai-fg)
+        (setq sml/active-background-color monokai-bg+2)
+        (setq sml/inactive-foreground-color monokai-fg-1)
+        (setq sml/inactive-background-color monokai-bg-1)
+        (set-face-attribute 'sml/global nil :foreground monokai-fg)
+        ;; other faces
+        (set-face-attribute 'sml/time nil :foreground monokai-yellow)
+        (set-face-attribute 'sml/filename nil :foreground monokai-yellow)
+        (set-face-attribute 'sml/prefix nil :foreground monokai-green))
 
-(add-hook 'after-init-hook 'sml/setup)
+      (add-hook 'after-init-hook 'sml/setup)))
 
 ;;;;;;;;;;;;
 ;; eshell ;;
