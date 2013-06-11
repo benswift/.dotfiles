@@ -92,26 +92,26 @@
 (setq ben-home-dir (getenv "HOME"))
 (setq source-directory (concat ben-home-dir "/Code/emacs-24.3"))
 
+(setq ben-path
+      (list (concat ben-home-dir  "/.rbenv/shims")
+            (concat ben-home-dir  "/bin")
+            "/usr/local/share/python"
+            "/usr/local/bin" "/usr/bin" "/bin"
+            "/usr/local/sbin" "/usr/sbin" "/sbin"
+            "/usr/X11/bin" "/usr/texbin"))
+
 (defun nix-specific-setup ()
-  (setq ben-path (append (list
-                          (concat ben-home-dir  "/.rbenv/shims")
-                          (concat ben-home-dir  "/bin")
-			  "/usr/local/share/python" "/usr/local/bin" "/usr/bin" "/bin"
-                          "/usr/local/sbin" "/usr/sbin" "/sbin"
-                          "/usr/X11/bin" "/usr/texbin")
-                         ben-path))
   (setenv "PATH" (mapconcat 'identity ben-path ":"))
   (setq exec-path ben-path))
 
 (defun linux-specific-setup ()
   (setq base-face-height 140)
-  (setq ben-path '())
   (nix-specific-setup))
 
 (defun osx-specific-setup ()
   (setq base-face-height 160)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
-  (setq ben-path '("/Applications/Emacs.app/Contents/MacOS/bin"))
+  (add-to-list 'ben-path "/Applications/Emacs.app/Contents/MacOS/bin")
   (nix-specific-setup))
 
 (defun windows-specific-setup ()

@@ -57,13 +57,9 @@ alias plistbuddy="/usr/libexec/PlistBuddy"
 # Shortcuts
 alias simbk="~/Code/Scripts/backup-scripts/simstim-backup.sh"
 
-# named directories
+# for using emacsformacosx.com compiled Emacs
 
-thesisd=~/Documents/School/PhD/ben-thesis
-blogd=~/Code/octopress
-viscothequed=~/Projects/Viscotheque/src/ex2/R
-conferenced=~/Documents/School/Conferences
-musicd=~/Documents/Church/music
+alias emacs="/Applications/Emacs.app/Contents/MacOS/Emacs -nw"
 
 # Local Variables:
 # mode: sh
