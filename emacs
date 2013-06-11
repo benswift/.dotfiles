@@ -151,6 +151,7 @@
 (setq bidi-display-reordering nil)
 (setq ispell-dictionary "en_GB")
 (setq recentf-max-saved-items 100)
+(put 'narrow-to-region 'disabled nil)
 
 ;;;;;;;;;;;;;;
 ;; from ESK ;;
