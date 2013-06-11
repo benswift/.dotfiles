@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: load-module
+# key: loadmod
+# --
+(define ${1:libname} (sys:open-dylib "/Users/ben/Code/xtm/dylibs/$1.dylib"))
+(load "libs/${2:core}/$1.xtmh")
