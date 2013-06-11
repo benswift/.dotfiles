@@ -1039,7 +1039,6 @@ categories:
 
 (add-to-list 'auto-mode-alist '("\\.abc\\'"  . abc-mode))
 (add-to-list 'auto-mode-alist '("\\.abp\\'"  . abc-mode))
-(autoload 'abc-mode (concat user-emacs-directory "abc-mode") "abc music files" t)
 
 ;;;;;;;;;;;;;
 ;; keyfreq ;;
