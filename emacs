@@ -81,8 +81,7 @@
              yasnippet
              yasnippet-bundle
              powerline
-             auto-complete
-             auto-complete-clang))
+	     auto-complete))
   (if (not (package-installed-p p))
       (package-install p)))
 
