@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: sampler-setup
+# key: newsampler
+# --
+(load "libs/external/instruments.xtm")
+(load "/Users/ben/Code/xtm/lib/sampler-maps.xtm")
+
+(define-sampler ${1:sampler-name} sampler_note_hermite_c default_fx)
+
+(load-samples-from-map drums
+                       ${2:sampler-map}
+                       ${3:sampler-dir})
