@@ -81,7 +81,7 @@
              yasnippet
              yasnippet-bundle
              powerline
-	     auto-complete))
+             auto-complete))
   (if (not (package-installed-p p))
       (package-install p)))
 
@@ -986,9 +986,21 @@ categories:
 ;; Python ;;
 ;;;;;;;;;;;;
 
+;; jedi setup
+
+(add-hook 'python-mode-hook 'jedi:setup)
+
+;; elpy setup
+
 (elpy-enable)
 (setq elpy-rpc-backend 'jedi)
 (setq python-indent-offset 2)
+
+(setq  elpy-default-minor-modes
+       '(eldoc-mode
+         flymake-mode
+         ;; highlight-indentation-mode
+         auto-complete-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; ttl (Turtle) mode ;;
