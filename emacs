@@ -935,6 +935,8 @@ categories:
                              yas/completing-prompt
                              yas/no-prompt))
 
+(global-set-key (kbd "C-c C-s") 'yas/insert-snippet)
+
 ;;;;;;;;;;;;;;;;;;
 ;; autocomplete ;;
 ;;;;;;;;;;;;;;;;;;
