@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: sync-metro
+# key: syncmetro
+# --
+(ipc:connect "${1:server-ip}" "${2:server-name}" ${3:server-port})
+(clock:update-metro "$2" "${4:client-name}")
