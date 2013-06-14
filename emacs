@@ -838,11 +838,11 @@ categories:
 
 ;; session setup
 
-(defun ben-create-extempore-template-file (base-path filename header)
+(defun ben-create-extempore-template-file (base-path filename &optional header)
   (unless (file-exists-p (concat base-path filename))
     (progn
       (find-file (concat base-path filename))
-      (insert header)
+      (if header (insert header))
       (save-buffer)
       (kill-buffer))))
 
@@ -852,28 +852,18 @@ categories:
   (let* ((base-path (concat ben-home-dir "/Code/xtm/sessions/" name "/"))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
-                  "(load \"libs/core/instruments.xtm\")\n"
-                  "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"))
-         (scm-header
-          (concat ";-*- mode: Extempore; extempore-default-port: 7098; -*-\n"
-                  "(ipc:load \"primary\" \"" base-path "setup.xtm\")\n"
-                   "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
-                   "(load \"libs/core/pc_ivl.xtm\")\n"))
-         (xtlang-header
-          (concat "(load \"" base-path "setup.xtm\")\n")))
+		  ""
+		  "(load \"libs/xtmstd.xtm\")\n"
+		  "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
+		  "(load \"" ben-home-dir "/Code/xtm/lib/sampler-maps.xtm\")\n")))
     (if (file-exists-p base-path)
         (error "Cannot create xtm session: directory \"%s\" already exists" base-path))
     (make-directory base-path)
     ;; practice files
     (ben-create-extempore-template-file
-     base-path "practice-scm.xtm" scm-header)
+     base-path "practice-scm.xtm" "scmhead")
     (ben-create-extempore-template-file
-     base-path "practice-xtlang.xtm" xtlang-header)
-    ;; gig files
-    (ben-create-extempore-template-file
-     base-path "gig-scm.xtm" scm-header)
-    (ben-create-extempore-template-file
-     base-path "gig-xtlang.xtm" xtlang-header)
+     base-path "practice-xtlang.xtm" "xthead")
     ;; setup file
     (ben-create-extempore-template-file
      base-path "setup.xtm" setup-header)
