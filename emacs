@@ -826,9 +826,10 @@ categories:
   (turn-on-eldoc-mode)
   (setq eldoc-documentation-function
         'extempore-eldoc-documentation-function)
-  (if (and (not extempore-logger-mode)
-           (yes-or-no-p "Do you want to log this session?"))
-      (extempore-logger-mode 1)))
+  ;; (if (and (not extempore-logger-mode)
+  ;;          (yes-or-no-p "Do you want to log this session?"))
+  ;;     (extempore-logger-mode 1))
+  )
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
@@ -852,10 +853,10 @@ categories:
   (let* ((base-path (concat ben-home-dir "/Code/xtm/sessions/" name "/"))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
-		  ""
-		  "(load \"libs/xtmstd.xtm\")\n"
-		  "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
-		  "(load \"" ben-home-dir "/Code/xtm/lib/sampler-maps.xtm\")\n")))
+                  ""
+                  "(load \"libs/xtmstd.xtm\")\n"
+                  "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
+                  "(load \"" ben-home-dir "/Code/xtm/lib/sampler-maps.xtm\")\n")))
     (if (file-exists-p base-path)
         (error "Cannot create xtm session: directory \"%s\" already exists" base-path))
     (make-directory base-path)
