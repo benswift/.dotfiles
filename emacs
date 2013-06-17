@@ -79,7 +79,6 @@
              ttl-mode
              yaml-mode
              yasnippet
-             yasnippet-bundle
              smart-mode-line
              auto-complete))
   (if (not (package-installed-p p))
@@ -923,8 +922,6 @@ categories:
 (require 'yasnippet)
 (yas-global-mode 1)
 
-;; (add-to-list 'yas-snippet-dirs "~/.dotfiles/yasnippets")
-;; (yas-load-directory yas-snippet-dirs)
 (global-set-key (kbd "C-c C-s") 'yas-insert-snippet)
 (setq yas-prompt-functions '(yas-ido-prompt
                              ;; yas-completing-prompt
