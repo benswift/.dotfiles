@@ -80,7 +80,7 @@
              yaml-mode
              yasnippet
              yasnippet-bundle
-             powerline
+	     smart-mode-line
              auto-complete))
   (if (not (package-installed-p p))
       (package-install p)))
