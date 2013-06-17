@@ -80,7 +80,7 @@
              yaml-mode
              yasnippet
              yasnippet-bundle
-	     smart-mode-line
+             smart-mode-line
              auto-complete))
   (if (not (package-installed-p p))
       (package-install p)))
@@ -826,6 +826,7 @@ categories:
   (turn-on-eldoc-mode)
   (setq eldoc-documentation-function
         'extempore-eldoc-documentation-function)
+  (yas-minor-mode-on)
   ;; (if (and (not extempore-logger-mode)
   ;;          (yes-or-no-p "Do you want to log this session?"))
   ;;     (extempore-logger-mode 1))
@@ -919,14 +920,16 @@ categories:
 ;; yasnippet ;;
 ;;;;;;;;;;;;;;;
 
-(setq yas/root-directory "~/.dotfiles/yasnippets")
-(yas/load-directory yas/root-directory)
-(setq yas/prompt-functions '(yas/ido-prompt
-                             yas/dropdown-prompt
-                             yas/completing-prompt
-                             yas/no-prompt))
+(require 'yasnippet)
+(yas-global-mode 1)
 
-(global-set-key (kbd "C-c C-s") 'yas/insert-snippet)
+;; (add-to-list 'yas-snippet-dirs "~/.dotfiles/yasnippets")
+;; (yas-load-directory yas-snippet-dirs)
+(global-set-key (kbd "C-c C-s") 'yas-insert-snippet)
+(setq yas-prompt-functions '(yas-ido-prompt
+                             ;; yas-completing-prompt
+                             ;; yas-dropdown-prompt
+                             yas-no-prompt))
 
 ;;;;;;;;;;;;;;;;;;
 ;; autocomplete ;;

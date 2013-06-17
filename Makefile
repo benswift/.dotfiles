@@ -9,6 +9,8 @@ nix:
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
 
 	ln -sf $(DOTFILES_DIR)/emacs ~/.emacs
+	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/snippets
+
 	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
 	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
 
