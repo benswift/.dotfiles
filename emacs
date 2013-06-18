@@ -1153,3 +1153,8 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 (require 'server)
 (unless (server-running-p)
   (server-start))
+
+;; toggle fullscreen
+
+(if (display-graphic-p)
+    (toggle-frame-fullscreen))
