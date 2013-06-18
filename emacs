@@ -295,7 +295,6 @@
 (global-set-key (kbd "C-x g") 'find-grep)
 (global-set-key (kbd "C-x u") 'find-dired)
 (global-set-key (kbd "C-x i") 'imenu)
-(global-set-key (kbd "C-;") 'iedit-mode)
 
 ;; window navigation
 
@@ -1094,6 +1093,17 @@ categories:
 
 (if (file-exists-p "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el")
     (load-file "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el"))
+
+;;;;;;;;;;;;;;;;;;;;;;
+;; multiple-cursors ;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'multiple-cursors)
+
+(global-set-key (kbd "<C-S-up>") 'mc/edit-lines)
+(global-set-key (kbd "<C-S-down>") 'mc/mark-all-like-this-dwim)
+(global-set-key (kbd "<C-S-right>") 'mc/mark-next-symbol-like-this)
+(global-set-key (kbd "<C-S-left>") 'mc/mark-previous-symbol-like-this)
 
 ;;;;;;;;;;
 ;; misc ;;
