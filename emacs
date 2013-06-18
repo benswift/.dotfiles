@@ -1044,8 +1044,15 @@ categories:
 ;; floobits ;;
 ;;;;;;;;;;;;;;
 
-(if (file-exists-p "~/.emacs.d/floobits/floobits.el")
-    (load "~/.emacs.d/floobits/floobits.el"))
+;; (if (file-exists-p "~/.emacs.d/floobits/floobits.el")
+;;     (load "~/.emacs.d/floobits/floobits.el"))
+
+;;;;;;;;;;;
+;; rudel ;;
+;;;;;;;;;;;
+
+(if (file-exists-p "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el")
+    (load-file "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el"))
 
 ;;;;;;;;;;
 ;; misc ;;
