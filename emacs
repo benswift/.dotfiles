@@ -1041,6 +1041,13 @@ categories:
 (setq keyfreq-file (concat user-emacs-directory "keyfreq")
       keyfreq-file-lock (concat user-emacs-directory "keyfreq.lock"))
 
+;;;;;;;;;;;;;;
+;; floobits ;;
+;;;;;;;;;;;;;;
+
+(if (file-exists-p "~/.emacs.d/floobits/floobits.el")
+    (load "~/.emacs.d/floobits/floobits.el"))
+
 ;;;;;;;;;;
 ;; misc ;;
 ;;;;;;;;;;
