@@ -221,7 +221,6 @@
     (progn (load-theme 'monokai t)
            (add-to-list 'default-frame-alist
                         '(background-mode . dark))
-
            (set-cursor-color "white")))
 
 (dolist (mode '(menu-bar-mode tool-bar-mode scroll-bar-mode))
