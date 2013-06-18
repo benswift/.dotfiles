@@ -370,7 +370,7 @@
 (if (display-graphic-p)
     (progn
       (require 'smart-mode-line)
-      
+
       (setq sml/name-width 40)
       (setq sml/shorten-modes t)
 
@@ -873,6 +873,46 @@ categories:
 ;; paredit ;;
 ;;;;;;;;;;;;;
 
+;; from https://gist.github.com/malk/4962126
+
+(defun point-is-inside-string ()
+  "Whether point is currently inside string or not."
+  (nth 3 (syntax-ppss)))
+
+(defun point-is-inside-comment ()
+  "Whether point is currently inside a comment or not."
+  (nth 4 (syntax-ppss)))
+
+(defun paredit--is-at-opening-paren ()
+  (and (looking-at "\\s(")
+       (not (point-is-inside-string))
+       (not (point-is-inside-comment))))
+
+(defun paredit-skip-to-start-of-sexp-at-point ()
+  "Skips to start of current sexp."
+  (interactive)
+  (while (not (paredit--is-at-opening-paren))
+    (if (point-is-inside-string)
+	(paredit-backward-up)
+      (paredit-backward))))
+
+(defun paredit-duplicate-closest-sexp ()
+  (interactive)
+  (paredit-skip-to-start-of-sexp-at-point)
+  (set-mark-command nil)
+  ;; while we find sexps we move forward on the line
+  (while (and (bounds-of-thing-at-point 'sexp)
+              (<= (point) (car (bounds-of-thing-at-point 'sexp)))
+              (not (= (point) (line-end-position))))
+    (forward-sexp)
+    (while (looking-at " ")
+      (forward-char)))
+  (kill-ring-save (mark) (point))
+  ;; go to the next line and copy the sexprs we encountered
+  (paredit-newline)
+  (yank)
+  (exchange-point-and-mark))
+
 (defface paredit-paren-face
   '((((class color) (background dark))
      (:foreground "grey50"))
@@ -888,7 +928,8 @@ categories:
   (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
   (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
   (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
-  (define-key paredit-mode-map (kbd "<M-S-right>") 'transpose-sexps))
+  (define-key paredit-mode-map (kbd "<M-S-right>") 'transpose-sexps)
+  (define-key paredit-mode-map (kbd "<s-S-down>") 'paredit-duplicate-closest-sexp))
 
 (add-hook 'paredit-mode-hook 'ben-paredit-mode-hook)
 
