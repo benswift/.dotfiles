@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: cond-mod
+# key: cm
+# --
+(cond ((< (modulo beat ${1:1}) ${2:0})$0)
+      (else ${3:0}))
