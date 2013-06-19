@@ -961,10 +961,14 @@ categories:
 (require 'yasnippet)
 (yas-global-mode 1)
 
+;; this hack gets around the fact that elpy puts its own snippet dir
+;; in first place in the lit, which is where new snippets are placed
+(setq yas-snippet-dirs
+      (remove-duplicates (cons "~/.emacs.d/snippets"
+                               yas-snippet-dirs)))
+
 (global-set-key (kbd "C-c C-s") 'yas-insert-snippet)
 (setq yas-prompt-functions '(yas-ido-prompt
-                             ;; yas-completing-prompt
-                             ;; yas-dropdown-prompt
                              yas-no-prompt))
 
 ;;;;;;;;;;;;;;;;;;
