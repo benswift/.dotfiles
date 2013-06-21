@@ -868,6 +868,10 @@ categories:
      base-path "setup.xtm" setup-header)
     (dired base-path)))
 
+;; RBC minor mode
+(autoload 'remote-buffer-control-mode (concat extempore-path "extras/remote-buffer-control.el") "" t)
+
+
 ;;;;;;;;;;;;;
 ;; paredit ;;
 ;;;;;;;;;;;;;
