@@ -1106,10 +1106,8 @@ categories:
 
 (global-set-key (kbd "<C-S-up>") 'mc/edit-lines)
 (global-set-key (kbd "<C-S-down>") 'mc/mark-all-like-this-dwim)
-(global-set-key (kbd "<C-S-right>") 'mc/mark-next-symbol-like-this)
-(global-set-key (kbd "<C-S-M-right>") 'mc/mark-next-word-like-this)
-(global-set-key (kbd "<C-S-left>") 'mc/mark-previous-symbol-like-this)
-(global-set-key (kbd "<C-S-M-left>") 'mc/mark-previous-word-like-this)
+(global-set-key (kbd "<C-S-right>") 'mc/mark-next-like-this)
+(global-set-key (kbd "<C-S-left>") 'mc/mark-previous-like-this)
 
 ;;;;;;;;;;
 ;; misc ;;
