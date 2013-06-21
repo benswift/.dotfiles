@@ -67,19 +67,18 @@
              gist
              htmlize
              ido-ubiquitous
-             iedit
+             elpy
              magit
              markdown-mode
              monokai-theme
-             noctilux-theme
              org
              paredit
              scss-mode
              smex
-             ttl-mode
              yaml-mode
              yasnippet
              smart-mode-line
+             multiple-cursors
              auto-complete))
   (if (not (package-installed-p p))
       (package-install p)))
