@@ -1,15 +1,13 @@
 DOTFILES_DIR=$(shell pwd)
 
 nix:
-	ln -sf $(DOTFILES_DIR)/profile ~/.profile
-	ln -sf $(DOTFILES_DIR)/exports ~/.exports
-	ln -sf $(DOTFILES_DIR)/aliases ~/.aliases
+	ln -sf $(DOTFILES_DIR)/bashrc ~/.bashrc
 
 	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
 
 	ln -sf $(DOTFILES_DIR)/emacs ~/.emacs
-	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/snippets
+	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
 
 	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
 	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config

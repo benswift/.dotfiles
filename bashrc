@@ -1,3 +1,34 @@
+# Exports
+
+export PATH="/Applications/Emacs.app/Contents/MacOS/bin:/Users/ben/.rbenv/shims:/Users/ben/bin:/usr/local/share/python:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin"
+
+export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
+
+# don't clear the screen after quitting a manual page
+export MANPAGER="less -X"
+
+# for debian packaging
+export DEBEMAIL="benjamin.j.swift@gmail.com"
+export DEBFULLNAME="Ben Swift"
+
+# set up rbenv
+rbenv rehash 2>/dev/null
+rbenv() {
+  command="$1"
+  if [ "$#" -gt 0 ]; then
+    shift
+  fi
+
+  case "$command" in
+  shell)
+    eval `rbenv "sh-$command" "$@"`;;
+  *)
+    command rbenv "$command" "$@";;
+  esac
+}
+
+# Aliases
+
 # List all files colorized in long format, including dot files
 alias la="ls -Gla"
 
