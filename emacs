@@ -951,6 +951,13 @@ categories:
 (add-to-list 'auto-mode-alist '("\\.md" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.markdown" . markdown-mode))
 
+(defun ben-markdown-mode-hook ()
+  ;; unset these keys in markdown-mode-map
+  (define-key markdown-mode-map (kbd "<M-left>") nil)
+  (define-key markdown-mode-map (kbd "<M-right>") nil))
+
+(add-hook 'markdown-mode-hook 'ben-markdown-mode-hook)
+
 ;;;;;;;;;;
 ;; yaml ;;
 ;;;;;;;;;;
