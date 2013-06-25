@@ -53,11 +53,11 @@
 (require 'package)
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
-	("marmalade" . "http://marmalade-repo.org/packages/")
-	("melpa" . "http://melpa.milkbox.net/packages/")))
+        ("marmalade" . "http://marmalade-repo.org/packages/")
+        ("melpa" . "http://melpa.milkbox.net/packages/")))
 
 (unless package--initialized
-       (package-initialize))
+  (package-initialize))
 
 (when (null package-archive-contents)
   (package-refresh-contents))
@@ -257,14 +257,14 @@
 
 (defun ben-set-monokai-term-colors ()
   (monokai-with-color-variables
-   (set-face-attribute 'term-color-black nil :background nil :foreground monokai-fg-1)
-   (set-face-attribute 'term-color-blue nil :background nil :foreground monokai-blue)
-   (set-face-attribute 'term-color-cyan nil :background nil :foreground monokai-cyan)
-   (set-face-attribute 'term-color-green nil :background nil :foreground monokai-green)
-   (set-face-attribute 'term-color-magenta nil :background nil :foreground monokai-purple)
-   (set-face-attribute 'term-color-red nil :background nil :foreground monokai-magenta)
-   (set-face-attribute 'term-color-white nil :background nil :foreground monokai-fg)
-   (set-face-attribute 'term-color-yellow nil :background nil :foreground monokai-yellow)))
+    (set-face-attribute 'term-color-black nil :background nil :foreground monokai-fg-1)
+    (set-face-attribute 'term-color-blue nil :background nil :foreground monokai-blue)
+    (set-face-attribute 'term-color-cyan nil :background nil :foreground monokai-cyan)
+    (set-face-attribute 'term-color-green nil :background nil :foreground monokai-green)
+    (set-face-attribute 'term-color-magenta nil :background nil :foreground monokai-purple)
+    (set-face-attribute 'term-color-red nil :background nil :foreground monokai-magenta)
+    (set-face-attribute 'term-color-white nil :background nil :foreground monokai-fg)
+    (set-face-attribute 'term-color-yellow nil :background nil :foreground monokai-yellow)))
 
 (if (display-graphic-p)
     (add-hook 'term-hook 'ben-set-monokai-term-colors))
@@ -895,7 +895,7 @@ categories:
   (interactive)
   (while (not (paredit--is-at-opening-paren))
     (if (point-is-inside-string)
-	(paredit-backward-up)
+        (paredit-backward-up)
       (paredit-backward))))
 
 (defun paredit-duplicate-closest-sexp ()
