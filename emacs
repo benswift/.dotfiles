@@ -523,13 +523,7 @@
   (define-key org-mode-map (kbd "<M-left>") 'backward-word)
   (define-key org-mode-map (kbd "<M-right>") 'forward-word)
   (define-key org-mode-map (kbd "<C-left>") 'org-metaleft)
-  (define-key org-mode-map (kbd "<C-right>") 'org-metaright)
-  ;;faces
-  (set-face-attribute 'outline-2 nil :inherit font-lock-string-face)
-  (set-face-attribute 'outline-3 nil :inherit font-lock-type-face)
-  (set-face-attribute 'outline-4 nil :inherit font-lock-keyword-face)
-  (set-face-attribute 'outline-5 nil :inherit font-lock-constant-face)
-  (set-face-attribute 'outline-6 nil :inherit font-lock-comment-face))
+  (define-key org-mode-map (kbd "<C-right>") 'org-metaright))
 
 (add-hook 'org-mode-hook 'ben-org-mode-hook)
 
