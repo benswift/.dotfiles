@@ -523,7 +523,12 @@
   (define-key org-mode-map (kbd "<M-left>") 'backward-word)
   (define-key org-mode-map (kbd "<M-right>") 'forward-word)
   (define-key org-mode-map (kbd "<C-left>") 'org-metaleft)
-  (define-key org-mode-map (kbd "<C-right>") 'org-metaright))
+  (define-key org-mode-map (kbd "<C-right>") 'org-metaright)
+  ;; stop org-mode shadowing the mc keybindings
+  (define-key org-mode-map (kbd "<C-S-up>") nil)
+  (define-key org-mode-map (kbd "<C-S-down>") nil)
+  (define-key org-mode-map (kbd "<C-S-right>") nil)
+  (define-key org-mode-map (kbd "<C-S-left>") nil))
 
 (add-hook 'org-mode-hook 'ben-org-mode-hook)
 
