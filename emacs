@@ -676,17 +676,23 @@ categories:
 (add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
 
 (defun ben-latex-mode-hook ()
-  (setq TeX-master 't)
-  (setq TeX-engine 'xetex)
-  (setq TeX-PDF-mode t)
-  (setq TeX-auto-untabify t)
-  (setq TeX-parse-self t) ; Enable parse on load.
-  (setq TeX-auto-save t) ; Enable parse on save.
-  (setq TeX-view-program-selection '(output-pdf "Skim"))
+  ;; basic config vars
+  (setq TeX-master 't
+        TeX-engine 'xetex
+        TeX-PDF-mode t
+        TeX-auto-untabify t
+        TeX-parse-self t
+        TeX-auto-save t)
+  ;; Skim 
+  ;; (setq TeX-view-program-selection '((output-pdf "Skim"))
+  ;;       TeX-view-program-list
+  ;;       '(("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+  ;; Biber
   (add-to-list 'TeX-command-list
                '("Biber" "biber %s" TeX-run-Biber nil t :help "Run Biber"))
   (add-to-list 'TeX-command-list
                '("Glossary" "makeglossaries %s" TeX-run-command nil t :help "Create glossaries"))
+  ;; ispell
   (setq ispell-tex-skip-alists
         '((;; in their own commands:
            ("\\\\addcontentsline"                          ispell-tex-arg-end 2)
