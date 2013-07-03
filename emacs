@@ -836,8 +836,11 @@ categories:
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
 ;; syntax highlighting for LLVM IR files
-(load-file (concat extempore-path "/extras/llvm-mode.el"))
-(add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode))
+
+(let ((llvm-mode-file (concat extempore-path "/extras/llvm-mode.el")))
+  (if (file-exists-p llvm-mode-file)
+      (progn (load-file llvm-mode-file)
+             (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode)))))
 
 ;; session setup
 
@@ -1185,5 +1188,5 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 
 ;; toggle fullscreen
 
-(if (display-graphic-p)
+(if (and (display-graphic-p) (fboundp 'toggle-frame-fullscreen))
     (toggle-frame-fullscreen))
