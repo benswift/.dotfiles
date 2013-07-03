@@ -38,13 +38,13 @@
 (add-hook 'c-mode-common-hook 'ben-c-mode-common-hook)
 
 ;; Enable EDE (Project Management) features
-(global-ede-mode 1)
+;; (global-ede-mode 1)
 
-(ede-cpp-root-project "Extempore"
-                      :name "Extempore"
-                      :file "~/Code/extempore/README.md"
-                      :web-site-url "http://extempore.moso.com.au"
-                      :spp-table '(("TARGET_OS_MAC" . "")))
+;; (ede-cpp-root-project "Extempore"
+;;                       :name "Extempore"
+;;                       :file "~/Code/extempore/README.md"
+;;                       :web-site-url "http://extempore.moso.com.au"
+;;                       :spp-table '(("TARGET_OS_MAC" . "")))
 
 ;;;;;;;;;;
 ;; elpa ;;
