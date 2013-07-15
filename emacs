@@ -151,6 +151,11 @@
 (setq recentf-max-saved-items 100)
 (put 'narrow-to-region 'disabled nil)
 
+;; mark these commands as 'safe'
+
+(put 'downcase-region 'disabled nil)
+(put 'upcase-region 'disabled nil)
+
 ;;;;;;;;;;;;;;
 ;; from ESK ;;
 ;;;;;;;;;;;;;;
