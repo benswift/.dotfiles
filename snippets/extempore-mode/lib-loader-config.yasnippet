@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: lib-loader-config
+# key: libconf
+# --
+;; lib-loading config
+(sys:load-preload-check '${1:libname})
+(define *xtmlib-$1-loaded* #t)
