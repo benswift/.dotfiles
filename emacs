@@ -21,11 +21,11 @@
 (defun ben-c-mode-common-hook ()
   ;; turn on semantic mode
   (semantic-mode 1)
-  ;; turn on the appropriate minor modes
-  (semantic-add-minor-mode 'semantic-idle-scheduler-mode)
-  (semantic-add-minor-mode 'semanticdb-minor-mode)
-  (semantic-add-minor-mode 'semantic-idle-summary-mode)
-  (semantic-add-minor-mode 'semantic-idle-completions-mode)
+  ;; ;; turn on the appropriate minor modes
+  ;; (semantic-add-minor-mode 'semantic-idle-scheduler-mode)
+  ;; (semantic-add-minor-mode 'semanticdb-minor-mode)
+  ;; (semantic-add-minor-mode 'semantic-idle-summary-mode)
+  ;; (semantic-add-minor-mode 'semantic-idle-completions-mode)
   ;; set up some keybindings
   (local-set-key (kbd "C-<return>") 'semantic-ia-complete-symbol)
   (local-set-key (kbd "C-c ?") 'semantic-ia-complete-symbol-menu)
