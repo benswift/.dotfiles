@@ -864,7 +864,7 @@ categories:
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
                   ""
-                  "(load \"libs/xtmstd.xtm\")\n"
+                  "(sys:load \"libs/xtmstd.xtm\")\n"
                   "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
                   "(load \"" ben-home-dir "/Code/xtm/lib/sampler-maps.xtm\")\n")))
     (if (file-exists-p base-path)
