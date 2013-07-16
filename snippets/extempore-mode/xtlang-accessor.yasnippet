@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: xtlang-accessor
+# key: xtacc
+# --
+(bind-func ${1:tuple_name}_${2:field_name}
+  (lambda (${3:tuple_var}:$1_t*)
+    (tref $3 ${4:tuple_index})))
+
+(bind-func $1_set_$2
+  (lambda ($3:$1_t* $2)
+    (tset! $3 $4 $2)))
