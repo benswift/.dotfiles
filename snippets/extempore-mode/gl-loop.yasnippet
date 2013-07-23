@@ -15,6 +15,7 @@
 (define gl-loop
   (lambda (time delta-t$4)
     (gl_draw_frame${3:$(if (string= text "") "" (concat " " text))})
+    (gl:swap-buffers *gl-ctx*)
     (callback (+ time (* *second* delta-t) 0.5)
               '$1
               (+ time (* *second* delta-t)) 
