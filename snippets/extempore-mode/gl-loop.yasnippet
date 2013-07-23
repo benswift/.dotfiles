@@ -17,7 +17,7 @@
     (gl_draw_frame${3:$(if (string= text "") "" (concat " " text))})
     (gl:swap-buffers *gl-ctx*)
     (callback (+ time (* *second* delta-t) 0.5)
-              '$1
+              'gl-loop
               (+ time (* *second* delta-t)) 
               delta-t$4)))
 
