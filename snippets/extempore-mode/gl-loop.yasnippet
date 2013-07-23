@@ -1,0 +1,23 @@
+# -*- mode: snippet -*-
+# name: gl-loop
+# key: glloop
+# --
+(define *gl-ctx* (gl:make-ctx ":0.0" #f 0.0 0.0 ${1:1024.0} ${2:768.0}))
+
+(bind-func gl_draw_frame
+  (lambda ($3)
+    (glClear (+ GL_COLOR_BUFFER_BIT GL_DEPTH_BUFFER_BIT))
+    (glLoadIdentity)
+    ;; (glTranslated 0.0 0.0 0.0)
+    $0
+    (glEnd)))
+
+(define gl-loop
+  (lambda (time delta-t$4)
+    (gl_draw_frame${3:$(if (string= text "") "" (concat " " text))})
+    (callback (+ time (* *second* delta-t) 0.5)
+              '$1
+              (+ time (* *second* delta-t)) 
+              delta-t$4)))
+
+(gl-loop (now) ${5:1/20})
