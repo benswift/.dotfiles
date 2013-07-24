@@ -977,23 +977,6 @@ categories:
 
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
-;;;;;;;;;;;;;;;
-;; yasnippet ;;
-;;;;;;;;;;;;;;;
-
-(require 'yasnippet)
-(yas-global-mode 1)
-
-;; this hack gets around the fact that elpy puts its own snippet dir
-;; in first place in the lit, which is where new snippets are placed
-(setq yas-snippet-dirs
-      (cons "~/.emacs.d/snippets"
-            (delete "~/.emacs.d/snippets" yas-snippet-dirs)))
-
-(global-set-key (kbd "C-c C-s") 'yas-insert-snippet)
-(setq yas-prompt-functions '(yas-ido-prompt
-                             yas-no-prompt))
-
 ;;;;;;;;;;;;;;;;;;
 ;; autocomplete ;;
 ;;;;;;;;;;;;;;;;;;
@@ -1069,6 +1052,19 @@ categories:
          flymake-mode
          ;; highlight-indentation-mode
          auto-complete-mode))
+
+;;;;;;;;;;;;;;;
+;; yasnippet ;;
+;;;;;;;;;;;;;;;
+
+(require 'yasnippet)
+(yas-global-mode 1)
+(setq yas-prompt-functions '(yas-ido-prompt
+                             yas-no-prompt))
+
+(add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
+
+(global-set-key (kbd "C-c C-s") 'yas-insert-snippet)
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; ttl (Turtle) mode ;;
