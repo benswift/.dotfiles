@@ -1021,18 +1021,6 @@ categories:
 
 ;; (require 'ess-site)
 
-(add-hook 'ess-mode-hook
-          '(lambda()
-             (setq-default ess-language "R")
-             (setq ess-my-extra-R-function-keywords
-                   (read-lines (concat user-emacs-directory
-                                       "R-function-names.txt")))
-             (setq ess-R-mode-font-lock-keywords
-                   (append ess-R-mode-font-lock-keywords
-                           (list (cons (concat "\\<" (regexp-opt
-                                                      ess-my-extra-R-function-keywords 'enc-paren) "\\>")
-                                       'font-lock-function-name-face))))))
-
 ;;;;;;;;;;;;
 ;; Python ;;
 ;;;;;;;;;;;;
