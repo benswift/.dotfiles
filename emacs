@@ -93,7 +93,6 @@
 (setq ben-path
       (list (concat ben-home-dir  "/.rbenv/shims")
             (concat ben-home-dir  "/bin")
-            "/usr/local/share/python"
             "/usr/local/bin" "/usr/bin" "/bin"
             "/usr/local/sbin" "/usr/sbin" "/sbin"
             "/usr/X11/bin" "/usr/texbin"))
