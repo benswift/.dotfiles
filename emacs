@@ -976,37 +976,6 @@ categories:
 
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
-;;;;;;;;;;;;;;;;;;
-;; autocomplete ;;
-;;;;;;;;;;;;;;;;;;
-
-;; autocomplete needs to be set up after yasnippet
-
-(require 'auto-complete-config)
-
-;; (ac-set-trigger-key "<tab>")
-(add-to-list 'ac-dictionary-directories (concat ben-home-dir "/.emacs.d/ac-dict"))
-(setq ac-auto-start 2)
-(ac-config-default)
-
-;; for using Clang autocomplete
-
-;; (require 'auto-complete-clang)
-
-;; (defun my-ac-cc-mode-setup ()
-;;   (setq ac-sources (append '(ac-source-clang ac-source-yasnippet ac-source-gtags) ac-sources)))
-
-;; (defun my-ac-config ()
-;;   (setq-default ac-sources '(ac-source-abbrev ac-source-dictionary ac-source-words-in-same-mode-buffers))
-;;   (add-hook 'emacs-lisp-mode-hook 'ac-emacs-lisp-mode-setup)
-;;   (add-hook 'c-mode-common-hook 'my-ac-cc-mode-setup)
-;;   (add-hook 'ruby-mode-hook 'ac-ruby-mode-setup)
-;;   (add-hook 'css-mode-hook 'ac-css-mode-setup)
-;;   (add-hook 'auto-complete-mode-hook 'ac-common-setup)
-;;   (global-auto-complete-mode t))
-
-;; (my-ac-config)
-
 ;;;;;;;;;
 ;; git ;;
 ;;;;;;;;;
@@ -1052,6 +1021,37 @@ categories:
 (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
 
 (global-set-key (kbd "C-c C-s") 'yas-insert-snippet)
+
+;;;;;;;;;;;;;;;;;;
+;; autocomplete ;;
+;;;;;;;;;;;;;;;;;;
+
+;; autocomplete needs to be set up after yasnippet
+
+(require 'auto-complete-config)
+
+;; (ac-set-trigger-key "<tab>")
+(add-to-list 'ac-dictionary-directories (concat ben-home-dir "/.emacs.d/ac-dict"))
+(setq ac-auto-start 2)
+(ac-config-default)
+
+;; for using Clang autocomplete
+
+;; (require 'auto-complete-clang)
+
+;; (defun my-ac-cc-mode-setup ()
+;;   (setq ac-sources (append '(ac-source-clang ac-source-yasnippet ac-source-gtags) ac-sources)))
+
+;; (defun my-ac-config ()
+;;   (setq-default ac-sources '(ac-source-abbrev ac-source-dictionary ac-source-words-in-same-mode-buffers))
+;;   (add-hook 'emacs-lisp-mode-hook 'ac-emacs-lisp-mode-setup)
+;;   (add-hook 'c-mode-common-hook 'my-ac-cc-mode-setup)
+;;   (add-hook 'ruby-mode-hook 'ac-ruby-mode-setup)
+;;   (add-hook 'css-mode-hook 'ac-css-mode-setup)
+;;   (add-hook 'auto-complete-mode-hook 'ac-common-setup)
+;;   (global-auto-complete-mode t))
+
+;; (my-ac-config)
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; ttl (Turtle) mode ;;
