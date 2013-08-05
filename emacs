@@ -987,7 +987,10 @@ categories:
 ;; R ;;
 ;;;;;;;
 
-;; (require 'ess-site)
+(require 'ess-site)
+
+(add-to-list 'auto-mode-alist '("\\.r$" . R-mode))
+(add-to-list 'auto-mode-alist '("\\.R$" . R-mode))
 
 ;;;;;;;;;;;;
 ;; Python ;;
