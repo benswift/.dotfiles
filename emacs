@@ -67,7 +67,7 @@
              gist
              htmlize
              ido-ubiquitous
-             elpy
+             ;; elpy
              magit
              markdown-mode
              monokai-theme
@@ -1002,15 +1002,15 @@ categories:
 
 ;; elpy setup
 
-(elpy-enable)
-(setq elpy-rpc-backend 'jedi)
-(setq python-indent-offset 2)
+;; (elpy-enable)
+;; (setq elpy-rpc-backend 'jedi)
+;; (setq python-indent-offset 2)
 
-(setq  elpy-default-minor-modes
-       '(eldoc-mode
-         flymake-mode
-         ;; highlight-indentation-mode
-         auto-complete-mode))
+;; (setq  elpy-default-minor-modes
+;;        '(eldoc-mode
+;;          flymake-mode
+;;          ;; highlight-indentation-mode
+;;          auto-complete-mode))
 
 ;;;;;;;;;;;;;;;
 ;; yasnippet ;;
