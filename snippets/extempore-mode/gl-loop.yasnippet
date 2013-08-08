@@ -3,7 +3,6 @@
 # key: glloop
 # --
 (sys:load "libs/external/shaders.xtm")
-(sys:load "libs/external/openvg.xtm")
 
 (define width ${1:1024.0})
 (define height ${2:768.0})
@@ -12,29 +11,22 @@
 (define fullscreen ${3:#f})
 
 (define *gl-ctx* (gl:make-ctx ":0.0" fullscreen 0.0 0.0 width height))
+(xtm_render_setup (real->integer width) (real->integer height))
 
-(bind-func render_cb:XTMRENDERCB
-  (lambda (frame shader m v p data)
-    $0
-    ))
+rendercb$0
 
 (bind-func gl_render
   (lambda ()
-    (xtm_render null null null null null)
+    (xtm_render ${4:pre} ${5:opaque} ${6:transparent} ${7:post} ${8:data})
     void))
 
-(xtm_render_setup (real->integer width) (real->integer height))
-
-(if (<> (vgCreateContext (real->integer width) (real->integer height)) 1)
-    (print "VGContext error!  Error code " (vgGetError) "\n"))
-
 (define gl-loop
-  (lambda (time delta-t$4)
+  (lambda (time delta-t$9)
     (gl_render)
     (gl:swap-buffers *gl-ctx*)
-    (callback (+ time (* *second* delta-t) 0.5)
+    (callback (+ time (* *second* delta-t) 0.9)
               'gl-loop
               (+ time (* *second* delta-t)) 
-              delta-t$4)))
+              delta-t$9)))
 
-(gl-loop (now) ${5:1/30})
+(gl-loop (now) ${10:1/30})

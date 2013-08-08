@@ -1,0 +1,42 @@
+# -*- mode: snippet -*-
+# name: openvg
+# key: openvg
+# --
+$0(if (<> (vgCreateContext (real->integer width) (real->integer height)) 1)
+    (print "VGContext error!  Error code " (vgGetError) "\n"))
+(let ((bg_colour:float* (salloc 4))
+      (path (xtm_create_vgpath))
+      (stroke (vgCreatePaint))
+      (stroke_colour:float* (salloc 4))
+      (fill (vgCreatePaint))
+      (fill_colour:float* (salloc 4)))
+  (glDisable GL_DEPTH_TEST)
+  (vgSetParameteri stroke VG_PAINT_TYPE VG_PAINT_TYPE_COLOR)
+  (vgSetParameteri fill VG_PAINT_TYPE VG_PAINT_TYPE_COLOR)
+  ;; background
+  (pfill! bg_color 0.0 0.0 0.0 1.0)
+  (vgSetfv VG_CLEAR_COLOR 4 color)
+  (vgClear 0 0 ${1:width} ${2:height})
+  ;; matrices
+  (vgSeti VG_MATRIX_MODE VG_MATRIX_PATH_USER_TO_SURFACE)
+  (vgLoadIdentity)
+  ;; colours
+  (pfill! stroke_color ${3:0.0 0.0 0.0 1.0})
+  (vgSetParameterfv stroke VG_PAINT_COLOR 4 stroke_color)
+  (pfill! fill_colour ${4:0.0 0.0 0.0 1.0})
+  (vgSetParameterfv fill VG_PAINT_COLOR 4 fill_color)
+  (vgSetPaint stroke VG_STROKE_PATH)
+  (vgSetPaint fill VG_FILL_PATH)
+  (vgSetf VG_STROKE_LINE_WIDTH 10.0)
+  ;; create the path
+  
+  ;; draw path
+  (vgDrawPath path (+ VG_FILL_PATH VG_STROKE_PATH))
+  ;; cleanup
+  (vgDestroyPath path)
+  (vgDestroyPaint stroke)
+  (vgDestroyPaint fill)
+  ;; error handling
+  (if (<> (vgGetError) VG_NO_ERROR)
+      (printf "VG Error code: %d\n" (vgGetError)))
+  void)
