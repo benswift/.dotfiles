@@ -250,6 +250,25 @@
 (global-set-key (kbd "C-c +") 'text-scale-increase)
 (global-set-key (kbd "C-c -") 'text-scale-decrease)
 
+;;;;;;;;;;;;;;;;;;;
+;; monokai theme ;;
+;;;;;;;;;;;;;;;;;;;
+
+;; this is fragile, but necessary since they took this macro out in a
+;; recent change
+
+(defmacro monokai-with-color-variables (&rest body)
+  "`let' bind all colors defined in `monokai-colors-alist'.
+Also bind `class' to ((class color) (min-colors 89))."
+  (declare (indent 0))
+  `(let ((class '((class color) (min-colors 89)))
+         ,@(mapcar (lambda (cons)
+                     (list (car cons) (cdr cons)))
+                   (if window-system
+                       (cdar monokai-colors)
+                     (cdadr monokai-colors))))
+     ,@body))
+
 ;;;;;;;;;;;
 ;; faces ;;
 ;;;;;;;;;;;
