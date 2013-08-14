@@ -2,40 +2,19 @@
 # name: openvg
 # key: openvg
 # --
-$0(if (<> (vgCreateContext (real->integer width) (real->integer height)) 1)
-    (print "VGContext error!  Error code " (vgGetError) "\n"))
-(let ((bg_colour:float* (salloc 4))
-      (path (xtm_create_vgpath))
+$0(let ((vg-ctx-res (xtm_create_vg_context (real->integer width) (real->integer height))))
+  (if (<> vg-ctx-res 1)
+      (xtm_vg_print_error)))
+(let ((path (xtm_create_vgpath))
       (stroke (vgCreatePaint))
-      (stroke_colour:float* (salloc 4))
-      (fill (vgCreatePaint))
-      (fill_colour:float* (salloc 4)))
-  (glDisable GL_DEPTH_TEST)
-  (vgSetParameteri stroke VG_PAINT_TYPE VG_PAINT_TYPE_COLOR)
-  (vgSetParameteri fill VG_PAINT_TYPE VG_PAINT_TYPE_COLOR)
-  ;; background
-  (pfill! bg_colour 0.0 0.0 0.0 1.0)
-  (vgSetfv VG_CLEAR_COLOR 4 bg_colour)
-  (vgClear 0 0 ${1:(ftoi32 width)} ${2:(ftoi32 height)})
-  ;; matrices
-  (vgSeti VG_MATRIX_MODE VG_MATRIX_PATH_USER_TO_SURFACE)
-  (vgLoadIdentity)
-  ;; colours
-  (pfill! stroke_colour ${3:0.0 0.0 0.0 1.0})
-  (vgSetParameterfv stroke VG_PAINT_COLOR 4 stroke_colour)
-  (pfill! fill_colour ${4:0.0 0.0 0.0 1.0})
-  (vgSetParameterfv fill VG_PAINT_COLOR 4 fill_colour)
-  (vgSetPaint stroke VG_STROKE_PATH)
-  (vgSetPaint fill VG_FILL_PATH)
-  (vgSetf VG_STROKE_LINE_WIDTH 10.0)
-  ;; create the path
+      (fill (vgCreatePaint)))
+  (xtm_vg_setup)
+  ;; (xtm_vg_clear 0.0 0.0 0.0 1.0 ${1:(ftoi32 width)} ${2:(ftoi32 height)})
+  (xtm_paint_setup_fill fill ${3:0.0 0.0 0.0 1.0})
+  (xtm_paint_setup_stroke stroke ${4:0.0 0.0 0.0 1.0 10.0})
+  ;; draw the path
   
-  ;; draw path
-  (vgDrawPath path (+ VG_FILL_PATH VG_STROKE_PATH))
   ;; cleanup
-  (vgDestroyPath path)
-  (vgDestroyPaint stroke)
-  (vgDestroyPaint fill)
-  ;; error handling
-  (if (<> (vgGetError) VG_NO_ERROR)
-      (printf "VG Error code: %d\n" (vgGetError))))
+  (xtm_destroy_paint fill)
+  (xtm_destroy_paint stroke)
+  (xtm_vg_print_error))
