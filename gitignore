@@ -24,6 +24,13 @@ secrets/
 *.aux
 *.rel
 *.log
+*.pdf
+*.bbl
+*.blg
+*.bcf
+*.out
+*.xml
+*.toc
 auto/
 
 # emacs
