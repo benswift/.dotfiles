@@ -1,7 +1,7 @@
 DOTFILES_DIR=$(shell pwd)
 
 nix:
-	ln -sf $(DOTFILES_DIR)/bashrc ~/.bashrc
+	ln -sf $(DOTFILES_DIR)/bash_profile ~/.bash_profile
 
 	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
