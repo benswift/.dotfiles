@@ -854,7 +854,7 @@ categories:
   ;; (if (and (not extempore-logger-mode)
   ;;          (yes-or-no-p "Do you want to log this session?"))
   ;;     (extempore-logger-mode 1))
-  (set-face-attribute 'extempore-blink-eval-face nil :foreground "#FD971F" :background "#171A0B" :inherit nil))
+  (set-face-attribute 'extempore-blink-eval-face nil :foreground "#171A0B" :background "#FD971F" :inherit nil))
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
