@@ -1193,6 +1193,9 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 ;;;;;;;;;;;;;;;;;;
 
 (require 'server)
+
+(setq server-name "ben")
+
 (unless (server-running-p)
   (server-start))
 
