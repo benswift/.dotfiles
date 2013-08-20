@@ -19,3 +19,7 @@ Host simflanny
     ProxyCommand ssh -q simstim nc -q0 %h 22
     HostName 192.168.11.109
     User ben
+
+# Local Variables:
+# mode: conf
+# End:
