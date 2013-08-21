@@ -843,8 +843,11 @@ categories:
 (autoload 'extempore-mode (concat extempore-path "extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-to-list 'auto-mode-alist '("\\.xtmh$" . extempore-mode))
-(setq extempore-tab-completion nil)
-(setq extempore-default-device-number 2)
+
+;; extempore customisation
+(setq extempore-tab-completion nil
+      extempore-default-device-number 2
+      extempore-process-args (concat "--run " extempore-path "libs/xtm.xtm"))
 
 (defun ben-extempore-mode-hook ()
   (turn-on-eldoc-mode)
