@@ -847,7 +847,7 @@ categories:
 ;; extempore customisation
 (setq extempore-tab-completion nil
       extempore-default-device-number 2
-      extempore-process-args (concat "--run " extempore-path "libs/xtm.xtm"))
+      extempore-process-args "--run libs/xtm.xtm")
 
 (defun ben-extempore-mode-hook ()
   (turn-on-eldoc-mode)
