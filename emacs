@@ -847,8 +847,13 @@ categories:
 
 ;; extempore customisation
 (setq extempore-tab-completion nil
-      extempore-default-device-number 2
       extempore-process-args "--run libs/xtm.xtm")
+
+(setq extempore-default-device-number
+      (cond
+       ((string= system-name "lonyx") 1)
+       ((string= system-name "cyril.local") 2)
+       (t nil)))
 
 (defun ben-extempore-mode-hook ()
   (turn-on-eldoc-mode)
