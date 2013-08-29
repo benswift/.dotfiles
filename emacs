@@ -144,7 +144,7 @@
 
 (column-number-mode 1)
 (global-auto-revert-mode t)
-(setq special-display-regexps nil)
+;; (setq display-buffer-alist nil)
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 (setq bidi-display-reordering nil)
 (setq ispell-dictionary "en_GB")
@@ -194,8 +194,9 @@
 (show-paren-mode 1)
 
 ;; ido-mode is like magic pixie dust!
-(ido-mode t)
-(ido-ubiquitous t)
+(ido-mode 1)
+(ido-ubiquitous-mode 1)
+
 (setq ido-enable-prefix nil
       ido-enable-flex-matching t
       ido-auto-merge-work-directories-length nil
@@ -1197,9 +1198,9 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
       ;; Otherwise kill the whole line, and yank it back.
       (let ((kill-read-only-ok t)
             deactivate-mark)
-        (toggle-read-only 1)
+        (read-only-mode 1)
         (kill-whole-line)
-        (toggle-read-only 0)
+        (read-only-mode 0)
         (yank)))))
 
 (global-set-key (kbd "C-c d") 'duplicate-line)
