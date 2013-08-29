@@ -10,22 +10,21 @@
 
 ;; uses Emacs-supplied CEDET (for Emacs >= 24)
 
-;; Enable Semantic for C/C++ modes only
-
-;; Haven't really tested out if this works properly---need to do that
-;; next time I'm coding in C/C++
-
-(setq semantic-imenu-bucketize-file nil)
-(setq semantic-default-submodes nil)
+;; (setq semantic-imenu-bucketize-file nil)
+(setq semantic-default-submodes
+      '(global-semanticdb-minor-mode             ;; Maintain tag database.
+        global-semantic-idle-scheduler-mode      ;; Reparse buffer when idle.
+        global-semantic-idle-summary-mode        ;; Show summary of tag at point.
+        ;; global-semantic-idle-completions-mode    ;; Show completions when idle.
+        global-semantic-decoration-mode          ;; Additional tag decorations.
+        ;; global-semantic-highlight-func-mode      ;; Highlight the current tag.
+        global-semantic-stickyfunc-mode          ;; Show current fun in header line.
+        ;; global-semantic-mru-bookmark-mode        ;; Provide `switch-to-buffer'-like keybinding for tag names.
+        ))
 
 (defun ben-c-mode-common-hook ()
   ;; turn on semantic mode
   (semantic-mode 1)
-  ;; ;; turn on the appropriate minor modes
-  ;; (semantic-add-minor-mode 'semantic-idle-scheduler-mode)
-  ;; (semantic-add-minor-mode 'semanticdb-minor-mode)
-  ;; (semantic-add-minor-mode 'semantic-idle-summary-mode)
-  ;; (semantic-add-minor-mode 'semantic-idle-completions-mode)
   ;; set up some keybindings
   (local-set-key (kbd "C-<return>") 'semantic-ia-complete-symbol)
   (local-set-key (kbd "C-c ?") 'semantic-ia-complete-symbol-menu)
@@ -707,7 +706,7 @@ categories:
         TeX-auto-untabify t
         TeX-parse-self t
         TeX-auto-save t)
-  ;; Skim 
+  ;; Skim
   ;; (setq TeX-view-program-selection '((output-pdf "Skim"))
   ;;       TeX-view-program-list
   ;;       '(("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
