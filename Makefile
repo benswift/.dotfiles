@@ -7,6 +7,7 @@ nix:
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
 
 	ln -sf $(DOTFILES_DIR)/emacs ~/.emacs
+	ln -sf $(DOTFILES_DIR)/emacs.elc ~/.emacs.elc
 	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
 
 	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
