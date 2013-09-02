@@ -62,7 +62,6 @@
   (package-refresh-contents))
 
 (dolist (p '(auctex
-             auto-async-byte-compile
              ess
              gist
              htmlize
@@ -836,13 +835,6 @@ categories:
     (message (concat "Biber finished successfully. "
                      "Run LaTeX again to get citations right."))))
   (setq TeX-command-next TeX-command-default))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; auto-async-byte-compile ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'auto-async-byte-compile)
-(add-hook 'emacs-lisp-mode-hook 'enable-auto-async-byte-compile-mode)
 
 ;;;;;;;;;;;;;;;
 ;; extempore ;;
