@@ -2,4 +2,4 @@
 # name: printf-debug
 # key: pfd
 # --
-(printf "$1\n" ${1:$(replace-regexp-in-string "\\\\(:\\\\| =\\\\) %\\\\(lld\\\\|d\\\\|f\\\\|p\\\\|s\\\\|c\\\\)" "" text)})
+(printf "$1\n" ${1:$(replace-regexp-in-string "\\\\(:\\\\| =\\\\) %\\\\(lld\\\\|d\\\\|f\\\\|p\\\\|s\\\\|c\\\\)" "" yas-text)})
