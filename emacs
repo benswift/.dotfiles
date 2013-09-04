@@ -686,13 +686,6 @@ categories:
 (setq erc-prompt-for-nickserv-password nil)
 (setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
 
-(defun ben-erc-set-faces ()
-  (set-face-attribute 'erc-input-face nil :foreground nil :inherit font-lock-string-face)
-  (set-face-attribute 'erc-my-nick-face nil :foreground nil :inherit font-lock-keyword-face)
-  (set-face-attribute 'erc-notice-face nil :foreground nil :inherit font-lock-comment-face))
-
-(add-hook 'erc-mode-hook 'ben-erc-set-faces)
-
 ;;;;;;;;;;;
 ;; LaTeX ;;
 ;;;;;;;;;;;
