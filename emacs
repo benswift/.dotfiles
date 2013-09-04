@@ -261,6 +261,9 @@
 ;; this is fragile, but necessary since they took this macro out in a
 ;; recent change
 
+;; TODO look into the `monokai-add-font-lock-keywords' variable and
+;; see if it's a better way to do this.
+
 (defmacro monokai-with-color-variables (&rest body)
   "`let' bind all colors defined in `monokai-colors-alist'.
 Also bind `class' to ((class color) (min-colors 89))."
@@ -445,7 +448,8 @@ Also bind `class' to ((class color) (min-colors 89))."
   (define-key eshell-mode-map (kbd "<up>") 'previous-line)
   (define-key eshell-mode-map (kbd "<down>") 'next-line)
   ;;faces
-  (set-face-attribute 'eshell-prompt nil :foreground nil :inherit 'font-lock-function-name-face)
+  (monokai-with-color-variables
+    (set-face-attribute 'eshell-prompt nil :foreground monokai-red-1))
   ;; prompt helpers
   (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
   (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
@@ -462,21 +466,7 @@ Also bind `class' to ((class color) (min-colors 89))."
                '("tar" "\\(\\.tar|\\.tgz\\|\\.tar\\.gz\\)\\'"))
   (add-to-list 'eshell-visual-commands "ssh"))
 
-(defun ben-eshell-set-faces ()
-  (set-face-attribute 'eshell-ls-archive nil :foreground nil :inherit 'font-lock-warning-face)
-  (set-face-attribute 'eshell-ls-backup nil :foreground nil :inherit 'font-lock-constant-face)
-  (set-face-attribute 'eshell-ls-clutter nil :foreground nil :inherit 'font-lock-comment-face)
-  (set-face-attribute 'eshell-ls-directory nil :foreground nil :inherit 'font-lock-type-face)
-  (set-face-attribute 'eshell-ls-executable nil :foreground nil :inherit 'font-lock-function-name-face)
-  (set-face-attribute 'eshell-ls-missing nil :foreground nil :inherit 'font-lock-warning-face)
-  (set-face-attribute 'eshell-ls-product nil :foreground nil :inherit 'font-lock-comment-face)
-  (set-face-attribute 'eshell-ls-readonly nil :foreground nil :inherit 'font-lock-string-face)
-  (set-face-attribute 'eshell-ls-special nil :foreground nil :inherit 'font-lock-keyword-face)
-  (set-face-attribute 'eshell-ls-symlink nil :foreground nil :inherit 'font-lock-string-face)
-  (set-face-attribute 'eshell-ls-unreadable nil :foreground nil :inherit 'font-lock-comment-face))
-
 (add-hook 'eshell-mode-hook 'ben-eshell-mode-hook)
-(add-hook 'eshell-mode-hook 'ben-eshell-set-faces)
 
 (defun base-name (path)
   "Returns the base name of the given path."
@@ -513,11 +503,6 @@ Also bind `class' to ((class color) (min-colors 89))."
 ;;;;;;;;;;;
 
 (setq magit-save-some-buffers nil)
-
-(eval-after-load 'magit
-  '(progn
-     (set-face-foreground 'magit-diff-add "green4")
-     (set-face-foreground 'magit-diff-del "red3")))
 
 ;;;;;;;;;;;;;
 ;; cc-mode ;;
