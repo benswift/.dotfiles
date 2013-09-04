@@ -150,6 +150,9 @@
 (setq recentf-max-saved-items 100)
 (put 'narrow-to-region 'disabled nil)
 
+(display-time)
+(setq display-time-format "%H:%M")
+
 ;; mark these commands as 'safe'
 
 (put 'downcase-region 'disabled nil)
@@ -395,9 +398,6 @@ Also bind `class' to ((class color) (min-colors 89))."
 
       (setq sml/name-width 40)
       (setq sml/shorten-modes t)
-
-      (setq sml/show-time t)
-      (setq sml/time-format " %H:%M  ")
 
       (add-to-list 'sml/hidden-modes " ElDoc")
       (add-to-list 'sml/hidden-modes " Paredit")
