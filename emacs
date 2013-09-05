@@ -65,7 +65,7 @@
              ess
              gist
              htmlize
-             ido-ubiquitous
+             ;; ido-ubiquitous
              imenu-anywhere
              ;; elpy
              magit
@@ -197,7 +197,7 @@
 
 ;; ido-mode is like magic pixie dust!
 (ido-mode 1)
-(ido-ubiquitous-mode 1)
+;; (ido-ubiquitous-mode 1)
 
 (setq ido-enable-prefix nil
       ido-enable-flex-matching t
