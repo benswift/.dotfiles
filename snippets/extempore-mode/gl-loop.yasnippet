@@ -17,7 +17,8 @@ rendercb$0
 
 (bind-func gl_render
   (lambda ()
-    (xtm_render ${4:pre} ${5:opaque} ${6:transparent} ${7:post} ${8:data})
+    ;;          pre opaque transparent post data
+    (xtm_render ${4:null} ${5:null} ${6:null} ${7:null} ${8:null})
     void))
 
 (define gl-loop
