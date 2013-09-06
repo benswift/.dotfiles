@@ -197,7 +197,7 @@
 
 ;; ido-mode is like magic pixie dust!
 (ido-mode 1)
-;; (ido-ubiquitous-mode 1)
+(ido-ubiquitous-mode 1)
 
 (setq ido-enable-prefix nil
       ido-enable-flex-matching t
