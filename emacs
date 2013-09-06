@@ -842,7 +842,9 @@ categories:
   ;; (if (and (not extempore-logger-mode)
   ;;          (yes-or-no-p "Do you want to log this session?"))
   ;;     (extempore-logger-mode 1))
-  (set-face-attribute 'extempore-blink-eval-face nil :foreground "#FD971F" :weight 'bold :inherit nil))
+  (monokai-with-color-variables
+    (set-face-attribute 'extempore-blink-eval-face nil :foreground monokai-bg :background "#FD971F")
+    (set-face-attribute 'extempore-sb-blink-eval-face nil :foreground monokai-bg :background "#A6E22E")))
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
