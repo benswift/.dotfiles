@@ -399,7 +399,7 @@ Also bind `class' to ((class color) (min-colors 89))."
     (progn
       (require 'smart-mode-line)
 
-      (setq sml/name-width 40)
+      (setq sml/name-width 30)
       (setq sml/mode-width 'full)
       (setq sml/shorten-modes t)
 
