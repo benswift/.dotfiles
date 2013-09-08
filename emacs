@@ -428,7 +428,7 @@ Also bind `class' to ((class color) (min-colors 89))."
         (setq sml/inactive-background-color monokai-bg-1)
         (set-face-attribute 'sml/global nil :foreground monokai-fg)
         ;; other faces
-        (set-face-attribute 'sml/time nil :foreground monokai-orange :weight 'bold)
+        (set-face-attribute 'sml/time nil :foreground monokai-fg :weight 'bold)
         (set-face-attribute 'sml/filename nil :foreground monokai-yellow)
         (set-face-attribute 'sml/prefix nil :foreground monokai-green))
 
@@ -456,7 +456,7 @@ Also bind `class' to ((class color) (min-colors 89))."
   (define-key eshell-mode-map (kbd "<down>") 'next-line)
   ;;faces
   (monokai-with-color-variables
-    (set-face-attribute 'eshell-prompt nil :foreground monokai-red-1))
+    (set-face-attribute 'eshell-prompt nil :foreground monokai-orange))
   ;; prompt helpers
   (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
   (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
