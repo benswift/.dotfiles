@@ -2,18 +2,15 @@
 # name: openvg
 # key: openvg
 # --
-$0(let ((vg-ctx-res (xtm_create_vg_context (real->integer width) (real->integer height))))
-  (if (<> vg-ctx-res 1)
-      (xtm_vg_print_error)))
 (let ((path (xtm_create_vgpath))
       (stroke (vgCreatePaint))
       (fill (vgCreatePaint)))
   (xtm_vg_setup)
-  ;; (xtm_vg_clear 0.0 0.0 0.0 1.0 ${1:(ftoi32 width)} ${2:(ftoi32 height)})
-  (xtm_paint_setup_fill fill ${3:0.0 0.0 0.0 1.0})
-  (xtm_paint_setup_stroke stroke ${4:0.0 0.0 0.0 1.0 10.0})
+  ;; (xtm_vg_clear 0.0 0.0 0.0 1.0 (ftoi32 width) (ftoi32 height))
+  (xtm_paint_setup_fill fill ${1:0.0 0.0 0.0 1.0})
+  (xtm_paint_setup_stroke stroke ${2:0.0 0.0 0.0 1.0 10.0})
   ;; create the path
-  
+  $0
   ;; draw the path
   (xtm_draw_path path)  
   ;; cleanup

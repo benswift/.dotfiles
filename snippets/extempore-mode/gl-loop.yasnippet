@@ -12,6 +12,9 @@
 
 (define *gl-ctx* (gl:make-ctx ":0.0" fullscreen 0.0 0.0 width height))
 (xtm_render_setup (real->integer width) (real->integer height))
+;; set up canvas as an OpenVG canvas
+(let ((vg-ctx-res (xtm_create_vg_context (real->integer width) (real->integer height))))
+  (if (<> vg-ctx-res 1) (xtm_vg_print_error)))
 
 rendercb$0
 
