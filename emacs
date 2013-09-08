@@ -678,6 +678,12 @@ categories:
 (setq erc-prompt-for-nickserv-password nil)
 (setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
 
+(defun ben-erc-set-faces ()
+  (monokai-with-color-variables
+    (set-face-attribute 'erc-input-face nil :foreground monokai-yellow)))
+
+(add-hook 'erc-mode-hook 'ben-erc-set-faces)
+
 ;;;;;;;;;;;
 ;; LaTeX ;;
 ;;;;;;;;;;;
