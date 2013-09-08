@@ -844,7 +844,7 @@ categories:
   ;;     (extempore-logger-mode 1))
   (monokai-with-color-variables
     (set-face-attribute 'extempore-blink-eval-face nil :foreground monokai-bg :background "#FD971F")
-    (set-face-attribute 'extempore-sb-blink-eval-face nil :foreground monokai-bg :background "#A6E22E")))
+    (set-face-attribute 'extempore-sb-blink-eval-face nil :foreground monokai-bg :background "#39FF14")))
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
