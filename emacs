@@ -239,6 +239,12 @@
   (mouse-wheel-mode t)
   (blink-cursor-mode -1))
 
+;; transparency
+
+(defun set-current-frame-transparency (value)
+   (interactive "nTransparency Value 0 (transparent) - 100 (opaque): ")
+   (set-frame-parameter (selected-frame) 'alpha value))
+
 ;; pretty lambdas
 
 (add-hook 'prog-mode-hook
