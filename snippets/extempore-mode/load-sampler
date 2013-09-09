@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: load-sampler
+# key: loadsamp
+# --
+(load-sampler ${1:sampler} ${2:"~/Documents/samples/"} ${3:bank} ${4:parse-sample-names-1})
