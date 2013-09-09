@@ -1,6 +1,5 @@
 alias ff find-file $1
 alias d dired $1
-alias simbk ~/Code/Scripts/backup-scripts/simstim-backup.sh
 alias la ls -la
 alias bu brew update; echo ' '; echo '**outdated**'; brew outdated
 alias eject-buddy diskutil eject /Volumes/Buddy/
