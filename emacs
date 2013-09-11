@@ -255,11 +255,6 @@
                                                ,(make-char 'greek-iso8859-7 107))
                                nil)))))))
 
-;; buffer-local text size adjustment
-
-(global-set-key (kbd "C-c +") 'text-scale-increase)
-(global-set-key (kbd "C-c -") 'text-scale-decrease)
-
 ;;;;;;;;;;;;;;;;;;;
 ;; monokai theme ;;
 ;;;;;;;;;;;;;;;;;;;
