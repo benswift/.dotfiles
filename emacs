@@ -62,11 +62,11 @@
   (package-refresh-contents))
 
 (dolist (p '(auctex
+             epl
              ess
              gist
+             helm
              htmlize
-             ;; ido-ubiquitous
-             imenu-anywhere
              ;; elpy
              magit
              markdown-mode
@@ -74,7 +74,6 @@
              org
              paredit
              scss-mode
-             smex
              yaml-mode
              yasnippet
              smart-mode-line
@@ -130,12 +129,14 @@
     (load custom-file))
 
 ;;;;;;;;;;
-;; smex ;;
+;; helm ;;
 ;;;;;;;;;;
 
-(setq smex-save-file (concat user-emacs-directory ".smex-items"))
-(smex-initialize)
-(global-set-key (kbd "M-x") 'smex)
+(helm-mode 1)
+
+(global-set-key (kbd "C-c h") 'helm-mini)
+(global-set-key (kbd "C-c <SPC>") 'helm-all-mark-rings)
+(global-set-key (kbd "C-c i") 'helm-imenu)
 
 ;;;;;;;;;;;;;;;;
 ;; one-liners ;;
@@ -194,19 +195,6 @@
 
 ;; Highlight matching parentheses when the point is on them.
 (show-paren-mode 1)
-
-;; ido-mode is like magic pixie dust!
-(ido-mode 1)
-(ido-ubiquitous-mode 1)
-
-(setq ido-enable-prefix nil
-      ido-enable-flex-matching t
-      ido-auto-merge-work-directories-length nil
-      ido-create-new-buffer 'always
-      ido-use-filename-at-point 'guess
-      ido-use-virtual-buffers t
-      ido-handle-duplicate-virtual-buffers 2
-      ido-max-prospects 10)
 
 (set-default 'indent-tabs-mode nil)
 (set-default 'tab-width 2)
@@ -324,7 +312,6 @@ Also bind `class' to ((class color) (min-colors 89))."
 (global-set-key (kbd "<f6>") 'compile)
 (global-set-key (kbd "C-x g") 'find-grep)
 (global-set-key (kbd "C-x u") 'find-dired)
-(global-set-key (kbd "C-x i") 'imenu-anywhere)
 
 ;; window navigation
 
@@ -526,8 +513,6 @@ Also bind `class' to ((class color) (min-colors 89))."
 ;;;;;;;;;;;;;;
 ;; org mode ;;
 ;;;;;;;;;;;;;;
-
-(setq org-completion-use-ido t)
 
 (defun ben-org-mode-hook ()
   ;; keymappings
