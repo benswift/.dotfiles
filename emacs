@@ -66,6 +66,7 @@
              ess
              gist
              helm
+             helm-c-yasnippet
              htmlize
              ;; elpy
              magit
@@ -78,9 +79,12 @@
              yasnippet
              smart-mode-line
              multiple-cursors
-             auto-complete))
+             auto-complete
+             ac-helm))
   (if (not (package-installed-p p))
       (package-install p)))
+
+(global-set-key (kbd "C-c p") 'list-packages)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cross-platform setup ;;
@@ -1018,13 +1022,14 @@ categories:
 ;;;;;;;;;;;;;;;
 
 (require 'yasnippet)
-(yas-global-mode 1)
-(setq yas-prompt-functions '(yas-ido-prompt
-                             yas-no-prompt))
+(require 'helm-c-yasnippet)
+
+;; (setq yas-prompt-functions '(yas-ido-prompt
+;;                              yas-no-prompt))
 
 (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
-
-(global-set-key (kbd "C-c C-s") 'yas-insert-snippet)
+(global-set-key (kbd "C-c y") 'helm-c-yas-complete)
+(yas-global-mode 1)
 
 ;;;;;;;;;;;;;;;;;;
 ;; autocomplete ;;
