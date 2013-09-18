@@ -522,7 +522,19 @@ Also bind `class' to ((class color) (min-colors 89))."
 ;; org mode ;;
 ;;;;;;;;;;;;;;
 
+(require 'org)
+
 (defun ben-org-mode-hook ()
+  ;; org-latex export
+  (add-to-list 'org-export-latex-classes
+               '("scrartcl"
+                 "\\documentclass[12pt,a4paper]{scrartcl}"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  (setq org-export-latex-default-class "scrartcl")
   ;; keymappings
   (define-key org-mode-map (kbd "<M-left>") 'backward-word)
   (define-key org-mode-map (kbd "<M-right>") 'forward-word)
@@ -536,74 +548,72 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 (add-hook 'org-mode-hook 'ben-org-mode-hook)
 
-;; org-latex export
+;; (setq org-format-latex-header
+;;       "\\documentclass[12pt,a4paper]{scrartcl}
+;; \\usepackage{libertineotf}
+;; \\usepackage{fontspec}
+;; \\setmonofont[Scale=MatchLowercase,Mapping=tex-text]{Source Code Pro}
 
-(setq org-format-latex-header
-      "\\documentclass[12pt,a4paper]{scrartcl}
-\\usepackage{libertineotf}
-\\usepackage{fontspec}
-\\setmonofont[Scale=MatchLowercase,Mapping=tex-text]{Source Code Pro}
+;; \\usepackage{booktabs}
+;; \\usepackage{tabularx}
+;; \\renewcommand{\\arraystretch}{1.2}
 
-\\usepackage{booktabs}
-\\usepackage{tabularx}
-\\renewcommand{\\arraystretch}{1.2}
+;; % biblatex
 
-% biblatex
+;; \\usepackage[%
+;; backend=biber,
+;; natbib=true,
+;; backref=true,
+;; citecounter=true,
+;; dashed=false,
+;; backrefstyle=three,
+;; citestyle=authoryear-icomp,
+;; firstinits=true,
+;; maxcitenames=2,
+;; maxbibnames=10,
+;; uniquename=mininit,
+;; bibstyle=authoryear,
+;; % refsegment=chapter,
+;; % ibidtracker=strict,
+;; url=false,
+;; doi=false]{biblatex}
 
-\\usepackage[%
-backend=biber,
-natbib=true,
-backref=true,
-citecounter=true,
-dashed=false,
-backrefstyle=three,
-citestyle=authoryear-icomp,
-firstinits=true,
-maxcitenames=2,
-maxbibnames=10,
-uniquename=mininit,
-bibstyle=authoryear,
-% refsegment=chapter,
-% ibidtracker=strict,
-url=false,
-doi=false]{biblatex}
+;; % to use year-only bib format
+;; \\AtEveryBibitem{\\clearfield{month}}
+;; \\AtEveryCitekey{\\clearfield{month}}
 
-% to use year-only bib format
-\\AtEveryBibitem{\\clearfield{month}}
-\\AtEveryCitekey{\\clearfield{month}}
+;; % specify the bib file here
+;; \\addbibresource{papers.bib}
 
-% specify the bib file here
-\\addbibresource{papers.bib}
+;; % IMPORTANT: to actually print the bibliography in the document,
+;; % insert the command: \\printbibliography[title=References]
 
-% IMPORTANT: to actually print the bibliography in the document,
-% insert the command: \\printbibliography[title=References]
+;; % csquotes
 
-% csquotes
+;; \\usepackage[english=british,threshold=15,thresholdtype=words]{csquotes}
+;; \\SetCiteCommand{\\parencite}
 
-\\usepackage[english=british,threshold=15,thresholdtype=words]{csquotes}
-\\SetCiteCommand{\\parencite}
+;; \\newenvironment*{smallquote}
+;;   {\\quote\\small}
+;;   {\\endquote}
+;; \\SetBlockEnvironment{smallquote}
 
-\\newenvironment*{smallquote}
-  {\\quote\\small}
-  {\\endquote}
-\\SetBlockEnvironment{smallquote}
+;; % hyperref & bookmark
 
-% hyperref & bookmark
+;; \\usepackage[svgnames,hyperref]{xcolor}
 
-\\usepackage[svgnames,hyperref]{xcolor}
+;; \\usepackage[%
+;; unicode=true,
+;; hyperindex=true,
+;; bookmarks=true,
+;; colorlinks=true, % change to false for final
+;; pdfborder=0,
+;; allcolors=DarkBlue,
+;; % plainpages=false,
+;; pdfpagelabels,
+;; hyperfootnotes=true]{hyperref}
 
-\\usepackage[%
-unicode=true,
-hyperindex=true,
-bookmarks=true,
-colorlinks=true, % change to false for final
-pdfborder=0,
-allcolors=DarkBlue,
-% plainpages=false,
-pdfpagelabels,
-hyperfootnotes=true]{hyperref}
-
-")
+;; ")
 
 ;;;;;;;;;;;;;;
 ;; blogging ;;
@@ -677,20 +687,32 @@ categories:
 ;;;;;;;;;;;
 
 (require 'latex)
+(require 'reftex)
 
-(setq TeX-master t)
-(setq TeX-PDF-mode t)
-(setq TeX-auto-untabify t)
-(setq TeX-parse-self t)
-(setq TeX-auto-save t)
-
-;; synctex
-
-(setq TeX-source-correlate-mode t)
-(setq TeX-source-correlate-method 'synctex)
-
-(add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
-(define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count)
+(defun ben-latex-mode-hook ()
+  ;; latex
+  (setq TeX-master t)
+  (setq TeX-PDF-mode t)
+  (setq TeX-auto-untabify t)
+  (setq TeX-parse-self t)
+  (setq TeX-auto-save t)
+  (add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
+  ;; use Skim for pdfs on OSX
+  (add-to-list 'TeX-view-program-list
+               '("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
+  (if (string= system-type "darwin")
+      (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
+  ;; synctex
+  (setq TeX-source-correlate-mode t)
+  (setq TeX-source-correlate-method 'synctex)
+  ;; reftex
+  (setq reftex-enable-partial-scans t)
+  (setq reftex-save-parse-info t)
+  (setq reftex-plug-into-AUCTeX t)
+  (setq reftex-cite-prompt-optional-args nil)
+  (setq reftex-cite-cleanup-optional-args t)
+  ;; keybindings
+  (define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count))
 
 (defun latex-word-count ()
   (interactive)
@@ -707,20 +729,6 @@ categories:
             (with-current-buffer standard-output
               (call-process "texcount" nil t nil "-1" "-merge" enc-opt tex-file)))))
     (message word-count)))
-
-(require 'reftex)
-
-(setq reftex-enable-partial-scans t)
-(setq reftex-save-parse-info t)
-(setq reftex-plug-into-AUCTeX t)
-(setq reftex-cite-prompt-optional-args nil)
-(setq reftex-cite-cleanup-optional-args t)
-
-;; use Skim for pdfs on OSX
-(add-to-list 'TeX-view-program-list
-             '("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
-(if (string= system-type "darwin")
-    (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
 
 ;;;;;;;;;;;;;;;
 ;; extempore ;;
