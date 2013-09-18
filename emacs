@@ -676,144 +676,51 @@ categories:
 ;; LaTeX ;;
 ;;;;;;;;;;;
 
+(require 'latex)
+
+(setq TeX-master t)
+(setq TeX-PDF-mode t)
+(setq TeX-auto-untabify t)
+(setq TeX-parse-self t)
+(setq TeX-auto-save t)
+
+;; synctex
+
+(setq TeX-source-correlate-mode t)
+(setq TeX-source-correlate-method 'synctex)
+
 (add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
-
-(defun ben-latex-mode-hook ()
-  ;; basic config vars
-  (setq TeX-master 't
-        TeX-engine 'xetex
-        TeX-PDF-mode t
-        TeX-auto-untabify t
-        TeX-parse-self t
-        TeX-auto-save t)
-  ;; Skim
-  ;; (setq TeX-view-program-selection '((output-pdf "Skim"))
-  ;;       TeX-view-program-list
-  ;;       '(("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
-  ;; Biber
-  (add-to-list 'TeX-command-list
-               '("Biber" "biber %s" TeX-run-Biber nil t :help "Run Biber"))
-  (add-to-list 'TeX-command-list
-               '("Glossary" "makeglossaries %s" TeX-run-command nil t :help "Create glossaries"))
-  ;; ispell
-  (setq ispell-tex-skip-alists
-        '((;; in their own commands:
-           ("\\\\addcontentsline"                          ispell-tex-arg-end 2)
-           ("\\\\add\\(tocontents\\|vspace\\)"             ispell-tex-arg-end)
-           ("\\\\\\([aA]lph\\|arabic\\)"                   ispell-tex-arg-end)
-           ("\\\\author"                                   ispell-tex-arg-end)
-           ("\\\\gls\\(pl\\|reset\\)?"                     ispell-tex-arg-end)
-           ("\\\\newacronym"                               ispell-tex-arg-end 2)
-           ("\\\\\\(re\\)?newcommand"                      ispell-tex-arg-end 0)
-           ("\\\\\\(full\\|text\\|paren\\)cite\\*?"        ispell-tex-arg-end)
-           ("\\\\cite\\(t\\|p\\|year\\|yearpar\\|title\\|author\\)" ispell-tex-arg-end)
-           ("\\\\bibliographystyle"                        ispell-tex-arg-end)
-           ("\\\\\\(block\\|text\\)cquote"                 ispell-tex-arg-end 1)
-           ("\\\\c?ref"                                    ispell-tex-arg-end)
-           ("\\\\makebox"                                  ispell-tex-arg-end 0)
-           ("\\\\e?psfig"                                  ispell-tex-arg-end)
-           ("\\\\document\\(class\\|style\\)" .
-            "\\\\begin[ \t\n]*{[ \t\n]*document[ \t\n]*}"))
-          (;; delimited with \begin
-           ("\\(figure\\|table\\)\\*?"                     ispell-tex-arg-end 0)
-           ("tabular"                                      ispell-tex-arg-end 1)
-           ("tabularx"                                     ispell-tex-arg-end 2)
-           ("list"                                         ispell-tex-arg-end 2)
-           ("program"             . "\\\\end[ \t\n]*{[ \t\n]*program[ \t\n]*}")
-           ("verbatim\\*?"        . "\\\\end[ \t\n]*{[ \t\n]*verbatim\\*?[ \t\n]*}")))))
-
-(defun ben-latex-keybindings ()
-  (define-key LaTeX-mode-map (kbd "C-c t") 'switch-to-toc-other-frame)
-  (define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count))
-
-(defun ben-reftex-setup ()
-  (turn-on-reftex)
-  (setq reftex-default-bibliography '("papers.bib"))
-  (setq reftex-enable-partial-scans t)
-  (setq reftex-save-parse-info t)
-  (setq reftex-use-multiple-selection-buffers t)
-  (setq reftex-plug-into-AUCTeX t)
-  (setq reftex-cite-prompt-optional-args nil)
-  (setq reftex-cite-cleanup-optional-args t)
-  ;; RefTeX formats for biblatex (not natbib)
-  (setq reftex-cite-format
-        '((?\C-m . "\\cite[]{%l}")
-          (?t . "\\textcite{%l}")
-          (?a . "\\autocite[]{%l}")
-          (?p . "\\parencite{%l}")
-          (?f . "\\footcite[][]{%l}")
-          (?F . "\\fullcite[]{%l}")
-          (?x . "[]{%l}")
-          (?X . "{%l}")))
-  (setq font-latex-match-reference-keywords
-        '(("cite" "[{")
-          ("cites" "[{}]")
-          ("footcite" "[{")
-          ("footcites" "[{")
-          ("parencite" "[{")
-          ("textcite" "[{")
-          ("fullcite" "[{")
-          ("citetitle" "[{")
-          ("citetitles" "[{")
-          ("headlessfullcite" "[{"))))
+(define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count)
 
 (defun latex-word-count ()
   (interactive)
-  (let*
-      ((tex-file (if (stringp TeX-master)
-                     TeX-master
-                   (buffer-file-name)))
-       (enc-str (symbol-name buffer-file-coding-system))
-       (enc-opt
-        (cond
-         ((string-match "utf-8" enc-str) "-utf8")
-         ((string-match "latin" enc-str) "-latin1")
-         ("-encoding=guess")))
-       (word-count
-        (with-output-to-string
-          (with-current-buffer standard-output
-            (call-process "texcount" nil t nil "-1" "-merge" enc-opt tex-file)))))
+  (let* ((tex-file (if (stringp TeX-master)
+                       TeX-master
+                     (buffer-file-name)))
+         (enc-str (symbol-name buffer-file-coding-system))
+         (enc-opt (cond
+                   ((string-match "utf-8" enc-str) "-utf8")
+                   ((string-match "latin" enc-str) "-latin1")
+                   ("-encoding=guess")))
+         (word-count
+          (with-output-to-string
+            (with-current-buffer standard-output
+              (call-process "texcount" nil t nil "-1" "-merge" enc-opt tex-file)))))
     (message word-count)))
 
-(defun switch-to-toc-other-frame ()
-  (interactive)
-  (if (not (get-buffer "*toc*"))
-      (progn (reftex-toc)
-             (delete-window)))
-  (switch-to-buffer-other-window "*toc*"))
+(require 'reftex)
 
-(add-hook 'LaTeX-mode-hook 'ben-latex-mode-hook)
-(add-hook 'LaTeX-mode-hook 'ben-latex-keybindings)
-(add-hook 'LaTeX-mode-hook 'ben-reftex-setup)
+(setq reftex-enable-partial-scans t)
+(setq reftex-save-parse-info t)
+(setq reftex-plug-into-AUCTeX t)
+(setq reftex-cite-prompt-optional-args nil)
+(setq reftex-cite-cleanup-optional-args t)
 
-;; Biber under AUCTeX
-(defun TeX-run-Biber (name command file)
-  "Create a process for NAME using COMMAND to format FILE with Biber."
-  (let ((process (TeX-run-command name command file)))
-    (setq TeX-sentinel-function 'TeX-Biber-sentinel)
-    (if TeX-process-asynchronous
-        process
-      (TeX-synchronous-sentinel name file process))))
-
-(defun TeX-Biber-sentinel (process name)
-  "Cleanup TeX output buffer after running Biber."
-  (goto-char (point-max))
-  (cond
-   ;; Check whether Biber reports any warnings or errors.
-   ((re-search-backward (concat
-                         "^(There \\(?:was\\|were\\) \\([0-9]+\\) "
-                         "\\(warnings?\\|error messages?\\))") nil t)
-    ;; Tell the user their number so that she sees whether the
-    ;; situation is getting better or worse.
-    (message (concat "Biber finished with %s %s. "
-                     "Type `%s' to display output.")
-             (match-string 1) (match-string 2)
-             (substitute-command-keys
-              "\\\\[TeX-recenter-output-buffer]")))
-   (t
-    (message (concat "Biber finished successfully. "
-                     "Run LaTeX again to get citations right."))))
-  (setq TeX-command-next TeX-command-default))
+;; use Skim for pdfs on OSX
+(add-to-list 'TeX-view-program-list
+             '("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
+(if (string= system-type "darwin")
+    (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
 
 ;;;;;;;;;;;;;;;
 ;; extempore ;;
