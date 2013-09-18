@@ -130,8 +130,7 @@
 ;;;;;;;;;;;;;;;;;;;
 
 (setq custom-file (concat user-emacs-directory "custom.el"))
-(if (file-readable-p custom-file)
-    (load custom-file))
+(load custom-file t)
 
 ;;;;;;;;;;
 ;; helm ;;
@@ -765,10 +764,8 @@ categories:
 
 ;; syntax highlighting for LLVM IR files
 
-(let ((llvm-mode-file (concat extempore-path "/extras/llvm-mode.el")))
-  (if (file-exists-p llvm-mode-file)
-      (progn (load-file llvm-mode-file)
-             (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode)))))
+(if (load (concat extempore-path "extras/llvm-mode.el") t)
+    (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode)))
 
 ;; session setup
 
@@ -1029,8 +1026,8 @@ categories:
 ;; rudel ;;
 ;;;;;;;;;;;
 
-(if (file-exists-p "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el")
-    (load-file "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el"))
+;; (if (file-exists-p "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el")
+;;     (load-file "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el"))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; multiple-cursors ;;
