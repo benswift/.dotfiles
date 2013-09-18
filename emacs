@@ -1011,27 +1011,6 @@ categories:
 (add-to-list 'auto-mode-alist '("\\.abc\\'"  . abc-mode))
 (add-to-list 'auto-mode-alist '("\\.abp\\'"  . abc-mode))
 
-;;;;;;;;;;;;;
-;; keyfreq ;;
-;;;;;;;;;;;;;
-
-(setq keyfreq-file (concat user-emacs-directory "keyfreq")
-      keyfreq-file-lock (concat user-emacs-directory "keyfreq.lock"))
-
-;;;;;;;;;;;;;;
-;; floobits ;;
-;;;;;;;;;;;;;;
-
-;; (if (file-exists-p "~/.emacs.d/floobits/floobits.el")
-;;     (load "~/.emacs.d/floobits/floobits.el"))
-
-;;;;;;;;;;;
-;; rudel ;;
-;;;;;;;;;;;
-
-;; (if (file-exists-p "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el")
-;;     (load-file "~/.emacs.d/rudel-0.2-4/rudel-loaddefs.el"))
-
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; multiple-cursors ;;
 ;;;;;;;;;;;;;;;;;;;;;;
