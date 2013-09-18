@@ -4,47 +4,6 @@
 
 ;; dotfiles repo: https://github.com/benswift/.dotfiles
 
-;;;;;;;;;;;
-;; cedet ;;
-;;;;;;;;;;;
-
-;; uses Emacs-supplied CEDET (for Emacs >= 24)
-
-;; (setq semantic-imenu-bucketize-file nil)
-(setq semantic-default-submodes
-      '(global-semanticdb-minor-mode             ;; Maintain tag database.
-        global-semantic-idle-scheduler-mode      ;; Reparse buffer when idle.
-        global-semantic-idle-summary-mode        ;; Show summary of tag at point.
-        ;; global-semantic-idle-completions-mode    ;; Show completions when idle.
-        global-semantic-decoration-mode          ;; Additional tag decorations.
-        ;; global-semantic-highlight-func-mode      ;; Highlight the current tag.
-        global-semantic-stickyfunc-mode          ;; Show current fun in header line.
-        ;; global-semantic-mru-bookmark-mode        ;; Provide `switch-to-buffer'-like keybinding for tag names.
-        ))
-
-(defun ben-c-mode-common-hook ()
-  ;; turn on semantic mode
-  (semantic-mode 1)
-  ;; set up some keybindings
-  (local-set-key (kbd "C-<return>") 'semantic-ia-complete-symbol)
-  (local-set-key (kbd "C-c ?") 'semantic-ia-complete-symbol-menu)
-  (local-set-key (kbd "C-c >") 'semantic-complete-analyze-inline)
-  (local-set-key (kbd "C-c p") 'semantic-analyze-proto-impl-toggle)
-  (local-set-key (kbd "C-c j") 'semantic-ia-fast-jump)
-  (local-set-key "." 'semantic-complete-self-insert)
-  (local-set-key ">" 'semantic-complete-self-insert))
-
-(add-hook 'c-mode-common-hook 'ben-c-mode-common-hook)
-
-;; Enable EDE (Project Management) features
-;; (global-ede-mode 1)
-
-;; (ede-cpp-root-project "Extempore"
-;;                       :name "Extempore"
-;;                       :file "~/Code/extempore/README.md"
-;;                       :web-site-url "http://extempore.moso.com.au"
-;;                       :spp-table '(("TARGET_OS_MAC" . "")))
-
 ;;;;;;;;;;
 ;; elpa ;;
 ;;;;;;;;;;
