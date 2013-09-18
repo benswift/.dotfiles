@@ -157,7 +157,10 @@
 (setq recentf-max-saved-items 100)
 (put 'narrow-to-region 'disabled nil)
 
-(display-time)
+;; mode line
+
+(display-time-mode 1)
+(display-battery-mode 1)
 (setq display-time-format "%H:%M")
 
 ;; mark these commands as 'safe'
