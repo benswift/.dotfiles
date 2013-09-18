@@ -399,6 +399,7 @@ Also bind `class' to ((class color) (min-colors 89))."
       (add-to-list 'sml/hidden-modes " Paredit")
       (add-to-list 'sml/hidden-modes " AC")
       (add-to-list 'sml/hidden-modes " yas")
+      (add-to-list 'sml/hidden-modes " Helm")
 
       ;; directory shorteners
       (add-to-list 'sml/replacer-regexp-list '("^~/Code/extempore/" ":extempore:"))
