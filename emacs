@@ -103,97 +103,77 @@
 (global-set-key (kbd "C-c <SPC>") 'helm-all-mark-rings)
 (global-set-key (kbd "C-c i") 'helm-imenu)
 
-;;;;;;;;;;;;;;;;
-;; one-liners ;;
-;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; display & appearance ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(column-number-mode 1)
-(global-auto-revert-mode t)
-;; (setq display-buffer-alist nil)
-(remove-hook 'text-mode-hook 'smart-spacing-mode)
+(setq visible-bell t)
+(setq inhibit-startup-message t)
+(setq color-theme-is-global t)
 (setq bidi-display-reordering nil)
-(setq ispell-dictionary "en_GB")
-(setq recentf-max-saved-items 100)
-(put 'narrow-to-region 'disabled nil)
 
-;; mode line
-
-(display-time-mode 1)
-(display-battery-mode 1)
-(setq display-time-format "%H:%M")
-
-;; mark these commands as 'safe'
-
-(put 'downcase-region 'disabled nil)
-(put 'upcase-region 'disabled nil)
-
-;;;;;;;;;;;;;;
-;; from ESK ;;
-;;;;;;;;;;;;;;
-
-(setq save-place t)
-(hl-line-mode t)
-
-(setq visible-bell t
-      inhibit-startup-message t
-      color-theme-is-global t
-      sentence-end-double-space nil
-      shift-select-mode nil
-      mouse-yank-at-point t
-      uniquify-buffer-name-style 'forward
-      whitespace-style '(face trailing lines-tail tabs)
-      whitespace-line-column 80
-      ediff-window-setup-function 'ediff-setup-windows-plain
-      save-place-file (concat user-emacs-directory "places")
-      backup-directory-alist `(("." . ,(concat user-emacs-directory "backups")))
-      diff-switches "-u")
-
-(add-to-list 'safe-local-variable-values '(lexical-binding . t))
-(add-to-list 'safe-local-variable-values '(whitespace-line-column . 80))
-
-;; Set this to whatever browser you use
-;; (setq browse-url-browser-function 'browse-url-firefox)
-;; (setq browse-url-browser-function 'browse-default-macosx-browser)
-;; (setq browse-url-browser-function 'browse-default-windows-browser)
-;; (setq browse-url-browser-function 'browse-default-kde)
-;; (setq browse-url-browser-function 'browse-default-epiphany)
-;; (setq browse-url-browser-function 'browse-default-w3m)
-;; (setq browse-url-browser-function 'browse-url-generic
-;;       browse-url-generic-program "~/src/conkeror/conkeror")
-
-;; Highlight matching parentheses when the point is on them.
-(show-paren-mode 1)
+(when window-system
+  (setq frame-title-format '(buffer-file-name "%f" ("%b")))
+  (tooltip-mode -1)
+  (mouse-wheel-mode t)
+  (blink-cursor-mode -1)
+  (dolist (mode '(menu-bar-mode tool-bar-mode scroll-bar-mode))
+    (when (fboundp mode) (funcall mode -1))))
 
 (set-default 'indent-tabs-mode nil)
 (set-default 'tab-width 2)
 (set-default 'indicate-empty-lines t)
 (set-default 'imenu-auto-rescan t)
 
+(show-paren-mode 1)
+(column-number-mode 1)
+(hl-line-mode t)
+
+;; show time and battery status in mode line
+
+(display-time-mode 1)
+(setq display-time-format "%H:%M")
+(display-battery-mode 1)
+
+;; whitespace
+
+(setq sentence-end-double-space nil)
+(setq shift-select-mode nil)
+(setq whitespace-style '(face trailing lines-tail tabs))
+(setq whitespace-line-column 80)
+(add-to-list 'safe-local-variable-values '(whitespace-line-column . 80))
+
+;; mark region commands as safe
+
+(put 'downcase-region 'disabled nil)
+(put 'upcase-region 'disabled nil)
+(put 'narrow-to-region 'disabled nil)
+
+;; text mode tweaks
+
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
 (add-hook 'text-mode-hook 'turn-on-flyspell)
+(remove-hook 'text-mode-hook 'smart-spacing-mode)
+
+;; file visiting stuff
+
+(setq save-place t)
+(setq save-place-file (concat user-emacs-directory "places"))
+(setq backup-directory-alist `(("." . ,(concat user-emacs-directory "backups"))))
+(setq recentf-max-saved-items 100)
+
+(global-auto-revert-mode t)
+
+;; other niceties
+
+(add-to-list 'safe-local-variable-values '(lexical-binding . t))
+(setq ediff-window-setup-function 'ediff-setup-windows-plain)
+(setq diff-switches "-u")
+(setq ispell-dictionary "en_GB")
 
 (define-key lisp-mode-shared-map (kbd "RET") 'reindent-then-newline-and-indent)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
-
-;;;;;;;;;;;;;;;;
-;; appearance ;;
-;;;;;;;;;;;;;;;;
-
-(if (display-graphic-p)
-    (progn (load-theme 'monokai t)
-           (add-to-list 'default-frame-alist
-                        '(background-mode . dark))
-           (set-cursor-color "white")))
-
-(dolist (mode '(menu-bar-mode tool-bar-mode scroll-bar-mode))
-  (when (fboundp mode) (funcall mode -1)))
-
-(when window-system
-  (setq frame-title-format '(buffer-file-name "%f" ("%b")))
-  (tooltip-mode -1)
-  (mouse-wheel-mode t)
-  (blink-cursor-mode -1))
 
 ;; transparency
 
@@ -214,6 +194,12 @@
 ;;;;;;;;;;;;;;;;;;;
 ;; monokai theme ;;
 ;;;;;;;;;;;;;;;;;;;
+
+(if (display-graphic-p)
+    (progn (load-theme 'monokai t)
+           (add-to-list 'default-frame-alist
+                        '(background-mode . dark))
+           (set-cursor-color "white")))
 
 ;; this is fragile, but necessary since they took this macro out in a
 ;; recent change
