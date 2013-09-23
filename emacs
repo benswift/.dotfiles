@@ -889,8 +889,7 @@ categories:
 (require 'yasnippet)
 (require 'helm-c-yasnippet)
 
-;; (setq yas-prompt-functions '(yas-ido-prompt
-;;                              yas-no-prompt))
+(setq yas-prompt-functions '(yas-dropdown-prompt yas-completing-prompt yas-ido-prompt yas-no-prompt))
 
 (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
 (global-set-key (kbd "C-c y") 'helm-c-yas-complete)
