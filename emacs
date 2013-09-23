@@ -20,28 +20,29 @@
 (when (null package-archive-contents)
   (package-refresh-contents))
 
-(dolist (p '(auctex
-             epl
-             ess
-             gist
-             helm
-             helm-c-yasnippet
-             htmlize
-             ;; elpy
-             magit
-             markdown-mode
-             monokai-theme
-             org
-             paredit
-             scss-mode
-             yaml-mode
-             yasnippet
-             smart-mode-line
-             multiple-cursors
-             auto-complete
-             ac-helm))
-  (if (not (package-installed-p p))
-      (package-install p)))
+(dolist (package
+         '(auctex
+           auto-complete
+           epl
+           elpy
+           ess
+           ido-ubiquitous
+           imenu-anywhere
+           smex
+           gist
+           htmlize
+           magit
+           markdown-mode
+           monokai-theme
+           multiple-cursors
+           org
+           paredit
+           scss-mode
+           smart-mode-line
+           yaml-mode
+           yasnippet))
+  (if (not (package-installed-p package))
+      (package-install package)))
 
 (global-set-key (kbd "C-c p") 'list-packages)
 
@@ -92,17 +93,27 @@
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (load custom-file t)
 
-;;;;;;;;;;
-;; helm ;;
-;;;;;;;;;;
+;;;;;;;;;;;;;;;;
+;; smex & ido ;;
+;;;;;;;;;;;;;;;;
 
-(setq helm-yank-symbol-first t)
+(setq smex-save-file (concat user-emacs-directory ".smex-items"))
+(smex-initialize)
+(global-set-key (kbd "M-x") 'smex)
 
-(helm-mode 1)
+(ido-mode 1)
+(ido-ubiquitous-mode 1)
 
-(global-set-key (kbd "C-c h") 'helm-mini)
-(global-set-key (kbd "C-c <SPC>") 'helm-all-mark-rings)
-(global-set-key (kbd "C-c i") 'helm-imenu)
+(setq ido-enable-prefix nil
+      ido-enable-flex-matching t
+      ido-auto-merge-work-directories-length nil
+      ido-create-new-buffer 'always
+      ido-use-filename-at-point 'guess
+      ido-use-virtual-buffers t
+      ido-handle-duplicate-virtual-buffers 2
+      ido-max-prospects 10)
+
+(global-set-key (kbd "C-c i") 'imenu-anywhere)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; display & appearance ;;
@@ -350,7 +361,6 @@ Also bind `class' to ((class color) (min-colors 89))."
       (add-to-list 'sml/hidden-modes " Paredit")
       (add-to-list 'sml/hidden-modes " AC")
       (add-to-list 'sml/hidden-modes " yas")
-      (add-to-list 'sml/hidden-modes " Helm")
 
       ;; directory shorteners
       (add-to-list 'sml/replacer-regexp-list '("^~/Code/extempore/" ":extempore:"))
@@ -471,6 +481,8 @@ Also bind `class' to ((class color) (min-colors 89))."
 ;;;;;;;;;;;;;;
 
 (require 'org)
+
+(setq org-completion-use-ido t)
 
 (defun ben-org-mode-hook ()
   ;; ;; org-latex export
@@ -887,12 +899,10 @@ categories:
 ;;;;;;;;;;;;;;;
 
 (require 'yasnippet)
-(require 'helm-c-yasnippet)
 
-(setq yas-prompt-functions '(yas-dropdown-prompt yas-completing-prompt yas-ido-prompt yas-no-prompt))
+(setq yas-prompt-functions '(yas-ido-prompt yas-no-prompt))
 
 (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
-(global-set-key (kbd "C-c y") 'helm-c-yas-complete)
 (yas-global-mode 1)
 
 ;;;;;;;;;;;;;;;;;;
