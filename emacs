@@ -473,16 +473,16 @@ Also bind `class' to ((class color) (min-colors 89))."
 (require 'org)
 
 (defun ben-org-mode-hook ()
-  ;; org-latex export
-  (add-to-list 'org-export-latex-classes
-               '("scrartcl"
-                 "\\documentclass[12pt,a4paper]{scrartcl}"
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-  (setq org-export-latex-default-class "scrartcl")
+  ;; ;; org-latex export
+  ;; (add-to-list 'org-export-latex-classes
+  ;;              '("scrartcl"
+  ;;                "\\documentclass[12pt,a4paper]{scrartcl}"
+  ;;                ("\\section{%s}" . "\\section*{%s}")
+  ;;                ("\\subsection{%s}" . "\\subsection*{%s}")
+  ;;                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+  ;;                ("\\paragraph{%s}" . "\\paragraph*{%s}")
+  ;;                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  ;; (setq org-export-latex-default-class "scrartcl")
   ;; keymappings
   (define-key org-mode-map (kbd "<M-left>") 'backward-word)
   (define-key org-mode-map (kbd "<M-right>") 'forward-word)
