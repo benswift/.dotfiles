@@ -71,6 +71,7 @@
   (setq base-face-height 160)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
   (setq helm-locate-command "mdfind -name %s %s")
+  (setq x-bitmap-file-path '("/usr/X11/include/X11/bitmaps"))
   (add-to-list 'ben-path "/Applications/Emacs.app/Contents/MacOS/bin")
   (nix-specific-setup))
 
