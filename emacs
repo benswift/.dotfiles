@@ -24,13 +24,13 @@
          '(auctex
            auto-complete
            elpy
-	   epl
+           epl
            ess
-	   flx-ido
+           flx-ido
            gist
            htmlize
-	   ido-ubiquitous
-	   imenu-anywhere
+           ido-ubiquitous
+           imenu-anywhere
            magit
            markdown-mode
            monokai-theme
@@ -39,7 +39,7 @@
            paredit
            scss-mode
            smart-mode-line
-	   smex
+           smex
            yaml-mode
            yasnippet))
   (if (not (package-installed-p package))
@@ -596,7 +596,7 @@ Also bind `class' to ((class color) (min-colors 89))."
          ;; Path to your Jekyll project.
          :publishing-directory "~/Code/octopress/source/"
          :recursive t
-	 :publishing-function org-html-publish-to-html
+         :publishing-function org-html-publish-to-html
          :headline-levels 4
          :html-extension "html"
          :body-only t)
@@ -1035,6 +1035,7 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
         (yank)))))
 
 (global-set-key (kbd "C-c d") 'duplicate-line)
+(global-set-key (kbd "C-c b") 'comment-box)
 
 ;;;;;;;;;;;;;;;;;;
 ;; emacs server ;;
