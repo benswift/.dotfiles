@@ -23,14 +23,14 @@
 (dolist (package
          '(auctex
            auto-complete
-           epl
            elpy
+	   epl
            ess
-           ido-ubiquitous
-           imenu-anywhere
-           smex
+	   flx-ido
            gist
            htmlize
+	   ido-ubiquitous
+	   imenu-anywhere
            magit
            markdown-mode
            monokai-theme
@@ -39,6 +39,7 @@
            paredit
            scss-mode
            smart-mode-line
+	   smex
            yaml-mode
            yasnippet))
   (if (not (package-installed-p package))
@@ -97,12 +98,10 @@
 ;; smex & ido ;;
 ;;;;;;;;;;;;;;;;
 
+(require 'flx-ido)
+
 (setq smex-save-file (concat user-emacs-directory ".smex-items"))
 (smex-initialize)
-(global-set-key (kbd "M-x") 'smex)
-
-(ido-mode 1)
-(ido-ubiquitous-mode 1)
 
 (setq ido-enable-prefix nil
       ido-enable-flex-matching t
@@ -113,6 +112,14 @@
       ido-handle-duplicate-virtual-buffers 2
       ido-max-prospects 10)
 
+(ido-mode 1)
+(ido-ubiquitous-mode 1)
+(flx-ido-mode 1)
+
+;; disable ido faces to see flx highlights.
+(setq ido-use-faces nil)
+
+(global-set-key (kbd "M-x") 'smex)
 (global-set-key (kbd "C-c i") 'imenu-anywhere)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
