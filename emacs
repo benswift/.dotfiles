@@ -490,6 +490,7 @@ Also bind `class' to ((class color) (min-colors 89))."
 (require 'org)
 
 (setq org-completion-use-ido t)
+(setq org-export-with-toc nil)
 
 (defun ben-org-mode-hook ()
   ;; ;; org-latex export
@@ -582,9 +583,9 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 ;; ")
 
-;;;;;;;;;;;;;;
-;; blogging ;;
-;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;
+;; octopress ;;
+;;;;;;;;;;;;;;;
 
 (setq org-publish-project-alist
       '(("biott-posts"
@@ -595,7 +596,7 @@ Also bind `class' to ((class color) (min-colors 89))."
          ;; Path to your Jekyll project.
          :publishing-directory "~/Code/octopress/source/"
          :recursive t
-         :publishing-function org-publish-org-to-html
+	 :publishing-function org-html-publish-to-html
          :headline-levels 4
          :html-extension "html"
          :body-only t)
