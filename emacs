@@ -24,8 +24,6 @@
          '(auctex
            auto-complete
            bookmark+
-           dired+
-           dired-details+
            elpy
            epl
            ess
