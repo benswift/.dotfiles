@@ -23,6 +23,9 @@
 (dolist (package
          '(auctex
            auto-complete
+           bookmark+
+           dired+
+           dired-details+
            elpy
            epl
            ess
@@ -31,6 +34,7 @@
            htmlize
            ido-ubiquitous
            imenu-anywhere
+           isearch+
            magit
            markdown-mode
            monokai-theme
@@ -69,10 +73,14 @@
   (setq base-face-height 140)
   (nix-specific-setup))
 
+(defun spotlight-locate-make-command-line (search-string)
+  (list "mdfind" "-interpret" search-string))
+
 (defun osx-specific-setup ()
   (setq base-face-height 160)
   (setq browse-default-macosx-browser "/Applications/Safari.app")
   (setq helm-locate-command "mdfind -name %s %s")
+  (setq locate-make-command-line 'spotlight-locate-make-command-line)
   (setq x-bitmap-file-path '("/usr/X11/include/X11/bitmaps"))
   (add-to-list 'ben-path "/Applications/Emacs.app/Contents/MacOS/bin")
   (nix-specific-setup))
@@ -115,9 +123,6 @@
 (ido-mode 1)
 (ido-ubiquitous-mode 1)
 (flx-ido-mode 1)
-
-;; disable ido faces to see flx highlights.
-(setq ido-use-faces nil)
 
 (global-set-key (kbd "M-x") 'smex)
 (global-set-key (kbd "C-c i") 'imenu-anywhere)
