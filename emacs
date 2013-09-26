@@ -653,15 +653,14 @@ categories:
 
 (add-hook 'erc-mode-hook 'ben-erc-set-faces)
 
-;;;;;;;;;;;
-;; LaTeX ;;
-;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+;; LaTeX & reftex ;;
+;;;;;;;;;;;;;;;;;;;;
 
 (require 'latex)
 (require 'reftex)
 
 (defun ben-latex-mode-hook ()
-  ;; latex
   (setq TeX-master t)
   (setq TeX-PDF-mode t)
   (setq TeX-auto-untabify t)
@@ -676,14 +675,17 @@ categories:
   ;; synctex
   (setq TeX-source-correlate-mode t)
   (setq TeX-source-correlate-method 'synctex)
+  ;; latex keybindings
+  (define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count)
   ;; reftex
   (setq reftex-enable-partial-scans t)
   (setq reftex-save-parse-info t)
   (setq reftex-plug-into-AUCTeX t)
   (setq reftex-cite-prompt-optional-args nil)
   (setq reftex-cite-cleanup-optional-args t)
-  ;; keybindings
-  (define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count))
+  ;; reftex keybindings
+  (define-key LaTeX-mode-map (kbd "C-c c") 'reftex-citation)
+  (define-key LaTeX-mode-map (kbd "C-c r") 'reftex-reference))
 
 (defun latex-word-count ()
   (interactive)
@@ -700,6 +702,8 @@ categories:
             (with-current-buffer standard-output
               (call-process "texcount" nil t nil "-1" "-merge" enc-opt tex-file)))))
     (message word-count)))
+
+(add-hook 'LaTeX-mode-hook 'ben-latex-mode-hook)
 
 ;;;;;;;;;;;;;;;
 ;; extempore ;;
