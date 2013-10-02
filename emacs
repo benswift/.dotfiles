@@ -125,6 +125,12 @@
 (global-set-key (kbd "M-x") 'smex)
 (global-set-key (kbd "C-c i") 'imenu-anywhere)
 
+;;;;;;;;;;;;;;;;;;;;;;;;
+;; garbage collection ;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq gc-cons-threshold 50000000)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; display & appearance ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
