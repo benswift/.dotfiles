@@ -246,7 +246,8 @@ Also bind `class' to ((class color) (min-colors 89))."
 ;;;;;;;;;;;
 
 (set-face-attribute 'default nil :height base-face-height :family "Source Code Pro")
-(set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
+(set-face-attribute 'variable-pitch nil :height base-face-height :family "Fira Sans OT")
+;; (set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
 
 ;; get colours right in terminal (and related) modes
 
