@@ -685,6 +685,7 @@ categories:
   (setq reftex-cite-prompt-optional-args nil)
   (setq reftex-cite-cleanup-optional-args t)
   ;; reftex keybindings
+  (define-key LaTeX-mode-map (kbd "C-c =") 'reftex-toc)
   (define-key LaTeX-mode-map (kbd "C-c c") 'reftex-citation)
   (define-key LaTeX-mode-map (kbd "C-c r") 'reftex-reference))
 
