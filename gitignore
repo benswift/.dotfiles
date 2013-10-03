@@ -32,6 +32,7 @@ secrets/
 *.xml
 *.toc
 auto/
+*.synctex.gz
 
 # emacs
 
