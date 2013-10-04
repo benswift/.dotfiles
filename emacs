@@ -206,8 +206,10 @@
 ;; transparency
 
 (defun set-current-frame-transparency (value)
-   (interactive "nTransparency Value 0 (transparent) - 100 (opaque): ")
+   (interactive "nTransparency Value 0.0 (transparent) - 1.0 (opaque): ")
    (set-frame-parameter (selected-frame) 'alpha value))
+
+(global-set-key (kbd "C-c t") 'set-current-frame-transparency)
 
 ;; pretty lambdas
 
