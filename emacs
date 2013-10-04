@@ -80,6 +80,7 @@
   (setq helm-locate-command "mdfind -name %s %s")
   (setq locate-make-command-line 'spotlight-locate-make-command-line)
   (setq x-bitmap-file-path '("/usr/X11/include/X11/bitmaps"))
+  (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open")))
   (add-to-list 'ben-path "/Applications/Emacs.app/Contents/MacOS/bin")
   (nix-specific-setup))
 
