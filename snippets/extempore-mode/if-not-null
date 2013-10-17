@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: if-not-null
+# key: inn
+# --
+(if (not (null? $1))$0)

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: if-mod-frame
+# key: imf
+# --
+(if (${1:=} (modulo frame ${2:fps}) ${3:0}) $0)

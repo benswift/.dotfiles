@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: cos-frame
+# key: cosf
+# --
+(cos (* TWOPI (/ (i64tod frame) ${1:fps}) ${2:freq}))

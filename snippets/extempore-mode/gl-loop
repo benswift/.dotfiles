@@ -2,26 +2,27 @@
 # name: gl-loop
 # key: glloop
 # --
+(sys:load "libs/xtm.xtm")
 (sys:load "libs/external/shaders.xtm")
 
-(define width ${1:1024.0})
-(define height ${2:768.0})
+(define width ${1:`(display-pixel-width)`.0})
+(define height ${2:`(display-pixel-height)`.0})
 (bind-val width float $1)
 (bind-val height float $2)
-(define fullscreen ${3:#f})
+(define fullscreen ${3:#t})
 
 (define *gl-ctx* (gl:make-ctx ":0.0" fullscreen 0.0 0.0 width height))
 (xtm_render_setup (real->integer width) (real->integer height))
-;; set up canvas as an OpenVG canvas
-(let ((vg-ctx-res (xtm_create_vg_context (real->integer width) (real->integer height))))
-  (if (<> vg-ctx-res 1) (xtm_vg_print_error)))
 
-rendercb$0
+(bind-func post:XTMRENDERCB
+  (lambda (frame shader m v p data)
+    $0    
+    void))
 
 (bind-func gl_render
   (lambda ()
     ;;          pre  opaq trans post data
-    (xtm_render ${4:null} ${5:null} ${6:null}  ${7:null} ${8:null})
+    (xtm_render null null null  post null)
     void))
 
 (define gl-loop
