@@ -2,17 +2,18 @@
 # name: openvg-loop
 # key: vgloop
 # --
+(define width ${1:`(display-pixel-width)`.0})
+(define height ${2:`(display-pixel-height)`.0})
+(bind-val width double width)
+(bind-val height double height)
+(define fullscreen ${3:#t})
+
+(define *vg-ctx* (gl:make-ctx ":0.0" fullscreen 0.0 0.0 width height))
+
 (sys:load "libs/xtm.xtm")
 (sys:load "libs/external/shaders.xtm")
 (sys:load "libs/external/openvg.xtm")
 
-(define width ${1:`(display-pixel-width)`.0})
-(define height ${2:`(display-pixel-height)`.0})
-(bind-val width double $1)
-(bind-val height double $2)
-(define fullscreen ${3:#t})
-
-(define *vg-ctx* (gl:make-ctx ":0.0" fullscreen 0.0 0.0 width height))
 (xtm_render_setup (real->integer width) (real->integer height))
 (let ((vg-ctx-res (xtm_create_vg_context (real->integer width)
                                          (real->integer height))))
