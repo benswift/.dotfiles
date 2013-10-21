@@ -798,6 +798,10 @@ categories:
 
 ;; from https://gist.github.com/malk/4962126
 
+(defun point-is-inside-list ()
+  "Whether point is currently inside list or not."
+  (nth 1 (syntax-ppss)))
+
 (defun point-is-inside-string ()
   "Whether point is currently inside string or not."
   (nth 3 (syntax-ppss)))
@@ -819,22 +823,23 @@ categories:
         (paredit-backward-up)
       (paredit-backward))))
 
-(defun paredit-duplicate-closest-sexp ()
+(defun paredit-duplicate-rest-of-closest-sexp ()
   (interactive)
-  (paredit-skip-to-start-of-sexp-at-point)
-  (set-mark-command nil)
-  ;; while we find sexps we move forward on the line
-  (while (and (bounds-of-thing-at-point 'sexp)
-              (<= (point) (car (bounds-of-thing-at-point 'sexp)))
-              (not (= (point) (line-end-position))))
-    (forward-sexp)
-    (while (looking-at " ")
-      (forward-char)))
-  (kill-ring-save (mark) (point))
-  ;; go to the next line and copy the sexprs we encountered
-  (paredit-newline)
-  (yank)
-  (exchange-point-and-mark))
+  (cond ((paredit--is-at-opening-paren)
+         (paredit-copy-sexps-as-kill)
+         (forward-sexp)
+         (paredit-newline)
+         (yank)
+         (exchange-point-and-mark))
+        ((point-is-inside-list)
+         (while (not (looking-back "[ ()]"))
+           (backward-char))
+         (kill-ring-save (point) (- (paredit-next-up/down-point 1 1) 1))
+         (paredit-forward-up)
+         (backward-char)
+         (paredit-newline)
+         (yank)
+         (exchange-point-and-mark))))
 
 (defface paredit-paren-face
   '((((class color) (background dark))
@@ -852,7 +857,7 @@ categories:
   (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
   (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
   (define-key paredit-mode-map (kbd "<M-S-right>") 'transpose-sexps)
-  (define-key paredit-mode-map (kbd "<s-S-down>") 'paredit-duplicate-closest-sexp))
+  (define-key paredit-mode-map (kbd "<s-S-down>") 'paredit-duplicate-rest-of-closest-sexp))
 
 (add-hook 'paredit-mode-hook 'ben-paredit-mode-hook)
 
