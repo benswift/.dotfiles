@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: play-chord
+# key: pchord
+# --
+(for-each (lambda (p)
+            (play ${1:inst} p ${2:80} ${3:dur}))
+          (pc:make-chord ${4:lower} ${5:upper} ${6:number} ${7:pcchord}$0))
