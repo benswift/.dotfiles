@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: path-iteration
+# key: pathiter
+# --
+(dotimes (i n)
+  (xtm_paint_setup_fill fill 1. 1. 1. 1.)
+  (xtm_paint_setup_stroke stroke 1. 1. 1. 1. 1.)
+  (xtm_draw_rect$0 0. 0. width height))
