@@ -8,7 +8,7 @@
 (bind-val height double height)
 (define fullscreen ${3:#t})
 
-(define *vg-ctx* (gl:make-ctx ":0.0" fullscreen 0.0 0.0 width height))
+(define *vg-ctx* (gl:make-ctx ":0.0" fullscreen 0. 0. width height))
 
 (sys:load "libs/xtm.xtm")
 (sys:load "libs/external/shaders.xtm")
@@ -23,11 +23,13 @@
   (lambda (frame shader m v p data)
     (let ((path (xtm_create_vgpath))
           (stroke (vgCreatePaint))
-          (fill (vgCreatePaint)))
+          (fill (vgCreatePaint))
+          (i:double 0.)
+          (n:double 10.))
       (xtm_vg_reset_matrices)
-      ;; (xtm_vg_clear 0.0 0.0 0.0 1.0 (dtoi64 width) (dtoi64 height))
-      (xtm_paint_setup_fill fill 0.5 0.5 0.5 1.0)
-      (xtm_paint_setup_stroke stroke 1.0 1.0 1.0 1.0 10.0)
+      ;; (xtm_vg_clear 0. 0. 0. 1. (dtoi64 width) (dtoi64 height))
+      (xtm_paint_setup_fill fill 1. 1. 1. 1.)
+      (xtm_paint_setup_stroke stroke 1. 1. 1. 1. 10.)
       ;; create the path
       $0
       ;; draw the path
