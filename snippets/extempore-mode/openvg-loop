@@ -32,8 +32,7 @@
       (xtm_paint_setup_stroke stroke 1. 1. 1. 1. 10.)
       ;; create the path
       $0
-      ;; draw the path
-      (xtm_draw_path path)
+      ;; (xtm_draw_path path)
       ;; cleanup
       (xtm_destroy_paint fill)
       (xtm_destroy_paint stroke)
