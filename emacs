@@ -773,8 +773,10 @@ categories:
           (concat ";;; setup.xtm --- setup file for " name "\n"
                   ""
                   "(sys:load \"libs/xtm.xtm\")\n"
-                  "(load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
-                  "(load \"" ben-home-dir "/Code/xtm/lib/sampler-maps.xtm\")\n")))
+                  "(ipc:load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
+                  "(ipc:load \"utility\" \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
+                  "(ipc:load \"" ben-home-dir "/Code/xtm/lib/sampler-maps.xtm\")\n"
+                  "(ipc:load \"utility\" \"" ben-home-dir "/Code/xtm/lib/sampler-maps.xtm\")\n")))
     (if (file-exists-p base-path)
         (error "Cannot create xtm session: directory \"%s\" already exists" base-path))
     (make-directory base-path)
@@ -783,6 +785,11 @@ categories:
      base-path "practice-scm.xtm" "scmhead")
     (ben-create-extempore-template-file
      base-path "practice-xtlang.xtm" "xthead")
+    ;; gig files
+    (ben-create-extempore-template-file
+     base-path "gig-scm.xtm" "scmhead")
+    (ben-create-extempore-template-file
+     base-path "gig-xtlang.xtm" "xthead")
     ;; setup file
     (ben-create-extempore-template-file
      base-path "setup.xtm" setup-header)

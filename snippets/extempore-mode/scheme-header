@@ -4,6 +4,3 @@
 # --
 ;-*- mode: Extempore; extempore-default-port: 7098; -*-
 (ipc:load "primary" "`default-directory`setup.xtm")
-(load "/Users/ben/Code/xtm/lib/ben-lib.xtm")
-(load "/Users/ben/Code/xtm/lib/sampler-maps.xtm")
-(load "libs/core/pc_ivl.xtm")
