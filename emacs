@@ -53,46 +53,36 @@
 ;; cross-platform setup ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq ben-home-dir (getenv "HOME"))
-(setq source-directory (concat ben-home-dir "/Code/emacs-24.3"))
+(exec-path-from-shell-initialize)
 
-(setq ben-path
-      (list (concat ben-home-dir  "/.rbenv/shims")
-            (concat ben-home-dir  "/bin")
-            "/usr/local/bin" "/usr/bin" "/bin"
-            "/usr/local/sbin" "/usr/sbin" "/sbin"
-            "/usr/X11/bin" "/usr/texbin"))
+;; linux
 
-(defun nix-specific-setup ()
-  (setenv "PATH" (mapconcat 'identity ben-path ":"))
-  (setq exec-path ben-path))
+(defun ben-linux-specific-setup ()
+  (setq base-face-height 140))
 
-(defun linux-specific-setup ()
-  (setq base-face-height 140)
-  (nix-specific-setup))
+;; OSX
 
 (defun spotlight-locate-make-command-line (search-string)
   (list "mdfind" "-interpret" search-string))
 
-(defun osx-specific-setup ()
+(defun ben-osx-specific-setup ()
   (setq base-face-height 160)
-  (setq browse-default-macosx-browser "/Applications/Safari.app")
   (setq helm-locate-command "mdfind -name %s %s")
   (setq locate-make-command-line 'spotlight-locate-make-command-line)
   (setq x-bitmap-file-path '("/usr/X11/include/X11/bitmaps"))
-  (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open")))
-  (add-to-list 'ben-path "/Applications/Emacs.app/Contents/MacOS/bin")
-  (nix-specific-setup))
+  (setq source-directory "/Library/Caches/Homebrew/emacs--git")
+  (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open"))))
 
-(defun windows-specific-setup ()
+;; Windows
+
+(defun ben-windows-specific-setup ()
   (setq base-face-height 160)
   (setq w32-pass-lwindow-to-system nil)
   (setq w32-lwindow-modifier 'super))
 
-(cond ((string-equal system-type "gnu/linux") (linux-specific-setup))
-      ((string-equal system-type "darwin") (osx-specific-setup))
-      ((string-equal system-type "windows-nt") (windows-specific-setup))
-      (t (message "Unknown operating system")))
+(cond ((string-equal system-type "gnu/linux") (ben-linux-specific-setup))
+      ((string-equal system-type "darwin") (ben-osx-specific-setup))
+      ((string-equal system-type "windows-nt") (ben-windows-specific-setup)))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; customisation ;;
@@ -721,7 +711,7 @@ categories:
 ;; extempore ;;
 ;;;;;;;;;;;;;;;
 
-(setq extempore-path (concat ben-home-dir "/Code/extempore/"))
+(setq extempore-path "~/Code/extempore/")
 (autoload 'extempore-mode (concat extempore-path "extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-to-list 'auto-mode-alist '("\\.xtmh$" . extempore-mode))
@@ -768,15 +758,16 @@ categories:
 (defun ben-create-extempore-template-dir (name)
   "Set up the directory structure and files for a new extempore session/gig."
   (interactive "sSession name: ")
-  (let* ((base-path (concat ben-home-dir "/Code/xtm/sessions/" name "/"))
+  (let* ((xtm-dir (expand-file-name "~/Code/xtm"))
+	 (base-path (concat xtm-dir "/sessions/" name "/"))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
                   ""
                   "(sys:load \"libs/xtm.xtm\")\n"
-                  "(ipc:load \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
-                  "(ipc:load \"utility\" \"" ben-home-dir "/Code/xtm/lib/ben-lib.xtm\")\n"
-                  "(ipc:load \"" ben-home-dir "/Code/xtm/lib/sampler-maps.xtm\")\n"
-                  "(ipc:load \"utility\" \"" ben-home-dir "/Code/xtm/lib/sampler-maps.xtm\")\n")))
+                  "(ipc:load \"" xtm-dir "/lib/ben-lib.xtm\")\n"
+                  "(ipc:load \"utility\" \"" xtm-dir "/lib/ben-lib.xtm\")\n"
+                  "(ipc:load \"" xtm-dir "/lib/sampler-maps.xtm\")\n"
+                  "(ipc:load \"utility\" \"" xtm-dir "/lib/sampler-maps.xtm\")\n")))
     (if (file-exists-p base-path)
         (error "Cannot create xtm session: directory \"%s\" already exists" base-path))
     (make-directory base-path)
@@ -966,7 +957,7 @@ categories:
 (require 'auto-complete-config)
 
 ;; (ac-set-trigger-key "<tab>")
-(add-to-list 'ac-dictionary-directories (concat ben-home-dir "/.emacs.d/ac-dict"))
+(add-to-list 'ac-dictionary-directories (concat user-emacs-directory ".ac-dict"))
 (setq ac-auto-start 2)
 (ac-config-default)
 

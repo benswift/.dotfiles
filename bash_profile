@@ -1,6 +1,6 @@
 # Exports
 
-export PATH="/Applications/Emacs.app/Contents/MacOS/bin:/Users/ben/.rbenv/shims:/Users/ben/bin:/usr/local/share/python:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin"
+export PATH="/Users/ben/.rbenv/shims:/Users/ben/bin:/usr/local/share/python:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin"
 
 export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 
