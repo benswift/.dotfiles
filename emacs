@@ -349,7 +349,7 @@ Also bind `class' to ((class color) (min-colors 89))."
 (global-set-key (kbd "<s-right>") 'move-end-of-line)
 (global-set-key (kbd "<s-up>") 'beginning-of-buffer)
 (global-set-key (kbd "<s-down>") 'end-of-buffer)
-(global-set-key (kbd "<M-kp-delete>") 'kill-word)
+(global-set-key (kbd "<M-delete>") 'kill-word)
 (global-set-key (kbd "<M-backspace>") 'backward-kill-word)
 (global-set-key (kbd "<s-backspace>") (lambda () (interactive) (kill-visual-line 0)))
 
