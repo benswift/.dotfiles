@@ -217,7 +217,7 @@
 ;; transparency
 
 (defun set-current-frame-alpha (value)
-  
+
    (set-frame-para next-window (selected-frame) 'alpha value))
 
 (global-set-key (kbd "C-c t") 'set-current-frame-alpha)
@@ -619,8 +619,8 @@ Also bind `class' to ((class color) (min-colors 89))."
         (mathml t)))
 
 (defun biott-new-post (post-name)
-  
-  (find-file (conc next-window "~/Documents/biott/org/_posts/drafts/"
+  (interactive "sPost title: ")
+  (find-file (concat "~/Documents/biott/org/_posts/drafts/"
                      (format-time-string "%Y-%m-%d-")
                      (downcase (subst-char-in-string 32 45 post-name))
                      ".org"))
@@ -689,8 +689,10 @@ categories:
   (define-key LaTeX-mode-map (kbd "C-c r") 'reftex-reference))
 
 (defun latex-word-count ()
-  
-  (let* ((tex-file (call-interactively  next-window))
+  (interactive)
+  (let* ((tex-file (if (stringp TeX-master)
+		       TeX-master
+		     (buffer-file-name)))
          (enc-str (symbol-name buffer-file-coding-system))
          (enc-opt (cond
                    ((string-match "utf-8" enc-str) "-utf8")
@@ -737,10 +739,11 @@ categories:
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
-;; syntax highlighting for LLVM IR files
+(autoload #'llvm-mode (concat extempore-path "extras/llvm-mode.el")
+  "Major mode for editing LLVM IR files" t)
 
-(if (load (concat extempore-path "extras/llvm-mode.el") t)
-    (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode)))
+(add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode))
+(add-to-list 'auto-mode-alist '("\\.ll$" . llvm-mode))
 
 ;; session setup
 
@@ -754,12 +757,11 @@ categories:
 
 (defun ben-create-extempore-template-dir (name)
   "Set up the directory structure and files for a new extempore session/gig."
-  
+  (interactive "sSession name: ")
   (let* ((xtm-dir (call-interactively next-window))
-	 (base-path (concat xtm-dir "/sessions/" name "/"))
+         (base-path (concat xtm-dir "/sessions/" name "/"))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
-                  ""
                   "(sys:load \"libs/xtm.xtm\")\n"
                   "(ipc:load \"" xtm-dir "/lib/ben-lib.xtm\")\n"
                   "(ipc:load \"utility\" \"" xtm-dir "/lib/ben-lib.xtm\")\n"
@@ -768,24 +770,23 @@ categories:
     (if (file-exists-p base-path)
         (error "Cannot create xtm session: directory \"%s\" already exists" base-path))
     (make-directory base-path)
-    ;; practice files
+         ;; practice files
+
     (ben-create-extempore-template-file
      base-path "practice-scm.xtm" "scmhead")
     (ben-create-extempore-template-file
      base-path "practice-xtlang.xtm" "xthead")
-    ;; gig files
+         ;; gig files
+
     (ben-create-extempore-template-file
      base-path "gig-scm.xtm" "scmhead")
     (ben-create-extempore-template-file
      base-path "gig-xtlang.xtm" "xthead")
-    ;; setup file
+         ;; setup file
+
     (ben-create-extempore-template-file
      base-path "setup.xtm" setup-header)
     (dired base-path)))
-
-;; RBC minor mode
-(autoload 'remote-buffer-control-mode (concat extempore-path "extras/remote-buffer-control.el") "" t)
-
 
 ;;;;;;;;;;;;;
 ;; paredit ;;
@@ -812,21 +813,21 @@ categories:
 
 (defun paredit-skip-to-start-of-sexp-at-point ()
   "Skips to start of current sexp."
-  
-  (while (not (par next-window))
+  (interactive)
+  (while (not (paredit--is-at-opening-paren))
     (if (point-is-inside-string)
         (paredit-backward-up)
       (paredit-backward))))
 
 (defun paredit-duplicate-rest-of-closest-sexp ()
-  
-  (cond (call-interactively 
-         (next-window
-          (paredit-copy-sexps-as-kill)
-          (forward-sexp)
-          (paredit-newline)
-          (yank)
-          (exchange-point-and-mark)))
+  (interactive)
+  (cond
+   ((paredit--is-at-opening-paren)
+    (paredit-copy-sexps-as-kill)
+    (forward-sexp)
+    (paredit-newline)
+    (yank)
+    (exchange-point-and-mark))
    ((point-is-inside-list)
     (while (looking-at " ") (forward-char))
     (if (not (= (point) (car (bounds-of-thing-at-point 'sexp))))
@@ -1029,8 +1030,8 @@ categories:
     (split-string (buffer-string) "\n" t)))
 
 (defun what-face (pos)
-  
-  (let ((face (or (call-interactively next-window)
+  (interactive "d")
+  (let ((face (or (get-char-property (point) 'read-face-name)
                   (get-char-property (point) 'face))))
     (if face (message "Face: %s" face) (message "No face at %d" pos))))
 
@@ -1040,8 +1041,8 @@ categories:
 If no region is selected and current line is not blank and we are not at the end of the line,
 then comment current line.
 Replaces default behaviour of `comment-dwim', when it inserts comment at the end of the line."
-  
-  (comment-normali next-window)
+  (interactive "*P")
+  (comment-normalize-vars)
   (if (and (not (region-active-p)) (not (looking-at "[ \t]*$")))
       (comment-or-uncomment-region (line-beginning-position) (line-end-position))
     (comment-dwim arg)))
@@ -1053,8 +1054,19 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 
 (defun duplicate-line ()
   "Clone line at cursor, leaving the latter intact."
-  
-  (save-excursion next-window))
+  (interactive "*")
+  (save-excursion
+    ;; The last line of the buffer cannot be killed
+    ;; if it is empty. Instead, simply add a new line.
+    (if (and (eobp) (bolp))
+	(newline)
+      ;; Otherwise kill the whole line, and yank it back.
+      (let ((kill-read-only-ok t)
+	    deactivate-mark)
+	(read-only-mode 1)
+	(kill-whole-line)
+	(read-only-mode 0)
+	(yank)))))
 
 (global-set-key (kbd "C-c d") 'duplicate-line)
 (global-set-key (kbd "C-c b") 'comment-box)
