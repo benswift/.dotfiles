@@ -68,21 +68,20 @@
 (defun ben-osx-setup-keybindings ()
   (setq mac-option-modifier 'meta)
 	(setq mac-command-modifier 'super)
-  (define-key global-map [?\s-a] 'mark-whole-buffer)
-  (define-key global-map [?\s-j] 'exchange-point-and-mark)
-  (define-key global-map [?\s-k] 'kill-this-buffer)
-  (define-key global-map [?\s-l] 'goto-line)
-  (define-key global-map [?\s-m] 'iconify-frame)
-  (define-key global-map [?\s-n] 'make-frame)
-  (define-key global-map [?\s-o] 'ns-open-file-using-panel)
-  (define-key global-map [?\s-p] 'ns-print-buffer)
-  (define-key global-map [?\s-q] 'save-buffers-kill-emacs)
-  (define-key global-map [?\s-s] 'save-buffer)
-  (define-key global-map [?\s-u] 'revert-buffer)
-  (define-key global-map [?\s-v] 'yank)
-  (define-key global-map [?\s-w] 'delete-frame)
-  (define-key global-map [?\s-x] 'kill-region)
-  (define-key global-map [?\s-z] 'undo))
+  (define-key global-map (kbd "s-a") 'mark-whole-buffer)
+  (define-key global-map (kbd "s-j") 'exchange-point-and-mark)
+  (define-key global-map (kbd "s-k") 'kill-this-buffer)
+  (define-key global-map (kbd "s-l") 'goto-line)
+  (define-key global-map (kbd "s-m") 'iconify-frame)
+  (define-key global-map (kbd "s-n") 'make-frame)
+  (define-key global-map (kbd "s-o") 'ns-open-file-using-panel)
+  (define-key global-map (kbd "s-p") 'ns-print-buffer)
+  (define-key global-map (kbd "s-q") 'save-buffers-kill-emacs)
+  (define-key global-map (kbd "s-s") 'save-buffer)
+  (define-key global-map (kbd "s-u") 'revert-buffer)
+  (define-key global-map (kbd "s-v") 'yank)
+  (define-key global-map (kbd "s-w") 'delete-frame)
+  (define-key global-map (kbd "s-x") 'kill-region))
 
 (defun ben-osx-specific-setup ()
   (setq base-face-height 160)
@@ -218,9 +217,8 @@
 ;; transparency
 
 (defun set-current-frame-alpha (value)
-  (interactive
-   (list (read-number "Frame alpha: " 1.0)))
-   (set-frame-parameter (selected-frame) 'alpha value))
+  
+   (set-frame-para next-window (selected-frame) 'alpha value))
 
 (global-set-key (kbd "C-c t") 'set-current-frame-alpha)
 
@@ -337,15 +335,8 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 ;; window navigation
 
-(global-set-key (kbd "s-[")
-                (lambda ()
-                  (interactive)
-                  (other-window -1)))
-
-(global-set-key (kbd "s-]")
-                (lambda ()
-                  (interactive)
-                  (other-window 1)))
+(global-set-key (kbd "s-[") '(lambda () (interactive) (other-window -1)))
+(global-set-key (kbd "s-]") 'other-window)
 
 (global-set-key (kbd "s-{") 'shrink-window-horizontally)
 (global-set-key (kbd "s-}") 'enlarge-window-horizontally)
@@ -354,50 +345,13 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 (global-set-key (kbd "s-z") 'undo)
 
-(global-set-key (kbd "<s-left>")
-                (lambda ()
-                  (interactive)
-                  (move-beginning-of-line 1)))
-
-(global-set-key (kbd "<s-right>")
-                (lambda ()
-                  (interactive)
-                  (move-end-of-line 1)))
-
-(global-set-key (kbd "<s-up>")
-                (lambda ()
-                  (interactive)
-                  (goto-char (point-min))))
-
-(global-set-key (kbd "<s-down>")
-                (lambda ()
-                  (interactive)
-                  (goto-char (point-max))))
-
-(global-set-key (kbd "<M-kp-delete>")
-                (lambda ()
-                  (interactive)
-                  (kill-word 1)))
-
-(global-set-key (kbd "<M-backspace>")
-                (lambda ()
-                  (interactive)
-                  (backward-kill-word 1)))
-
-(global-set-key (kbd "<s-backspace>")
-                (lambda ()
-                  (interactive)
-                  (kill-visual-line 0)))
-
-(global-set-key (kbd "<s-kp-delete>")
-                (lambda ()
-                  (interactive)
-                  (kill-visual-line)))
-
-(global-set-key (kbd "<A-backspace>")
-                (lambda ()
-                  (interactive)
-                  (kill-visual-line 0)))
+(global-set-key (kbd "<s-left>") 'move-beginning-of-line)
+(global-set-key (kbd "<s-right>") 'move-end-of-line)
+(global-set-key (kbd "<s-up>") 'beginning-of-buffer)
+(global-set-key (kbd "<s-down>") 'end-of-buffer)
+(global-set-key (kbd "<M-kp-delete>") 'kill-word)
+(global-set-key (kbd "<M-backspace>") 'backward-kill-word)
+(global-set-key (kbd "<s-backspace>") (lambda () (interactive) (kill-visual-line 0)))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; smart mode line ;;
@@ -665,8 +619,8 @@ Also bind `class' to ((class color) (min-colors 89))."
         (mathml t)))
 
 (defun biott-new-post (post-name)
-  (interactive "sPost title: ")
-  (find-file (concat "~/Documents/biott/org/_posts/drafts/"
+  
+  (find-file (conc next-window "~/Documents/biott/org/_posts/drafts/"
                      (format-time-string "%Y-%m-%d-")
                      (downcase (subst-char-in-string 32 45 post-name))
                      ".org"))
@@ -735,10 +689,8 @@ categories:
   (define-key LaTeX-mode-map (kbd "C-c r") 'reftex-reference))
 
 (defun latex-word-count ()
-  (interactive)
-  (let* ((tex-file (if (stringp TeX-master)
-                       TeX-master
-                     (buffer-file-name)))
+  
+  (let* ((tex-file (call-interactively  next-window))
          (enc-str (symbol-name buffer-file-coding-system))
          (enc-opt (cond
                    ((string-match "utf-8" enc-str) "-utf8")
@@ -802,8 +754,8 @@ categories:
 
 (defun ben-create-extempore-template-dir (name)
   "Set up the directory structure and files for a new extempore session/gig."
-  (interactive "sSession name: ")
-  (let* ((xtm-dir (expand-file-name "~/Code/xtm"))
+  
+  (let* ((xtm-dir (call-interactively next-window))
 	 (base-path (concat xtm-dir "/sessions/" name "/"))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
@@ -860,21 +812,21 @@ categories:
 
 (defun paredit-skip-to-start-of-sexp-at-point ()
   "Skips to start of current sexp."
-  (interactive)
-  (while (not (paredit--is-at-opening-paren))
+  
+  (while (not (par next-window))
     (if (point-is-inside-string)
         (paredit-backward-up)
       (paredit-backward))))
 
 (defun paredit-duplicate-rest-of-closest-sexp ()
-  (interactive)
-  (cond
-   ((paredit--is-at-opening-paren)
-    (paredit-copy-sexps-as-kill)
-    (forward-sexp)
-    (paredit-newline)
-    (yank)
-    (exchange-point-and-mark))
+  
+  (cond (call-interactively 
+         (next-window
+          (paredit-copy-sexps-as-kill)
+          (forward-sexp)
+          (paredit-newline)
+          (yank)
+          (exchange-point-and-mark)))
    ((point-is-inside-list)
     (while (looking-at " ") (forward-char))
     (if (not (= (point) (car (bounds-of-thing-at-point 'sexp))))
@@ -895,6 +847,7 @@ categories:
   "Face for parentheses.  Taken from ESK.")
 
 (defun ben-paredit-mode-hook ()
+  (define-key paredit-mode-map (kbd "<M-delete>") 'paredit-forward-kill-word)
   (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-up)
   (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-down)
   (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-up)
@@ -1076,8 +1029,8 @@ categories:
     (split-string (buffer-string) "\n" t)))
 
 (defun what-face (pos)
-  (interactive "d")
-  (let ((face (or (get-char-property (point) 'read-face-name)
+  
+  (let ((face (or (call-interactively next-window)
                   (get-char-property (point) 'face))))
     (if face (message "Face: %s" face) (message "No face at %d" pos))))
 
@@ -1087,8 +1040,8 @@ categories:
 If no region is selected and current line is not blank and we are not at the end of the line,
 then comment current line.
 Replaces default behaviour of `comment-dwim', when it inserts comment at the end of the line."
-  (interactive "*P")
-  (comment-normalize-vars)
+  
+  (comment-normali next-window)
   (if (and (not (region-active-p)) (not (looking-at "[ \t]*$")))
       (comment-or-uncomment-region (line-beginning-position) (line-end-position))
     (comment-dwim arg)))
@@ -1100,19 +1053,8 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 
 (defun duplicate-line ()
   "Clone line at cursor, leaving the latter intact."
-  (interactive "*")
-  (save-excursion
-    ;; The last line of the buffer cannot be killed
-    ;; if it is empty. Instead, simply add a new line.
-    (if (and (eobp) (bolp))
-        (newline)
-      ;; Otherwise kill the whole line, and yank it back.
-      (let ((kill-read-only-ok t)
-            deactivate-mark)
-        (read-only-mode 1)
-        (kill-whole-line)
-        (read-only-mode 0)
-        (yank)))))
+  
+  (save-excursion next-window))
 
 (global-set-key (kbd "C-c d") 'duplicate-line)
 (global-set-key (kbd "C-c b") 'comment-box)
