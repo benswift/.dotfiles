@@ -65,13 +65,6 @@
 (defun spotlight-locate-make-command-line (search-string)
   (list "mdfind" "-interpret" search-string))
 
-(defun toggle-frame-fullscreen ()
-  (interactive)
-  (if (not (eq (frame-parameter nil 'fullscreen) 'fullboth))
-      (set-frame-parameter nil 'fullscreen 'fullboth)
-    (if (frame-parameter nil 'fullscreen)
-        (set-frame-parameter nil 'fullscreen nil))))
-
 (defun ben-osx-setup-keybindings ()
   (setq mac-option-modifier 'meta)
 	(setq mac-command-modifier 'super)
@@ -230,6 +223,30 @@
    (set-frame-parameter (selected-frame) 'alpha value))
 
 (global-set-key (kbd "C-c t") 'set-current-frame-alpha)
+
+;; fullscreen
+
+(defun toggle-frame-fullscreen ()
+  "Toggle fullscreen mode of the selected frame.
+Enable fullscreen mode of the selected frame or disable if it is
+already fullscreen.  Ignore window manager screen decorations.
+When turning on fullscreen mode, remember the previous value of the
+maximization state in the temporary frame parameter `maximized'.
+Restore the maximization state when turning off fullscreen mode.
+See also `toggle-frame-maximized'."
+  (interactive)
+  (modify-frame-parameters
+   nil
+   `((maximized
+      . ,(unless (memq (frame-parameter nil 'fullscreen) '(fullscreen fullboth))
+	   (frame-parameter nil 'fullscreen)))
+     (fullscreen
+      . ,(if (memq (frame-parameter nil 'fullscreen) '(fullscreen fullboth))
+	     (if (eq (frame-parameter nil 'maximized) 'maximized)
+		 'maximized)
+	   'fullscreen)))))
+
+(define-key global-map (kbd "<f11>") 'toggle-frame-fullscreen)
 
 ;; pretty lambdas
 
