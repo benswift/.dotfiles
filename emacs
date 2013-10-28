@@ -65,13 +65,41 @@
 (defun spotlight-locate-make-command-line (search-string)
   (list "mdfind" "-interpret" search-string))
 
+(defun toggle-frame-fullscreen ()
+  (interactive)
+  (if (not (eq (frame-parameter nil 'fullscreen) 'fullboth))
+      (set-frame-parameter nil 'fullscreen 'fullboth)
+    (if (frame-parameter nil 'fullscreen)
+        (set-frame-parameter nil 'fullscreen nil))))
+
+(defun ben-osx-setup-keybindings ()
+  (setq mac-option-modifier 'meta)
+	(setq mac-command-modifier 'super)
+  (define-key global-map [?\s-a] 'mark-whole-buffer)
+  (define-key global-map [?\s-j] 'exchange-point-and-mark)
+  (define-key global-map [?\s-k] 'kill-this-buffer)
+  (define-key global-map [?\s-l] 'goto-line)
+  (define-key global-map [?\s-m] 'iconify-frame)
+  (define-key global-map [?\s-n] 'make-frame)
+  (define-key global-map [?\s-o] 'ns-open-file-using-panel)
+  (define-key global-map [?\s-p] 'ns-print-buffer)
+  (define-key global-map [?\s-q] 'save-buffers-kill-emacs)
+  (define-key global-map [?\s-s] 'save-buffer)
+  (define-key global-map [?\s-u] 'revert-buffer)
+  (define-key global-map [?\s-v] 'yank)
+  (define-key global-map [?\s-w] 'delete-frame)
+  (define-key global-map [?\s-x] 'kill-region)
+  (define-key global-map [?\s-z] 'undo))
+
 (defun ben-osx-specific-setup ()
   (setq base-face-height 160)
   (setq helm-locate-command "mdfind -name %s %s")
   (setq locate-make-command-line 'spotlight-locate-make-command-line)
   (setq x-bitmap-file-path '("/usr/X11/include/X11/bitmaps"))
   (setq source-directory "/Library/Caches/Homebrew/emacs--git")
-  (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open"))))
+  (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open")))
+  ;; for railwaycat emacs-mac
+  (ben-osx-setup-keybindings))
 
 ;; Windows
 
