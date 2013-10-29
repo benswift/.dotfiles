@@ -57,7 +57,7 @@
 
 ;; linux
 
-(defun ben-linux-specific-setup ()
+(defun ben-linux-setup ()
   (setq base-face-height 140))
 
 ;; OSX
@@ -65,7 +65,7 @@
 (defun spotlight-locate-make-command-line (search-string)
   (list "mdfind" "-interpret" search-string))
 
-(defun ben-osx-setup-keybindings ()
+(defun ben-setup-osx-keybindings ()
   (setq mac-option-modifier 'meta)
 	(setq mac-command-modifier 'super)
   (define-key global-map (kbd "s-a") 'mark-whole-buffer)
@@ -81,7 +81,7 @@
   (define-key global-map (kbd "s-w") 'delete-frame)
   (define-key global-map (kbd "s-x") 'kill-region))
 
-(defun ben-osx-specific-setup ()
+(defun ben-osx-setup ()
   (setq base-face-height 160)
   (setq helm-locate-command "mdfind -name %s %s")
   (setq locate-make-command-line 'spotlight-locate-make-command-line)
@@ -89,18 +89,18 @@
   (setq source-directory "/Library/Caches/Homebrew/emacs--git")
   (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open")))
   ;; for railwaycat emacs-mac
-  (ben-osx-setup-keybindings))
+  (ben-setup-osx-keybindings))
 
 ;; Windows
 
-(defun ben-windows-specific-setup ()
+(defun ben-windows-setup ()
   (setq base-face-height 160)
   (setq w32-pass-lwindow-to-system nil)
   (setq w32-lwindow-modifier 'super))
 
-(cond ((string-equal system-type "gnu/linux") (ben-linux-specific-setup))
-      ((string-equal system-type "darwin") (ben-osx-specific-setup))
-      ((string-equal system-type "windows-nt") (ben-windows-specific-setup)))
+(cond ((equal system-type 'gnu/linux) (ben-linux-setup))
+      ((equal system-type 'darwin) (ben-osx-setup))
+      ((equal system-type 'windows-nt) (ben-windows-setup)))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; customisation ;;
