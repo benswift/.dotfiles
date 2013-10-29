@@ -74,8 +74,6 @@
   (define-key global-map (kbd "s-l") 'goto-line)
   (define-key global-map (kbd "s-m") 'iconify-frame)
   (define-key global-map (kbd "s-n") 'make-frame)
-  (define-key global-map (kbd "s-o") 'ns-open-file-using-panel)
-  (define-key global-map (kbd "s-p") 'ns-print-buffer)
   (define-key global-map (kbd "s-q") 'save-buffers-kill-emacs)
   (define-key global-map (kbd "s-s") 'save-buffer)
   (define-key global-map (kbd "s-u") 'revert-buffer)
