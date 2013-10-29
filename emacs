@@ -849,6 +849,7 @@ categories:
 
 (defun ben-paredit-mode-hook ()
   (define-key paredit-mode-map (kbd "<M-delete>") 'paredit-forward-kill-word)
+  (define-key paredit-mode-map (kbd "<M-backspace>") 'paredit-backward-kill-word)
   (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-up)
   (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-down)
   (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-up)
