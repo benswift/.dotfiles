@@ -215,8 +215,9 @@
 ;; transparency
 
 (defun set-current-frame-alpha (value)
-
-   (set-frame-para next-window (selected-frame) 'alpha value))
+  (interactive
+   (list (read-number "Frame alpha: " 1.0)))
+   (set-frame-parameter (selected-frame) 'alpha value))
 
 (global-set-key (kbd "C-c t") 'set-current-frame-alpha)
 
@@ -746,9 +747,9 @@ categories:
 ;; session setup
 
 (defun ben-create-extempore-template-file (base-path filename &optional header)
-  (unless (file-exists-p (concat base-path filename))
+  (unless (file-exists-p (concat base-path "/" filename))
     (progn
-      (find-file (concat base-path filename))
+      (find-file (concat base-path "/" filename))
       (if header (insert header))
       (save-buffer)
       (kill-buffer))))
@@ -756,8 +757,8 @@ categories:
 (defun ben-create-extempore-template-dir (name)
   "Set up the directory structure and files for a new extempore session/gig."
   (interactive "sSession name: ")
-  (let* ((xtm-dir (call-interactively next-window))
-         (base-path (concat xtm-dir "/sessions/" name "/"))
+  (let* ((xtm-dir "~/Code/xtm")
+         (base-path (concat xtm-dir "/sessions/" name))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
                   "(sys:load \"libs/xtm.xtm\")\n"
@@ -766,22 +767,19 @@ categories:
                   "(ipc:load \"" xtm-dir "/lib/sampler-maps.xtm\")\n"
                   "(ipc:load \"utility\" \"" xtm-dir "/lib/sampler-maps.xtm\")\n")))
     (if (file-exists-p base-path)
-        (error "Cannot create xtm session: directory \"%s\" already exists" base-path))
+        (error "Cannot create xtm session: directory already exists."))
     (make-directory base-path)
-         ;; practice files
-
+    ;; practice files
     (ben-create-extempore-template-file
      base-path "practice-scm.xtm" "scmhead")
     (ben-create-extempore-template-file
      base-path "practice-xtlang.xtm" "xthead")
-         ;; gig files
-
+    ;; gig files
     (ben-create-extempore-template-file
      base-path "gig-scm.xtm" "scmhead")
     (ben-create-extempore-template-file
      base-path "gig-xtlang.xtm" "xthead")
-         ;; setup file
-
+    ;; setup file
     (ben-create-extempore-template-file
      base-path "setup.xtm" setup-header)
     (dired base-path)))
