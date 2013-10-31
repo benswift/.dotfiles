@@ -711,17 +711,17 @@ categories:
 (setq extempore-path "~/Code/extempore/")
 (autoload 'extempore-mode (concat extempore-path "extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
-(add-to-list 'auto-mode-alist '("\\.xtmh$" . extempore-mode))
 
 ;; extempore customisation
-(setq extempore-tab-completion nil
-      extempore-process-args "--run libs/xtm.xtm")
+(setq extempore-tab-completion nil)
 
-(setq extempore-default-device-number
-      (cond
-       ((string= system-name "lonyx") 1)
-       ((string= system-name "cyril.local") 2)
-       (t nil)))
+;; device-specific Extempore config
+(cond
+ ((string= system-name "lonyx")
+  (setq extempore-program-args "--device 1 --run libs/xtm.xtm"))
+ ((string= system-name "cyril.local")
+  (setq extempore-program-args "--device 2 --run libs/xtm.xtm"))
+ (t nil))
 
 (defun ben-extempore-mode-hook ()
   (turn-on-eldoc-mode)
@@ -732,8 +732,8 @@ categories:
   ;;          (yes-or-no-p "Do you want to log this session?"))
   ;;     (extempore-logger-mode 1))
   (monokai-with-color-variables
-    (set-face-attribute 'extempore-blink-eval-face nil :foreground monokai-bg :background "#FD971F")
-    (set-face-attribute 'extempore-sb-blink-eval-face nil :foreground monokai-bg :background "#39FF14")))
+    (set-face-attribute 'extempore-blink-face nil :foreground monokai-bg :background "#FD971F")
+    (set-face-attribute 'extempore-sb-blink-face nil :foreground monokai-bg :background "#39FF14")))
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
