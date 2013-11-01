@@ -8,36 +8,12 @@
 (bind-val height double height)
 (define fullscreen ${3:#t})
 
-(if (and (defined? '*xtmlib-opengl-loaded*) *xtmlib-opengl-loaded*)
-    (sys:load-escape "Need to create the context before loading opengl.xtm"))
+(sys:load "/Users/ben/Code/xtm/lib/vg-setup.xtm")
 
-(define *gl-ctx* (gl:make-ctx ":0.0" fullscreen 0. 0. width height))
-
-(sys:load "libs/xtm.xtm")
-(sys:load "libs/external/shaders.xtm")
-(sys:load "libs/external/openvg.xtm")
-
-(xtm_render_setup (real->integer width) (real->integer height))
-(if (<> (xtm_vg_create_context (real->integer width) (real->integer height)) 1)
-    (xtm_vg_print_error))
-
-(bind-func vgframe:XTMRENDERCB
-  (lambda (frame shader m v p data)
-    void))
+(ipc:xtm-render-setup "utility")
 
 (bind-func gl_render
   (lambda ()
     ;;          pre  opaq trans post    data
     (xtm_render null null null  vgframe null)
     void))
-
-(define gl-loop
-  (lambda (time delta-t$4)
-    (gl_render)
-    (gl:swap-buffers *gl-ctx*)
-    (callback (+ time (* *second* delta-t) 0.9)
-              'gl-loop
-              (+ time (* *second* delta-t))
-              delta-t$4)))
-
-(gl-loop (*metro* (*metro* 'get-beat 4)) 1/${5:30})
