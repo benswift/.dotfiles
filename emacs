@@ -78,6 +78,7 @@
   (define-key global-map (kbd "s-s") 'save-buffer)
   (define-key global-map (kbd "s-u") 'revert-buffer)
   (define-key global-map (kbd "s-v") 'yank)
+  (define-key global-map (kbd "s-c") 'kill-ring-save)
   (define-key global-map (kbd "s-w") 'delete-frame)
   (define-key global-map (kbd "s-x") 'kill-region))
 
