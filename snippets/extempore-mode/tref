@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tref
+# key: tref
+# binding: direct-keybinding
+# --
+(tref$1 ${2:dat} ${3:index})

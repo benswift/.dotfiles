@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: aref
+# key: aref
+# binding: direct-keybinding
+# --
+(aref$1 ${2:dat} ${3:index})

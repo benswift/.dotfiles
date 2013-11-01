@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: tset
+# key: tset
+# --
+(tset! ${1:dat} ${2:index} ${3:value})

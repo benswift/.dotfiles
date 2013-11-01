@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pset
+# key: pset
+# --
+(pset! ${1:dat} ${2:index} ${3:value})
