@@ -2,4 +2,4 @@
 # name: cos-frame
 # key: cosf
 # --
-(cos (* TWOPI (/ (i64tod frame) ${1:30.0}) ${2:freq}))
+(cos_frame frame ${1:[dc]} ${2:amp} ${3:freq})
