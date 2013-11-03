@@ -710,8 +710,8 @@ categories:
 ;; extempore ;;
 ;;;;;;;;;;;;;;;
 
-(setq extempore-path "~/Code/extempore/")
-(autoload 'extempore-mode (concat extempore-path "extras/extempore.el") "" t)
+(setq extempore-path "~/Code/extempore")
+(autoload 'extempore-mode (concat extempore-path "/extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 
 ;; extempore customisation
@@ -748,12 +748,13 @@ categories:
 ;; session setup
 
 (defun ben-create-extempore-template-file (base-path filename &optional header)
-  (unless (file-exists-p (concat base-path "/" filename))
-    (progn
-      (find-file (concat base-path "/" filename))
-      (if header (insert header))
-      (save-buffer)
-      (kill-buffer))))
+  (let ((full-path (format "%s/%s" base-path filename)))
+    (unless (file-exists-p full-path)
+      (progn
+        (find-file full-path)
+        (if header (insert header))
+        (save-buffer)
+        (kill-buffer)))))
 
 (defun ben-create-extempore-template-dir (name)
   "Set up the directory structure and files for a new extempore session/gig."
