@@ -710,8 +710,8 @@ categories:
 ;; extempore ;;
 ;;;;;;;;;;;;;;;
 
-(setq extempore-path "~/Code/extempore")
-(autoload 'extempore-mode (concat extempore-path "/extras/extempore.el") "" t)
+(setq user-extempore-directory "~/Code/extempore/")
+(autoload 'extempore-mode (concat user-extempore-directory "extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 
 ;; extempore customisation
@@ -739,7 +739,7 @@ categories:
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
-(autoload #'llvm-mode (concat extempore-path "extras/llvm-mode.el")
+(autoload #'llvm-mode (concat user-extempore-directory "extras/llvm-mode.el")
   "Major mode for editing LLVM IR files" t)
 
 (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode))
@@ -759,15 +759,15 @@ categories:
 (defun ben-create-extempore-template-dir (name)
   "Set up the directory structure and files for a new extempore session/gig."
   (interactive "sSession name: ")
-  (let* ((xtm-dir "~/Code/xtm")
-         (base-path (concat xtm-dir "/sessions/" name))
+  (let* ((xtm-dir "~/Code/xtm/")
+         (base-path (concat xtm-dir "sessions/" name))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
                   "(sys:load \"libs/xtm.xtm\")\n"
-                  "(ipc:load \"" xtm-dir "/lib/ben-lib.xtm\")\n"
-                  "(ipc:load \"utility\" \"" xtm-dir "/lib/ben-lib.xtm\")\n"
-                  "(ipc:load \"" xtm-dir "/lib/sampler-maps.xtm\")\n"
-                  "(ipc:load \"utility\" \"" xtm-dir "/lib/sampler-maps.xtm\")\n")))
+                  "(ipc:load \"" xtm-dir "lib/ben-lib.xtm\")\n"
+                  "(ipc:load \"utility\" \"" xtm-dir "lib/ben-lib.xtm\")\n"
+                  "(ipc:load \"" xtm-dir "lib/sampler-maps.xtm\")\n"
+                  "(ipc:load \"utility\" \"" xtm-dir "lib/sampler-maps.xtm\")\n")))
     (if (file-exists-p base-path)
         (error "Cannot create xtm session: directory already exists."))
     (make-directory base-path)
