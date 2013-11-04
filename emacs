@@ -467,6 +467,7 @@ Also bind `class' to ((class color) (min-colors 89))."
 ;; magit ;;
 ;;;;;;;;;;;
 
+(setq vc-display-status nil)
 (setq magit-save-some-buffers nil)
 
 ;;;;;;;;;;;;;
