@@ -760,14 +760,14 @@ categories:
 (defun ben-create-extempore-template-dir (name)
   "Set up the directory structure and files for a new extempore session/gig."
   (interactive "sSession name: ")
-  (let* ((xtm-dir "~/Code/xtm/")
+  (let* ((xtm-dir (expand-file-name "~/Code/xtm/"))
          (base-path (concat xtm-dir "sessions/" name))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
                   "(sys:load \"libs/xtm.xtm\")\n"
-                  "(ipc:load \"" xtm-dir "lib/ben-lib.xtm\")\n"
+                  "(sys:load \"" xtm-dir "lib/ben-lib.xtm\")\n"
                   "(ipc:load \"utility\" \"" xtm-dir "lib/ben-lib.xtm\")\n"
-                  "(ipc:load \"" xtm-dir "lib/sampler-maps.xtm\")\n"
+                  "(sys:load \"" xtm-dir "lib/sampler-maps.xtm\")\n"
                   "(ipc:load \"utility\" \"" xtm-dir "lib/sampler-maps.xtm\")\n")))
     (if (file-exists-p base-path)
         (error "Cannot create xtm session: directory already exists."))
