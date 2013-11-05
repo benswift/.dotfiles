@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: xtlang-header
-# key: xthead
+# name: header-primary
+# key: headerp
 # --
 (sys:load "`default-directory`setup.xtm")

@@ -774,14 +774,14 @@ categories:
     (make-directory base-path)
     ;; practice files
     (ben-create-extempore-template-file
-     base-path "practice-scm.xtm" "scmhead")
+     base-path "prac-utility.xtm" "headeru")
     (ben-create-extempore-template-file
-     base-path "practice-xtlang.xtm" "xthead")
+     base-path "prac-primary.xtm" "headerp")
     ;; gig files
     (ben-create-extempore-template-file
-     base-path "gig-scm.xtm" "scmhead")
+     base-path "gig-utility.xtm" "headeru")
     (ben-create-extempore-template-file
-     base-path "gig-xtlang.xtm" "xthead")
+     base-path "gig-primary.xtm" "headerp")
     ;; setup file
     (ben-create-extempore-template-file
      base-path "setup.xtm" setup-header)

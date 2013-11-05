@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: scheme-header
-# key: scmhead
+# name: header-utility
+# key: headeru
 # --
 ;-*- mode: Extempore; extempore-default-port: 7098; -*-
 (ipc:load "primary" "`default-directory`setup.xtm")
