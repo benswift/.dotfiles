@@ -2,8 +2,8 @@
 # name: width-height-setup
 # key: whsetup
 # --
-(define width ${1:`(display-pixel-width)`.0})
-(define height ${2:`(display-pixel-height)`.0})
-(bind-val width double $1)
-(bind-val height double $2)
-(define fullscreen ${3:#t})
+(define width `(display-pixel-width)`.0)
+(define height `(display-pixel-height)`.0)
+(bind-val width double `(display-pixel-width)`.0)
+(bind-val height double `(display-pixel-height)`.0)
+(define fullscreen #t)

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: xtm-draw-path
+# key: xdp
+# --
+(xtm_${1:draw}_path$2 path)
