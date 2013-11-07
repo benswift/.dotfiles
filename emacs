@@ -24,6 +24,7 @@
          '(auctex
            auto-complete
            bookmark+
+           cider
            elpy
            epl
            ess
