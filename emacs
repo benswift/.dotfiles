@@ -21,7 +21,8 @@
   (package-refresh-contents))
 
 (dolist (package
-         '(auctex
+         '(ac-nrepl
+           auctex
            auto-complete
            bookmark+
            cider
@@ -864,7 +865,7 @@ categories:
 
 ;; turn on paredit by default in all 'lispy' modes
 
-(dolist (mode '(scheme emacs-lisp lisp clojure clojurescript extempore))
+(dolist (mode '(scheme emacs-lisp lisp clojure cider-repl clojurescript extempore))
   (when (> (display-color-cells) 8)
     (font-lock-add-keywords (intern (concat (symbol-name mode) "-mode"))
                             '(("(\\|)" . 'paredit-paren-face))))
@@ -880,6 +881,31 @@ categories:
       (paredit-mode 1)))
 
 (add-hook 'minibuffer-setup-hook 'conditionally-enable-paredit-mode)
+
+;;;;;;;;;;;;;
+;; clojure ;;
+;;;;;;;;;;;;;
+
+;; cider
+
+;; (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
+
+(setq nrepl-hide-special-buffers t)
+(setq cider-auto-select-error-buffer t)
+(setq cider-repl-use-pretty-printing t)
+
+;; ac-nrepl
+
+;; (require 'ac-nrepl)
+
+;; (add-hook 'cider-repl-mode-hook 'ac-nrepl-setup)
+;; (add-hook 'cider-mode-hook 'ac-nrepl-setup)
+
+;; (eval-after-load "auto-complete"
+;;   '(add-to-list 'ac-modes 'cider-repl-mode))
+
+;; (eval-after-load "cider"
+;;   '(define-key cider-mode-map (kbd "C-c C-d") 'ac-nrepl-popup-doc))
 
 ;;;;;;;;;;;;;;
 ;; markdown ;;
