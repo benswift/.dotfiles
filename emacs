@@ -61,7 +61,8 @@
 ;; linux
 
 (defun ben-linux-setup ()
-  (setq base-face-height 140))
+  (setq base-face-height 140)
+  (setq frame-maximization-mode 'maximized))
 
 ;; OSX
 
@@ -92,6 +93,7 @@
   (setq x-bitmap-file-path '("/usr/X11/include/X11/bitmaps"))
   (setq source-directory "/Library/Caches/Homebrew/emacs--git")
   (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open")))
+  (setq frame-maximization-mode 'fullscreen)
   ;; for railwaycat emacs-mac
   (ben-setup-osx-keybindings))
 
@@ -227,27 +229,21 @@
 
 ;; fullscreen
 
-(defun toggle-frame-fullscreen ()
-  "Toggle fullscreen mode of the selected frame.
-Enable fullscreen mode of the selected frame or disable if it is
-already fullscreen.  Ignore window manager screen decorations.
-When turning on fullscreen mode, remember the previous value of the
-maximization state in the temporary frame parameter `maximized'.
-Restore the maximization state when turning off fullscreen mode.
-See also `toggle-frame-maximized'."
+(defcustom frame-maximization-mode 'maximized
+  "The maximization style of \\[toggle-frame-maximized]."
+  :type '(choice
+          (const :tab "Respect window manager screen decorations." maximized)
+          (const :tab "Ignore window manager screen decorations." fullscreen))
+  :group 'frames)
+
+(defun toggle-frame-maximized ()
+  "Maximize/un-maximize Emacs frame according to `frame-maximization-mode'."
   (interactive)
   (modify-frame-parameters
-   nil
-   `((maximized
-      . ,(unless (memq (frame-parameter nil 'fullscreen) '(fullscreen fullboth))
-	   (frame-parameter nil 'fullscreen)))
-     (fullscreen
-      . ,(if (memq (frame-parameter nil 'fullscreen) '(fullscreen fullboth))
-	     (if (eq (frame-parameter nil 'maximized) 'maximized)
-		 'maximized)
-	   'fullscreen)))))
+   nil `((fullscreen . ,(if (frame-parameter nil 'fullscreen)
+                            nil frame-maximization-mode)))))
 
-(define-key global-map (kbd "<f11>") 'toggle-frame-fullscreen)
+(define-key global-map (kbd "<f11>") 'toggle-frame-maximized)
 
 ;; pretty lambdas
 
@@ -1112,5 +1108,5 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 
 ;; toggle fullscreen
 
-(if (and (display-graphic-p) (fboundp 'toggle-frame-fullscreen))
-    (toggle-frame-fullscreen))
+(if (display-graphic-p)
+    (toggle-frame-maximized))
