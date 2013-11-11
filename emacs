@@ -29,6 +29,7 @@
            elpy
            epl
            ess
+           exec-path-from-shell
            flx-ido
            gist
            htmlize
