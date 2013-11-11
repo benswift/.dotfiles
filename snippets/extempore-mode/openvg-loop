@@ -4,8 +4,8 @@
 # --
 (define width ${1:`(display-pixel-width)`.0})
 (define height ${2:`(display-pixel-height)`.0})
-(bind-val width double width)
-(bind-val height double height)
+(bind-val width float width)
+(bind-val height float height)
 (define fullscreen ${3:#t})
 
 (sys:load "/Users/ben/Code/xtm/lib/vg-setup.xtm")

@@ -10,7 +10,7 @@
           (i:double 0.)
           (n:double 10.))
       (xtm_vg_reset_matrices)
-      ;; (xtm_vg_clear 0. 0. 0. 1. (dtoi64 width) (dtoi64 height))
+      ;; (xtm_vg_clear 0. 0. 0. 1. (ftoi32 width) (ftoi32 height))
       (xtm_paint_setup_fill fill 1. 1. 1. 1.)
       (xtm_paint_setup_stroke stroke 1. 1. 1. 1. 10.)
       ;; create the path

@@ -4,6 +4,6 @@
 # --
 (define width `(display-pixel-width)`.0)
 (define height `(display-pixel-height)`.0)
-(bind-val width double `(display-pixel-width)`.0)
-(bind-val height double `(display-pixel-height)`.0)
+(bind-val width float `(display-pixel-width)`.0)
+(bind-val height float `(display-pixel-height)`.0)
 (define fullscreen #t)
