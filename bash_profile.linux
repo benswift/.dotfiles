@@ -14,6 +14,11 @@ export DEBFULLNAME="Ben Swift"
 # Extempore-patched LLVM directory
 export EXT_LLVM_DIR=~/Code/extempore/llvm-build
 
+# linux homebrew
+
+export PATH=~/.linuxbrew/bin:$PATH
+export LD_LIBRARY_PATH=~/.linuxbrew/lib
+
 # set up rbenv
 rbenv rehash 2>/dev/null
 rbenv() {
