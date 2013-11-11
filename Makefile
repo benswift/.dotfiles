@@ -1,22 +1,34 @@
 DOTFILES_DIR=$(shell pwd)
 
-nix:
-	ln -sf $(DOTFILES_DIR)/bash_profile ~/.bash_profile
+osx:
+	ln -sf $(DOTFILES_DIR)/bash_profile.osx ~/.bash_profile
 
 	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
 
 	ln -sf $(DOTFILES_DIR)/emacs ~/.emacs
-	ln -sf $(DOTFILES_DIR)/emacs.elc ~/.emacs.elc
 	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
 
 	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
 	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
 
-osx:
-	ln -sf $(DOTFILES_DIR)/osx ~/.osx
-	ln -sf $(DOTFILES_DIR)/brew ~/.brew
-	make nix
-
 linux:
-	make nix
+	ln -sf $(DOTFILES_DIR)/bash_profile.linux ~/.bash_profile
+
+	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
+	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
+
+	ln -sf $(DOTFILES_DIR)/emacs ~/.emacs
+	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
+
+	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
+	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
+
+clean:
+	rm -f ~/.RProfile
+	rm -f -d ~/.emacs.d/snippets
+	rm -f ~/.emacs
+	rm -f ~/.gitignore
+	rm -f ~/.gitconfig
+	rm -f ~/.bash_profile
+	rm -f ~/.ssh/config
