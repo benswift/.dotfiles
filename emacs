@@ -62,21 +62,18 @@
 
 (defun ben-linux-setup ()
   (setq base-face-height 140)
-  (setq frame-maximization-mode 'maximized))
+  (setq frame-maximization-mode 'maximized)
+  (ben-setup-keybindings))
 
 ;; OSX
 
 (defun spotlight-locate-make-command-line (search-string)
   (list "mdfind" "-interpret" search-string))
 
-(defun ben-setup-osx-keybindings ()
-  (setq mac-option-modifier 'meta)
-	(setq mac-command-modifier 'super)
+(defun ben-setup-keybindings ()
   (define-key global-map (kbd "s-a") 'mark-whole-buffer)
-  (define-key global-map (kbd "s-j") 'exchange-point-and-mark)
   (define-key global-map (kbd "s-k") 'kill-this-buffer)
   (define-key global-map (kbd "s-l") 'goto-line)
-  (define-key global-map (kbd "s-m") 'iconify-frame)
   (define-key global-map (kbd "s-n") 'make-frame)
   (define-key global-map (kbd "s-q") 'save-buffers-kill-emacs)
   (define-key global-map (kbd "s-s") 'save-buffer)
@@ -88,6 +85,8 @@
 
 (defun ben-osx-setup ()
   (setq base-face-height 160)
+  (setq mac-option-modifier 'meta)
+	(setq mac-command-modifier 'super)
   (setq helm-locate-command "mdfind -name %s %s")
   (setq locate-make-command-line 'spotlight-locate-make-command-line)
   (setq x-bitmap-file-path '("/usr/X11/include/X11/bitmaps"))
@@ -95,14 +94,15 @@
   (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open")))
   (setq frame-maximization-mode 'fullscreen)
   ;; for railwaycat emacs-mac
-  (ben-setup-osx-keybindings))
+  (ben-setup-keybindings))
 
 ;; Windows
 
 (defun ben-windows-setup ()
   (setq base-face-height 160)
   (setq w32-pass-lwindow-to-system nil)
-  (setq w32-lwindow-modifier 'super))
+  (setq w32-lwindow-modifier 'super)
+  (ben-setup-keybindings))
 
 (cond ((equal system-type 'gnu/linux) (ben-linux-setup))
       ((equal system-type 'darwin) (ben-osx-setup))
