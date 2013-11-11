@@ -11,6 +11,9 @@ export MANPAGER="less -X"
 export DEBEMAIL="benjamin.j.swift@gmail.com"
 export DEBFULLNAME="Ben Swift"
 
+# Extempore-patched LLVM directory
+export EXT_LLVM_DIR=~/Code/extempore/llvm-build
+
 # set up rbenv
 rbenv rehash 2>/dev/null
 rbenv() {
