@@ -42,6 +42,7 @@
            multiple-cursors
            org
            paredit
+           powerline
            scss-mode
            smart-mode-line
            smex
@@ -176,7 +177,7 @@
 
 (display-time-mode 1)
 (setq display-time-format "%H:%M")
-(display-battery-mode 1)
+(display-battery-mode -1)
 
 ;; whitespace
 
@@ -352,13 +353,32 @@ Also bind `class' to ((class color) (min-colors 89))."
 (global-set-key (kbd "<M-backspace>") 'backward-kill-word)
 (global-set-key (kbd "<s-backspace>") (lambda () (interactive) (kill-visual-line 0)))
 
+;;;;;;;;;;;;;;;
+;; powerline ;;
+;;;;;;;;;;;;;;;
+
+(require 'powerline)
+
+(setq powerline-default-separator 'zigzag)
+(setq powerline-height 30)
+
+(monokai-with-color-variables
+  (set-face-attribute 'mode-line nil :foreground monokai-bg-1 :background monokai-green)
+  (set-face-attribute 'mode-line-inactive nil :foreground monokai-green-1 :background monokai-bg+1)
+  (set-face-attribute 'mode-line-buffer-id nil :foreground monokai-bg-1)
+  (set-face-attribute 'powerline-active1 nil :background monokai-green-1)
+  (set-face-attribute 'powerline-active2 nil :background "#255416"))
+
+(powerline-default-theme)
+
 ;;;;;;;;;;;;;;;;;;;;;
 ;; smart mode line ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
+;; currently disabled - I'm using powerline.el instead
 ;; only works in a graphical frame
 
-(if (display-graphic-p)
+(if (and nil (display-graphic-p))
     (progn
       (require 'smart-mode-line)
 
