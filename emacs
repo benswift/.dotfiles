@@ -364,7 +364,7 @@ Also bind `class' to ((class color) (min-colors 89))."
 (setq powerline-height 30)
 
 (monokai-with-color-variables
-  (set-face-attribute 'mode-line nil :foreground monokai-bg-1 :background monokai-green)
+  (set-face-attribute 'mode-line nil :foreground monokai-bg-1 :background monokai-cyan-1)
   (set-face-attribute 'mode-line-inactive nil :foreground monokai-fg :background monokai-bg+1)
   (set-face-attribute 'mode-line-buffer-id nil :foreground monokai-bg-1)
   (set-face-attribute 'powerline-active1 nil :foreground monokai-fg-1 :background monokai-bg)
