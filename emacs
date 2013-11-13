@@ -58,6 +58,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (exec-path-from-shell-initialize)
+(exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH"))
 
 ;; linux
 
