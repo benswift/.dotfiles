@@ -743,7 +743,7 @@ categories:
 ;; device-specific Extempore config
 (cond
  ((string= system-name "lonyx")
-  (setq extempore-program-args "--device 1 --run libs/xtm.xtm"))
+  (setq extempore-program-args "--device 0 --run libs/xtm.xtm"))
  ((string= system-name "cyril.local")
   (setq extempore-program-args "--device 2 --run libs/xtm.xtm"))
  (t nil))
