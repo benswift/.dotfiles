@@ -4,9 +4,6 @@ export PATH="/Users/ben/.rbenv/shims:/Users/ben/bin:/usr/local/bin:/usr/bin:/bin
 
 export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 
-# don't clear the screen after quitting a manual page
-export MANPAGER="less -X"
-
 # for debian packaging
 export DEBEMAIL="benjamin.j.swift@gmail.com"
 export DEBFULLNAME="Ben Swift"
@@ -37,9 +34,6 @@ alias la="ls -Gla"
 
 # List only directories
 alias lsd='ls -l | grep "^d"'
-
-# Get OS X Software Updates, update Homebrew itself, and upgrade installed Homebrew packages
-alias update='sudo softwareupdate -i -a; brew update; brew upgrade'
 
 # IP addresses
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
@@ -87,13 +81,6 @@ alias spoton="sudo mdutil -a -i on"
 
 # PlistBuddy alias, because sometimes 'defaults' just doesn't cut it
 alias plistbuddy="/usr/libexec/PlistBuddy"
-
-# Shortcuts
-alias simbk="~/Code/Scripts/backup-scripts/simstim-backup.sh"
-
-# for using emacsformacosx.com compiled Emacs
-
-alias emacs="/Applications/Emacs.app/Contents/MacOS/Emacs -nw"
 
 # Local Variables:
 # mode: sh
