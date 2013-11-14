@@ -332,8 +332,8 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 (global-set-key (kbd "<f5>") 'magit-status)
 (global-set-key (kbd "<f6>") 'compile)
-(global-set-key (kbd "C-x g") 'find-grep)
-(global-set-key (kbd "C-x u") 'find-dired)
+(global-set-key (kbd "C-c g") 'ag)
+(global-set-key (kbd "C-c u") 'find-dired)
 
 ;; window navigation
 
