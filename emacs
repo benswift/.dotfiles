@@ -22,6 +22,7 @@
 
 (dolist (package
          '(ac-nrepl
+           ag
            auctex
            auto-complete
            bookmark+
