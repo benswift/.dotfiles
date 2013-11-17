@@ -45,7 +45,6 @@
            paredit
            powerline
            scss-mode
-           smart-mode-line
            smex
            yaml-mode
            yasnippet))
