@@ -364,7 +364,7 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 (require 'powerline)
 
-(setq powerline-default-separator 'zigzag)
+(setq powerline-default-separator 'slant)
 (setq powerline-height 30)
 
 (monokai-with-color-variables
