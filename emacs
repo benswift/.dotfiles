@@ -41,6 +41,7 @@
            markdown-mode
            monokai-theme
            multiple-cursors
+           nrepl-ritz
            org
            paredit
            powerline
