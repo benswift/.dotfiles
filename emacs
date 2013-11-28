@@ -37,6 +37,7 @@
            ido-ubiquitous
            imenu-anywhere
            isearch+
+           less-css-mode
            magit
            markdown-mode
            monokai-theme
@@ -657,27 +658,42 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 ;; ")
 
-;;;;;;;;;;;;;;;
-;; octopress ;;
-;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Ben is On the Tubes ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; need to use the command `org-html-htmlize-generate-css' to extract
+;; class definitions
+(setq org-html-htmlize-output-type 'inline-css)
+
+;; (setq org-html-htmlize-font-prefix "")
+
+(setq org-html-footnotes-section
+      "<div id=\"footnotes\">
+<h2>%s </h2>
+<div id=\"text-footnotes\">
+%s
+</div>
+</div>")
+(setq org-html-footnote-format "[%s] ")
+(setq org-html-footnote-separator "")
 (setq org-publish-project-alist
       '(("biott-posts"
-         ;; Path to your org files.
-         :base-directory "~/Documents/biott/org/"
+         :base-directory "~/Documents/biott/"
          :base-extension "org"
-         :exclude "drafts/*"
-         ;; Path to your Jekyll project.
-         :publishing-directory "~/Code/octopress/source/"
+         :exclude "draft-posts/*"
+         :publishing-directory "~/Code/clojure/benswift.me/resources/"
          :recursive t
          :publishing-function org-html-publish-to-html
          :headline-levels 4
          :html-extension "html"
-         :body-only t)
+         :body-only t
+         :html-head-include-default-style nil
+         :section-numbers nil)
         ("biott-images"
-         :base-directory "~/Documents/biott/images/"
+         :base-directory "~/Documents/biott/public/img/"
          :base-extension "png\\|jpg\\|pdf"
-         :publishing-directory "/Users/ben/Code/octopress/source/images/"
+         :publishing-directory "~/Code/clojure/benswift.me/resources/public/img/"
          :recursive t
          :publishing-function org-publish-attachment)
         ("biott" :components ("biott-posts" "biott-images"))))
@@ -695,17 +711,16 @@ Also bind `class' to ((class color) (min-colors 89))."
                      (format-time-string "%Y-%m-%d-")
                      (downcase (subst-char-in-string 32 45 post-name))
                      ".org"))
-  (insert (concat
-           "#+begin_html
+  (insert (format
+"#+begin_html
 ---
-layout: post
-title: \"" post-name "\"
-date: " (format-time-string "%Y-%m-%d %R") "
-comments: true
+title: \"%s\"
+alias: [\"%s-%s.html\"]
 categories:
 ---
 #+end_html
-")))
+"
+post-name (format-time-string "%Y-%m-%d") post-name)))
 
 ;;;;;;;;;
 ;; erc ;;
