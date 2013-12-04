@@ -423,46 +423,6 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 (powerline-ben-theme)
 
-;;;;;;;;;;;;;;;;;;;;;
-;; smart mode line ;;
-;;;;;;;;;;;;;;;;;;;;;
-
-;; currently disabled - I'm using powerline.el instead
-;; only works in a graphical frame
-
-(if (and nil (display-graphic-p))
-    (progn
-      (require 'smart-mode-line)
-
-      (setq sml/name-width 30)
-      (setq sml/mode-width 'full)
-      (setq sml/shorten-modes t)
-
-      (add-to-list 'sml/hidden-modes " ElDoc")
-      (add-to-list 'sml/hidden-modes " Paredit")
-      (add-to-list 'sml/hidden-modes " AC")
-      (add-to-list 'sml/hidden-modes " yas")
-
-      ;; directory shorteners
-      (add-to-list 'sml/replacer-regexp-list '("^~/Code/extempore/" ":extempore:"))
-      (add-to-list 'sml/replacer-regexp-list '("^~/Code/xtm/" ":xtm:"))
-      (add-to-list 'sml/replacer-regexp-list '("^~/Documents/School/postdoc/papers/" ":papers:"))
-
-      ;; monokai-ize the smart-mode-line
-      (monokai-with-color-variables
-        ;; modeline foreground/background
-        (setq sml/active-foreground-color monokai-fg)
-        (setq sml/active-background-color monokai-bg+1)
-        (setq sml/inactive-foreground-color monokai-fg-1)
-        (setq sml/inactive-background-color monokai-bg-1)
-        (set-face-attribute 'sml/global nil :foreground monokai-fg)
-        ;; other faces
-        (set-face-attribute 'sml/time nil :foreground monokai-fg :weight 'bold)
-        (set-face-attribute 'sml/filename nil :foreground monokai-yellow)
-        (set-face-attribute 'sml/prefix nil :foreground monokai-green))
-
-      (add-hook 'after-init-hook 'sml/setup)))
-
 ;;;;;;;;;;;;
 ;; eshell ;;
 ;;;;;;;;;;;;
