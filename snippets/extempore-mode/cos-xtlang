@@ -2,4 +2,4 @@
 # name: cos-xtlang
 # key: cosx
 # --
-(cos (/ (* TWOPI time ${1:frequency}) SR))
+(cos (/ (* STWOPI (convert time) ${1:frequency}) SR))
