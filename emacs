@@ -649,7 +649,9 @@ Also bind `class' to ((class color) (min-colors 89))."
          :html-extension "html"
          :body-only t
          :html-head-include-default-style nil
-         :section-numbers nil)
+         :section-numbers nil
+         :html-link-home "/"
+         :html-link-use-abs-url t)
         ("biott-images"
          :base-directory "~/Documents/biott/public/img/"
          :base-extension "png\\|jpg\\|pdf"
@@ -675,7 +677,7 @@ Also bind `class' to ((class color) (min-colors 89))."
 "#+begin_html
 ---
 title: \"%s\"
-alias: [\"%s-%s.html\"]
+alias: [\"./%s-%s.html\"]
 categories:
 ---
 #+end_html
