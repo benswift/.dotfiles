@@ -676,7 +676,7 @@ Also bind `class' to ((class color) (min-colors 89))."
   (insert (format
 "#+begin_html
 ---
-title: \"%s\"
+title: %s
 alias: [\"./%s-%s.html\"]
 categories:
 ---
