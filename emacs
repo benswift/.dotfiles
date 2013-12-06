@@ -669,7 +669,7 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 (defun biott-new-post (post-name)
   (interactive "sPost title: ")
-  (find-file (concat "~/Documents/biott/org/_posts/drafts/"
+  (find-file (concat "~/Documents/biott/draft-posts/"
                      (format-time-string "%Y-%m-%d-")
                      (downcase (subst-char-in-string 32 45 post-name))
                      ".org"))
