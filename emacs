@@ -211,6 +211,11 @@
 
 (global-auto-revert-mode t)
 
+;; uniquify
+
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'forward)
+
 ;; other niceties
 
 (add-to-list 'safe-local-variable-values '(lexical-binding . t))
