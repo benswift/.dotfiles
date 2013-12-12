@@ -499,6 +499,12 @@ Also bind `class' to ((class color) (min-colors 89))."
 (setq dired-listing-switches "-alh")
 (setq dired-auto-revert-buffer t)
 
+;;;;;;;;;;;;;
+;; ibuffer ;;
+;;;;;;;;;;;;;
+
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+
 ;;;;;;;;;;;
 ;; magit ;;
 ;;;;;;;;;;;
