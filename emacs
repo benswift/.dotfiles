@@ -765,6 +765,13 @@ post-name (format-time-string "%Y-%m-%d") post-name)))
 
 (add-hook 'LaTeX-mode-hook 'ben-latex-mode-hook)
 
+;; for minted
+
+(eval-after-load "tex"
+  '(setcdr (assoc "LaTeX" TeX-command-list)
+          '("%`%l%(mode) -shell-escape%' %t"
+          TeX-run-TeX nil (latex-mode doctex-mode) :help "Run LaTeX")))
+
 ;;;;;;;;;;;;;;;
 ;; extempore ;;
 ;;;;;;;;;;;;;;;
