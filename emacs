@@ -680,20 +680,21 @@ Also bind `class' to ((class color) (min-colors 89))."
 
 (defun biott-new-post (post-name)
   (interactive "sPost title: ")
-  (find-file (concat "~/Documents/biott/draft-posts/"
-                     (format-time-string "%Y-%m-%d-")
-                     (downcase (subst-char-in-string 32 45 post-name))
-                     ".org"))
-  (insert (format
-"#+begin_html
+  (let ((post-url-basename
+         (concat "~/Documents/biott/draft-posts/"
+                 (format-time-string "%Y-%m-%d-")
+                 (downcase (subst-char-in-string 32 45 post-name)))))
+    (find-file (concat post-url-basename ".org"))
+    (insert (format
+             "#+begin_html
 ---
 title: %s
-alias: [\"./%s-%s.html\"]
+alias: [\"./%s.html\"]
 categories:
 ---
 #+end_html
 "
-post-name (format-time-string "%Y-%m-%d") post-name)))
+             post-name post-url-basename))))
 
 ;;;;;;;;;
 ;; erc ;;
