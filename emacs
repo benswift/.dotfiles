@@ -690,7 +690,7 @@ Also bind `class' to ((class color) (min-colors 89))."
 ---
 title: %s
 alias: [\"./%s.html\"]
-categories:
+tags:
 ---
 #+end_html
 "
