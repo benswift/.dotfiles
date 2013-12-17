@@ -812,9 +812,7 @@ tags:
 (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode))
 (add-to-list 'auto-mode-alist '("\\.ll$" . llvm-mode))
 
-;; session setup
-
-(defun ben-create-extempore-template-file (base-path filename &optional header)
+(defun extempore-create-template-file (base-path filename &optional header)
   (let ((full-path (format "%s/%s" base-path filename)))
     (unless (file-exists-p full-path)
       (progn
@@ -823,7 +821,7 @@ tags:
         (save-buffer)
         (kill-buffer)))))
 
-(defun ben-create-extempore-template-dir (name)
+(defun extempore-create-template (name)
   "Set up the directory structure and files for a new extempore session/gig."
   (interactive "sSession name: ")
   (let* ((xtm-dir (expand-file-name "~/Code/xtm/"))
@@ -839,17 +837,17 @@ tags:
         (error "Cannot create xtm session: directory already exists."))
     (make-directory base-path)
     ;; practice files
-    (ben-create-extempore-template-file
+    (extempore-create-template-file
      base-path "prac-utility.xtm" "headeru")
-    (ben-create-extempore-template-file
+    (extempore-create-template-file
      base-path "prac-primary.xtm" "headerp")
     ;; gig files
-    (ben-create-extempore-template-file
+    (extempore-create-template-file
      base-path "gig-utility.xtm" "headeru")
-    (ben-create-extempore-template-file
+    (extempore-create-template-file
      base-path "gig-primary.xtm" "headerp")
     ;; setup file
-    (ben-create-extempore-template-file
+    (extempore-create-template-file
      base-path "setup.xtm" setup-header)
     (dired base-path)))
 
