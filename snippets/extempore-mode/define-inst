@@ -9,11 +9,11 @@
 
 (bind-func $1_fx
   (lambda (in:float time:i64 chan:i64 dat:float*)
-    ))
+    in))
 
 (define-instrument $1 $1_note_c $1_fx)
 
 ($1.attack 200.0)
 ($1.decay 200.0)
-($1.release 1000.0)
 ($1.sustain 0.6)
+($1.release 1000.0)
