@@ -832,7 +832,13 @@ tags:
                   "(sys:load \"" xtm-dir "lib/ben-lib.xtm\")\n"
                   "(ipc:load \"utility\" \"" xtm-dir "lib/ben-lib.xtm\")\n"
                   "(sys:load \"" xtm-dir "lib/sampler-maps.xtm\")\n"
-                  "(ipc:load \"utility\" \"" xtm-dir "lib/sampler-maps.xtm\")\n")))
+                  "(ipc:load \"utility\" \"" xtm-dir "lib/sampler-maps.xtm\")\n\n\n"
+                  "(bind-func dsp:[float,float,i64,i64,float*]*"
+                  "  (lambda (in time chan dat)"
+                  "    0.0))\n\n"
+                  ";; (ipc:bind-func \"utility\" 'instname)\n"
+                  "(ipc:audio-setup \"utility\")\n"
+                  "(dsp:set! dsp)")))
     (if (file-exists-p base-path)
         (error "Cannot create xtm session: directory already exists."))
     (make-directory base-path)
