@@ -3,8 +3,8 @@
 # key: tr
 # --
 (define ${1:fun-name}
-  (lambda (beat dur$2)
+  (lambda (beat ${2:dur}$3)
     $0
-    (callback (*metro* (+ beat (* .5 dur))) '$1 (+ beat dur) dur$2)))
+    (callback (*metro* (+ beat (* .5 ${2:$(if (string-match "dlist" yas-text) "(car dlist)" "dur")}))) '$1 (+ beat ${2:$(if (string-match "dlist" yas-text) "(car dlist)" "dur")})${3:$(if yas-text (mapconcat (lambda (sym) (if (string-match "list" sym) (format "\n              (rotate -1 %s)" sym) (concat " " sym))) (split-string yas-text) "") "")})))
 
-($1 (*metro* 'get-beat ${3:4}) ${4:1/4})
+($1 (*metro* 'get-beat ${4:4}) ${5:1/4}$6)
