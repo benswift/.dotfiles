@@ -278,24 +278,6 @@
                         '(background-mode . dark))
            (set-cursor-color "white")))
 
-;; this is fragile, but necessary since they took this macro out in a
-;; recent change
-
-;; TODO look into the `monokai-add-font-lock-keywords' variable and
-;; see if it's a better way to do this.
-
-(defmacro monokai-with-color-variables (&rest body)
-  "`let' bind all colors defined in `monokai-colors-alist'.
-Also bind `class' to ((class color) (min-colors 89))."
-  (declare (indent 0))
-  `(let ((class '((class color) (min-colors 89)))
-         ,@(mapcar (lambda (cons)
-                     (list (car cons) (cdr cons)))
-                   (if window-system
-                       (cdar monokai-colors)
-                     (cdadr monokai-colors))))
-     ,@body))
-
 ;;;;;;;;;;;
 ;; faces ;;
 ;;;;;;;;;;;
@@ -303,36 +285,6 @@ Also bind `class' to ((class color) (min-colors 89))."
 (set-face-attribute 'default nil :height base-face-height :family "Source Code Pro")
 (set-face-attribute 'variable-pitch nil :height base-face-height :family "Fira Sans OT")
 ;; (set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
-
-;; get colours right in terminal (and related) modes
-
-(defun ben-set-monokai-term-colors ()
-  (monokai-with-color-variables
-    (set-face-attribute 'term-color-black nil :background nil :foreground monokai-fg-1)
-    (set-face-attribute 'term-color-blue nil :background nil :foreground monokai-blue)
-    (set-face-attribute 'term-color-cyan nil :background nil :foreground monokai-cyan)
-    (set-face-attribute 'term-color-green nil :background nil :foreground monokai-green)
-    (set-face-attribute 'term-color-magenta nil :background nil :foreground monokai-purple)
-    (set-face-attribute 'term-color-red nil :background nil :foreground monokai-magenta)
-    (set-face-attribute 'term-color-white nil :background nil :foreground monokai-fg)
-    (set-face-attribute 'term-color-yellow nil :background nil :foreground monokai-yellow)))
-
-(if (display-graphic-p)
-    (add-hook 'term-hook 'ben-set-monokai-term-colors))
-
-(require 'ansi-color)
-
-(if (display-graphic-p)
-    (monokai-with-color-variables
-      (setq ansi-color-names-vector (vector monokai-fg-1
-                                            monokai-purple
-                                            monokai-green
-                                            monokai-yellow
-                                            monokai-blue
-                                            monokai-magenta
-                                            monokai-green
-                                            monokai-fg)
-            ansi-color-map (ansi-color-make-color-map))))
 
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
@@ -374,14 +326,15 @@ Also bind `class' to ((class color) (min-colors 89))."
 (setq powerline-default-separator 'slant)
 (setq powerline-height 30)
 
-(monokai-with-color-variables
-  (set-face-attribute 'mode-line nil :foreground monokai-bg-1 :background monokai-cyan-1)
-  (set-face-attribute 'mode-line-inactive nil :foreground monokai-fg :background monokai-bg+1)
-  (set-face-attribute 'mode-line-buffer-id nil :foreground monokai-bg-1)
-  (set-face-attribute 'powerline-active1 nil :foreground monokai-fg-1 :background monokai-bg)
-  (set-face-attribute 'powerline-active2 nil :foreground monokai-fg-1 :background monokai-bg-1)
-  (set-face-attribute 'powerline-inactive1 nil :foreground monokai-fg-1 :background monokai-bg)
-  (set-face-attribute 'powerline-inactive2 nil :foreground monokai-fg-1 :background monokai-bg-1))
+;; monokai has changed the way it does it's colours - so this no longer works
+
+;; (set-face-attribute 'mode-line nil :foreground monokai-bg-1 :background monokai-cyan-1)
+;; (set-face-attribute 'mode-line-inactive nil :foreground monokai-fg :background monokai-bg+1)
+;; (set-face-attribute 'mode-line-buffer-id nil :foreground monokai-bg-1)
+;; (set-face-attribute 'powerline-active1 nil :foreground monokai-fg-1 :background monokai-bg)
+;; (set-face-attribute 'powerline-active2 nil :foreground monokai-fg-1 :background monokai-bg-1)
+;; (set-face-attribute 'powerline-inactive1 nil :foreground monokai-fg-1 :background monokai-bg)
+;; (set-face-attribute 'powerline-inactive2 nil :foreground monokai-fg-1 :background monokai-bg-1)
 
 (defun powerline-ben-theme ()
   "Ben's powerline theme, based on \\[powerline-default-theme]"
@@ -448,9 +401,6 @@ Also bind `class' to ((class color) (min-colors 89))."
   (define-key eshell-mode-map (kbd "<C-down>") 'eshell-next-matching-input-from-input)
   (define-key eshell-mode-map (kbd "<up>") 'previous-line)
   (define-key eshell-mode-map (kbd "<down>") 'next-line)
-  ;;faces
-  (monokai-with-color-variables
-    (set-face-attribute 'eshell-prompt nil :foreground monokai-orange))
   ;; prompt helpers
   (setq eshell-directory-name (concat user-emacs-directory "eshell/"))
   (setq eshell-prompt-regexp "^[^@]*@[^ ]* [^ ]* [$#] ")
@@ -707,12 +657,6 @@ tags:
 (setq erc-prompt-for-nickserv-password nil)
 (setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
 
-(defun ben-erc-set-faces ()
-  (monokai-with-color-variables
-    (set-face-attribute 'erc-input-face nil :foreground monokai-yellow)))
-
-(add-hook 'erc-mode-hook 'ben-erc-set-faces)
-
 ;;;;;;;;;;;;;;;;;;;;
 ;; LaTeX & reftex ;;
 ;;;;;;;;;;;;;;;;;;;;
@@ -800,9 +744,9 @@ tags:
   ;; (if (and (not extempore-logger-mode)
   ;;          (yes-or-no-p "Do you want to log this session?"))
   ;;     (extempore-logger-mode 1))
-  (monokai-with-color-variables
-    (set-face-attribute 'extempore-blink-face nil :foreground monokai-bg :background "#FD971F")
-    (set-face-attribute 'extempore-sb-blink-face nil :foreground monokai-bg :background "#39FF14")))
+  ;; (set-face-attribute 'extempore-blink-face nil :foreground monokai-bg :background "#FD971F")
+  ;; (set-face-attribute 'extempore-sb-blink-face nil :foreground monokai-bg :background "#39FF14")
+  )
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
