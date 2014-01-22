@@ -776,9 +776,9 @@ tags:
                   "(sys:load \"" xtm-dir "lib/ben-lib.xtm\")\n"
                   "(ipc:load \"utility\" \"" xtm-dir "lib/ben-lib.xtm\")\n"
                   "(sys:load \"" xtm-dir "lib/sampler-maps.xtm\")\n"
-		  "(ipc:load \"utility\" \"" xtm-dir "lib/sampler-maps.xtm\")\n\n"
-		  "(bind-func dsp:[float,float,i64,i64,float*]*\n"
-		  "  (lambda (in time chan dat)\n"
+                  "(ipc:load \"utility\" \"" xtm-dir "lib/sampler-maps.xtm\")\n\n"
+                  "(bind-func dsp:[float,float,i64,i64,float*]*\n"
+                  "  (lambda (in time chan dat)\n"
                   "    0.0))\n\n"
                   ";; (ipc:bind-func \"utility\" 'instname)\n"
                   "(ipc:audio-setup \"utility\")\n"
@@ -898,6 +898,14 @@ tags:
   '(cl-nsubstitute-if '(paredit-mode " pe")
                       (lambda (x) (equalp (car x) 'paredit-mode))
                       minor-mode-alist))
+
+;;;;;;;;;;;;
+;; cscope ;;
+;;;;;;;;;;;;
+
+;; uses xcscope.el
+
+(cscope-setup)
 
 ;;;;;;;;;;;;;
 ;; clojure ;;
