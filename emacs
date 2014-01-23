@@ -729,12 +729,13 @@ tags:
   (turn-on-eldoc-mode)
   (setq eldoc-documentation-function
         'extempore-eldoc-documentation-function)
-  (yas-minor-mode-on)
   ;; (if (and (not extempore-logger-mode)
   ;;          (yes-or-no-p "Do you want to log this session?"))
   ;;     (extempore-logger-mode 1))
-  (set-face-attribute 'extempore-blink-face nil :foreground "#111111" :background "#FD971F")
-  (set-face-attribute 'extempore-sb-blink-face nil :foreground "#111111" :background "#39FF14"))
+  (yas-minor-mode-on)
+  ;; monokai-bg is #272822 (monokai 20140109.2253)
+  (set-face-attribute 'extempore-blink-face nil :foreground "#272822" :background "#FD971F")
+  (set-face-attribute 'extempore-sb-blink-face nil :foreground "#272822" :background "#39FF14"))
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
