@@ -468,17 +468,6 @@
 
 ;; (setq c-default-style "k&r")
 
-;;;;;;;;;;;;;
-;; ebrowse ;;
-;;;;;;;;;;;;;
-
-(defun ben-ebrowse-set-faces ()
-  (set-face-attribute 'ebrowse-root-class nil :foreground nil :inherit font-lock-type-face)
-  (set-face-attribute 'ebrowse-member-class nil :foreground nil :inherit font-lock-function-name-face)
-  (set-face-attribute 'ebrowse-member-attribute nil :foreground nil :inherit font-lock-string-face))
-
-(add-hook 'ebrowse-tree-mode 'ben-ebrowse-set-faces)
-
 ;;;;;;;;;;;;;;
 ;; org mode ;;
 ;;;;;;;;;;;;;;
