@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: begin
+# key: beg
+# --
+(begin $0)

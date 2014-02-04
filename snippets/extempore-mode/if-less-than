@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: if-less-than
+# key: ifl
+# --
+(if (< $1)$0)
