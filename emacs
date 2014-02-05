@@ -143,6 +143,7 @@
 
 (global-set-key (kbd "M-x") 'smex)
 (global-set-key (kbd "C-c i") 'imenu-anywhere)
+(global-set-key (kbd "C-c o") 'occur)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; garbage collection ;;
