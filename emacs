@@ -412,6 +412,7 @@
                   (if (= (user-uid) 0) " # " " $ "))))
   ;; helpful bits and pieces
   (turn-on-eldoc-mode)
+  (show-paren-mode -1)
   (add-to-list 'eshell-command-completions-alist
                '("gunzip" "gz\\'"))
   (add-to-list 'eshell-command-completions-alist
