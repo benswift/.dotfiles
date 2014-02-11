@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: doloop
+# key: doloop
+# --
+(doloop (${1:i} ${2:[start] num})
+  $0)
