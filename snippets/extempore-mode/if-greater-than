@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: if-greater-than
-# key: ifg
-# --
-(if (> $1)$0)
