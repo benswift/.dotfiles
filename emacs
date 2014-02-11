@@ -27,6 +27,7 @@
            auto-complete
            bookmark+
            cider
+           xcscope
            elpy
            epl
            ess
