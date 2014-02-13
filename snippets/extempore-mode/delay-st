@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: delay-st
+# key: delayst
+# --
+(delay (delay_st_c (convert (* SR ${1:seconds-left})) (convert (* SR ${2:seconds-right}))))

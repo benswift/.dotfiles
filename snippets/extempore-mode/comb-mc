@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: comb-mc
+# key: combmc
+# --
+(comb (comb_mc_c ${1:2} (convert ${2:samples})))

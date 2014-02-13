@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: chorus-mc
+# key: chorusmc
+# --
+(chorus (chorus_mc_c ${1:2} ${2:phase}))

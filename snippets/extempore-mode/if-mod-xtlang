@@ -2,4 +2,4 @@
 # name: if-mod-xtlang
 # key: imx
 # --
-(if (${1:=} (modulo time ${2:1}) ${3:0}) $0)
+(if (${1:=} (modulo time ${2:(convert SR)}) ${3:0})$0)

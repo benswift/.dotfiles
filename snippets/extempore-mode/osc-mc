@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: osc-mc
+# key: oscmc
+# --
+(osc (osc_mc_c ${1:0.0}))
