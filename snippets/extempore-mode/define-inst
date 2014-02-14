@@ -3,12 +3,12 @@
 # key: dinst
 # --
 (bind-func ${1:name}_note_c
-  (lambda (nargs:i64 dargs:float*)
-    (lambda (time:i64 chan:i64 freq:float amp:float)
+  (lambda (nargs:i64 dargs:SAMPLE*)
+    (lambda (time:i64 chan:i64 freq:SAMPLE amp:SAMPLE)
       $0)))
 
 (bind-func $1_fx
-  (lambda (in:float time:i64 chan:i64 dat:float*)
+  (lambda (in:SAMPLE time:i64 chan:i64 dat:SAMPLE*)
     in))
 
 (define-instrument $1 $1_note_c $1_fx)
