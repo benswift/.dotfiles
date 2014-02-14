@@ -1061,6 +1061,8 @@ tags:
 (global-set-key (kbd "<C-S-right>") 'mc/mark-next-like-this)
 (global-set-key (kbd "<C-S-left>") 'mc/mark-previous-like-this)
 
+(global-set-key (kbd "C-c n") 'mc/insert-numbers)
+
 ;;;;;;;;;;
 ;; misc ;;
 ;;;;;;;;;;
