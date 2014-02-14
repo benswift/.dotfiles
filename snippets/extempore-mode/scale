@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: scale
-# key: scale
+# key: scl
 # --
 (+ ${1:dc} (* ${2:amp} $0))
