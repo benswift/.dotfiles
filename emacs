@@ -175,6 +175,7 @@
 (set-default 'imenu-auto-rescan t)
 
 (show-paren-mode 1)
+
 (column-number-mode 1)
 (hl-line-mode t)
 
@@ -413,7 +414,6 @@
                   (if (= (user-uid) 0) " # " " $ "))))
   ;; helpful bits and pieces
   (turn-on-eldoc-mode)
-  (show-paren-mode -1)
   (add-to-list 'eshell-command-completions-alist
                '("gunzip" "gz\\'"))
   (add-to-list 'eshell-command-completions-alist
