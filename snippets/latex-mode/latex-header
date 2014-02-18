@@ -2,6 +2,7 @@
 # name: latex-header
 # key: latexheader
 # --
+% -*- TeX-engine: xetex -*-
 \documentclass[${1:12}pt,a4paper]{scrartcl}
 \usepackage{libertine}
 \usepackage{fontspec}
