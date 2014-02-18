@@ -1,0 +1,62 @@
+# -*- mode: snippet -*-
+# name: latex-header
+# key: latexheader
+# --
+\documentclass[${1:12}pt,a4paper]{scrartcl}
+\usepackage{libertine}
+\usepackage{fontspec}
+\setmonofont[Scale=MatchLowercase,Mapping=tex-text]{Source Code Pro}
+
+\usepackage[svgnames,hyperref]{xcolor}
+\usepackage{url}
+\usepackage{graphicx}
+
+% \usepackage{fullpage}
+
+% monokai code listings
+
+% \usepackage{minted}
+% \definecolor{bg}{rgb}{0.95,0.95,0.95}
+% \newminted{scheme}{bgcolor=bg,fontsize=\footnotesize}
+
+\usepackage[%
+backend=biber,
+% natbib=true,
+% backref=true,
+% citecounter=true,
+dashed=false,
+% backrefstyle=three,
+citestyle=authoryear,
+firstinits=true,
+maxcitenames=2,
+maxbibnames=10,
+uniquename=mininit,
+bibstyle=authoryear,
+% refsegment=chapter,
+% ibidtracker=strict,
+url=false,
+doi=false]{biblatex}
+
+\AtEveryBibitem{\clearfield{month}}
+\AtEveryCitekey{\clearfield{month}}
+
+\addbibresource{${2:papers}.bib}
+
+\usepackage[english=british,threshold=15,thresholdtype=words]{csquotes}
+\SetCiteCommand{\parencite}
+
+\newenvironment*{smallquote}
+  {\quote\small}
+  {\endquote}
+\SetBlockEnvironment{smallquote}
+
+\usepackage[%
+unicode=true,
+hyperindex=true,
+bookmarks=true,
+colorlinks=true, % change to false for final
+pdfborder=0,
+allcolors=DarkBlue,
+% plainpages=false,
+pdfpagelabels,
+hyperfootnotes=true]{hyperref}
