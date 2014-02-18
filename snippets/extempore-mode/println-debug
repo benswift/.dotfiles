@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: println-debug
+# key: pld
+# --
+(println ${1:$$(extempore-println-debug-expander yas-text "'%s: %s")})

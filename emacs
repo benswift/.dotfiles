@@ -979,6 +979,16 @@ tags:
 (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
 (yas-global-mode 1)
 
+;; used in extempore-mode's print-line-debug snippet
+(defun extempore-println-debug-expander (pl-str format-str)
+  (if (not (string= pl-str ""))
+      (mapconcat (lambda (name) (format format-str name name))
+                 (cl-remove-if (lambda (x) (or (string-match "^'.*:$" x)
+                                          (string-match "^\".*:\"$" x)))
+                               (split-string pl-str " "))
+                 " ")
+    pl-str))
+
 (eval-after-load "yasnippet"
   '(cl-nsubstitute-if '(yas-minor-mode "")
                       (lambda (x) (equalp (car x) 'yas-minor-mode))
