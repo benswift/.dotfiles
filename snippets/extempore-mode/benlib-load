@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: benlib-load
+# key: bload
+# --
+(sys:load "/Users/ben/Code/xtm/lib/$0.xtm")
