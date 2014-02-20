@@ -10,7 +10,7 @@
 
 (sys:load "/Users/ben/Code/xtm/lib/vg-setup.xtm")
 
-(ipc:xtm-render-setup "utility")
+(ipc:xtm-render-setup "utility" width height fullscreen ${4:30} (now))
 
 (bind-func gl_render
   (lambda ()
