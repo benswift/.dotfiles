@@ -49,6 +49,7 @@
            powerline
            scss-mode
            smex
+           wgrep-ag
            yaml-mode
            yasnippet))
   (if (not (package-installed-p package))
