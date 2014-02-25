@@ -2,4 +2,4 @@
 # name: cos-frame
 # key: cosf
 # --
-(cos_frame frame ${1:[dc]} ${2:amp} ${3:freq})
+(+ ${1:.5} (* ${2:.5} (cos (* STWOPI ${3:freq} (/ (convert frame) ${4:30.})))))

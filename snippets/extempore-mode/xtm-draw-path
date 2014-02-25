@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: xtm-draw-path
-# key: xdp
+# key: xpath
 # --
-(xtm_${1:draw}_path$2 path)
+(xtm_${1:$$(yas-choose-value '("draw" "fill" "stroke" "create" "clear" "destroy"))}_path$0 path)
