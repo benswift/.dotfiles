@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: scale-beat
+# key: sb
+# --
+(scale beat)
