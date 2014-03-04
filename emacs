@@ -386,6 +386,14 @@
 (powerline-ben-theme)
 
 ;;;;;;;;;;;;
+;; cscope ;;
+;;;;;;;;;;;;
+
+;; uses xcscope.el
+
+(cscope-setup)
+
+;;;;;;;;;;;;
 ;; eshell ;;
 ;;;;;;;;;;;;
 
@@ -892,14 +900,6 @@ tags:
   '(cl-nsubstitute-if '(paredit-mode " pe")
                       (lambda (x) (equalp (car x) 'paredit-mode))
                       minor-mode-alist))
-
-;;;;;;;;;;;;
-;; cscope ;;
-;;;;;;;;;;;;
-
-;; uses xcscope.el
-
-(cscope-setup)
 
 ;;;;;;;;;;;;;
 ;; clojure ;;
