@@ -633,10 +633,11 @@
 (defun biott-new-post (post-name)
   (interactive "sPost title: ")
   (let ((post-url-basename
-         (concat "~/Documents/biott/draft-posts/"
-                 (format-time-string "%Y-%m-%d-")
-                 (downcase (subst-char-in-string 32 45 post-name)))))
-    (find-file (concat post-url-basename ".org"))
+         (concat (format-time-string "%Y-%m-%d-")
+                 (downcase (replace-regexp-in-string "[:_- ]+" "-" post-name)))))
+    (find-file (concat "~/Documents/biott/draft-posts/"
+                       post-url-basename
+                       ".org"))
     (insert (format
              "#+begin_html
 ---
