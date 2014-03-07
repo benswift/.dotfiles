@@ -49,6 +49,7 @@
            powerline
            scss-mode
            smex
+           string-utils
            wgrep-ag
            yaml-mode
            yasnippet))
