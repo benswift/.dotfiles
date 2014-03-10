@@ -8,10 +8,4 @@
 (bind-val height float height)
 (define fullscreen ${3:#t})
 
-(bind-func gl_render
-  (lambda ()
-    ;;          pre  opaq trans post data
-    (xtm_render null null null  post null)
-    void))
-
-(ipc:graphics-setup "utility" width height fullscreen ${4:30} (*metro* 'get-beat 4))
+(ipc:graphics-setup "primary" width height fullscreen ${4:30} (*metro* 'get-beat 4) #t)
