@@ -322,7 +322,7 @@
 (global-set-key (kbd "<M-backspace>") 'backward-kill-word)
 (global-set-key (kbd "<s-backspace>") (lambda () (interactive) (kill-visual-line 0)))
 
-(eval-after-load "magit-auto-revert-mode"
+(eval-after-load "magit"
   '(cl-nsubstitute-if '(magit-auto-revert-mode "")
                       (lambda (x) (equalp (car x) 'magit-auto-revert-mode))
                       minor-mode-alist))
