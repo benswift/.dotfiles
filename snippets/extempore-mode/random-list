@@ -2,4 +2,4 @@
 # name: random-list
 # key: rlist
 # --
-(random '($0))
+(random (list $0))
