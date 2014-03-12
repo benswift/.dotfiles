@@ -4,7 +4,7 @@
 # --
 ;;; `(buffer-name)` -- $1
 
-;; Author: ${2:$$(yas/choose-value '("Andrew Sorensen" "Ben Swift"))}
+;; Author: ${2:$$(yas-choose-value '("Andrew Sorensen" "Ben Swift"))}
 ;; Keywords: extempore
 ;; Required dylibs: $3
 
