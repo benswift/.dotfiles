@@ -740,9 +740,9 @@ tags:
 ;; device-specific Extempore config
 (cond
  ((string= system-name "lonyx")
-  (setq extempore-program-args "--device 0 --frames 512 --run libs/xtm.xtm"))
+  (setq extempore-program-args "--device 0 --frames 4096 --run libs/xtm.xtm"))
  ((string= system-name "cyril.local")
-  (setq extempore-program-args "--device 2 --frames 512 --run libs/xtm.xtm"))
+  (setq extempore-program-args "--device 2 --frames 4096 --run libs/xtm.xtm"))
  (t nil))
 
 (defun ben-extempore-mode-hook ()
