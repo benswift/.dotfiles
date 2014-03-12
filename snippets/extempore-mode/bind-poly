@@ -1,0 +1,5 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: bind-poly
+# key: bindp
+# --
+(bind-poly ${1:name} $1$0)
