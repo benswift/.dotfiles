@@ -2,4 +2,4 @@
 # name: osc-mc
 # key: oscmc
 # --
-(${1:osc} ($1_mc_c 0.0))
+(${1:osc} ($1_mc_c$0))

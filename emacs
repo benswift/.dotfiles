@@ -782,8 +782,9 @@ tags:
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
                   "(sys:load \"libs/xtm.xtm\")\n"
-                  "(sys:load \"" xtm-dir "lib/ben-lib.xtm\")\n"
-                  "(ipc:load \"utility\" \"" xtm-dir "lib/ben-lib.xtm\")\n"
+                  "(sys:load \"" xtm-dir "lib/ben-lib-xtlang.xtm\")\n"
+                  "(sys:load \"" xtm-dir "lib/ben-lib-scheme.xtm\")\n"
+                  "(ipc:load \"utility\" \"" xtm-dir "lib/ben-lib-scheme.xtm\")\n"
                   "(sys:load \"" xtm-dir "lib/sampler-maps.xtm\")\n"
                   "(ipc:load \"utility\" \"" xtm-dir "lib/sampler-maps.xtm\")\n\n"
                   "(bind-func dsp:[SAMPLE,SAMPLE,i64,i64,SAMPLE*]*\n"

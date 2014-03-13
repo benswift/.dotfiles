@@ -1,0 +1,5 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: convert
+# key: cv
+# --
+(convert $0)

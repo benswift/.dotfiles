@@ -4,3 +4,4 @@
 # --
 ;-*- mode: Extempore; extempore-default-port: 7098; -*-
 (ipc:load "primary" "`default-directory`setup.xtm")
+(sys:load "libs/core/pc_ivl.xtm")
