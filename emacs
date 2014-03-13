@@ -811,6 +811,53 @@ tags:
      base-path "setup.xtm" setup-header)
     (dired base-path)))
 
+;; yasnippet helpers
+
+
+;; used in extempore-mode's print-line-debug snippet
+(defun extempore-yas-println-debug-expander (pl-str format-str)
+  (if (not (string= pl-str ""))
+      (mapconcat (lambda (name) (format format-str name name))
+                 (cl-remove-if (lambda (x) (or (string-match "^'.*:$" x)
+                                          (string-match "^\".*:\"$" x)))
+                               (split-string pl-str " "))
+                 " ")
+    pl-str))
+
+(defvar extempore-yas-expansion-list-oscmc_c
+  '(("osc" " 0." " chan amp freq")
+    ("square" " 0." " chan amp freq n")
+    ("triangle" " 0." " chan amp freq n")
+    ("rect" " 0." " chan amp freq duty")
+    ("saw" " 0." " chan amp freq")
+    ("pulse" "" " chan amp freq width")
+    ("fade" "" " chan initial final dur")
+    ("delay" " chan max_delay_samps" " chan in wet fb")
+    ("comb" " chan max_delay_samps" " chan in delay wet fb")
+    ("flanger" " chan delay mod_phase mod_range mod_rate" " chan in wet fb")
+    ("chorus" " chan phase" " chan in wet fb")
+    ("tap_delay" " chan max_delay_samps ntaps" " chan in")
+    ("allpass" " chan delay_sec" " chan in wet")
+    ("reverb" " chan size_ms" " chan in wet fb")
+    ("hold" " chan" " chan in h")
+    ("lpf" " chan" " chan in freq res")
+    ("hpf" " chan" " chan in freq res")
+    ("bpf" " chan" " chan in freq bw")
+    ("notch" " chan" " chan in freq bw")
+    ("vcf" " type chan" " chan in freq res")
+    ("hann" "" " chan width")
+    ("linear" " start end dur" " chan inc")))
+
+(defun extempore-yas-oscmc_c-expander (type construct-p)
+  (let ((res (cl-find-if (lambda (x) (string= (car x) type))
+                         extempore-yas-expansion-list-oscmc_c)))
+    (if res
+        (if construct-p
+            (cadr res)
+          (caddr res))
+      "")))
+
+
 ;;;;;;;;;;;;;
 ;; paredit ;;
 ;;;;;;;;;;;;;
@@ -987,16 +1034,6 @@ tags:
 (setq yas-triggers-in-field t)
 (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
 (yas-global-mode 1)
-
-;; used in extempore-mode's print-line-debug snippet
-(defun extempore-println-debug-expander (pl-str format-str)
-  (if (not (string= pl-str ""))
-      (mapconcat (lambda (name) (format format-str name name))
-                 (cl-remove-if (lambda (x) (or (string-match "^'.*:$" x)
-                                          (string-match "^\".*:\"$" x)))
-                               (split-string pl-str " "))
-                 " ")
-    pl-str))
 
 (eval-after-load "yasnippet"
   '(cl-nsubstitute-if '(yas-minor-mode "")
