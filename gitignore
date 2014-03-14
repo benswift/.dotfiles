@@ -40,6 +40,10 @@ auto/
 .\#*
 *.elc
 
+# yasnippet
+
+.yas-compiled-snippets.el
+
 # Sublime Text
 
 sublime-text-user-dir/SublimeREPLHistory
