@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: define-inst
 # key: dinst
+# name: define-inst
 # --
 (bind-func ${1:name}_note_c
   (lambda (nargs:i64 dargs:SAMPLE*)
@@ -12,6 +12,7 @@
     in))
 
 (define-instrument $1 $1_note_c $1_fx)
+(ipc:bind-func "${2:utility}" '$1)
 
 ($1.attack 200.0)
 ($1.decay 200.0)
