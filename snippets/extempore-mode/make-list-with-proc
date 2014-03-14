@@ -1,0 +1,5 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: make-list-with-proc
+# key: mlwp
+# --
+(make-list-with-proc ${1:n} (lambda (i) $0i))
