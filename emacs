@@ -712,6 +712,7 @@ tags:
   (setq reftex-cite-prompt-optional-args nil)
   (setq reftex-cite-cleanup-optional-args t)
   (setq reftex-bibliography-commands '("bibliography" "nobibliography" "setupbibtex\\[.*?database=" "addbibresource"))
+  (reftex-mode 1)
   ;; reftex keybindings
   (define-key LaTeX-mode-map (kbd "C-c =") 'reftex-toc)
   (define-key LaTeX-mode-map (kbd "C-c c") 'reftex-citation)
