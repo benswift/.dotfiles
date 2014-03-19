@@ -92,7 +92,7 @@
   (define-key global-map (kbd "s-x") 'kill-region))
 
 (defun ben-osx-setup ()
-  (setq base-face-height 160)
+  (setq base-face-height 140)
   (setq mac-option-modifier 'meta)
 	(setq mac-command-modifier 'super)
   (setq helm-locate-command "mdfind -name %s %s")
