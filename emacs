@@ -698,7 +698,7 @@ tags:
   ;; use Skim for pdfs on OSX
   (add-to-list 'TeX-view-program-list
                '("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
-  (if (string= system-type "darwin")
+  (if (equal system-type 'darwin)
       (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
   ;; synctex
   (setq TeX-source-correlate-mode t)
