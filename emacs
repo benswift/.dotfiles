@@ -423,6 +423,12 @@
 
 (cscope-setup)
 
+;;;;;;;;;;
+;; dash ;;
+;;;;;;;;;;
+
+(global-set-key (kbd "C-c d") 'dash-at-point)
+
 ;;;;;;;;;;;;
 ;; eshell ;;
 ;;;;;;;;;;;;
@@ -1194,8 +1200,8 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 	(read-only-mode 0)
 	(yank)))))
 
-(global-set-key (kbd "C-c d") 'duplicate-line)
-(global-set-key (kbd "C-c b") 'comment-box)
+;; (global-set-key (kbd "C-c d") 'duplicate-line)
+;; (global-set-key (kbd "C-c b") 'comment-box)
 
 ;;;;;;;;;;;;;;;;;;
 ;; emacs server ;;
