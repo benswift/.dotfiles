@@ -276,15 +276,21 @@
                                                ,(make-char 'greek-iso8859-7 107))
                                nil)))))))
 
-;;;;;;;;;;;;;;;;;;;
-;; monokai theme ;;
-;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;
+;; color theme ;;
+;;;;;;;;;;;;;;;;;
 
-(if (display-graphic-p)
-    (progn (load-theme 'monokai t)
-           (add-to-list 'default-frame-alist
-                        '(background-mode . dark))
-           (set-cursor-color "white")))
+(let ((theme 'monokai))
+  (if (display-graphic-p)
+      (case theme
+        ('monokai (load-theme 'monokai t)
+                  (add-to-list 'default-frame-alist
+                               '(background-mode . dark))
+                  (set-cursor-color "white"))
+        ;; flatui
+        ('flatui  (load-theme 'flatui t)
+                  (add-to-list 'default-frame-alist
+                               '(background-mode . light))))))
 
 ;;;;;;;;;;;
 ;; faces ;;
