@@ -28,11 +28,13 @@
            auto-complete
            bookmark+
            cider
+           dash-at-point
            xcscope
            elpy
            epl
            ess
            exec-path-from-shell
+           flatui-theme
            flx-ido
            gist
            htmlize
