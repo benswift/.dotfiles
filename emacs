@@ -66,13 +66,17 @@
 ;; cross-platform setup ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun ben-set-default-faces (face-height)
+  (set-face-attribute 'default nil :height face-height :family "Source Code Pro")
+  (set-face-attribute 'variable-pitch nil :height face-height :family "Source Sans Pro"))
+
 (exec-path-from-shell-initialize)
 (exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH"))
 
 ;; linux
 
 (defun ben-linux-setup ()
-  (setq base-face-height 140)
+  (ben-set-default-faces 140)
   (setq frame-maximization-mode 'maximized)
   (ben-setup-keybindings))
 
@@ -95,7 +99,7 @@
   (define-key global-map (kbd "s-x") 'kill-region))
 
 (defun ben-osx-setup ()
-  (setq base-face-height 140)
+  (ben-set-default-faces 140)
   (setq mac-option-modifier 'meta)
 	(setq mac-command-modifier 'super)
   (setq helm-locate-command "mdfind -name %s %s")
@@ -110,7 +114,7 @@
 ;; Windows
 
 (defun ben-windows-setup ()
-  (setq base-face-height 160)
+  (ben-set-default-faces 160)
   (setq w32-pass-lwindow-to-system nil)
   (setq w32-lwindow-modifier 'super)
   (ben-setup-keybindings))
@@ -292,14 +296,6 @@
         ('flatui  (load-theme 'flatui t)
                   (add-to-list 'default-frame-alist
                                '(background-mode . light))))))
-
-;;;;;;;;;;;
-;; faces ;;
-;;;;;;;;;;;
-
-(set-face-attribute 'default nil :height base-face-height :family "Source Code Pro")
-(set-face-attribute 'variable-pitch nil :height base-face-height :family "Source Sans Pro")
-;; (set-face-attribute 'variable-pitch nil :height base-face-height :family "Ubuntu")
 
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
