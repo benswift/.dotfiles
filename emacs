@@ -51,6 +51,7 @@
            paredit
            powerline
            scss-mode
+           smartparens
            smex
            string-utils
            wgrep-ag
@@ -891,6 +892,46 @@ tags:
           (caddr res))
       "")))
 
+;;;;;;;;;;;;;;;;;
+;; smartparens ;;
+;;;;;;;;;;;;;;;;;
+
+(defun ben-smartparens-mode-hook ()
+  (define-key sp-keymap (kbd "M-<down>") 'sp-splice-sexp-killing-forward)
+  (define-key sp-keymap (kbd "M-<up>") 'sp-splice-sexp-killing-backward)
+  (define-key sp-keymap (kbd "s-<left>") 'sp-backward-up-sexp)
+  (define-key sp-keymap (kbd "s-<right>") 'sp-up-sexp)
+  (define-key sp-keymap (kbd "s-S-<left>") 'sp-backward-down-sexp)
+  (define-key sp-keymap (kbd "s-S-<right>") 'sp-down-sexp)
+  (define-key sp-keymap (kbd "C-<left>") 'sp-forward-barf-sexp)
+  (define-key sp-keymap (kbd "C-<right>") 'sp-forward-slurp-sexp)
+  (define-key sp-keymap (kbd "M-S-<up>") 'sp-splice-sexp-killing-around)
+  (define-key sp-keymap (kbd "M-S-<left>") 'sp-convolute-sexp)
+  (define-key sp-keymap (kbd "M-S-<right>") 'sp-transpose-sexp)
+  (define-key sp-keymap (kbd "s-S-<down>") 'sp-duplicate-next-sexp)
+  (define-key sp-keymap (kbd "M-S-<down>") 'sp-wrap-with-paren)
+  (add-to-list 'sp--lisp-modes 'extempore-mode))
+
+(add-hook 'smartparens-enabled-hook 'ben-smartparens-mode-hook)
+
+(defun sp-wrap-with-paren (&optional arg)
+  (interactive "p")
+  (sp-select-next-thing-exchange arg)
+  (execute-kbd-macro (kbd "(")))
+
+(defun sp-duplicate-next-sexp (&optional arg)
+  (interactive "p")
+  (sp-select-next-thing arg)
+  (kill-ring-save (mark) (point))
+  (reindent-then-newline-and-indent)
+  (yank)
+  (sp-backward-sexp))
+
+(require 'smartparens-config)
+
+(smartparens-global-mode 1)
+(smartparens-strict-mode 1)
+(show-smartparens-global-mode 1)
 
 ;;;;;;;;;;;;;
 ;; paredit ;;
@@ -968,12 +1009,12 @@ tags:
 
 ;; turn on paredit by default in all 'lispy' modes
 
-(dolist (mode '(scheme emacs-lisp lisp clojure cider-repl clojurescript extempore))
-  (when (> (display-color-cells) 8)
-    (font-lock-add-keywords (intern (concat (symbol-name mode) "-mode"))
-                            '(("(\\|)" . 'paredit-paren-face))))
-  (add-hook (intern (concat (symbol-name mode) "-mode-hook"))
-            'paredit-mode))
+;; (dolist (mode '(scheme emacs-lisp lisp clojure cider-repl clojurescript extempore))
+;;   (when (> (display-color-cells) 8)
+;;     (font-lock-add-keywords (intern (concat (symbol-name mode) "-mode"))
+;;                             '(("(\\|)" . 'paredit-paren-face))))
+;;   (add-hook (intern (concat (symbol-name mode) "-mode-hook"))
+;;             'paredit-mode))
 
 ;; taken from
 ;; http://emacsredux.com/blog/2013/04/18/evaluate-emacs-lisp-in-the-minibuffer/
