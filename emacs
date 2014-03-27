@@ -931,7 +931,6 @@ tags:
 
 (smartparens-global-mode 1)
 (smartparens-strict-mode 1)
-(show-smartparens-global-mode 1)
 
 ;;;;;;;;;;;;;
 ;; paredit ;;
