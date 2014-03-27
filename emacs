@@ -683,6 +683,19 @@ tags:
 "
              post-name post-url-basename))))
 
+;;;;;;;;;;;;;;
+;; hunspell ;;
+;;;;;;;;;;;;;;
+
+;; (require 'ispell)
+
+;; (setq ispell-program-name "/usr/local/bin/hunspell")
+;; (setq ispell-dictionary "en_AU")
+;; (add-to-list 'ispell-dictionary-alist
+;;              '("en_AU" "[[:alpha:]]" "[^[:alpha:]]" "" t ("-d" "/Library/Spelling/en_AU") nil iso-8859-1))
+
+;; (setq rw-hunspell-dicpath-list '("/Library/Spelling"))
+
 ;;;;;;;;;
 ;; erc ;;
 ;;;;;;;;;
