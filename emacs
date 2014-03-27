@@ -892,6 +892,10 @@ tags:
 ;; smartparens ;;
 ;;;;;;;;;;;;;;;;;
 
+(setq sp-highlight-wrap-tag-overlay nil
+      sp-highlight-wrap-overlay nil
+      sp-highlight-pair-overlay nil)
+
 (defun ben-smartparens-mode-hook ()
   (define-key sp-keymap (kbd "M-<down>") 'sp-splice-sexp-killing-forward)
   (define-key sp-keymap (kbd "M-<up>") 'sp-splice-sexp-killing-backward)
@@ -926,7 +930,7 @@ tags:
 (require 'smartparens-config)
 
 (smartparens-global-mode 1)
-(smartparens-strict-mode 1)
+(smartparens-global-strict-mode 1)
 
 ;;;;;;;;;;;;;
 ;; paredit ;;
