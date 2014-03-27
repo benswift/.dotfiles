@@ -36,12 +36,14 @@
            exec-path-from-shell
            flatui-theme
            flx-ido
+           flycheck
            gist
            htmlize
            ido-ubiquitous
            imenu-anywhere
            isearch+
            less-css-mode
+           jedi
            magit
            markdown-mode
            monokai-theme
@@ -1088,15 +1090,16 @@ tags:
 
 ;; elpy setup
 
-;; (elpy-enable)
-;; (setq elpy-rpc-backend 'jedi)
-;; (setq python-indent-offset 2)
+(elpy-enable)
+(elpy-use-ipython)
+(setq elpy-rpc-backend "jedi")
+(setq python-indent-offset 2)
 
-;; (setq  elpy-default-minor-modes
-;;        '(eldoc-mode
-;;          flymake-mode
-;;          ;; highlight-indentation-mode
-;;          auto-complete-mode))
+(setq  elpy-default-minor-modes
+       '(eldoc-mode
+         ;; flycheck-mode
+         ;; highlight-indentation-mode
+         auto-complete-mode))
 
 ;;;;;;;;;;;;;;;
 ;; yasnippet ;;
