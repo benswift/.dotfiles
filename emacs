@@ -303,6 +303,10 @@
 ;; keybindings ;;
 ;;;;;;;;;;;;;;;;;
 
+;; always use reindent-then-newline-and-indent
+
+(global-set-key (kbd "RET") 'reindent-then-newline-and-indent)
+
 ;; handy shortcuts
 
 (global-set-key (kbd "<f5>") 'magit-status)
