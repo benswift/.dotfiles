@@ -548,7 +548,9 @@
   (define-key org-mode-map (kbd "<C-S-up>") nil)
   (define-key org-mode-map (kbd "<C-S-down>") nil)
   (define-key org-mode-map (kbd "<C-S-right>") nil)
-  (define-key org-mode-map (kbd "<C-S-left>") nil))
+  (define-key org-mode-map (kbd "<C-S-left>") nil)
+  ;; turn off smartparens
+  (smartparens-mode -1))
 
 (add-hook 'org-mode-hook 'ben-org-mode-hook)
 
