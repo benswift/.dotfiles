@@ -780,7 +780,7 @@ tags:
 (setq user-extempore-directory "~/Code/extempore/")
 (autoload 'extempore-mode (concat user-extempore-directory "extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
-(add-to-list 'dash-at-point-mode-alist '(extempore-mode . "gl4,gl3,gl2,c"))
+(add-to-list 'dash-at-point-mode-alist '(extempore-mode . "gl4,gl3,gl2,c,c++,osx"))
 
 ;; extempore customisation
 (setq extempore-tab-completion nil)
