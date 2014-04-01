@@ -1060,8 +1060,9 @@ tags:
 ;; (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
 
 (setq nrepl-hide-special-buffers t)
-(setq cider-auto-select-error-buffer t)
+(setq cider-auto-select-error-buffer nil)
 (setq cider-repl-use-pretty-printing nil)
+(setq cider-repl-use-clojure-font-lock t)
 
 ;;;;;;;;;;;;;;
 ;; markdown ;;
