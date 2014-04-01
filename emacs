@@ -931,6 +931,7 @@ tags:
   (define-key sp-keymap (kbd "M-S-<right>") 'sp-transpose-sexp)
   (define-key sp-keymap (kbd "s-S-<down>") 'sp-duplicate-next-sexp)
   (define-key sp-keymap (kbd "M-S-<down>") 'sp-wrap-with-paren)
+  (define-key sp-keymap (kbd "M-q") 'sp-reindent-defun)
   (add-to-list 'sp--lisp-modes 'extempore-mode))
 
 (add-hook 'smartparens-enabled-hook 'ben-smartparens-mode-hook)
@@ -947,6 +948,19 @@ tags:
   (reindent-then-newline-and-indent)
   (yank)
   (sp-backward-sexp))
+
+(defun sp-reindent-defun (&optional argument)
+  "Reindent the definition that the point is on.
+If the point is in a string or a comment, fill the paragraph instead,
+  and with a prefix argument, justify as well."
+  (interactive "P")
+  (if (or (sp-point-in-string)
+          (sp-point-in-comment))
+      (lisp-fill-paragraph argument)
+    (save-excursion
+      (end-of-defun)
+      (beginning-of-defun)
+      (indent-sexp))))
 
 (require 'smartparens-config)
 
