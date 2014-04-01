@@ -10,6 +10,7 @@ osx:
 	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
 
 	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
+	ln -sf $(DOTFILES_DIR)/profile.clj ~/.lein/
 	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
 
 linux:
@@ -22,6 +23,7 @@ linux:
 	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
 
 	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
+	ln -sf $(DOTFILES_DIR)/profile.clj ~/.lein/
 	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
 
 clean:
