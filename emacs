@@ -970,6 +970,12 @@ If the point is in a string or a comment, fill the paragraph instead,
 (smartparens-global-mode 1)
 (smartparens-global-strict-mode 1)
 
+;;;;;;;;;;;;;;;;;;;;;;;;
+;; rainwow-delimiters ;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+(global-rainbow-delimiters-mode)
+
 ;;;;;;;;;;;;;
 ;; paredit ;;
 ;;;;;;;;;;;;;
