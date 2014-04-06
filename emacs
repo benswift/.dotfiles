@@ -440,7 +440,7 @@
 ;;;;;;;;;;;;
 
 (setq eshell-aliases-file "~/.dotfiles/eshell-alias")
-(global-set-key (kbd "C-c s") 'eshell)
+(global-set-key (kbd "C-c e") 'eshell)
 
 (defun ben-eshell-mode-hook ()
   ;; config vars
