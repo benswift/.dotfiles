@@ -22,12 +22,14 @@
 
 (dolist (package
          '(ac-nrepl
+           ac-cider-compliment
            ace-jump-mode
            ag
            auctex
            auto-complete
            bookmark+
            cider
+           clojure-snippets
            dash-at-point
            xcscope
            elpy
@@ -52,6 +54,7 @@
            org
            paredit
            powerline
+           rainbow-delimiters
            scss-mode
            smartparens
            smex
