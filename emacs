@@ -798,6 +798,8 @@ tags:
   (setq extempore-program-args "--device 2 --frames 1024 --run libs/xtm.xtm"))
  ((string= system-name "hodgey.local")
   (setq extempore-program-args "--device 1 --frames 1024 --run libs/xtm.xtm"))
+ ((string= system-name "manjaro-hodgey")
+  (setq extempore-program-args "--device 0 --frames 1024 --run libs/xtm.xtm"))
  (t nil))
 
 (defun ben-extempore-mode-hook ()
