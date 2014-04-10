@@ -61,7 +61,8 @@
            string-utils
            wgrep-ag
            yaml-mode
-           yasnippet))
+           yasnippet
+           zoom-frm))
   (if (not (package-installed-p package))
       (package-install package)))
 
