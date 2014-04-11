@@ -343,6 +343,15 @@
                       (lambda (x) (equalp (car x) 'magit-auto-revert-mode))
                       minor-mode-alist))
 
+;;;;;;;;;;;;;;
+;; zoom-frm ;;
+;;;;;;;;;;;;;;
+
+(global-set-key (kbd "C-x C-+") 'zoom-in/out)
+(global-set-key (kbd "C-x C--") 'zoom-in/out)
+(global-set-key (kbd "C-x C-=") 'zoom-in/out)
+(global-set-key (kbd "C-x C-0") 'zoom-in/out)
+
 ;;;;;;;;;;;;;;;
 ;; powerline ;;
 ;;;;;;;;;;;;;;;
