@@ -729,6 +729,10 @@ tags:
 (setq erc-prompt-for-nickserv-password nil)
 (setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
 
+;; erc-notify
+
+(setq erc-notify-list '("digego"))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; LaTeX & reftex ;;
 ;;;;;;;;;;;;;;;;;;;;
