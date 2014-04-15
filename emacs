@@ -34,12 +34,15 @@
            xcscope
            elpy
            epl
+           erc-hl-nicks
+           erc-terminal-notifier
            ess
            exec-path-from-shell
            flatui-theme
            flx-ido
            flycheck
            gist
+           glsl-mode
            htmlize
            ido-ubiquitous
            imenu-anywhere
