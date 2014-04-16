@@ -350,6 +350,8 @@
 ;; zoom-frm ;;
 ;;;;;;;;;;;;;;
 
+(require 'zoom-frm)
+
 (global-set-key (kbd "C-x C-+") 'zoom-in/out)
 (global-set-key (kbd "C-x C--") 'zoom-in/out)
 (global-set-key (kbd "C-x C-=") 'zoom-in/out)
