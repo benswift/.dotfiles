@@ -274,7 +274,7 @@
    nil `((fullscreen . ,(if (frame-parameter nil 'fullscreen)
                             nil frame-maximization-mode)))))
 
-(define-key global-map (kbd "<f11>") 'toggle-frame-maximized)
+(define-key global-map (kbd "C-s-f") 'toggle-frame-maximized)
 
 ;; hide certain minor modes from mode line
 
