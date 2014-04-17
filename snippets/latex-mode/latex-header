@@ -1,12 +1,11 @@
 # -*- mode: snippet -*-
 # name: latex-header
-# key: latexheader
+# key: header
 # --
 % -*- TeX-engine: xetex -*-
 \documentclass[${1:12}pt,a4paper]{scrartcl}
-\usepackage{libertine}
-\usepackage{fontspec}
-\setmonofont[Scale=MatchLowercase,Mapping=tex-text]{Source Code Pro}
+\usepackage{Alegreya}
+\usepackage{AlegreyaSans}
 
 \usepackage[svgnames,hyperref]{xcolor}
 \usepackage{url}
@@ -41,7 +40,7 @@ doi=false]{biblatex}
 \AtEveryBibitem{\clearfield{month}}
 \AtEveryCitekey{\clearfield{month}}
 
-\addbibresource{${2:papers}.bib}
+\addbibresource{papers.bib}
 
 \usepackage[english=british,threshold=15,thresholdtype=words]{csquotes}
 \SetCiteCommand{\parencite}
@@ -61,3 +60,15 @@ allcolors=DarkBlue,
 % plainpages=false,
 pdfpagelabels,
 hyperfootnotes=true]{hyperref}
+
+\author{${2:Ben Swift}}
+\date{\today}
+\title{$3}
+
+\begin{document}
+
+$0
+
+\printbibliography[title=References]
+
+\end{document}
