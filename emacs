@@ -567,7 +567,8 @@
   (define-key org-mode-map (kbd "<C-S-down>") nil)
   (define-key org-mode-map (kbd "<C-S-right>") nil)
   (define-key org-mode-map (kbd "<C-S-left>") nil)
-  )
+  ;; disable rainbow-delimiters
+  (rainbow-delimiters-mode-disable))
 
 (add-hook 'org-mode-hook 'ben-org-mode-hook)
 
