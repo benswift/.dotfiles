@@ -567,8 +567,7 @@
   (define-key org-mode-map (kbd "<C-S-down>") nil)
   (define-key org-mode-map (kbd "<C-S-right>") nil)
   (define-key org-mode-map (kbd "<C-S-left>") nil)
-  ;; turn off smartparens
-  (smartparens-mode -1))
+  )
 
 (add-hook 'org-mode-hook 'ben-org-mode-hook)
 
@@ -936,6 +935,11 @@ tags:
 ;;;;;;;;;;;;;;;;;
 ;; smartparens ;;
 ;;;;;;;;;;;;;;;;;
+
+(require 'smartparens)
+
+;; disable SP in org-mode
+(add-to-list 'sp-ignore-modes-list 'org-mode)
 
 (setq sp-highlight-wrap-tag-overlay nil
       sp-highlight-wrap-overlay nil
