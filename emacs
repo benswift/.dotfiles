@@ -114,7 +114,7 @@
   (setq helm-locate-command "mdfind -name %s %s")
   (setq locate-make-command-line 'spotlight-locate-make-command-line)
   (setq x-bitmap-file-path '("/usr/X11/include/X11/bitmaps"))
-  (setq source-directory "/Library/Caches/Homebrew/emacs--git")
+  (setq source-directory "/Library/Caches/Homebrew/emacs-mac--git")
   (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open")))
   (setq frame-maximization-mode 'fullscreen)
   ;; for railwaycat emacs-mac
