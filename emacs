@@ -751,7 +751,7 @@ tags:
   (add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
   ;; use Skim for pdfs on OSX
   (add-to-list 'TeX-view-program-list
-               '("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
+               '("Skim" "~/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
   (if (equal system-type 'darwin)
       (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
   ;; synctex
