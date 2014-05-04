@@ -688,6 +688,9 @@
         (indent "2em")
         (mathml t)))
 
+
+(require 'url-util) ; needed for url-unerserved-chars
+
 (defun biott-sanitise-post-name (post-name)
   (apply #'string (reverse (cl-reduce (lambda (processed char)
                                       (if (member char url-unreserved-chars)
