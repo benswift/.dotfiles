@@ -80,7 +80,7 @@
   (set-face-attribute 'variable-pitch nil :height face-height :family "Source Sans Pro"))
 
 (exec-path-from-shell-initialize)
-(exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH"))
+(exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH" "PYTHONPATH"))
 
 ;; linux
 
@@ -1169,12 +1169,13 @@ If the point is in a string or a comment, fill the paragraph instead,
 
 ;; jedi setup
 
-(add-hook 'python-mode-hook 'jedi:setup)
+;; (add-hook 'python-mode-hook 'jedi:setup)
 
 ;; elpy setup
 
 (elpy-enable)
 (elpy-use-ipython)
+
 (setq elpy-rpc-backend "jedi")
 (setq python-indent-offset 2)
 
