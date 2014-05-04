@@ -738,9 +738,11 @@ tags:
 ;; erc ;;
 ;;;;;;;;;
 
+(unless (load "~/.dotfiles/secrets/ercpass" t)
+  ("Couldn't find the secrets file, you need to pull it down from dropbox."))
+
 (erc-services-mode 1)
 (setq erc-nick "benswift")
-(load "~/.dotfiles/secrets/ercpass")
 (setq erc-prompt-for-password nil)
 (setq erc-prompt-for-nickserv-password nil)
 (setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
