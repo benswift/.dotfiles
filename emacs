@@ -976,7 +976,6 @@ tags:
   (define-key sp-keymap (kbd "M-S-<right>") 'sp-transpose-sexp)
   (define-key sp-keymap (kbd "s-S-<down>") 'sp-duplicate-next-sexp)
   (define-key sp-keymap (kbd "M-S-<down>") 'sp-wrap-with-paren)
-  (define-key sp-keymap (kbd "M-q") 'sp-reindent-defun)
   (add-to-list 'sp--lisp-modes 'extempore-mode))
 
 (add-hook 'smartparens-enabled-hook 'ben-smartparens-mode-hook)
@@ -1007,6 +1006,8 @@ instead, and with a prefix argument, justify as well."
       (end-of-defun)
       (beginning-of-defun)
       (indent-sexp))))
+
+(define-key lisp-mode-shared-map (kbd "M-q") 'sp-reindent-defun)
 
 (require 'smartparens-config)
 
