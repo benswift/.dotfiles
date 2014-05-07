@@ -1170,10 +1170,6 @@ instead, and with a prefix argument, justify as well."
 ;; Python ;;
 ;;;;;;;;;;;;
 
-;; jedi setup
-
-;; (add-hook 'python-mode-hook 'jedi:setup)
-
 ;; elpy setup
 
 (elpy-enable)
@@ -1184,8 +1180,8 @@ instead, and with a prefix argument, justify as well."
 
 (setq  elpy-default-minor-modes
        '(eldoc-mode
-         ;; flycheck-mode
-         ;; highlight-indentation-mode
+         flycheck-mode
+         highlight-indentation-mode
          auto-complete-mode))
 
 ;;;;;;;;;;;;;;;
