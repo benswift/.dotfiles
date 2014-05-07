@@ -996,8 +996,9 @@ tags:
 
 (defun sp-reindent-defun (&optional argument)
   "Reindent the definition that the point is on.
-If the point is in a string or a comment, fill the paragraph instead,
-  and with a prefix argument, justify as well."
+
+If the point is in a string or a comment, fill the paragraph
+instead, and with a prefix argument, justify as well."
   (interactive "P")
   (if (or (sp-point-in-string)
           (sp-point-in-comment))
