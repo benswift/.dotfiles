@@ -55,7 +55,6 @@
            multiple-cursors
            ;; nrepl-ritz ;; shadows cider-mode
            org
-           paredit
            powerline
            rainbow-delimiters
            scss-mode
@@ -1019,104 +1018,6 @@ instead, and with a prefix argument, justify as well."
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (global-rainbow-delimiters-mode)
-
-;;;;;;;;;;;;;
-;; paredit ;;
-;;;;;;;;;;;;;
-
-;; from https://gist.github.com/malk/4962126
-
-(defun point-is-inside-list ()
-  "Whether point is currently inside list or not."
-  (nth 1 (syntax-ppss)))
-
-(defun point-is-inside-string ()
-  "Whether point is currently inside string or not."
-  (nth 3 (syntax-ppss)))
-
-(defun point-is-inside-comment ()
-  "Whether point is currently inside a comment or not."
-  (nth 4 (syntax-ppss)))
-
-(defun paredit--is-at-opening-paren ()
-  (and (looking-at "\\s(")
-       (not (point-is-inside-string))
-       (not (point-is-inside-comment))))
-
-(defun paredit-skip-to-start-of-sexp-at-point ()
-  "Skips to start of current sexp."
-  (interactive)
-  (while (not (paredit--is-at-opening-paren))
-    (if (point-is-inside-string)
-        (paredit-backward-up)
-      (paredit-backward))))
-
-(defun paredit-duplicate-rest-of-closest-sexp ()
-  (interactive)
-  (cond
-   ((paredit--is-at-opening-paren)
-    (paredit-copy-sexps-as-kill)
-    (forward-sexp)
-    (paredit-newline)
-    (yank)
-    (exchange-point-and-mark))
-   ((point-is-inside-list)
-    (while (looking-at " ") (forward-char))
-    (if (not (= (point) (car (bounds-of-thing-at-point 'sexp))))
-        (progn (forward-sexp)
-               (while (looking-at " ") (forward-char))))
-    (let ((sexp-inside-end (- (paredit-next-up/down-point 1 1) 1)))
-      (kill-ring-save (point) sexp-inside-end)
-      (goto-char sexp-inside-end))
-    (paredit-newline)
-    (yank)
-    (exchange-point-and-mark))))
-
-(defface paredit-paren-face
-  '((((class color) (background dark))
-     (:foreground "grey50"))
-    (((class color) (background light))
-     (:foreground "grey55")))
-  "Face for parentheses.  Taken from ESK.")
-
-(defun ben-paredit-mode-hook ()
-  (define-key paredit-mode-map (kbd "<M-delete>") 'paredit-forward-kill-word)
-  (define-key paredit-mode-map (kbd "<M-backspace>") 'paredit-backward-kill-word)
-  (define-key paredit-mode-map (kbd "<s-left>") 'paredit-backward-up)
-  (define-key paredit-mode-map (kbd "<s-S-left>") 'paredit-backward-down)
-  (define-key paredit-mode-map (kbd "<s-right>") 'paredit-forward-up)
-  (define-key paredit-mode-map (kbd "<s-S-right>") 'paredit-forward-down)
-  (define-key paredit-mode-map (kbd "<M-S-up>") 'paredit-raise-sexp)
-  (define-key paredit-mode-map (kbd "<M-S-down>") 'paredit-wrap-sexp)
-  (define-key paredit-mode-map (kbd "<M-S-left>") 'paredit-convolute-sexp)
-  (define-key paredit-mode-map (kbd "<M-S-right>") 'transpose-sexps)
-  (define-key paredit-mode-map (kbd "<s-S-down>") 'paredit-duplicate-rest-of-closest-sexp))
-
-(add-hook 'paredit-mode-hook 'ben-paredit-mode-hook)
-
-;; turn on paredit by default in all 'lispy' modes
-
-;; (dolist (mode '(scheme emacs-lisp lisp clojure cider-repl clojurescript extempore))
-;;   (when (> (display-color-cells) 8)
-;;     (font-lock-add-keywords (intern (concat (symbol-name mode) "-mode"))
-;;                             '(("(\\|)" . 'paredit-paren-face))))
-;;   (add-hook (intern (concat (symbol-name mode) "-mode-hook"))
-;;             'paredit-mode))
-
-;; taken from
-;; http://emacsredux.com/blog/2013/04/18/evaluate-emacs-lisp-in-the-minibuffer/
-
-(defun conditionally-enable-paredit-mode ()
-  "Enable `paredit-mode' in the minibuffer, during `eval-expression'."
-  (if (eq this-command 'eval-expression)
-      (paredit-mode 1)))
-
-(add-hook 'minibuffer-setup-hook 'conditionally-enable-paredit-mode)
-
-(eval-after-load "paredit"
-  '(cl-nsubstitute-if '(paredit-mode " pe")
-                      (lambda (x) (equalp (car x) 'paredit-mode))
-                      minor-mode-alist))
 
 ;;;;;;;;;;;;;
 ;; clojure ;;
