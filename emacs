@@ -959,7 +959,8 @@ tags:
 
 (setq sp-highlight-wrap-tag-overlay nil
       sp-highlight-wrap-overlay nil
-      sp-highlight-pair-overlay nil)
+      sp-highlight-pair-overlay nil
+      sp-hybrid-kill-excessive-whitespace t)
 
 (defun ben-smartparens-mode-hook ()
   (define-key sp-keymap (kbd "M-<down>") 'sp-splice-sexp-killing-forward)
