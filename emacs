@@ -953,8 +953,8 @@ tags:
 ;;;;;;;;;;;;;;;;;
 
 (require 'smartparens)
+(require 'smartparens-config)
 
-;; disable SP in org-mode
 (add-to-list 'sp-ignore-modes-list 'org-mode)
 
 (setq sp-highlight-wrap-tag-overlay nil
@@ -1009,10 +1009,33 @@ instead, and with a prefix argument, justify as well."
 
 (define-key lisp-mode-shared-map (kbd "M-q") 'sp-reindent-defun)
 
-(require 'smartparens-config)
-
 (smartparens-global-mode 1)
 (smartparens-global-strict-mode 1)
+
+;; make the quote (') character work right in lisp modes
+;; taken from https://github.com/Fuco1/smartparens/issues/286
+(defun sp--org-skip-markup (ms mb me)
+  (save-excursion
+    (and (progn
+           (goto-char mb)
+           (save-match-data (looking-back "\\sw\\|\\s_\\|\\s.")))
+         (progn
+           (goto-char me)
+           (save-match-data (looking-at "\\sw\\|\\s_\\|\\s."))))))
+
+(sp-with-modes sp--lisp-modes
+  ;; disable ', it's the quote character!
+  (sp-local-pair "'" nil :actions nil)
+  ;; also only use the pseudo-quote inside strings where it serve as
+  ;; hyperlink.
+  (sp-local-pair "`" "'" :when '(sp-in-string-p sp-in-comment-p))
+  (sp-local-pair "`" nil
+                 :skip-match (lambda (ms mb me)
+                               (cond
+                                ((equal ms "'")
+                                 (or (sp--org-skip-markup ms mb me)
+                                     (not (sp-point-in-string-or-comment))))
+                                (t (not (sp-point-in-string-or-comment)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; rainwow-delimiters ;;
