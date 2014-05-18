@@ -223,19 +223,28 @@
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 
-;; file visiting stuff
+;; file visiting
 
-(setq save-place t)
-(setq save-place-file (concat user-emacs-directory "places"))
-(setq backup-directory-alist `(("." . ,(concat user-emacs-directory "backups"))))
-(setq recentf-max-saved-items 100)
+(setq save-place t
+      save-place-file (concat user-emacs-directory "places")
+      recentf-max-saved-items 100)
+
+;; file backups
+
+(setq backup-by-copying t
+      backup-directory-alist `(("." . ,(concat user-emacs-directory "backups")))
+      delete-old-versions t
+      kept-new-versions 6
+      kept-old-versions 2
+      version-control t)
 
 (global-auto-revert-mode t)
 
 ;; uniquify
 
 (require 'uniquify)
-(setq uniquify-buffer-name-style 'forward)
+(setq uniquify-buffer-name-style 'post-forward
+      uniquify-separator ":")
 
 ;; other niceties
 
