@@ -12,7 +12,8 @@
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
         ("marmalade" . "http://marmalade-repo.org/packages/")
-        ("melpa" . "http://melpa.milkbox.net/packages/")))
+        ("melpa" . "http://melpa.milkbox.net/packages/")
+        ("elpy" . "http://jorgenschaefer.github.io/packages/")))
 
 (unless package--initialized
   (package-initialize))
@@ -1103,13 +1104,14 @@ instead, and with a prefix argument, justify as well."
 ;; Python ;;
 ;;;;;;;;;;;;
 
+(setq python-indent-offset 2)
+
 ;; elpy setup
 
 (elpy-enable)
 (elpy-use-ipython)
 
-(setq elpy-rpc-backend "jedi")
-(setq python-indent-offset 2)
+;; (setq elpy-rpc-backend "jedi")
 
 (setq  elpy-default-minor-modes
        '(eldoc-mode
