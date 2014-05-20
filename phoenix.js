@@ -4,12 +4,8 @@
 // https://github.com/carlo/bash-it/blob/master/dotfiles/.phoenix.js
 
 var mash = [ 'cmd', 'alt', 'ctrl' ],
-  mashMove = [ 'alt', 'ctrl' ],
-  mashMoveMore = [ 'shift', 'alt', 'ctrl' ],
-  nudgePixels = 10,
-  padding = 4,
+  padding = 0,
   previousSizes = {};
-
 
 // ### General key configurations
 //
@@ -81,54 +77,18 @@ api.bind( 'left', mash, function() {
   Window.focusedWindow().toW();
 });
 
-// The cursor keys together with `Ctrl`+`Alt` move a window.
-api.bind( 'up', mashMove, function() {
-  Window.focusedWindow().nudgeUp();
-});
 
-api.bind( 'right', mashMove, function() {
-  Window.focusedWindow().nudgeRight();
-});
-
-api.bind( 'down', mashMove, function() {
-  Window.focusedWindow().nudgeDown();
-});
-
-api.bind( 'left', mashMove, function() {
-  Window.focusedWindow().nudgeLeft();
-});
-
-
-// The cursor keys together with `Shift`+`Ctrl`+`Alt` move a window just like
-// the previous set but 5 times as fast.
-api.bind( 'up', mashMoveMore, function() {
-  Window.focusedWindow().nudgeUp( 5 );
-});
-
-api.bind( 'right', mashMoveMore, function() {
-  Window.focusedWindow().nudgeRight( 5 );
-});
-
-api.bind( 'down', mashMoveMore, function() {
-  Window.focusedWindow().nudgeDown( 5 );
-});
-
-api.bind( 'left', mashMoveMore, function() {
-  Window.focusedWindow().nudgeLeft( 5 );
-});
-
-
-// #### Apps: Chrome + Sublime
+// #### Apps: Chrome + Emacs
 //
-// When working on frontend stuff I like my Sublime Text to cover the left
+// When working on frontend stuff I like Emacs to cover the left
 // (East) half of the screen and Chrome the right (West) half.
 api.bind( '1', mash, function() {
   var chromeApp = App.findByTitle('Google Chrome'),
     chromeWindow = chromeApp && chromeApp.findWindowNotMatchingTitle('^Developer Tools -'),
-    sublimeApp = App.findByTitle('Sublime Text'),
-    sublimeWindow = sublimeApp && sublimeApp.firstWindow();
+ emacsApp = App.findByTitle('Emacs'),
+    sublimeWindow = emacsApp && emacsApp.firstWindow();
 
-  api.alert( 'Chrome + Sublime', 0.25 );
+  api.alert( 'Chrome + Emacs', 0.25 );
 
   if ( chromeWindow ) {
     chromeWindow.toE();
