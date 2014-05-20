@@ -13,6 +13,8 @@ osx:
 	ln -sf $(DOTFILES_DIR)/profiles.clj ~/.lein/
 	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
 
+	ln -sf $(DOTFILES_DIR)/phoenix.js ~/.phoenix.js
+
 linux:
 	ln -sf $(DOTFILES_DIR)/bash_profile.linux ~/.bash_profile
 
