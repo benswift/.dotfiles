@@ -1,0 +1,7 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: start-info
+# key: title
+# binding: direct-keybinding
+# --
+;; $0
+;; ben.swift@anu.edu.au
