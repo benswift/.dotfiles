@@ -1,0 +1,5 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: beat-modulo
+# key: bm
+# --
+(modulo beat $0)
