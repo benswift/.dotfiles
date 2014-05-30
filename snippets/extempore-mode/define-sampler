@@ -3,5 +3,4 @@
 # key: dsamp
 # --
 (define-sampler ${1:sampler-name} sampler_note_hermite_c sampler_fx)
-
 (sm-load-map $1 ${2:sample-map})
