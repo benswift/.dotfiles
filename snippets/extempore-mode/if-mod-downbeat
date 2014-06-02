@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: if-mod-downbeat
+# key: imd
+# binding: direct-keybinding
+# --
+(if (= (modulo beat ${1:4}) (- $1 dur))$0)
