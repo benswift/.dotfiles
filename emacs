@@ -1130,7 +1130,7 @@ instead, and with a prefix argument, justify as well."
 (add-to-list 'auto-mode-alist '("\\.R$" . R-mode))
 
 (defun ben-ess-R-post-run-hook ()
-  (smartparens-strict-mode 1)
+  (smartparens-mode t)
   (set (make-local-variable 'sp-hybrid-kill-excessive-whitespace) nil))
 
 (add-hook 'ess-R-post-run-hook 'ben-ess-R-post-run-hook)
