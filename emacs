@@ -776,18 +776,15 @@ tags:
 ;; erc ;;
 ;;;;;;;;;
 
-(unless (load "~/.dotfiles/secrets/ercpass" t)
-  ("Couldn't find the secrets file, you need to pull it down from dropbox."))
-
-(erc-services-mode 1)
-(setq erc-nick "benswift")
-(setq erc-prompt-for-password nil)
-(setq erc-prompt-for-nickserv-password nil)
-(setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
-
-;; erc-notify
-
-(setq erc-notify-list '("digego"))
+(if (load "~/.dotfiles/secrets/ercpass" t)
+    (progn
+      (erc-services-mode 1)
+      (setq erc-nick "benswift")
+      (setq erc-prompt-for-password nil)
+      (setq erc-prompt-for-nickserv-password nil)
+      (setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
+      (setq erc-notify-list '("digego")))
+  (message "Couldn't find the secrets file, you need to pull it down from dropbox."))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; LaTeX & reftex ;;
