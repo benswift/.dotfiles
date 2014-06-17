@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: anonymous-function
+# key: lam
+# binding: direct-keybinding
+# --
+function(${1:x}) {$0}
