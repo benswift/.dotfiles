@@ -863,13 +863,13 @@ tags:
 ;; device-specific Extempore config
 (cond
  ((string= system-name "lonyx")
-  (setq extempore-program-args "--device 0 --frames 1024 --run libs/xtm.xtm"))
+  (setq extempore-program-args "--device 0 --frames 1024"))
  ((string= system-name "cyril.local")
-  (setq extempore-program-args "--device 2 --frames 1024 --run libs/xtm.xtm"))
+  (setq extempore-program-args "--device 2 --frames 1024"))
  ((string= system-name "hodgey.local")
-  (setq extempore-program-args "--device 1 --frames 1024 --run libs/xtm.xtm"))
+  (setq extempore-program-args "--device 1 --frames 1024"))
  ((string= system-name "hodgey-ubuntu")
-  (setq extempore-program-args "--device 0 --frames 1024 --run libs/xtm.xtm"))
+  (setq extempore-program-args "--device 0 --frames 1024"))
  (t nil))
 
 (defun ben-extempore-mode-hook ()
