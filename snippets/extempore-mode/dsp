@@ -2,7 +2,7 @@
 # name: dsp
 # key: dsp
 # --
-(bind-func dsp:[SAMPLE,SAMPLE,i64,i64,SAMPLE*]*
+(bind-func dsp:DSP
   (lambda (in time chan dat)
     $0))
 
