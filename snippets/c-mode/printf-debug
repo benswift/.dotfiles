@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: printf-debug
+# key: pfd
+# binding: direct-keybinding
+# --
+printf("$1\n", ${1:$(replace-regexp-in-string "\\\\(:\\\\| =\\\\) %\\\\(lld\\\\|d\\\\|f\\\\|p\\\\|s\\\\|c\\\\)" "," yas-text)});
