@@ -1,0 +1,22 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: load-dylib
+# key: loaddylib
+# binding: direct-keybinding
+# --
+;; set up the current dylib name and path (for precompilation)
+(sys:precomp:set-dylib-name-info
+ '${1:dylib-name}
+ (cond ((string=? (sys:platform) "OSX")
+        "${2:$1}.dylib")
+       ((string=? (sys:platform) "Linux")
+        "$2.so")
+       ((string=? (sys:platform) "Windows")
+        "$2.dll")
+       (else
+        (begin (print-with-colors 'red 'default #f (print "Error"))
+               (print ": unsupported platform ")
+               (print-with-colors 'yellow 'default #f (print (sys:platform)))))))
+
+;; load the dylib               
+(define $1
+  (sys:load-dylib (cdr *sys:precomp:current-load-dylib-info*)))
