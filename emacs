@@ -908,13 +908,12 @@ tags:
          (base-path (concat xtm-dir "sessions/" name))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
-                  "(sys:load \"libs/xtm.xtm\")\n"
-                  "(sys:load \"" xtm-dir "lib/ben-lib-xtlang.xtm\")\n"
+                  "(sys:load \"libs/external/instruments_ext.xtm\")\n"
                   "(sys:load \"" xtm-dir "lib/ben-lib-scheme.xtm\")\n"
                   "(ipc:load \"utility\" \"" xtm-dir "lib/ben-lib-scheme.xtm\")\n"
                   "(sys:load \"" xtm-dir "lib/sampler-maps.xtm\")\n"
                   "(ipc:load \"utility\" \"" xtm-dir "lib/sampler-maps.xtm\")\n\n"
-                  "(bind-func dsp:[SAMPLE,SAMPLE,i64,i64,SAMPLE*]*\n"
+                  "(bind-func dsp:DSP\n"
                   "  (lambda (in time chan dat)\n"
                   "    0.0))\n\n"
                   ";; (ipc:bind-func \"utility\" 'instname)\n"
