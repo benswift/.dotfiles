@@ -5,6 +5,6 @@
 (define ${1:fun-name}
   (lambda (beat ${2:dur}$3)
     $0
-    (cv-callback (*metro* (+ beat (* .5 ${2:$(if (string-match "dlist" yas-text) "(car dlist)" "dur")}))) '$1 (+ beat ${2:$(if (string-match "dlist" yas-text) "(car dlist)" "dur")})${2:$(if yas-text (mapconcat (lambda (sym) (if (string-match "list" sym) (format "\n              (rotate %s -1)" sym) (concat " " sym))) (split-string yas-text) "") "")}${3:$(if yas-text (mapconcat (lambda (sym) (if (string-match "list" sym) (format "\n              (rotate %s -1)" sym) (concat " " sym))) (split-string yas-text) "") "")})))
+    (callback (*metro* (+ beat (* .5 ${2:$(if (string-match "dlist" yas-text) "(car dlist)" "dur")}))) '$1 (+ beat ${2:$(if (string-match "dlist" yas-text) "(car dlist)" "dur")})${2:$(if yas-text (mapconcat (lambda (sym) (if (string-match "list" sym) (format "\n              (rotate %s -1)" sym) (concat " " sym))) (split-string yas-text) "") "")}${3:$(if yas-text (mapconcat (lambda (sym) (if (string-match "list" sym) (format "\n              (rotate %s -1)" sym) (concat " " sym))) (split-string yas-text) "") "")})))
 
 ($1 (*metro* 'get-beat ${4:4}) ${5:1/4})
