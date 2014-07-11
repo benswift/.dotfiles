@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: fold-mod
+# key: fm
+# binding: direct-keybinding
+# --
+(if (${1:=} (foldl modulo beat '($2)) ${3:0})$0)

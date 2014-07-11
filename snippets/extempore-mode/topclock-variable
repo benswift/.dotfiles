@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: topclock-variable
+# key: tcvar
+# binding: direct-keybinding
+# --
+(topclock-variable (now) '${1:var-name} (*metro* 'get-beat ${2:4}) 0 $0)
