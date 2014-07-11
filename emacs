@@ -908,17 +908,9 @@ tags:
          (base-path (concat xtm-dir "sessions/" name))
          (setup-header
           (concat ";;; setup.xtm --- setup file for " name "\n"
-                  "(sys:load \"libs/external/instruments_ext.xtm\")\n"
-                  "(sys:load \"" xtm-dir "lib/ben-lib-scheme.xtm\")\n"
-                  "(ipc:load \"utility\" \"" xtm-dir "lib/ben-lib-scheme.xtm\")\n"
-                  "(sys:load \"" xtm-dir "lib/sampler-maps.xtm\")\n"
-                  "(ipc:load \"utility\" \"" xtm-dir "lib/sampler-maps.xtm\")\n\n"
-                  "(bind-func dsp:DSP\n"
-                  "  (lambda (in time chan dat)\n"
-                  "    0.0))\n\n"
-                  ";; (ipc:bind-func \"utility\" 'instname)\n"
-                  "(ipc:audio-setup \"utility\")\n"
-                  "(dsp:set! dsp)")))
+                  "(sys:load \"" xtm-dir "lib/benlib-scm.xtm\")\n"
+                  "(ipc:load \"utility\" \"" xtm-dir "lib/benlib-scm.xtm\")\n\n"
+                  "dspmt")))
     (if (file-exists-p base-path)
         (error "Cannot create xtm session: directory already exists."))
     (make-directory base-path)
