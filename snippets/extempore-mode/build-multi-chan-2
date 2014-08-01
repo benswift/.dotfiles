@@ -9,4 +9,4 @@
 	      (i:i64 0))
           (dotimes (i nchan) (pset! $1_buf i ($1_c$2)))
 	  (lambda (chan${4:osc-args})
-	    ((pref $1_buf (dtoi64 chan))$4))))))
+	    ((pref $1_buf chan)$4))))))
