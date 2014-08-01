@@ -1126,6 +1126,13 @@ instead, and with a prefix argument, justify as well."
 
 (add-hook 'ess-R-post-run-hook 'ben-ess-R-post-run-hook)
 
+;;;;;;;;;;;
+;; julia ;;
+;;;;;;;;;;;
+
+(require 'ess-julia)
+(setq inferior-julia-program-name "julia")
+
 ;;;;;;;;;;;;
 ;; Python ;;
 ;;;;;;;;;;;;
