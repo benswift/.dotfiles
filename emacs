@@ -56,6 +56,7 @@
            ;; nrepl-ritz ;; shadows cider-mode
            org
            powerline
+           projectile
            rainbow-delimiters
            scss-mode
            smartparens
@@ -67,8 +68,6 @@
            zoom-frm))
   (if (not (package-installed-p package))
       (package-install package)))
-
-(global-set-key (kbd "C-c p") 'list-packages)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cross-platform setup ;;
@@ -771,6 +770,12 @@ tags:
 ;;              '("en_AU" "[[:alpha:]]" "[^[:alpha:]]" "" t ("-d" "/Library/Spelling/en_AU") nil iso-8859-1))
 
 ;; (setq rw-hunspell-dicpath-list '("/Library/Spelling"))
+
+;;;;;;;;;;;;;;;;
+;; projectile ;;
+;;;;;;;;;;;;;;;;
+
+(projectile-global-mode)
 
 ;;;;;;;;;
 ;; erc ;;
