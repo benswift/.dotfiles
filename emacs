@@ -22,7 +22,7 @@
 
 (dolist (package
          '(ac-nrepl
-           ac-cider-compliment
+           ac-cider
            ace-jump-mode
            ag
            auctex
