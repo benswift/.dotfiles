@@ -54,6 +54,7 @@
            monokai-theme
            multiple-cursors
            ;; nrepl-ritz ;; shadows cider-mode
+           osc
            org
            powerline
            projectile
