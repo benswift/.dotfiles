@@ -15,6 +15,7 @@ export EXT_LLVM_DIR=~/Code/extempore/llvm-build
 
 export PATH=~/.linuxbrew/bin:$PATH
 export LD_LIBRARY_PATH=~/.linuxbrew/lib
+export EXT_LLVM_DIR=~/.linuxbrew/Cellar/extempore-llvm/3.4.1
 
 # set up rbenv
 rbenv rehash 2>/dev/null
