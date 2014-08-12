@@ -35,6 +35,13 @@ sudo apt-get install nvidia-current
 then launch the 'additional drivers' program/tool to select the
 latest driver
 
+
+** Fedora 20
+
+*** Emacs
+
+sudo yum install emacs
+
 * OSX
 
 ** homebrew
