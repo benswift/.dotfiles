@@ -1,0 +1,46 @@
+* Linux
+
+** Ubuntu 14.04
+
+*** keybindings
+
+sudo apt-get install gnome-tweak-tool
+
+- set caps lock to control
+- switch alt and win keys
+
+*** ssh keys
+
+these instructions are from GitHub
+
+# to set up a new key
+ssh-keygen -t rsa -C "benjamin.j.swift@gmail.com"
+sudo apt-get install xclip
+xclip -sel clip < ~/.ssh/id_rsa.pub
+
+*** emacs
+
+sudo apt-get install emacs24
+
+*** fonts
+
+sudo apt-get install fonts-source-code-pro-otf
+
+*** graphics
+
+sudo add-apt-repository ppa:xorg-edgers/ppa -y
+sudo apt-get update
+sudo apt-get install nvidia-current
+
+then launch the 'additional drivers' program/tool to select the
+latest driver
+
+* OSX
+
+** homebrew
+
+here are some useful packages:
+
+TODO populate list
+
+don't forget to install cask as well
