@@ -858,7 +858,7 @@ tags:
 ;; extempore ;;
 ;;;;;;;;;;;;;;;
 
-(setq user-extempore-directory "~/Code/extempore/")
+(setq user-extempore-directory "/home/ben/.linuxbrew/Cellar/extempore/0.56/")
 (autoload 'extempore-mode (concat user-extempore-directory "extras/extempore.el") "" t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-to-list 'dash-at-point-mode-alist '(extempore-mode . "gl4,gl3,gl2,c,c++,osx"))
