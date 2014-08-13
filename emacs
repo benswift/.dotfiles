@@ -404,16 +404,6 @@ i.e. change right window to bottom, or change bottom window to right."
 (setq powerline-default-separator 'slant)
 (setq powerline-height 30)
 
-;; monokai has changed the way it does it's colours - so this no longer works
-
-;; (set-face-attribute 'mode-line nil :foreground monokai-bg-1 :background monokai-cyan-1)
-;; (set-face-attribute 'mode-line-inactive nil :foreground monokai-fg :background monokai-bg+1)
-;; (set-face-attribute 'mode-line-buffer-id nil :foreground monokai-bg-1)
-;; (set-face-attribute 'powerline-active1 nil :foreground monokai-fg-1 :background monokai-bg)
-;; (set-face-attribute 'powerline-active2 nil :foreground monokai-fg-1 :background monokai-bg-1)
-;; (set-face-attribute 'powerline-inactive1 nil :foreground monokai-fg-1 :background monokai-bg)
-;; (set-face-attribute 'powerline-inactive2 nil :foreground monokai-fg-1 :background monokai-bg-1)
-
 (defun powerline-ben-theme ()
   "Ben's powerline theme, based on \\[powerline-default-theme]"
   (interactive)
