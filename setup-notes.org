@@ -42,6 +42,14 @@ latest driver
 
 sudo yum install emacs
 
+*** Linuxbrew
+
+need wget to do the 'one-line install', which isn't installed by
+default.
+
+sudo yum install gcc-c++ (clang doesn't get detected by configure)
+sudo yum install patch
+
 * OSX
 
 ** homebrew
