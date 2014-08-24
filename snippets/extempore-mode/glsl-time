@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: glsl-time
+# key: gtime
+# binding: direct-keybinding
+# --
+${1:min}+${2:amp}*cos(time*6.28*${3:freq})
