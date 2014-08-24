@@ -848,25 +848,26 @@ tags:
 ;; extempore ;;
 ;;;;;;;;;;;;;;;
 
-(setq user-extempore-directory "/home/ben/.linuxbrew/Cellar/extempore/0.56/")
-(autoload 'extempore-mode (concat user-extempore-directory "extras/extempore.el") "" t)
-(add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
-(add-to-list 'dash-at-point-mode-alist '(extempore-mode . "gl4,gl3,gl2,c,c++,osx"))
-
 ;; extempore customisation
 (setq extempore-tab-completion nil)
 
 ;; device-specific Extempore config
 (cond
  ((string= system-name "lonyx")
-  (setq extempore-program-args "--device 0 --frames 1024"))
+  (setq extempore-program-args "--device 0 --frames 1024")
+  (setq user-extempore-directory "/home/ben/.linuxbrew/Cellar/extempore/0.56/"))
  ((string= system-name "cyril.local")
   (setq extempore-program-args "--device 2 --frames 1024"))
  ((string= system-name "hodgey.local")
-  (setq extempore-program-args "--device 1 --frames 1024"))
+  (setq extempore-program-args "--device 1 --frames 1024")
+  (setq user-extempore-directory "/Users/ben/Code/extempore/"))
  ((string= system-name "hodgey-ubuntu")
   (setq extempore-program-args "--device 0 --frames 1024"))
  (t nil))
+
+(autoload 'extempore-mode (concat user-extempore-directory "extras/extempore.el") "" t)
+(add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
+(add-to-list 'dash-at-point-mode-alist '(extempore-mode . "gl4,gl3,gl2,c,c++,osx"))
 
 (defun ben-extempore-mode-hook ()
   (turn-on-eldoc-mode)
