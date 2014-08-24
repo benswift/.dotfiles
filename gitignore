@@ -39,9 +39,11 @@ auto/
 *~
 .\#*
 *.elc
-
-# yasnippet
-
+cscope.files
+cscope.out
+TAGS
+.dir-locals.el
+.projectile
 .yas-compiled-snippets.el
 
 # Sublime Text
