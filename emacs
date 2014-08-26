@@ -883,8 +883,13 @@ tags:
 
 (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
+;; more extempore-related goodies
+
 (autoload #'llvm-mode (concat user-extempore-directory "extras/llvm-mode.el")
   "Major mode for editing LLVM IR files" t)
+
+(autoload #'lldb (concat user-extempore-directory "extras/gud-lldb.el")
+  "A version of gud.el which supports debugging in LLDB." t)
 
 (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode))
 (add-to-list 'auto-mode-alist '("\\.ll$" . llvm-mode))
