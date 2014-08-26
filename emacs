@@ -29,6 +29,7 @@
            auto-complete
            bookmark+
            cider
+           cmake-mode
            clojure-snippets
            dash-at-point
            xcscope
