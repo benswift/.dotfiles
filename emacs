@@ -855,7 +855,7 @@ tags:
 (cond
  ((string= system-name "lonyx")
   (setq extempore-program-args "--device 0 --frames 1024")
-  (setq user-extempore-directory "/home/ben/.linuxbrew/Cellar/extempore/0.56/"))
+  (setq user-extempore-directory "/home/ben/Code/extempore/"))
  ((string= system-name "cyril.local")
   (setq extempore-program-args "--device 2 --frames 1024"))
  ((string= system-name "hodgey.local")
