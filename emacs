@@ -889,6 +889,9 @@ tags:
 (autoload #'llvm-mode (concat user-extempore-directory "extras/llvm-mode.el")
   "Major mode for editing LLVM IR files" t)
 
+;; to pull down the lldb-aware gud.el
+;; (async-shell-command (format "curl -o %sextras/gud-lldb.el http://www.opensource.apple.com/source/lldb/lldb-69/utils/emacs/gud.el?txt" user-extempore-directory))
+
 (autoload #'lldb (concat user-extempore-directory "extras/gud-lldb.el")
   "A version of gud.el which supports debugging in LLDB." t)
 
