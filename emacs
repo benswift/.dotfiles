@@ -356,7 +356,6 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; handy shortcuts
 
 (global-set-key (kbd "<f5>") 'magit-status)
-(global-set-key (kbd "<f6>") 'compile)
 (global-set-key (kbd "C-c g") 'ag)
 (global-set-key (kbd "C-c u") 'ag-dired)
 
@@ -768,6 +767,9 @@ tags:
 ;;;;;;;;;;;;;;;;
 
 (projectile-global-mode)
+
+(global-set-key (kbd "<f6>") 'projectile-compile-project)
+
 
 ;;;;;;;;;
 ;; erc ;;
