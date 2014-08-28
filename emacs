@@ -950,41 +950,35 @@ tags:
                  " ")
     pl-str))
 
-(defvar extempore-yas-expansion-list-oscmc_c
-  '(("osc" "0." "chan amp freq")
-    ("square" "0." "chan amp freq n")
-    ("triangle" "0." "chan amp freq n")
-    ("rect" "0." "chan amp freq duty")
-    ("saw" "0." "chan amp freq")
-    ("pulse" "" "chan amp freq width")
-    ("fade" "" "chan initial final dur")
-    ("delay" "2 max_delay_samps" "chan in wet fb")
-    ("comb" "2 max_delay_samps" "chan in delay wet fb")
-    ("flanger" "2 delay mod_phase mod_range mod_rate" "chan in wet fb")
-    ("chorus" "2 phase" "chan in wet fb")
-    ("tap_delay" "2 max_delay_samps ntaps" "chan in")
-    ("allpass" "2 delay_sec" "chan in wet")
-    ("reverb" "2 size_ms" "chan in wet fb")
-    ("hold" "2" "chan in h")
-    ("lpf" "2" "chan in cutoff res")
-    ("hpf" "2" "chan in cutoff res")
-    ("bpf" "2" "chan in cutoff res")
-    ("notch" "2" "chan in cutoff res")
-    ("peak" "2" "chan in cutoff res")
-    ("lshelf" "2" "chan in cutoff gain Q")
-    ("hshelf" "2" "chan in cutoff gain Q")
-    ("vcf" "type chan" "chan in freq res")
-    ("hann" "" "chan width")
-    ("linear" "start end dur" "chan inc")))
+(defvar extempore-yas-oscillator-list '("osc" "square" "triangle" "rect" "saw" "pulse" "fade" "delay" "delay_t" "comb" "flanger" "chorus" "tap_delay" "allpass" "reverb" "reverb2" "hold" "svf" "lpf" "lpf2" "bpf" "hpf" "notch" "peak" "lshelf" "hshelf" "skf" "lpfbq" "hpfbq" "bpfbq" "notchbq" "vcf" "hann" "hann_t" "linear"))
 
-(defun extempore-yas-oscmc_c-expander (type construct-p)
-  (let ((res (cl-find-if (lambda (x) (string= (car x) type))
-                         extempore-yas-expansion-list-oscmc_c)))
-    (if res
-        (if construct-p
-            (cadr res)
-          (caddr res))
-      "")))
+;; (let ((extempore-snippet-dir
+;;        "/Users/ben/.dotfiles/snippets/extempore-mode"))
+;;   (dolist (name extempore-yas-oscillator-list)
+;;     (with-temp-buffer
+;;       (insert (format "# -*- mode: snippet -*-
+;; # name: %s
+;; # key: %screate
+;; # --
+;; " name name))
+;;       (insert (format "(%s_mc_c ${1:nchan} ${2:})" name))
+;;       (write-region (point-min)
+;;                     (point-max)
+;;                     (format "%s/%s-create"
+;;                             extempore-snippet-dir
+;;                             name)))
+;;     (with-temp-buffer
+;;       (insert (format "# -*- mode: snippet -*-
+;; # name: %s
+;; # key: %scall
+;; # --
+;; " name name))
+;;       (insert (format "(%s ${1:chan} ${2:})" name))
+;;       (write-region (point-min)
+;;                     (point-max)
+;;                     (format "%s/%s-call"
+;;                             extempore-snippet-dir
+;;                             name)))))
 
 ;;;;;;;;;;;;;;;;;
 ;; smartparens ;;
