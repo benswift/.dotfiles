@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: osc-mc
-# key: oscmc
+# key: osc
 # --
-(${1:$$(yas-choose-value (mapcar #'car extempore-yas-expansion-list-oscmc_c))} $0${1:$(extempore-yas-oscmc_c-expander yas-text nil)})
+(${1:$$(yas-choose-value extempore-yas-oscillator-list)}_c $1call)

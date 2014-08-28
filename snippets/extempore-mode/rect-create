@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: rect
+# key: rectcreate
+# --
+(rect_mc_c ${1:phase})

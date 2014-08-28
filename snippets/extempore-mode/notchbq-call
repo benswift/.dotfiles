@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: notchbq
+# key: notchbqcall
+# --
+(notchbq ${1:chan} ${2:})

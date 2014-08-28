@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: notch
+# key: notchcreate
+# --
+(notch_mc_c ${1:nchan})

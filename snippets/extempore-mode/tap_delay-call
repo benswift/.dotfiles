@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: tap_delay
+# key: tap_delaycall
+# --
+(tap_delay ${1:chan} ${2:in})

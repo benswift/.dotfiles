@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: hshelf
+# key: hshelfcall
+# --
+(hshelf ${1:chan} ${2:in} ${3:cutoff} ${4:gain} ${5:Q})

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: lpfbq
+# key: lpfbqcall
+# --
+(lpfbq ${1:chan} ${2:})

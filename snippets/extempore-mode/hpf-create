@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: hpf
+# key: hpfcreate
+# --
+(hpf_mc_c ${1:nchan})

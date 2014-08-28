@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: chorus
+# key: choruscreate
+# --
+(chorus_mc_c ${1:nchan} ${2:phase})

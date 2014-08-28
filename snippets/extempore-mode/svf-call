@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: svf
+# key: svfcall
+# --
+(svf ${1:chan} ${2:})

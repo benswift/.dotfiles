@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: osc
+# key: osccreate
+# --
+(osc_mc_c ${2:phase})

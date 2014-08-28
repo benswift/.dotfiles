@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: fade
+# key: fadecall
+# --
+(fade ${1:chan} ${2:initial} ${3:final} ${4:duration})

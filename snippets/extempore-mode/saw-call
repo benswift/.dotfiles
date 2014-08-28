@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: saw
+# key: sawcall
+# --
+(saw ${1:chan} ${2:amp} ${3:freq})

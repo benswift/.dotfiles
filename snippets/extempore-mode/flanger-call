@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: flanger
+# key: flangercall
+# --
+(flanger ${1:chan} ${2:in} ${3:wet} ${4:fb})

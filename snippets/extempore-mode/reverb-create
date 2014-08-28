@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: reverb
+# key: reverbcreate
+# --
+(reverb_mc_c ${1:nchan} ${2:size})

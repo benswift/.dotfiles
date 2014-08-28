@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: peak
+# key: peakcreate
+# --
+(peak_mc_c ${1:nchan})

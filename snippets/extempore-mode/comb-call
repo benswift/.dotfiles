@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: comb
+# key: combcall
+# --
+(comb ${1:chan} ${2:in} ${3:delay} ${4:wet} ${5:fb})

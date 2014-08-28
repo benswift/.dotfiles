@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pulse
+# key: pulsecreate
+# --
+(pulse_mc_c)

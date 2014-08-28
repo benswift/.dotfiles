@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: vcf
+# key: vcfcall
+# --
+(vcf ${1:chan} ${2:})
