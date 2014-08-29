@@ -2,5 +2,5 @@
 # name: sampler-setup
 # key: dsamp
 # --
-(define-sampler ${1:sampler-name} sampler_note_hermite_c sampler_fx)
-(sm-load-map $1 ${2:sample-map})
+(define-sampler ${1:sampler-name} sampler_note_hermite_c sampler${2:1}_fx)
+(sm-load-map $1 ${3:$$(yas-choose-value (extempore-yas-get-sample-map-list))})

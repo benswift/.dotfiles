@@ -950,6 +950,17 @@ tags:
 
 (defvar extempore-yas-oscillator-list '("osc" "square" "triangle" "rect" "saw" "pulse" "fade" "delay" "delay_t" "comb" "flanger" "chorus" "tap_delay" "allpass" "reverb" "reverb2" "hold" "svf" "lpf" "lpf2" "bpf" "hpf" "notch" "peak" "lshelf" "hshelf" "skf" "lpfbq" "hpfbq" "bpfbq" "notchbq" "vcf" "hann" "hann_t" "linear"))
 
+(defun extempore-yas-get-sample-map-list ()
+  (if (boundp 'user-extempore-lib-directory)
+      (with-temp-buffer (insert-file-contents (concat user-extempore-lib-directory "sampler-maps.xtm"))
+                        (goto-char (point-min))
+                        (labels ((sm-parse-fn (sm-list)
+                                              (if (re-search-forward "(define \\(*sm-[^ \n]*\\)" nil :no-error)
+                                                  (funcall #'sm-parse-fn (cons (match-string-no-properties 1) sm-list))
+                                                sm-list)))
+                          (sm-parse-fn nil)))
+    '("")))
+
 ;; (let ((extempore-snippet-dir
 ;;        "/Users/ben/.dotfiles/snippets/extempore-mode"))
 ;;   (dolist (name extempore-yas-oscillator-list)
