@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: oscillator-call
+# key: osca
+# --
+${1:$$(yas-choose-value extempore-yas-oscillator-list)}call
