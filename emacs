@@ -27,7 +27,6 @@
            ag
            auctex
            auto-complete
-           bookmark+
            cider
            cmake-mode
            clojure-snippets
