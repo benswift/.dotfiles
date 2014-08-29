@@ -1,0 +1,5 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: pan2-call
+# key: pan2
+# --
+(pan2 ${1:in} ${2:chan} ${3:pan})
