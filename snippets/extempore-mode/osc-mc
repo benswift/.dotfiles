@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: osc-mc
-# key: osc
-# --
-(${1:$$(yas-choose-value extempore-yas-oscillator-list)}_c $1call)

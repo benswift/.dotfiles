@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: reverb2
+# name: reverb2-create
 # key: reverb2create
 # --
 (reverb2_mc_c ${1:nchan} ${2:})

@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: skf
+# name: skf-create
 # key: skfcreate
 # --
 (skf_mc_c ${1:nchan})

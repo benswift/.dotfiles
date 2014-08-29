@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: allpass
+# name: allpass-create
 # key: allpasscreate
 # --
 (allpass_mc_c ${1:nchan} ${2:delay})

@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: square
+# name: square-create
 # key: squarecreate
 # --
 (square_mc_c ${1:phase})

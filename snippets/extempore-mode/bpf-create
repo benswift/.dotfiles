@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: bpf
+# name: bpf-create
 # key: bpfcreate
 # --
 (bpf_mc_c ${1:nchan})

@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: comb
+# name: comb-create
 # key: combcreate
 # --
 (comb_mc_c ${1:nchan} ${2:max_delay})

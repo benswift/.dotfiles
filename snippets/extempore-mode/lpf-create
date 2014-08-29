@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: lpf
+# name: lpf-create
 # key: lpfcreate
 # --
 (lpf_mc_c ${1:nchan})

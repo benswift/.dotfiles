@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: vcf
+# name: vcf-create
 # key: vcfcreate
 # --
 (vcf_mc_c ${1:nchan} ${2:})

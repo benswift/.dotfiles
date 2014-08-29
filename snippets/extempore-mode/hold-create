@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: hold
+# name: hold-create
 # key: holdcreate
 # --
 (hold_mc_c ${1:nchan})

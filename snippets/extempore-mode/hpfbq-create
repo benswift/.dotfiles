@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: hpfbq
+# name: hpfbq-create
 # key: hpfbqcreate
 # --
 (hpfbq_mc_c ${1:nchan} ${2:})

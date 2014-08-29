@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: lpf2
+# name: lpf2-create
 # key: lpf2create
 # --
 (lpf2_mc_c ${1:nchan} ${2:})

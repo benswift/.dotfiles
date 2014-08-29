@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: lshelf
+# name: lshelf-create
 # key: lshelfcreate
 # --
 (lshelf_mc_c ${1:nchan})

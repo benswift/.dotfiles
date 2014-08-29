@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: linear
+# name: linear-create
 # key: linearcreate
 # --
 (linear_mc_c ${1:start} ${2:end} ${3:dur})

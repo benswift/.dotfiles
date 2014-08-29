@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: svf
+# name: svf-create
 # key: svfcreate
 # --
 (svf_mc_c ${1:nchan} ${2:})
