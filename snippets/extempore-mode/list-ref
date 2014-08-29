@@ -1,0 +1,5 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: list-ref
+# key: lref
+# --
+(list-ref ${1:lst} (min ${2:int-idx} (- (length $1) 1)))
