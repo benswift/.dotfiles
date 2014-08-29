@@ -978,6 +978,17 @@ tags:
 ;;                             extempore-snippet-dir
 ;;                             name)))))
 
+;; (let* ((snippet-dir "/Users/ben/.dotfiles/snippets/extempore-mode/")
+;;        (snippets (directory-files snippet-dir)))
+;;   (dolist (filename snippets)
+;;     (if (string-match "\\(-create\\)" filename)
+;;         (with-current-buffer (find-file (format "%s%s"
+;;                                                 snippet-dir
+;;                                                 filename))
+;;           (while (re-search-forward "# name: .*$" nil t)
+;;             (replace-match (concat (match-string 0) "-create") t nil))
+;;           (save-buffer)))))
+
 ;;;;;;;;;;;;;;;;;
 ;; smartparens ;;
 ;;;;;;;;;;;;;;;;;
