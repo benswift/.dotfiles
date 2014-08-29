@@ -858,12 +858,12 @@ tags:
 (cond
  ((string= system-name "lonyx")
   (setq extempore-program-args "--device 0 --frames 1024")
-  (setq user-extempore-directory "/home/ben/Code/extempore/"))
+  (setq user-extempore-directory "/home/ben/Code/extempore/")
+  (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
  ((string= system-name "hodgey.local")
   (setq extempore-program-args "--device 1 --frames 1024")
-  (setq user-extempore-directory "/Users/ben/Code/extempore/"))
- ((string= system-name "hodgey-ubuntu")
-  (setq extempore-program-args "--device 0 --frames 1024"))
+  (setq user-extempore-directory "/Users/ben/Code/extempore/")
+  (setq user-extempore-lib-directory "/Users/ben/Code/xtm/lib/"))
  (t nil))
 
 (autoload 'extempore-mode (concat user-extempore-directory "extras/extempore.el") "" t)
