@@ -953,12 +953,20 @@ tags:
   (if (boundp 'user-extempore-lib-directory)
       (with-temp-buffer (insert-file-contents (concat user-extempore-lib-directory "sampler-maps.xtm"))
                         (goto-char (point-min))
-                        (labels ((sm-parse-fn (sm-list)
-                                              (if (re-search-forward "(define \\(*sm-[^ \n]*\\)" nil :no-error)
-                                                  (funcall #'sm-parse-fn (cons (match-string-no-properties 1) sm-list))
-                                                sm-list)))
+                        (cl-labels ((sm-parse-fn (sm-list)
+                                                 (if (re-search-forward "(define \\(*sm-[^ \n]*\\)" nil :no-error)
+                                                     (funcall #'sm-parse-fn (cons (match-string-no-properties 1) sm-list))
+                                                   sm-list)))
                           (sm-parse-fn nil)))
     '("")))
+
+(defun extempore-yas-get-chord-sym (maj-min)
+  ;; symbol lists from libs/core/pc_ivl.xtm
+  (mapcar #'symbol-name
+          (case maj-min
+            ('^ 5 '(i i6 i64 i7 i- i-7 n n6 ii ii6 ii7 ii9 ii^ ii^7 iii iii6 iii7 iii^ iii^7 iv iv6 iv7 iv- iv-7 v v6 v7 v- v-7 vi vi6 vi7 vi^ vi^7 viio viio7 vii vii7))
+            ('- '(i i6 i64 i7 i^ i^6 i^64 i^7 n n6 ii ii6 ii7 ii- ii-6 ii-7 ii^ ii^7 iii iii6 iii7 iii- iii-6 iii-7 iv iv6 iv7 iv^ iv^6 iv^7 v v^ v6 v7 v- v-6 v-6 v-7 vi vi6 vi7 vi- vi-6 vi-7 vii vii6 vii7 viio viio6 viio7))
+            (t nil))))
 
 ;; (let ((extempore-snippet-dir
 ;;        "/Users/ben/.dotfiles/snippets/extempore-mode"))
