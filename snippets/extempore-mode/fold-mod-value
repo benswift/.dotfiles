@@ -1,0 +1,5 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: fold-mod-value
+# key: fmv
+# --
+(max ${1:1/4} (foldl modulo beat '($0)))
