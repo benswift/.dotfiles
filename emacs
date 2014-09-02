@@ -56,11 +56,11 @@
            ;; nrepl-ritz ;; shadows cider-mode
            osc
            org
-           powerline
            projectile
            rainbow-delimiters
            scss-mode
            smartparens
+           smart-mode-line
            smex
            string-utils
            wgrep-ag
