@@ -395,6 +395,9 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (sml/setup)
 
+(add-to-list 'rm-blacklist " SP/s")
+(add-to-list 'rm-blacklist " Projectile[.*]")
+
 ;;;;;;;;;;;;;;;;;;;
 ;; ace-jump-mode ;;
 ;;;;;;;;;;;;;;;;;;;
