@@ -378,11 +378,6 @@ i.e. change right window to bottom, or change bottom window to right."
 (global-set-key (kbd "<M-backspace>") 'backward-kill-word)
 (global-set-key (kbd "<s-backspace>") (lambda () (interactive) (kill-visual-line 0)))
 
-(eval-after-load "magit"
-  '(cl-nsubstitute-if '(magit-auto-revert-mode "")
-                      (lambda (x) (equalp (car x) 'magit-auto-revert-mode))
-                      minor-mode-alist))
-
 ;;;;;;;;;;;;;;
 ;; zoom-frm ;;
 ;;;;;;;;;;;;;;
@@ -1144,11 +1139,6 @@ instead, and with a prefix argument, justify as well."
 (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
 (yas-global-mode 1)
 
-(eval-after-load "yasnippet"
-  '(cl-nsubstitute-if '(yas-minor-mode "")
-                      (lambda (x) (equalp (car x) 'yas-minor-mode))
-                      minor-mode-alist))
-
 ;;;;;;;;;;;;;;;;;;
 ;; autocomplete ;;
 ;;;;;;;;;;;;;;;;;;
@@ -1161,11 +1151,6 @@ instead, and with a prefix argument, justify as well."
 ;; (add-to-list 'ac-dictionary-directories (concat user-emacs-directory ".ac-dict"))
 ;; (setq ac-auto-start 2)
 ;; (ac-config-default)
-
-;; (eval-after-load "auto-complete"
-;;   '(cl-nsubstitute-if '(auto-complete-mode "")
-;;                       (lambda (x) (equalp (car x) 'auto-complete-mode))
-;;                       minor-mode-alist))
 
 ;; for using Clang autocomplete
 
