@@ -395,8 +395,12 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (sml/setup)
 
-(add-to-list 'rm-blacklist " SP/s")
-(add-to-list 'rm-blacklist " Projectile[.*]")
+(setq sml/name-width (cons 10 40))
+
+(setq rm-blacklist
+      (regexp-opt '(" SP/s"
+                    " MRev"
+                    " Projectile")))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; ace-jump-mode ;;
