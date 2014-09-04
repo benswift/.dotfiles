@@ -398,9 +398,12 @@ i.e. change right window to bottom, or change bottom window to right."
 (setq sml/name-width (cons 10 40))
 
 (setq rm-blacklist
-      (regexp-opt '(" SP/s"
-                    " MRev"
-                    " Projectile")))
+      (regexp-opt '("SP/s"
+                    "MRev"
+                    "Projectile"
+                    "Fly"
+                    "Ref"
+                    "Fill")))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; ace-jump-mode ;;
@@ -547,9 +550,7 @@ i.e. change right window to bottom, or change bottom window to right."
   (define-key org-mode-map (kbd "<C-S-up>") nil)
   (define-key org-mode-map (kbd "<C-S-down>") nil)
   (define-key org-mode-map (kbd "<C-S-right>") nil)
-  (define-key org-mode-map (kbd "<C-S-left>") nil)
-  ;; disable rainbow-delimiters
-  (rainbow-delimiters-mode-disable))
+  (define-key org-mode-map (kbd "<C-S-left>") nil))
 
 (add-hook 'org-mode-hook 'ben-org-mode-hook)
 
@@ -1054,7 +1055,8 @@ instead, and with a prefix argument, justify as well."
 ;; rainwow-delimiters ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-(global-rainbow-delimiters-mode)
+;; enable in prog modes only
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 
 ;;;;;;;;;;;;;
 ;; clojure ;;
