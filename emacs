@@ -1064,7 +1064,7 @@ instead, and with a prefix argument, justify as well."
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; enable in prog modes only
-(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 
 ;;;;;;;;;;;;;
 ;; clojure ;;
