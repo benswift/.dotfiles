@@ -35,6 +35,13 @@ sudo apt-get install nvidia-current
 then launch the 'additional drivers' program/tool to select the
 latest driver
 
+*** GLFW
+
+need these deps
+
+- libxrandr-dev
+- libxi-dev
+- libxcursor-dev
 
 ** Fedora 20
 
