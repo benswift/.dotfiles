@@ -42,6 +42,7 @@
            flatui-theme
            flx-ido
            flycheck
+           ggtags
            gist
            glsl-mode
            htmlize
