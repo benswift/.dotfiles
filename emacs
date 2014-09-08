@@ -32,7 +32,6 @@
            clojure-snippets
            company
            dash-at-point
-           xcscope
            elpy
            epl
            erc-hl-nicks
@@ -429,12 +428,10 @@ i.e. change right window to bottom, or change bottom window to right."
 (add-hook 'after-init-hook 'global-company-mode)
 
 ;;;;;;;;;;;;
-;; cscope ;;
+;; ggtags ;;
 ;;;;;;;;;;;;
 
-;; uses xcscope.el
-
-(cscope-setup)
+(add-hook 'prog-mode-hook #'ggtags-mode)
 
 ;;;;;;;;;;
 ;; dash ;;
