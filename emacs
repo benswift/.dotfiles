@@ -30,6 +30,7 @@
            cider
            cmake-mode
            clojure-snippets
+           company
            dash-at-point
            xcscope
            elpy
@@ -419,6 +420,12 @@ i.e. change right window to bottom, or change bottom window to right."
 (eval-after-load "ace-jump-mode"
   '(ace-jump-mode-enable-mark-sync))
 (define-key global-map (kbd "C-x SPC") 'ace-jump-mode-pop-mark)
+
+;;;;;;;;;;;;;
+;; company ;;
+;;;;;;;;;;;;;
+
+(add-hook 'after-init-hook 'global-company-mode)
 
 ;;;;;;;;;;;;
 ;; cscope ;;
