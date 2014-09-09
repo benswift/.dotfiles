@@ -57,6 +57,15 @@ default.
 sudo yum install gcc-c++ (clang doesn't get detected by configure)
 sudo yum install patch
 
+
+** Debian Wheezy
+
+*** emacs 24
+
+- add =deb http://http.debian.net/debian wheezy-backports main= to
+  =/etc/apt/sources.list=
+- =sudo apt-get -t wheezy-backports install emacs24=
+
 * OSX
 
 ** homebrew
