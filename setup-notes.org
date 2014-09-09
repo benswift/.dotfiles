@@ -57,7 +57,6 @@ default.
 sudo yum install gcc-c++ (clang doesn't get detected by configure)
 sudo yum install patch
 
-
 ** Debian Wheezy
 
 *** emacs 24
@@ -65,6 +64,14 @@ sudo yum install patch
 - add =deb http://http.debian.net/debian wheezy-backports main= to
   =/etc/apt/sources.list=
 - =sudo apt-get -t wheezy-backports install emacs24=
+
+*** source code pro
+
+- download latest font files (FontsOnly) from
+  http://sourceforge.net/projects/sourcecodepro.adobe/files/
+- create =~/.fonts/= folder if it doesn't exist
+- copy the font files into =~/.fonts= 
+- =fc-cache -f -v= to re-build your fonts info cache files
 
 * OSX
 
