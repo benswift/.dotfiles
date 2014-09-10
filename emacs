@@ -32,6 +32,7 @@
            clojure-snippets
            company
            dash-at-point
+           dockerfile-mode
            elpy
            epl
            erc-hl-nicks
