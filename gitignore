@@ -53,3 +53,10 @@ sublime-text-user-dir/Default (Linux).sublime-keymap
 sublime-text-user-dir/Default (OSX).sublime-keymap
 sublime-text-user-dir/Default (Windows).sublime-keymap
 sublime-text-user-dir/Package Control.*
+
+# GNU Global
+
+GPATH
+GRTAGS
+GSYMS
+GTAGS
