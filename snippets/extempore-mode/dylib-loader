@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: dylib-loader
-# --
-(define ${1:libname}
-  (let ((platform (sys:platform)))
-    (cond ((string=? platform "Linux") (sys:open-dylib "$1.so"))
-          ((string=? platform "Windows") (sys:open-dylib "$1.dll"))
-          ((string=? platform "OSX") (sys:open-dylib "$1.dylib"))
-          (else (print "Unknown platform: " platform)))))
