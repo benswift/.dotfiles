@@ -318,7 +318,8 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; hide certain minor modes from mode line
 
-(setq eldoc-minor-mode-string "")
+(setq eldoc-minor-mode-string nil)
+(setq eldoc-argument-case 'downcase)
 
 ;; pretty lambdas
 
