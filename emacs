@@ -1234,9 +1234,9 @@ instead, and with a prefix argument, justify as well."
 
 (global-set-key (kbd "C-c n") 'mc/insert-numbers)
 
-;;;;;;;;;;
-;; misc ;;
-;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; handy, misc. elisp functions ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun read-lines (fpath)
   "Return a list of lines of a file at at FPATH."
