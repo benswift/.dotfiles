@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: rampr
+# key: rampr
+# binding: direct-keybinding
+# --
+(rampr ${1:min} ${2:amp} ${3:freq})

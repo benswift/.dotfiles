@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: rectr
+# key: rectr
+# binding: direct-keybinding
+# --
+(rectr ${1:min} ${2:amp} ${3:freq})

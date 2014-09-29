@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: sinr
+# key: sinr
+# binding: direct-keybinding
+# --
+(sinr ${1:min} ${2:amp} ${3:freq})
