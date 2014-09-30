@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: define-val
+# key: dv
+# binding: direct-keybinding
+# --
+(define ${1:name} $0)
