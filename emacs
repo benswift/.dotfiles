@@ -1286,6 +1286,14 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 ;; (global-set-key (kbd "C-c d") 'duplicate-line)
 ;; (global-set-key (kbd "C-c b") 'comment-box)
 
+;; unstick "stuck" color codes in shell buffer
+
+(defun unstick-ansi-color-codes ()
+  (interactive)
+  (end-of-buffer)
+  (insert "echo -e \"\033[m\"")
+  (comint-send-input nil t))
+
 ;;;;;;;;;;;;;;;;;;
 ;; emacs server ;;
 ;;;;;;;;;;;;;;;;;;
