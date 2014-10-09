@@ -34,7 +34,6 @@
            dash-at-point
            dockerfile-mode
            elpy
-           epl
            erc-hl-nicks
            erc-terminal-notifier
            ess
