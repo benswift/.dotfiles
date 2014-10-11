@@ -1294,6 +1294,18 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
   (insert "echo -e \"\033[m\"")
   (comint-send-input nil t))
 
+;; church music helper functions
+
+(defun compile-church-chord-chart-pdf (num-songs)
+  (interactive "nNumber of songs: ")
+  (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
+         (chord-charts-dir (concat church-music-dir "chord-charts"))
+         (charts (loop repeat num-songs collect (ido-completing-read "chart: " (directory-files chord-charts-dir) nil :require-match))))
+    (cd chord-charts-dir)
+    (shell-command (format "pdfjam %s -o %s.pdf"
+                           (mapconcat #'identity charts " ")
+                           (format-time-string "%d-%b-%Y")))))
+
 ;;;;;;;;;;;;;;;;;;
 ;; emacs server ;;
 ;;;;;;;;;;;;;;;;;;
