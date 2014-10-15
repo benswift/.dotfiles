@@ -1299,12 +1299,14 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 (defun compile-church-chord-chart-pdf (num-songs)
   (interactive "nNumber of songs: ")
   (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
-         (chord-charts-dir (concat church-music-dir "chord-charts"))
-         (charts (loop repeat num-songs collect (ido-completing-read "chart: " (directory-files chord-charts-dir) nil :require-match))))
-    (cd chord-charts-dir)
-    (shell-command (format "pdfjam %s -o %s.pdf"
-                           (mapconcat #'identity charts " ")
-                           (format-time-string "%d-%b-%Y")))))
+         (chord-charts-dir (concat church-music-dir "chord-charts/"))
+         (output-filename (concat (format-time-string "%d-%b-%Y") ".pdf"))
+         (charts (loop repeat num-songs collect (ido-completing-read "chart: " (directory-files chord-charts-dir nil "\\.pdf") nil :require-match))))
+    (let ((default-directory chord-charts-dir))
+      (shell-command (format "pdfjam %s -o %s && open %s"
+                             (mapconcat #'identity charts " ")
+                             output-filename
+                             output-filename)))))
 
 ;;;;;;;;;;;;;;;;;;
 ;; emacs server ;;
