@@ -1,0 +1,7 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: sprintf
+# key: sprintf
+# binding: direct-keybinding
+# --
+(let ((${1:str}:i8* (zalloc 256)))
+  (sprintf $1 "${2:format_string}" $0))
