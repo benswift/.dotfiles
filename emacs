@@ -1108,6 +1108,13 @@ instead, and with a prefix argument, justify as well."
 (add-to-list 'auto-mode-alist '(".*gitconfig$" . conf-unix-mode))
 (add-to-list 'auto-mode-alist '(".*gitignore$" . conf-unix-mode))
 
+;;;;;;;;;;;;;
+;; systemd ;;
+;;;;;;;;;;;;;
+
+(add-to-list 'auto-mode-alist '("\\.service$" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.socket$" . conf-unix-mode))
+
 ;;;;;;;
 ;; R ;;
 ;;;;;;;
