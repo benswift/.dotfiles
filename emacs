@@ -1310,9 +1310,12 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
   (interactive "nNumber of songs: ")
   (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
          (chord-charts-dir (concat church-music-dir "chord-charts/"))
-         (output-filename (concat (format-time-string "%d-%b-%Y") ".pdf"))
-         (charts (loop repeat num-songs collect (ido-completing-read "chart: " (directory-files chord-charts-dir nil "\\.pdf") nil :require-match))))
-    (let ((default-directory chord-charts-dir))
+         (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
+         (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
+                             (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
+         (output-filename (format "~/Desktop/%s.pdf" (format-time-string "%d-%b-%Y")))
+         (charts (loop repeat num-songs collect (ido-completing-read "chart: " candidates nil :require-match))))
+    (let ((default-directory church-music-dir))
       (shell-command (format "pdfjam %s -o %s && open %s"
                              (mapconcat #'identity charts " ")
                              output-filename
