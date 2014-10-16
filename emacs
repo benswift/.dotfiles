@@ -33,6 +33,7 @@
            company
            dash-at-point
            dockerfile-mode
+           xcscope
            elpy
            erc-hl-nicks
            erc-terminal-notifier
@@ -429,10 +430,12 @@ i.e. change right window to bottom, or change bottom window to right."
 (add-hook 'after-init-hook 'global-company-mode)
 
 ;;;;;;;;;;;;
-;; ggtags ;;
+;; cscope ;;
 ;;;;;;;;;;;;
 
-(add-hook 'prog-mode-hook #'ggtags-mode)
+;; uses xcscope.el
+
+(cscope-setup)
 
 ;;;;;;;;;;
 ;; dash ;;
