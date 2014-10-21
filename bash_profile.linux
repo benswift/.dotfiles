@@ -17,23 +17,12 @@ export PATH=~/.linuxbrew/bin:$PATH
 export LD_LIBRARY_PATH=~/.linuxbrew/lib
 export EXT_LLVM_DIR=~/.linuxbrew/Cellar/extempore-llvm/3.4.1
 
-# set up rbenv
-rbenv rehash 2>/dev/null
-rbenv() {
-  command="$1"
-  if [ "$#" -gt 0 ]; then
-    shift
-  fi
-
-  case "$command" in
-  shell)
-    eval `rbenv "sh-$command" "$@"`;;
-  *)
-    command rbenv "$command" "$@";;
-  esac
-}
-
 # Aliases
+
+alias agu="sudo apt-get update && sudo apt-get upgrade"
+alias eject-buddy="diskutil eject /Volumes/Buddy/"
+alias radios-on="blueutil power 1 && networksetup -setairportpower en1 on"
+alias radios-off="blueutil power 0 && networksetup -setairportpower en1 off"
 
 # List all files colorized in long format, including dot files
 alias la="ls -Gla"

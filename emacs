@@ -451,7 +451,6 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; eshell ;;
 ;;;;;;;;;;;;
 
-(setq eshell-aliases-file "~/.dotfiles/eshell-alias")
 (global-set-key (kbd "C-c e") 'eshell)
 
 (defun ben-eshell-mode-hook ()
