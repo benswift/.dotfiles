@@ -437,6 +437,10 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (cscope-setup)
 
+(add-hook 'cscope-list-entry-hook
+          (define-key cscope-list-entry-keymap (kbd "<backtab>") 'cscope-history-backward-line)
+          (define-key cscope-list-entry-keymap (kbd "<tab>") 'cscope-history-forward-line))
+
 ;;;;;;;;;;
 ;; dash ;;
 ;;;;;;;;;;
