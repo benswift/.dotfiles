@@ -13,7 +13,8 @@ osx:
 	ln -sf $(DOTFILES_DIR)/profiles.clj ~/.lein/
 	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
 
-	ln -sf $(DOTFILES_DIR)/phoenix.js ~/.phoenix.js
+	ln -sf $(DOTFILES_DIR)/scripts/upgrade-packages-brew.sh $(DOTFILES_DIR)/scripts/upgrade-packages.sh
+	ln -sf $(DOTFILES_DIR)/scripts ~/bin
 
 linux:
 	ln -sf $(DOTFILES_DIR)/bash_profile.linux ~/.bash_profile
@@ -28,6 +29,9 @@ linux:
 	ln -sf $(DOTFILES_DIR)/profiles.clj ~/.lein/
 	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
 
+	ln -sf $(DOTFILES_DIR)/scripts/upgrade-packages-apt-get.sh $(DOTFILES_DIR)/scripts/upgrade-packages.sh
+	ln -sf $(DOTFILES_DIR)/scripts ~/bin
+
 clean:
 	rm -f ~/.RProfile
 	rm -f -d ~/.emacs.d/snippets
@@ -36,3 +40,4 @@ clean:
 	rm -f ~/.gitconfig
 	rm -f ~/.bash_profile
 	rm -f ~/.ssh/config
+	rm -f ~/bin

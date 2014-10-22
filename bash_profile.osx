@@ -30,13 +30,6 @@ export DOCKER_TLS_VERIFY=1
 
 export FLEETCTL_TUNNEL=127.0.0.1:2222
 
-# Aliases
-
-alias bu="brew update && brew upgrade"
-alias eject-buddy="diskutil eject /Volumes/Buddy/"
-alias radios-on="blueutil power 1 && networksetup -setairportpower en1 on"
-alias radios-off="blueutil power 0 && networksetup -setairportpower en1 off"
-
 # List all files colorized in long format, including dot files
 alias la="ls -Gla"
 
