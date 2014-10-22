@@ -838,7 +838,9 @@ tags:
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
  (t nil))
 
-(autoload 'extempore-mode (concat user-extempore-directory "extras/extempore.el") "" t)
+(autoload 'extempore-mode (concat user-extempore-directory "extras/extempore.el") nil t)
+(autoload 'extempore-run (concat user-extempore-directory "extras/extempore.el") nil t)
+(autoload 'extempore-repl (concat user-extempore-directory "extras/extempore.el") nil t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-to-list 'dash-at-point-mode-alist '(extempore-mode . "gl4,gl3,gl2,c,c++,osx"))
 
