@@ -298,23 +298,7 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (global-set-key (kbd "C-c t") 'set-current-frame-alpha)
 
-;; fullscreen
-
-(defcustom frame-maximization-mode 'maximized
-  "The maximization style of \\[toggle-frame-maximized]."
-  :type '(choice
-          (const :tab "Respect window manager screen decorations." maximized)
-          (const :tab "Ignore window manager screen decorations." fullscreen))
-  :group 'frames)
-
-(defun toggle-frame-maximized ()
-  "Maximize/un-maximize Emacs frame according to `frame-maximization-mode'."
-  (interactive)
-  (modify-frame-parameters
-   nil `((fullscreen . ,(if (frame-parameter nil 'fullscreen)
-                            nil frame-maximization-mode)))))
-
-(define-key global-map (kbd "C-s-f") 'toggle-frame-maximized)
+(define-key global-map (kbd "C-s-f") 'toggle-frame-fullscreen)
 
 ;; hide certain minor modes from mode line
 
@@ -1340,4 +1324,4 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 ;; toggle fullscreen
 
 (if (display-graphic-p)
-    (toggle-frame-maximized))
+    (toggle-frame-fullscreen))
