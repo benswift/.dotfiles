@@ -2,7 +2,7 @@
 # name: set-up-instrument
 # key: sinst
 # --
-(define-instrument ${1:inst} $1_note_c $1_fx)
+(bind-instrument ${1:inst} $1_note_c $1_fx)
 
 ($1.attack 200.0)
 ($1.decay 200.0)

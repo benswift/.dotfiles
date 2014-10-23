@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# key: dinst
-# name: define-inst
+# key: binst
+# name: bind-instrument
 # --
 (bind-func ${1:name}_note_c
   (lambda (nargs:i64 dargs:SAMPLE*)
@@ -11,7 +11,7 @@
   (lambda (in:SAMPLE time:i64 chan:i64 dat:SAMPLE*)
     in))
 
-(define-instrument $1 $1_note_c $1_fx)
+(bind-instrument $1 $1_note_c $1_fx)
 (ipc:bind-func "${2:utility}" '$1)
 
 ($1.attack 200.0)
