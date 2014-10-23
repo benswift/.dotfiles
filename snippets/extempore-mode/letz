@@ -3,4 +3,4 @@
 # key: letz
 # binding: direct-keybinding
 # --
-(letz 1024 (($0)))
+(letz (($0)))
