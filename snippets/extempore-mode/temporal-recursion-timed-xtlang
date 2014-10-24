@@ -1,0 +1,12 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: temporal-recursion-timed-xtlang
+# key: trtx
+# binding: direct-keybinding
+# --
+(bind-func ${1:fun_name}
+  (lambda (time:i64 delta_t:double)
+    $0
+    (let ((next_time (+ time (convert (* 44100. delta_t)))))
+      (callback next_time $1 next_time delta_t))))
+
+($1 (now) ${2:1.0})
