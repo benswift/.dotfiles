@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: call-as-xtlang
+# key: cax
+# binding: direct-keybinding
+# --
+(call-as-xtlang $0)
