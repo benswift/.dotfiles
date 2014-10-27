@@ -3,5 +3,5 @@
 # key: df
 # binding: direct-keybinding
 # --
-(defun ${1:function-name} (${2:args})
+(defun ${1:function-name} ($2)
   $0)
