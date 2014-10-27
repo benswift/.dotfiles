@@ -856,6 +856,14 @@ tags:
 (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode))
 (add-to-list 'auto-mode-alist '("\\.ll$" . llvm-mode))
 
+;; lldb-GUD integration
+
+(defun ben-lldb-mode-hook ()
+  (if (string-match "^.*-extempore.*\\*$" (buffer-name))
+      (setq extempore-buffer (buffer-name))))
+
+(add-hook 'lldb-mode-hook 'ben-lldb-mode-hook)
+
 (defun extempore-create-template-file (base-path filename &optional header)
   (let ((full-path (format "%s/%s" base-path filename)))
     (unless (file-exists-p full-path)
