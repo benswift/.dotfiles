@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: string-append
+# key: sa
+# binding: direct-keybinding
+# --
+(string-append $0)
