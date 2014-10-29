@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
 # name: xtm-lib-header
-# key: xtmlibhead
+# key: libhead
 # --
 ;;; `(buffer-name)` -- $1
 
@@ -14,4 +14,25 @@
 
 ;;; Code:
 
-loaddylib$0
+(sys:load-preload-check '${5:libname})
+(define *xtmlib-$5-loaded* #f)
+
+;; set up the current dylib name and path (for precompilation)
+(sys:precomp:set-dylib-name-info
+ '${6:lib$5}
+ (cond ((string=? (sys:platform) "OSX")
+        "$6.dylib")
+       ((string=? (sys:platform) "Linux")
+        "$6.so")
+       ((string=? (sys:platform) "Windows")
+        "$6.dll")
+       (else
+        (begin (print-with-colors 'red 'default #f (print "Error"))
+               (print ": unsupported platform ")
+               (print-with-colors 'yellow 'default #f (print (sys:platform)))))))
+
+;; load the dylib               
+(define $6
+  (sys:load-dylib (cdr *sys:precomp:current-load-dylib-info*)))
+
+(define *xtmlib-$5-loaded* #t)
