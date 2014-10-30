@@ -60,6 +60,7 @@
            org
            projectile
            rainbow-delimiters
+           sane-term
            scss-mode
            smartparens
            smart-mode-line
