@@ -1334,4 +1334,6 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 ;; toggle fullscreen
 
 (if (display-graphic-p)
-    (toggle-frame-fullscreen))
+    (if (fboundp #'toggle-frame-fullscreen)
+        (toggle-frame-fullscreen)
+      (message "toggle-frame-fullscreen not defined - are you on Emacs 24.4 or greater?")))
