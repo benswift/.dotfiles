@@ -1,0 +1,1 @@
+/Users/ben/VMs/coreos-extempore/extempore-logview.sh
