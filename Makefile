@@ -26,7 +26,7 @@ linux:
 	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
 
 	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
-	ln -sf $(DOTFILES_DIR)/profiles.clj ~/.lein/
+	# ln -sf $(DOTFILES_DIR)/profiles.clj ~/.lein/
 	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
 
 	ln -sf $(DOTFILES_DIR)/scripts/upgrade-packages-apt-get.sh $(DOTFILES_DIR)/scripts/upgrade-packages.sh
