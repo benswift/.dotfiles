@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: ipc:eval-string
+# key: ipces
+# binding: direct-keybinding
+# --
+(ipc:eval-string "${1:utility}"$0)
