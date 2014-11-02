@@ -1,0 +1,11 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: temporal-recursion-now-xtlang
+# key: trnx
+# binding: direct-keybinding
+# --
+(bind-func ${1:fun_name}
+  (lambda ($2)
+    $0
+    (callback (+ (now) 1) $1$2)))
+
+($1$3)
