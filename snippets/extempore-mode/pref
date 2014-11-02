@@ -3,4 +3,4 @@
 # key: pref
 # binding: direct-keybinding
 # --
-(pref$1 ${2:dat} ${3:index})
+(pref ${1:dat} ${2:index})

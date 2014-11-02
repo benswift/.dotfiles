@@ -1,5 +1,6 @@
-# -*- mode: snippet -*-
+# -*- mode: snippet; require-final-newline: nil -*-
 # name: pset
 # key: pset
+# binding: direct-keybinding
 # --
 (pset! ${1:dat} ${2:index} ${3:value})
