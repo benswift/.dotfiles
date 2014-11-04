@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: pset-ref
+# key: psetr
+# binding: direct-keybinding
+# --
+(pset! ${1:dat} ${2:index} $0(pref $1 $2))
