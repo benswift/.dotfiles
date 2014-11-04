@@ -39,6 +39,7 @@
            erc-terminal-notifier
            ess
            exec-path-from-shell
+           fasm-mode
            flatui-theme
            flx-ido
            flycheck
@@ -740,8 +741,8 @@ tags:
 ;; LaTeX & reftex ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-(require 'latex)
-(require 'reftex)
+;; (require 'latex)
+;; (require 'reftex)
 
 (defun ben-latex-mode-hook ()
   (setq TeX-master t)
