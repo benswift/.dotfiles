@@ -976,6 +976,17 @@ tags:
 ;;             (replace-match (concat (match-string 0) "-create") t nil))
 ;;           (save-buffer)))))
 
+;;;;;;;;;;;;
+;; OpenCL ;;
+;;;;;;;;;;;;
+
+;; hopefully this will be added to MELPA at some stage, then we can
+;; just blow it away.
+
+(add-to-list 'load-path (concat user-emacs-directory "opencl-mode-emacs/"))
+(require 'opencl-mode nil :noerror)
+(add-to-list 'auto-mode-alist '("\\.cl\\'" . opencl-mode))
+
 ;;;;;;;;;;;;;;;;;
 ;; smartparens ;;
 ;;;;;;;;;;;;;;;;;
