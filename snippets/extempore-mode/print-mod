@@ -1,0 +1,8 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: print-mod
+# key: pm
+# binding: direct-keybinding
+# --
+(begin (if (= (% ${1:count} ${2:mod}) ${3:0})
+           pl$0)
+       (set! $1 (+ $1 1)))

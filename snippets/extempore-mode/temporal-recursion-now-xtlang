@@ -4,8 +4,8 @@
 # binding: direct-keybinding
 # --
 (bind-func ${1:fun_name}
-  (lambda ($2)
+  (lambda (delta_t$2)
     $0
-    (callback (+ (now) 1) $1$2)))
+    (callback (+ (now) delta_t) $1 delta_t$2)))
 
-($1$3)
+($1 ${3:44100})
