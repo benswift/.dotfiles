@@ -1,6 +1,6 @@
 * Linux
 
-** Ubuntu 14.04
+** Ubuntu 14.10
 
 *** keybindings
 
@@ -20,10 +20,13 @@ xclip -sel clip < ~/.ssh/id_rsa.pub
 
 *** emacs
 
-sudo apt-get install emacs24
+sudo add-apt-repository ppa:ubuntu-elisp/ppa
+sudo apt-get install emacs-snapshot
 
 *** fonts
 
+# not 100% sure if this ppa is necessary
+# sudo add-apt-repository ppa:unit193/sourcecodepro
 sudo apt-get install fonts-source-code-pro-otf
 
 *** graphics
