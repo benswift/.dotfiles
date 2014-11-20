@@ -28,7 +28,7 @@ export DOCKER_TLS_VERIFY=1
 
 # fleet
 
-export FLEETCTL_TUNNEL=127.0.0.1:2222
+export FLEETCTL_TUNNEL=10.211.55.11:22 # parallels vagrant provider
 
 # List all files colorized in long format, including dot files
 alias la="ls -Gla"
