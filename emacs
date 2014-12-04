@@ -741,8 +741,8 @@ tags:
 ;; LaTeX & reftex ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-;; (require 'latex)
-;; (require 'reftex)
+(require 'latex)
+(require 'reftex)
 
 (defun ben-latex-mode-hook ()
   (setq TeX-master t)
