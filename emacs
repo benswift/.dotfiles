@@ -1255,6 +1255,24 @@ instead, and with a prefix argument, justify as well."
 
 (global-set-key (kbd "C-c n") 'mc/insert-numbers)
 
+;; redefine mc/insert-numbers to do characters as well
+
+(defun mc/insert-numbers (num-or-char)
+  "Insert increasing numbers or characters for each cursor, starting at 0 or NUM-OR-CHAR."
+  (interactive "cStart from (default 0): ")
+  (setq mc--insert-numbers-number (if (= num-or-char (string-to-char (kbd "RET")))
+                                      ?0
+                                    num-or-char))
+  (mc/for-each-cursor-ordered
+   (mc/execute-command-for-fake-cursor 'mc--insert-number-and-increase cursor)))
+
+(defvar mc--insert-numbers-number ?0)
+
+(defun mc--insert-number-and-increase ()
+  (interactive)
+  (insert mc--insert-numbers-number)
+  (setq mc--insert-numbers-number (1+ mc--insert-numbers-number)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handy, misc. elisp functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
