@@ -2,4 +2,4 @@
 # name: scale
 # key: scl
 # --
-(+ ${1:dc} (* ${2:amp} $0))
+(+ (* $0 ${2:amp}) ${1:dc})
