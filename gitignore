@@ -46,6 +46,10 @@ TAGS
 .projectile
 .yas-compiled-snippets.el
 
+# this is just a symlink, so that the snippets
+# work in the repl as well
+snippets/extempore-repl-mode
+
 # Sublime Text
 
 sublime-text-user-dir/SublimeREPLHistory
