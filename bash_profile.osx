@@ -2,10 +2,6 @@
 
 export PATH="/Users/ben/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin"
 
-# needed for Yosemite?
-export C_INCLUDE_PATH="/usr/local/include:/usr/include"
-export CPLUS_INCLUDE_PATH="/usr/local/include:/usr/include"
-
 export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 
 # for debian packaging
