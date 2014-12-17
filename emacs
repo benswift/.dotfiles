@@ -61,6 +61,7 @@
            org
            projectile
            rainbow-delimiters
+           rtags
            sane-term
            scss-mode
            smartparens
@@ -415,17 +416,11 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (add-hook 'after-init-hook 'global-company-mode)
 
-;;;;;;;;;;;;
-;; cscope ;;
-;;;;;;;;;;;;
+;;;;;;;;;;;
+;; rtags ;;
+;;;;;;;;;;;
 
-;; uses xcscope.el
-
-(cscope-setup)
-
-(add-hook 'cscope-list-entry-hook
-          (define-key cscope-list-entry-keymap (kbd "<backtab>") 'cscope-history-backward-line)
-          (define-key cscope-list-entry-keymap (kbd "<tab>") 'cscope-history-forward-line))
+(rtags-enable-standard-keybindings)
 
 ;;;;;;;;;;
 ;; dash ;;
