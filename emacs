@@ -696,6 +696,11 @@ tags:
 "
              post-name post-url-basename))))
 
+(defun biott-push-to-gh-pages ()
+  (interactive)
+  (let ((default-directory "~/Code/clojure/benswift.me/"))
+    (async-shell-command "./gh-pages-deploy.sh")))
+
 ;;;;;;;;;;;;;;
 ;; hunspell ;;
 ;;;;;;;;;;;;;;
