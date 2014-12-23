@@ -1170,6 +1170,10 @@ instead, and with a prefix argument, justify as well."
          highlight-indentation-mode
          auto-complete-mode))
 
+;; scons
+
+(add-to-list 'auto-mode-alist '("SConstruct" . python-mode))
+
 ;;;;;;;;;;;;;;;
 ;; yasnippet ;;
 ;;;;;;;;;;;;;;;
