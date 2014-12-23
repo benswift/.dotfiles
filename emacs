@@ -682,7 +682,7 @@ i.e. change right window to bottom, or change bottom window to right."
   (let ((post-url-basename
          (concat (format-time-string "%Y-%m-%d-")
                  (downcase (biott-sanitise-post-name post-name)))))
-    (find-file (concat "~/Documents/biott/draft-posts/"
+    (find-file (concat "~/Documents/biott/posts/"
                        post-url-basename
                        ".org"))
     (insert (format
