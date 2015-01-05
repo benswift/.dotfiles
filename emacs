@@ -406,16 +406,6 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (setq mu4e-attachment-dir  "~/Downloads")
 
-;; signatures
-(setq mu4e-compose-signature nil)
-
-(defun message-signature ()
-  (concat
-   "Cheers,\nBen"
-   (if (string= 'to-address "benjamin.j.swift@gmail.com")
-       "\n\n P.S. I'm moving off this gmail address soon, my new address is benswift@fastmail.com - thanks :)"
-     nil)))
-
 ;; get mail
 (setq mu4e-get-mail-command "mbsync fastmail"
       mu4e-html2text-command "w3m -T text/html"
