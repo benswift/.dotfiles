@@ -3,6 +3,8 @@ DOTFILES_DIR=$(shell pwd)
 osx:
 	ln -sf $(DOTFILES_DIR)/bash_profile.osx ~/.bash_profile
 
+	ln -sf $(DOTFILES_DIR)/mbsyncrc ~/.mbsyncrc
+
 	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
 
@@ -17,6 +19,8 @@ osx:
 
 linux:
 	ln -sf $(DOTFILES_DIR)/bash_profile.linux ~/.bash_profile
+
+	ln -sf $(DOTFILES_DIR)/mbsyncrc ~/.mbsyncrc
 
 	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore

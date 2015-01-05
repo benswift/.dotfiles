@@ -1,0 +1,28 @@
+IMAPAccount fastmail
+Host mail.messagingengine.com
+Port 992
+User benswift@fastmail.com
+Pass ****
+UseIMAPS yes # Use SSL
+RequireSSL yes
+# CertificateFile /etc/ssl/certs/ca-certificates.crt
+
+IMAPStore fastmail-remote
+Account fastmail
+
+MaildirStore fastmail-local
+Path ~/Maildir/fastmail/
+Inbox ~/Maildir/fastmail/Inbox
+
+Channel fastmail
+Master :fastmail-remote:
+Slave :fastmail-local:
+Patterns "Inbox" "Drafts" "Sent Items" "Trash" "Archive" "Junk"
+Create Slave
+Sync All
+Expunge Both
+SyncState *
+
+## Local Variables:
+## mode: conf-unix
+## End:
