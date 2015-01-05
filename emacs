@@ -449,6 +449,18 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (global-set-key (kbd "C-c m") 'mu4e)
 
+;;;;;;;;;;;;;;
+;; osx-bbdb ;;
+;;;;;;;;;;;;;;
+
+;; to install, eval this in scratch buffer:
+
+;; (with-current-buffer (url-retrieve-synchronously
+;;                       "https://raw.github.com/chrisbarrett/osx-bbdb/master/osx-bbdb.el")
+;;   (call-interactively 'package-install-from-buffer))
+
+(setq osxb-timer-period 120)
+
 ;;;;;;;;;;;;;;;;;;;;;
 ;; smart mode line ;;
 ;;;;;;;;;;;;;;;;;;;;;
