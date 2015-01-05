@@ -25,6 +25,7 @@
            ac-cider
            ace-jump-mode
            ag
+           bbdb
            auctex
            auto-complete
            cider
