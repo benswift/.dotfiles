@@ -439,7 +439,9 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; mailing lists
 (setq mu4e-user-mailing-lists
-      '((""   . ?i)))
+      '(("extemporelang@googlegroups.com" . "Extempore")
+        ("livecode@group.lurk.org"        . "TOPLAP")
+        ("acma-l@list.waikato.ac.nz"      . "ACMA")))
 
 ;; spell check
 (add-hook 'mu4e-compose-mode-hook
