@@ -380,6 +380,75 @@ i.e. change right window to bottom, or change bottom window to right."
 (global-set-key (kbd "C-x C-=") 'zoom-in/out)
 (global-set-key (kbd "C-x C-0") 'zoom-in/out)
 
+;;;;;;;;;;;;;;;;
+;; mu (email) ;;
+;;;;;;;;;;;;;;;;
+
+(require 'smtpmail)
+
+;; smtp
+(setq message-send-mail-function 'smtpmail-send-it
+      smtpmail-starttls-credentials
+      '(("mail.messagingengine.com" 587 nil nil))
+      smtpmail-default-smtp-server "mail.messagingengine.com"
+      smtpmail-smtp-server "mail.messagingengine.com"
+      smtpmail-smtp-service 587
+      smtpmail-debug-info t)
+
+(require 'mu4e)
+
+(setq mu4e-maildir (expand-file-name "~/Maildir/fastmail"))
+
+(setq mu4e-sent-folder   "/Sent Items")
+(setq mu4e-refile-folder   "/Archive")
+(setq mu4e-drafts-folder "/Drafts")
+(setq mu4e-trash-folder  "/Trash")
+
+(setq mu4e-attachment-dir  "~/Downloads")
+
+(setq message-signature-file "~/.emacs.d/.signature") ; put your signature in this file
+
+;; get mail
+(setq mu4e-get-mail-command "mbsync fastmail"
+      mu4e-html2text-command "w3m -T text/html"
+      mu4e-update-interval 120
+      mu4e-headers-auto-update t
+      mu4e-compose-signature-auto-include nil
+      mu4e-change-filenames-when-moving t)
+
+(setq mu4e-maildir-shortcuts
+      '(("/INBOX"   . ?i)
+        ("/Sent Items"   . ?s)
+        ("/Archive"   . ?a)
+        ("/Drafts" . ?t)
+        ("/Trash"  . ?d)
+        ("/Junk"  . ?j)))
+
+(setq mu4e-show-images t
+      mu4e-use-fancy-chars t)
+
+;; use imagemagick, if available
+(when (fboundp 'imagemagick-register-types)
+  (imagemagick-register-types))
+
+;; general emacs mail settings; used when composing e-mail
+;; the non-mu4e-* stuff is inherited from emacs/message-mode
+(setq mu4e-reply-to-address "benswift@fastmail.com"
+      user-mail-address "benswift@fastmail.com"
+      user-full-name  "Ben Swift")
+
+;; mailing lists
+(setq mu4e-user-mailing-lists
+      '((""   . ?i)))
+
+;; spell check
+(add-hook 'mu4e-compose-mode-hook
+          (defun ben-mu4e-compose-mode-hook ()
+            "My settings for message composition."
+            (flyspell-mode 1)))
+
+(global-set-key (kbd "C-c m") 'mu4e)
+
 ;;;;;;;;;;;;;;;;;;;;;
 ;; smart mode line ;;
 ;;;;;;;;;;;;;;;;;;;;;
