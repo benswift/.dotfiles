@@ -1,0 +1,11 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: mate-template
+# key: matet
+# binding: direct-keybinding
+# --
+Hey mate
+
+$0
+
+Cheers,
+Ben
