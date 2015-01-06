@@ -415,7 +415,7 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-change-filenames-when-moving t)
 
 (setq mu4e-maildir-shortcuts
-      '(("/Inbox"   . ?i)
+      '(("/INBOX"   . ?i)
         ("/Sent Items"   . ?s)
         ("/Archive"   . ?a)
         ("/Drafts" . ?t)

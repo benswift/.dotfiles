@@ -12,12 +12,12 @@ Account fastmail
 
 MaildirStore fastmail-local
 Path ~/Maildir/fastmail/
-Inbox ~/Maildir/fastmail/Inbox
+Inbox ~/Maildir/fastmail/INBOX
 
 Channel fastmail
 Master :fastmail-remote:
 Slave :fastmail-local:
-Patterns "Inbox" "Drafts" "Sent Items" "Trash" "Archive" "Junk"
+Patterns "INBOX" "Drafts" "Sent Items" "Trash" "Archive" "Junk"
 Create Slave
 Sync All
 Expunge Both
