@@ -412,8 +412,7 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-update-interval 120
       mu4e-headers-auto-update t
       mu4e-compose-signature-auto-include nil
-      mu4e-change-filenames-when-moving t
-      message-kill-buffer-on-exit t)
+      mu4e-change-filenames-when-moving t)
 
 (setq mu4e-maildir-shortcuts
       '(("/INBOX"      . ?i)
