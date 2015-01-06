@@ -400,7 +400,7 @@ i.e. change right window to bottom, or change bottom window to right."
 (setq mu4e-maildir (expand-file-name "~/Maildir/fastmail"))
 
 (setq mu4e-sent-folder   "/Sent Items")
-(setq mu4e-refile-folder   "/Archive")
+(setq mu4e-refile-folder "/Archive")
 (setq mu4e-drafts-folder "/Drafts")
 (setq mu4e-trash-folder  "/Trash")
 
@@ -415,7 +415,7 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-change-filenames-when-moving t)
 
 (setq mu4e-maildir-shortcuts
-      '(("/INBOX"   . ?i)
+      '(("/Inbox"   . ?i)
         ("/Sent Items"   . ?s)
         ("/Archive"   . ?a)
         ("/Drafts" . ?t)
