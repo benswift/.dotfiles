@@ -416,12 +416,12 @@ i.e. change right window to bottom, or change bottom window to right."
       message-kill-buffer-on-exit t)
 
 (setq mu4e-maildir-shortcuts
-      '(("/INBOX"   . ?i)
-        ("/Sent Items"   . ?s)
-        ("/Archive"   . ?a)
-        ("/Drafts" . ?t)
-        ("/Trash"  . ?d)
-        ("/Junk"  . ?j)))
+      '(("/INBOX"      . ?i)
+        ("/Sent Items" . ?s)
+        ("/Archive"    . ?a)
+        ("/Drafts"     . ?d)
+        ("/Trash"      . ?t)
+        ("/Junk"       . ?j)))
 
 ;; fancy graphics
 (setq mu4e-show-images t
