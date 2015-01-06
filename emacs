@@ -422,6 +422,12 @@ i.e. change right window to bottom, or change bottom window to right."
         ("/Trash"      . ?t)
         ("/Junk"       . ?j)))
 
+(setq mu4e-bookmarks
+      '(("flag:unread AND NOT flag:trashed" "Unread messages" ?u)
+        ("date:today..now" "Today's messages" ?t)
+        ("date:7d..now" "Last 7 days" ?w)
+        ("list:extemporelang.googlegroups.com" "Extempore list" ?e)))
+
 ;; fancy graphics
 (setq mu4e-show-images t
       mu4e-use-fancy-chars t)
