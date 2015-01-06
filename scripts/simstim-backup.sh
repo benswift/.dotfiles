@@ -21,6 +21,8 @@ echo -e "\nBacking up \033[1;34mDesktop\033[0;00m..." && \
 # rsync -avz -e ssh --delete --stats --human-readable ~/Desktop ben@$SIMSTIM:$BACKUP_DIR/Desktop/ && \
 echo -e "\nBacking up \033[1;34mDocuments\033[0;00m..." && \
 rsync -avz -e ssh --delete --stats --human-readable ~/Documents ben@$SIMSTIM:$BACKUP_DIR/Documents/ && \
+echo -e "\nBacking up \033[1;34mMaildir\033[0;00m..." && \
+rsync -avz -e ssh --delete --stats --human-readable ~/Maildir ben@$SIMSTIM:$BACKUP_DIR/Maildir/ && \
 echo -e "\nBacking up \033[1;34mMovies\033[0;00m..." && \
 rsync -avz -e ssh --delete --stats --human-readable ~/Movies ben@$SIMSTIM:$BACKUP_DIR/Movies/ && \
 echo -e "\nBacking up \033[1;34mPictures\033[0;00m..." && \
