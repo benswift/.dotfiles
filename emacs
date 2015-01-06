@@ -460,7 +460,7 @@ i.e. change right window to bottom, or change bottom window to right."
 ;;                       "https://raw.github.com/chrisbarrett/osx-bbdb/master/osx-bbdb.el")
 ;;   (call-interactively 'package-install-from-buffer))
 
-(setq osxb-timer-period 120)
+(require 'osx-bbdb)
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; smart mode line ;;
