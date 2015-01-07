@@ -398,6 +398,7 @@ i.e. change right window to bottom, or change bottom window to right."
 (require 'mu4e)
 
 (setq mu4e-maildir (expand-file-name "~/Maildir/fastmail"))
+(setq smtpmail-queue-dir (expand-file-name "~/Desktop/queued-mail"))
 
 (setq mu4e-sent-folder   "/Sent Items")
 (setq mu4e-refile-folder "/Archive")
