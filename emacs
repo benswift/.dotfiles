@@ -430,7 +430,7 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; fancy graphics
 (setq mu4e-show-images t
-      mu4e-use-fancy-chars t)
+      mu4e-use-fancy-chars nil)
 
 ;; use imagemagick, if available
 (when (fboundp 'imagemagick-register-types)
