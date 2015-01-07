@@ -409,7 +409,7 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; get mail
 (setq mu4e-get-mail-command "mbsync fastmail"
       mu4e-html2text-command "w3m -T text/html"
-      mu4e-update-interval 120
+      mu4e-update-interval 300
       mu4e-headers-auto-update t
       mu4e-compose-signature-auto-include nil
       mu4e-change-filenames-when-moving t)
