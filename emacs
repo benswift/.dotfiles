@@ -409,11 +409,13 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; get mail
 (setq mu4e-get-mail-command "mbsync fastmail"
-      mu4e-html2text-command "w3m -T text/html"
       mu4e-update-interval 300
       mu4e-headers-auto-update t
       mu4e-compose-signature-auto-include nil
       mu4e-change-filenames-when-moving t)
+
+(require 'mu4e-contrib)
+(setq mu4e-html2text-command #'mu4e-shr2text)
 
 (setq mu4e-maildir-shortcuts
       '(("/INBOX"      . ?i)
@@ -421,13 +423,15 @@ i.e. change right window to bottom, or change bottom window to right."
         ("/Archive"    . ?a)
         ("/Drafts"     . ?d)
         ("/Trash"      . ?t)
-        ("/Junk"       . ?j)))
+        ("/Spam"       . ?j)))
 
-(setq mu4e-bookmarks
-      '(("flag:unread AND NOT flag:trashed" "Unread messages" ?u)
-        ("date:today..now" "Today's messages" ?t)
-        ("date:7d..now" "Last 7 days" ?w)
-        ("list:extemporelang.googlegroups.com" "Extempore list" ?e)))
+;; bookmarks
+(add-to-list 'mu4e-bookmarks
+             '("list:extemporelang.googlegroups.com" "Extempore list" ?e) t)
+
+;; actions
+(add-to-list 'mu4e-view-actions
+             '("bView in browser" . mu4e-action-view-in-browser) t)
 
 ;; fancy graphics
 (setq mu4e-show-images t
