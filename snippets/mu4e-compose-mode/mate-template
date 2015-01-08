@@ -3,7 +3,7 @@
 # key: matet
 # binding: direct-keybinding
 # --
-Hey mate
+Hey ${1:mate}
 
 $0
 
