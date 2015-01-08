@@ -384,6 +384,9 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; mu (email) ;;
 ;;;;;;;;;;;;;;;;
 
+;; on OSX, currently using brew --HEAD option.  to update, use
+;; brew rm mu4e && brew install --HEAD --with-emacs mu --ignore-dependencies
+
 (require 'smtpmail)
 
 ;; smtp
