@@ -417,6 +417,13 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-compose-signature-auto-include nil
       mu4e-change-filenames-when-moving t)
 
+;; signatures
+(defun ben-mu4e-compose-signature ()
+        "\n\nP.S. I'm getting rid of this gmail address (benjamin.j.swift@gmail.com) soon, my new address is benswift@fastmail.com\n")
+
+(setq mu4e-compose-signature #'ben-mu4e-compose-signature)
+
+;; html email handling
 (require 'mu4e-contrib)
 (setq mu4e-html2text-command #'mu4e-shr2text)
 ;; make sure fg-bg contrast is high enough
