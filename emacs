@@ -418,8 +418,18 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-change-filenames-when-moving t)
 
 ;; signatures
+
+;; ideally, this should be in a mode hook for mu4e:compose, which just
+;; calls yas-expand (or whatever it's called) directly with the
+;; appropriate snippet based on the message content
 (defun ben-mu4e-compose-signature ()
-        "\n\nP.S. I'm getting rid of this gmail address (benjamin.j.swift@gmail.com) soon, my new address is benswift@fastmail.com\n")
+  (let ((msg (mu4e-message-at-point)))
+    (cond
+     ((mu4e-message-contact-field-matches msg :to "benjamin.j.swift@gmail.com")
+      "\n\nP.S. I'm getting rid of this gmail address (benjamin.j.swift@gmail.com) soon, my new address is benswift@fastmail.com\n")
+     ((mu4e-message-contact-field-matches msg :from "\\(joyli90@gmail.com\\|joy.swift@abs.gov.au\\)")
+      "joyt")
+     (t nil))))
 
 (setq mu4e-compose-signature #'ben-mu4e-compose-signature)
 
