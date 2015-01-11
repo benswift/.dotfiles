@@ -849,12 +849,15 @@ tags:
 
 (add-hook 'LaTeX-mode-hook 'ben-latex-mode-hook)
 
+;; to clean Biber cache, use
+;; (shell-command "echo rm -r `biber --cache`")
+
 ;; for minted
 
-(eval-after-load "tex"
-  '(setcdr (assoc "LaTeX" TeX-command-list)
-          '("%`%l%(mode) -shell-escape%' %t"
-          TeX-run-TeX nil (latex-mode doctex-mode) :help "Run LaTeX")))
+;; (eval-after-load "tex"
+;;   '(setcdr (assoc "LaTeX" TeX-command-list)
+;;           '("%`%l%(mode) -shell-escape%' %t"
+;;           TeX-run-TeX nil (latex-mode doctex-mode) :help "Run LaTeX")))
 
 ;;;;;;;;;;;;;;;
 ;; extempore ;;
