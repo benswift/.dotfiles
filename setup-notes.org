@@ -14,7 +14,7 @@ sudo apt-get install gnome-tweak-tool
 these instructions are from GitHub
 
 # to set up a new key
-ssh-keygen -t rsa -C "benjamin.j.swift@gmail.com"
+ssh-keygen -t rsa -C "benswift@fastmail.com"
 sudo apt-get install xclip
 xclip -sel clip < ~/.ssh/id_rsa.pub
 
