@@ -459,9 +459,9 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; general emacs mail settings; used when composing e-mail
 ;; the non-mu4e-* stuff is inherited from emacs/message-mode
-(setq mu4e-reply-to-address "benswift@fastmail.com"
-      user-mail-address "benswift@fastmail.com"
-      user-full-name  "Ben Swift")
+(setq mu4e-reply-to-address "ben@benswift.me"
+      user-mail-address     "ben@benswift.me"
+      user-full-name        "Ben Swift")
 
 ;; mailing lists
 (setq mu4e-user-mailing-lists
@@ -484,12 +484,15 @@ i.e. change right window to bottom, or change bottom window to right."
                            "mate")))))
           (if (mu4e-message-contact-field-matches
                msg :to "\\(benjamin.j.swift@gmail.com\\|benswift@fastmail.com\\)")
-              (insert "\nP.S. I'm getting rid of this gmail address soon, my new address is ben@benswift.me\n")))
+              (insert "\nP.S. I'm getting rid of this gmail address soon, my new address is ben@benswift.me\n"))
+          (goto-char bomp)
+          (forward-line 2))
       (progn
         (goto-char (point-max))
-        (insert "Hi mate\n\n\n\nCheers,\nBen\n")))
-    (goto-char bomp)
-    (forward-line 2)))
+        (insert "Hi mate\n\n\n\nCheers,\nBen\n")
+        (goto-char (point-min))
+        (forward-line)
+        (move-end-of-line 1)))))
 
 ;; spell check
 (add-hook 'mu4e-compose-mode-hook
