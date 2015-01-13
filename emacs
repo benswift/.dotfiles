@@ -1281,8 +1281,12 @@ instead, and with a prefix argument, justify as well."
 ;; flycheck ;;
 ;;;;;;;;;;;;;;
 
+(setq flycheck-completion-system 'ido)
+
 (eval-after-load 'flycheck
   '(add-to-list 'flycheck-checkers 'irony))
+
+(add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;;;;;;;;;;;;
 ;; Python ;;
