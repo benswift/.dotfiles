@@ -1,0 +1,13 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: process-directory
+# key: procdir
+# binding: direct-keybinding
+# --
+(let* ((default-directory "$1")
+       (files (directory-files "." nil "^[^.]+.*$")))
+  (-each files
+    (lambda (f)
+      (with-current-buffer (find-file-noselect f)
+        $0
+        (save-buffer)
+        (kill-buffer)))))
