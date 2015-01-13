@@ -472,15 +472,20 @@ i.e. change right window to bottom, or change bottom window to right."
 (defun ben-mu4e-compose-insert-template ()
   (let ((msg mu4e-compose-parent-message)
         (bomp (point)))
-    (insert
-     (cond
-      ((mu4e-message-contact-field-matches msg :from "\\(joyli90@gmail.com\\|joy.swift@abs.gov.au\\)")
-       "Hi Bunny\n\n\n\nLove,\nBun\n")
-      (t (format "Hi %s\n\n\n\nCheers,\nBen\n"
-                 (or (car (split-string (caar (mu4e-msg-field msg :from))))
-                     "mate")))))
-    (if (mu4e-message-contact-field-matches msg :to "benjamin.j.swift@gmail.com")
-        (insert "\nP.S. I'm getting rid of this gmail address (benjamin.j.swift@gmail.com) so on, my new address is benswift@fastmail.com\n"))
+    (if msg
+        (progn
+          (insert
+           (cond
+            ((mu4e-message-contact-field-matches msg :from "\\(joyli90@gmail.com\\|joy.swift@abs.gov.au\\)")
+             "Hi Bunny\n\n\n\nLove,\nBun\n")
+            (t (format "Hi %s\n\n\n\nCheers,\nBen\n"
+                       (or (car (split-string (caar (mu4e-msg-field msg :from))))
+                           "mate")))))
+          (if (mu4e-message-contact-field-matches msg :to "\\(benjamin.j.swift@gmail.com\\|benswift@fastmail.com\\)")
+              (insert "\nP.S. I'm getting rid of this gmail address soon, my new address is ben@benswift.me\n")))
+      (progn
+        (goto-char (point-max))
+        (insert "Hi mate\n\n\n\nCheers,\nBen\n")))
     (goto-char bomp)
     (forward-line 2)))
 
