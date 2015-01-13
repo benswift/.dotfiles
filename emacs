@@ -419,22 +419,6 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-compose-signature-auto-include nil
       mu4e-change-filenames-when-moving t)
 
-;; signatures
-
-;; ideally, this should be in a mode hook for mu4e:compose, which just
-;; calls yas-expand (or whatever it's called) directly with the
-;; appropriate snippet based on the message content
-(defun ben-mu4e-compose-signature ()
-  (let ((msg (mu4e-message-at-point)))
-    (cond
-     ((mu4e-message-contact-field-matches msg :to "benjamin.j.swift@gmail.com")
-      "\n\nP.S. I'm getting rid of this gmail address (benjamin.j.swift@gmail.com) soon, my new address is benswift@fastmail.com\n")
-     ((mu4e-message-contact-field-matches msg :from "\\(joyli90@gmail.com\\|joy.swift@abs.gov.au\\)")
-      "joyt")
-     (t nil))))
-
-(setq mu4e-compose-signature #'ben-mu4e-compose-signature)
-
 ;; html email handling
 (require 'mu4e-contrib)
 (setq mu4e-html2text-command #'mu4e-shr2text)
@@ -485,11 +469,26 @@ i.e. change right window to bottom, or change bottom window to right."
         ("livecode.group.lurk.org"        . "TOPLAP")
         ("acma-l.list.waikato.ac.nz"      . "ACMA")))
 
+(defun ben-mu4e-compose-insert-template ()
+  (let ((msg mu4e-compose-parent-message)
+        (bomp (point)))
+    (insert
+     (cond
+      ((mu4e-message-contact-field-matches msg :from "\\(joyli90@gmail.com\\|joy.swift@abs.gov.au\\)")
+       "Hi Bunny\n\n\n\nLove,\nBun\n")
+      (t (format "Hi %s\n\n\n\nCheers,\nBen\n"
+                 (car (split-string (caar (mu4e-msg-field msg :from))))))))
+    (if (mu4e-message-contact-field-matches msg :to "benjamin.j.swift@gmail.com")
+        (insert "\nP.S. I'm getting rid of this gmail address (benjamin.j.swift@gmail.com) so on, my new address is benswift@fastmail.com\n"))
+    (goto-char bomp)
+    (forward-line 2)))
+
 ;; spell check
 (add-hook 'mu4e-compose-mode-hook
           (defun ben-mu4e-compose-mode-hook ()
             "My settings for message composition."
-            (flyspell-mode 1)))
+            (flyspell-mode 1)
+            (ben-mu4e-compose-insert-template)))
 
 ;; for using dired to specify attachments
 (require 'gnus-dired)
