@@ -5,7 +5,7 @@ export PATH="/Users/ben/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sb
 export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 
 # for debian packaging
-export DEBEMAIL="benswift@fastmail.com"
+export DEBEMAIL="ben@benswift.me"
 export DEBFULLNAME="Ben Swift"
 
 # python
