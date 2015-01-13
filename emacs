@@ -809,7 +809,8 @@ i.e. change right window to bottom, or change bottom window to right."
                        post-url-basename
                        ".org"))
     (insert (format
-             "#+begin_html
+             "#+PROPERTY: header-args:extempore :tangle /tmp/%s.xtm
+#+begin_html
 ---
 title: %s
 alias: [\"./%s.html\"]
@@ -817,7 +818,7 @@ tags:
 ---
 #+end_html
 "
-             post-name post-url-basename))))
+             post-url-basename post-name post-url-basename))))
 
 (defun biott-push-to-gh-pages ()
   (interactive)
