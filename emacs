@@ -106,6 +106,7 @@
         smart-mode-line
         smex
         string-utils
+        unidecode
         vagrant
         vagrant-tramp
         vimrc-mode
