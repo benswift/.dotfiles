@@ -1,8 +1,39 @@
-;;;;;;;;;;;;;;;;;;;;;;;;
-;: ben swift's .emacs ;;
-;;;;;;;;;;;;;;;;;;;;;;;;
+;;; .emacs --- Ben Swift's Emacs init file
 
-;; dotfiles repo: https://github.com/benswift/.dotfiles
+;; Copyright (C) 2008-2015 Ben Swift
+
+;; Permission is hereby granted, free of charge, to any person
+;; obtaining a copy of this software and associated documentation
+;; files (the "Software"), to deal in the Software without
+;; restriction, including without limitation the rights to use, copy,
+;; modify, merge, publish, distribute, sublicense, and/or sell copies
+;; of the Software, and to permit persons to whom the Software is
+;; furnished to do so, subject to the following conditions:
+
+;; The above copyright notice and this permission notice shall be
+;; included in all copies or substantial portions of the Software.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+;; BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+;; ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+;; SOFTWARE.
+
+;; Author: Ben Swift <ben@benswift.me>
+;; Homepage: https://github.com/benswift/.dotfiles
+
+;; This file is not part of GNU Emacs.
+
+;;; Commentary:
+
+;; My emacs init file - an ever-growing bag of tricks and hacks. Where
+;; I've stolen code from emacswiki, stackoverflow and other places,
+;; I've tried to acknowledge it.
+
+;;; Code:
 
 ;;;;;;;;;;
 ;; elpa ;;
@@ -1527,3 +1558,5 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
     (if (fboundp #'toggle-frame-fullscreen)
         (toggle-frame-fullscreen)
       (message "toggle-frame-fullscreen not defined - are you on Emacs 24.4 or greater?")))
+
+;;; .emacs ends here
