@@ -628,19 +628,21 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; malinka ;;
 ;;;;;;;;;;;;;
 
-(require 'malinka)
+;; (require 'malinka)
 
-(setq malinka-completion-system 'ido)
+;; (setq malinka-completion-system 'ido)
 
-(add-hook 'c-mode-common-hook 'malinka-mode)
+;; (add-hook 'c-mode-common-hook 'malinka-mode)
 
-(malinka-define-project
- :name "Extempore"
- :root-directory "~/Code/extempore"
- :build-directory "~/Code/extempore"
- :configure-cmd ""
- :compile-cmd "./all.bash"
- :test-cmd "./test-all.sh")
+;; (malinka-define-project
+;;  :name "Extempore"
+;;  :root-directory "~/Code/extempore"
+;;  :build-directory "~/Code/extempore"
+;;  ;; :cpp-defines '("TARGET_OS_MAC" "USE_GLUT")
+;;  :compiler-flags '("-Wall" "-g")
+;;  :configure-cmd ""
+;;  :compile-cmd "./all.bash"
+;;  :test-cmd "./test-all.sh")
 
 ;;;;;;;;;;
 ;; dash ;;
