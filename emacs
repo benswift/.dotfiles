@@ -600,6 +600,8 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (require 'malinka)
 
+(setq malinka-completion-system 'ido)
+
 (add-hook 'c-mode-common-hook 'malinka-mode)
 
 (malinka-define-project
