@@ -59,6 +59,7 @@
         jedi
         magit
         markdown-mode
+        malinka
         monokai-theme
         multiple-cursors
         ;; nrepl-ritz ;; shadows cider-mode
@@ -592,6 +593,22 @@ i.e. change right window to bottom, or change bottom window to right."
 ;;;;;;;;;;;
 
 (rtags-enable-standard-keybindings)
+
+;;;;;;;;;;;;;
+;; malinka ;;
+;;;;;;;;;;;;;
+
+(require 'malinka)
+
+(add-hook 'c-mode-common-hook 'malinka-mode)
+
+(malinka-define-project
+ :name "Extempore"
+ :root-directory "~/Code/extempore"
+ :build-directory "~/Code/extempore"
+ :configure-cmd ""
+ :compile-cmd "./all.bash"
+ :test-cmd "./test-all.sh")
 
 ;;;;;;;;;;
 ;; dash ;;
