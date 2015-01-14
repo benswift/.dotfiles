@@ -435,7 +435,7 @@ i.e. change right window to bottom, or change bottom window to right."
 (require 'mu4e-contrib)
 (setq mu4e-html2text-command #'mu4e-shr2text)
 ;; make sure fg-bg contrast is high enough
-(setq shr-color-visible-luminance-min 70)
+(setq shr-color-visible-luminance-min 80)
 
 (setq mu4e-maildir-shortcuts
       '(("/INBOX"      . ?i)
