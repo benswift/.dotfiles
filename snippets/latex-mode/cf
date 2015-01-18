@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: cf
+# key: cf
+# binding: direct-keybinding
+# --
+c.f.~
