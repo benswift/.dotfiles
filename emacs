@@ -478,12 +478,12 @@ i.e. change right window to bottom, or change bottom window to right."
         ("/Spam"       . ?j)))
 
 ;; headers view
-(setq mu4e-headers-fields
-      '((:human-date . 12)
-        (:flags . 6)
-        (:maildir . 10)
-        (:from . 22)
-        (:subject)))
+(setq mu4e-headers-date-format "%e %b %y"
+      mu4e-headers-fields '((:human-date . 12)
+                            (:flags . 6)
+                            (:maildir . 10)
+                            (:from . 22)
+                            (:subject)))
 
 ;; bookmarks
 (add-to-list 'mu4e-bookmarks
