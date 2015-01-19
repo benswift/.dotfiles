@@ -537,10 +537,27 @@ i.e. change right window to bottom, or change bottom window to right."
         (forward-line)
         (move-end-of-line 1)))))
 
+(defun ben-asciify-buffer-or-region (beg end)
+  (interactive "r")
+  (let ((asciify-alist '(("’" . "'")
+                         ("‘" . "'")
+                         ("“" . "\"")
+                         ("”" . "\""))))
+    (unless (region-active-p)
+      (setq beg (point-min))
+      (setq end (point-max)))
+    (save-excursion
+      (-each asciify-alist
+        (lambda (nonascii-char-pair)
+          (goto-char beg)
+          (while (search-forward (car nonascii-char-pair) end :noerror)
+            (replace-match (cdr nonascii-char-pair) nil :literal)))))))
+
 ;; spell check
 (add-hook 'mu4e-compose-mode-hook
           (defun ben-mu4e-compose-mode-hook ()
             "My settings for message composition."
+            (ben-asciify-buffer-or-region (point-min) (point-max))
             (flyspell-mode 1)
             (ben-mu4e-compose-insert-template)))
 
