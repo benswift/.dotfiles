@@ -515,8 +515,11 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (defun ben-mu4e-compose-insert-template ()
   (let ((msg mu4e-compose-parent-message)
-        (bomp (point)))
-    (if msg
+        (bomp (+ (progn (goto-char (point-min))
+                        (search-forward mail-header-separator))
+                 1)))
+    (goto-char bomp)
+    (if msg ;; reply or forward (use "(string= user-mail-address (cdar (mu4e-msg-field msg :from)))" to test for forward)
         (progn
           (insert
            (cond
@@ -530,8 +533,8 @@ i.e. change right window to bottom, or change bottom window to right."
               (insert "\nP.S. I'm getting rid of this gmail address soon, my new address is ben@benswift.me\n"))
           (goto-char bomp)
           (forward-line 2))
-      (progn
-        (goto-char (point-max))
+      (progn ;; compose new
+        (goto-char bomp)
         (insert "Hi mate\n\n\n\nCheers,\nBen\n")
         (goto-char (point-min))
         (forward-line)
