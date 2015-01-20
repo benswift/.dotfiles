@@ -17,6 +17,12 @@ export PATH=~/.linuxbrew/bin:$PATH
 export LD_LIBRARY_PATH=~/.linuxbrew/lib
 export EXT_LLVM_DIR=~/.linuxbrew/Cellar/extempore-llvm/3.4.1
 
+# clojure
+
+LEIN_FAST_TRAMPOLINE=y
+export LEIN_FAST_TRAMPOLINE
+alias cljsbuild="lein trampoline cljsbuild $@"
+
 # List all files colorized in long format, including dot files
 alias la="ls -Gla"
 
