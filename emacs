@@ -52,9 +52,7 @@
   (package-refresh-contents))
 
 (setq ben-package-list
-      '(ac-nrepl
-        ac-cider
-        ace-jump-mode
+      '(ace-jump-mode
         ag
         bbdb
         auctex
@@ -1293,6 +1291,9 @@ instead, and with a prefix argument, justify as well."
 (setq cider-auto-select-error-buffer nil)
 (setq cider-repl-use-pretty-printing nil)
 (setq cider-repl-use-clojure-font-lock t)
+
+;; for debugging
+(setq nrepl-log-messages t)
 
 ;;;;;;;;;;;;;;
 ;; markdown ;;
