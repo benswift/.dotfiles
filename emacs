@@ -1491,6 +1491,15 @@ instead, and with a prefix argument, justify as well."
 ;; handy, misc. elisp functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun copy-buffer-file-name-as-kill ()
+  (interactive)
+  (let ((fname (buffer-file-name)))
+    (if fname
+        (progn
+          (kill-new fname)
+          (message "%s" fname))
+      (message "current buffer is not visiting any file."))))
+
 (defun read-lines (fpath)
   "Return a list of lines of a file at at FPATH."
   (with-temp-buffer
