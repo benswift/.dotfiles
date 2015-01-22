@@ -3,7 +3,7 @@
 # key: header
 # --
 % -*- TeX-engine: xetex -*-
-\documentclass[${1:12}pt,a4paper]{scrartcl}
+\documentclass[a4paper,fontsize=12pt]{scrartcl}
 \usepackage{Alegreya}
 \usepackage{AlegreyaSans}
 
@@ -13,32 +13,15 @@
 
 % \usepackage{fullpage}
 
-% monokai code listings
-
-% \usepackage{minted}
-% \definecolor{bg}{rgb}{0.95,0.95,0.95}
-% \newminted{scheme}{bgcolor=bg,fontsize=\footnotesize}
-
 \usepackage[%
 backend=biber,
-% natbib=true,
-% backref=true,
-% citecounter=true,
-dashed=false,
-% backrefstyle=three,
-citestyle=authoryear,
-firstinits=true,
-maxcitenames=2,
+style=numeric-comp, % authoryear
 maxbibnames=10,
-uniquename=mininit,
-bibstyle=authoryear,
-% refsegment=chapter,
-% ibidtracker=strict,
 url=false,
 doi=false]{biblatex}
 
-\AtEveryBibitem{\clearfield{month}}
-\AtEveryCitekey{\clearfield{month}}
+% \AtEveryBibitem{\clearfield{month}}
+% \AtEveryCitekey{\clearfield{month}}
 
 \addbibresource{papers.bib}
 
@@ -61,13 +44,13 @@ allcolors=DarkBlue,
 pdfpagelabels,
 hyperfootnotes=true]{hyperref}
 
-\author{${2:Ben Swift}}
+\author{${1:Ben Swift}}
 \date{\today}
-\title{$3}
+\title{$0}
 
 \begin{document}
 
-$0
+
 
 \printbibliography[title=References]
 
