@@ -1,8 +1,15 @@
 * Linux
 
 ** Ubuntu 14.10
+  :PROPERTIES:
+  :header-args:sh:    :tangle ubuntu-setup.sh
+  :END:
 
 *** keybindings
+
+**** gnome-tweak-tool
+
+deprecated - use XModmap version
 
 sudo apt-get install gnome-tweak-tool
 
@@ -14,29 +21,31 @@ sudo apt-get install gnome-tweak-tool
 these instructions are from GitHub
 
 # to set up a new key
-ssh-keygen -t rsa -C "benswift@fastmail.com"
-sudo apt-get install xclip
-xclip -sel clip < ~/.ssh/id_rsa.pub
+#+BEGIN_SRC sh
+ssh-keygen -t rsa -C "benswift@fastmail.com" && sudo apt-get install xclip && xclip -sel clip < ~/.ssh/id_rsa.pub
+#+END_SRC
 
 *** emacs
 
-sudo add-apt-repository ppa:ubuntu-elisp/ppa
-sudo apt-get install emacs-snapshot
+#+BEGIN_SRC 
+sudo add-apt-repository ppa:ubuntu-elisp/ppa && sudo apt-get install emacs-snapshot
+#+END_SRC
 
 *** fonts
 
-# not 100% sure if this ppa is necessary
-# sudo add-apt-repository ppa:unit193/sourcecodepro
-sudo apt-get install fonts-source-code-pro-otf
+#+BEGIN_SRC sh
+sudo add-apt-repository ppa:unit193/sourcecodepro && sudo apt-get install fonts-source-code-pro-otf
+#+END_SRC
 
 *** graphics
 
-sudo add-apt-repository ppa:xorg-edgers/ppa -y
-sudo apt-get update
-sudo apt-get install nvidia-current
+#+BEGIN_SRC sh
+# to get the absolute latest (probably not necessary)
+sudo add-apt-repository ppa:xorg-edgers/ppa -y && sudo apt-get update && sudo apt-get install nvidia-current
+#+END_SRC
 
-then launch the 'additional drivers' program/tool to select the
-latest driver
+launch the 'additional drivers' program/tool to select the latest
+driver
 
 *** GLFW
 
@@ -47,18 +56,26 @@ need these deps
 - libxcursor-dev
 
 ** Fedora 20
+  :PROPERTIES:
+  :header-args:sh:    :tangle fedora-setup.sh
+  :END:
 
 *** Emacs
 
+#+BEGIN_SRC sh
 sudo yum install emacs
+#+END_SRC
 
 *** Linuxbrew
 
-need wget to do the 'one-line install', which isn't installed by
+need =wget= to do the 'one-line install', which isn't installed by
 default.
 
-sudo yum install gcc-c++ (clang doesn't get detected by configure)
-sudo yum install patch
+#+BEGIN_SRC sh
+sudo yum install gcc-c++ && sudo yum install patch
+#+END_SRC
+
+(using gcc because clang doesn't get detected by configure)
 
 ** Debian Wheezy
 
@@ -85,3 +102,17 @@ here are some useful packages:
 TODO populate list
 
 don't forget to install cask as well
+
+* Windows
+  :PROPERTIES:
+  :header-args:sh:    :tangle windows-setup.bat
+  :END:
+
+** chocolatey
+
+install from https://chocolatey.org/
+
+#+BEGIN_SRC sh
+choco install git.commandline emacs VisualStudioCommunity2013 NuGet.commandline firefox
+#+END_SRC
+
