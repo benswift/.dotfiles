@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: row-major
+# key: rowmaj
+# --
+(+ (* ${1:r} ${2:num_cols}) ${3:c})

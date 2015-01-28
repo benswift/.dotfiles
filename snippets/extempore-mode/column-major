@@ -2,5 +2,4 @@
 # name: column-major
 # key: colmaj
 # --
-(col_maj (lambda (r c)
-            (+ r (* c ${1:num_rows}))))
+(+ ${1:r} (* ${2:c} ${3:num_rows}))
