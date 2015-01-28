@@ -432,156 +432,159 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; on OSX, currently using brew --HEAD option.  to update, use
 ;; (shell-command "brew rm mu && brew install --HEAD --with-emacs mu --ignore-dependencies")
 
-(require 'smtpmail)
+;; only set this up when mu4e is installed
+(if (require 'mu4e nil :noerror)
+    (progn
+      (require 'smtpmail)
 
-;; smtp
-(setq message-send-mail-function 'smtpmail-send-it
-      smtpmail-starttls-credentials
-      '(("mail.messagingengine.com" 587 nil nil))
-      smtpmail-default-smtp-server "mail.messagingengine.com"
-      smtpmail-smtp-server "mail.messagingengine.com"
-      smtpmail-smtp-service 587
-      smtpmail-debug-info t)
+      ;; smtp
+      (setq message-send-mail-function 'smtpmail-send-it
+            smtpmail-starttls-credentials
+            '(("mail.messagingengine.com" 587 nil nil))
+            smtpmail-default-smtp-server "mail.messagingengine.com"
+            smtpmail-smtp-server "mail.messagingengine.com"
+            smtpmail-smtp-service 587
+            smtpmail-debug-info t)
 
-(require 'mu4e)
+      (global-set-key (kbd "C-c m") 'mu4e)
 
-(global-set-key (kbd "C-c m") 'mu4e)
+      (setq mu4e-maildir (expand-file-name "~/Maildir/fastmail"))
+      (setq smtpmail-queue-dir (expand-file-name "~/Desktop/queued-mail"))
 
-(setq mu4e-maildir (expand-file-name "~/Maildir/fastmail"))
-(setq smtpmail-queue-dir (expand-file-name "~/Desktop/queued-mail"))
+      (setq mu4e-sent-folder   "/Sent Items")
+      (setq mu4e-refile-folder "/Archive")
+      (setq mu4e-drafts-folder "/Drafts")
+      (setq mu4e-trash-folder  "/Trash")
 
-(setq mu4e-sent-folder   "/Sent Items")
-(setq mu4e-refile-folder "/Archive")
-(setq mu4e-drafts-folder "/Drafts")
-(setq mu4e-trash-folder  "/Trash")
+      (setq mu4e-attachment-dir  "~/Downloads")
 
-(setq mu4e-attachment-dir  "~/Downloads")
+      ;; get mail
+      (setq mu4e-get-mail-command "mbsync fastmail"
+            mu4e-update-interval 300
+            mu4e-headers-auto-update t
+            mu4e-compose-signature-auto-include nil
+            mu4e-change-filenames-when-moving t)
 
-;; get mail
-(setq mu4e-get-mail-command "mbsync fastmail"
-      mu4e-update-interval 300
-      mu4e-headers-auto-update t
-      mu4e-compose-signature-auto-include nil
-      mu4e-change-filenames-when-moving t)
+      ;; html email handling
+      (require 'mu4e-contrib)
+      (setq mu4e-html2text-command #'mu4e-shr2text)
+      ;; make sure fg-bg contrast is high enough
+      (setq shr-color-visible-luminance-min 80)
 
-;; html email handling
-(require 'mu4e-contrib)
-(setq mu4e-html2text-command #'mu4e-shr2text)
-;; make sure fg-bg contrast is high enough
-(setq shr-color-visible-luminance-min 80)
+      (setq mu4e-maildir-shortcuts
+            '(("/INBOX"      . ?i)
+              ("/Sent Items" . ?s)
+              ("/Archive"    . ?a)
+              ("/Drafts"     . ?d)
+              ("/Trash"      . ?t)
+              ("/Spam"       . ?j)))
 
-(setq mu4e-maildir-shortcuts
-      '(("/INBOX"      . ?i)
-        ("/Sent Items" . ?s)
-        ("/Archive"    . ?a)
-        ("/Drafts"     . ?d)
-        ("/Trash"      . ?t)
-        ("/Spam"       . ?j)))
+      ;; headers view
+      (setq mu4e-headers-date-format "%e %b %y"
+            mu4e-headers-fields '((:human-date . 12)
+                                  (:flags . 6)
+                                  (:maildir . 10)
+                                  (:from . 22)
+                                  (:subject)))
 
-;; headers view
-(setq mu4e-headers-date-format "%e %b %y"
-      mu4e-headers-fields '((:human-date . 12)
-                            (:flags . 6)
-                            (:maildir . 10)
-                            (:from . 22)
-                            (:subject)))
+      ;; bookmarks
+      (add-to-list 'mu4e-bookmarks
+                   '("list:extemporelang.googlegroups.com" "Extempore list" ?e) t)
 
-;; bookmarks
-(add-to-list 'mu4e-bookmarks
-             '("list:extemporelang.googlegroups.com" "Extempore list" ?e) t)
+      ;; actions
+      (add-to-list 'mu4e-view-actions
+                   '("bView in browser" . mu4e-action-view-in-browser) t)
 
-;; actions
-(add-to-list 'mu4e-view-actions
-             '("bView in browser" . mu4e-action-view-in-browser) t)
+      ;; fancy graphics
+      (setq mu4e-show-images t
+            mu4e-use-fancy-chars nil)
 
-;; fancy graphics
-(setq mu4e-show-images t
-      mu4e-use-fancy-chars nil)
+      ;; use imagemagick, if available
+      (when (fboundp 'imagemagick-register-types)
+        (imagemagick-register-types))
 
-;; use imagemagick, if available
-(when (fboundp 'imagemagick-register-types)
-  (imagemagick-register-types))
+      ;; general emacs mail settings; used when composing e-mail
+      ;; the non-mu4e-* stuff is inherited from emacs/message-mode
+      (setq mu4e-reply-to-address "ben@benswift.me"
+            user-mail-address     "ben@benswift.me"
+            user-full-name        "Ben Swift")
 
-;; general emacs mail settings; used when composing e-mail
-;; the non-mu4e-* stuff is inherited from emacs/message-mode
-(setq mu4e-reply-to-address "ben@benswift.me"
-      user-mail-address     "ben@benswift.me"
-      user-full-name        "Ben Swift")
+      ;; mailing lists
+      (setq mu4e-user-mailing-lists
+            '(("extemporelang.googlegroups.com" . "Extempore")
+              ("livecode.group.lurk.org"        . "TOPLAP")
+              ("acma-l.list.waikato.ac.nz"      . "ACMA")))
 
-;; mailing lists
-(setq mu4e-user-mailing-lists
-      '(("extemporelang.googlegroups.com" . "Extempore")
-        ("livecode.group.lurk.org"        . "TOPLAP")
-        ("acma-l.list.waikato.ac.nz"      . "ACMA")))
-
-(defun ben-mu4e-compose-insert-template ()
-  (let ((msg mu4e-compose-parent-message)
-        (bomp (+ (progn (goto-char (point-min))
-                        (search-forward mail-header-separator))
-                 1)))
-    (goto-char bomp)
-    (if msg ;; reply or forward (use "(string= user-mail-address (cdar (mu4e-msg-field msg :from)))" to test for forward)
-        (progn
-          (insert
-           (cond
-            ((mu4e-message-contact-field-matches
-              msg :from "\\(joyli90@gmail.com\\|joy.swift@abs.gov.au\\)")
-             "Hi Bunny\n\n\n\nLove,\nBun\n")
-            (t (format "Hi %s\n\n\n\nCheers,\nBen\n"
-                       (car (split-string (or (caar (mu4e-msg-field msg :from)) "mate")))))))
-          (if (mu4e-message-contact-field-matches
-               msg :to "\\(benjamin.j.swift@gmail.com\\|benswift@fastmail.com\\)")
-              (insert "\nP.S. I'm getting rid of this gmail address soon, my new address is ben@benswift.me\n"))
+      (defun ben-mu4e-compose-insert-template ()
+        (let ((msg mu4e-compose-parent-message)
+              (bomp (+ (progn (goto-char (point-min))
+                              (search-forward mail-header-separator))
+                       1)))
           (goto-char bomp)
-          (forward-line 2))
-      (progn ;; compose new
-        (goto-char bomp)
-        (insert "Hi mate\n\n\n\nCheers,\nBen\n")
-        (goto-char (point-min))
-        (forward-line)
-        (move-end-of-line 1)))))
+          (if msg ;; reply or forward (use "(string= user-mail-address (cdar (mu4e-msg-field msg :from)))" to test for forward)
+              (progn
+                (insert
+                 (cond
+                  ((mu4e-message-contact-field-matches
+                    msg :from "\\(joyli90@gmail.com\\|joy.swift@abs.gov.au\\)")
+                   "Hi Bunny\n\n\n\nLove,\nBun\n")
+                  (t (format "Hi %s\n\n\n\nCheers,\nBen\n"
+                             (car (split-string (or (caar (mu4e-msg-field msg :from)) "mate")))))))
+                (if (mu4e-message-contact-field-matches
+                     msg :to "\\(benjamin.j.swift@gmail.com\\|benswift@fastmail.com\\)")
+                    (insert "\nP.S. I'm getting rid of this gmail address soon, my new address is ben@benswift.me\n"))
+                (goto-char bomp)
+                (forward-line 2))
+            (progn ;; compose new
+              (goto-char bomp)
+              (insert "Hi mate\n\n\n\nCheers,\nBen\n")
+              (goto-char (point-min))
+              (forward-line)
+              (move-end-of-line 1)))))
 
-(defun ben-asciify-buffer-or-region (beg end)
-  (interactive "r")
-  (let ((asciify-alist '(("’" . "'")
-                         ("‘" . "'")
-                         ("“" . "\"")
-                         ("”" . "\""))))
-    (unless (region-active-p)
-      (setq beg (point-min))
-      (setq end (point-max)))
-    (save-excursion
-      (-each asciify-alist
-        (lambda (nonascii-char-pair)
-          (goto-char beg)
-          (while (search-forward (car nonascii-char-pair) end :noerror)
-            (replace-match (cdr nonascii-char-pair) nil :literal)))))))
+      (defun ben-asciify-buffer-or-region (beg end)
+        (interactive "r")
+        (let ((asciify-alist '(("’" . "'")
+                               ("‘" . "'")
+                               ("“" . "\"")
+                               ("”" . "\""))))
+          (unless (region-active-p)
+            (setq beg (point-min))
+            (setq end (point-max)))
+          (save-excursion
+            (-each asciify-alist
+              (lambda (nonascii-char-pair)
+                (goto-char beg)
+                (while (search-forward (car nonascii-char-pair) end :noerror)
+                  (replace-match (cdr nonascii-char-pair) nil :literal)))))))
 
-;; spell check
-(add-hook 'mu4e-compose-mode-hook
-          (defun ben-mu4e-compose-mode-hook ()
-            "My settings for message composition."
-            (ben-asciify-buffer-or-region (point-min) (point-max))
-            (flyspell-mode 1)
-            (ben-mu4e-compose-insert-template)))
+      ;; spell check
+      (add-hook 'mu4e-compose-mode-hook
+                (defun ben-mu4e-compose-mode-hook ()
+                  "My settings for message composition."
+                  (ben-asciify-buffer-or-region (point-min) (point-max))
+                  (flyspell-mode 1)
+                  (ben-mu4e-compose-insert-template)))
 
-;; for using dired to specify attachments
-(require 'gnus-dired)
-;; make the `gnus-dired-mail-buffers' function also work on
-;; message-mode derived modes, such as mu4e-compose-mode
-(defun gnus-dired-mail-buffers ()
-  "Return a list of active message buffers."
-  (let (buffers)
-    (save-current-buffer
-      (dolist (buffer (buffer-list t))
-        (set-buffer buffer)
-        (when (and (derived-mode-p 'message-mode)
-                   (null message-sent-message-via))
-          (push (buffer-name buffer) buffers))))
-    (nreverse buffers)))
+      ;; for using dired to specify attachments
+      (require 'gnus-dired)
+      ;; make the `gnus-dired-mail-buffers' function also work on
+      ;; message-mode derived modes, such as mu4e-compose-mode
+      (defun gnus-dired-mail-buffers ()
+        "Return a list of active message buffers."
+        (let (buffers)
+          (save-current-buffer
+            (dolist (buffer (buffer-list t))
+              (set-buffer buffer)
+              (when (and (derived-mode-p 'message-mode)
+                         (null message-sent-message-via))
+                (push (buffer-name buffer) buffers))))
+          (nreverse buffers)))
 
-(setq gnus-dired-mail-mode 'mu4e-user-agent)
-(add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
+      (setq gnus-dired-mail-mode 'mu4e-user-agent)
+      (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
+
+      )) ;; end "(if (require 'mu4e nil :noerror) ..."
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; smart mode line ;;
