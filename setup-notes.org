@@ -113,6 +113,19 @@ don't forget to install cask as well
 install from https://chocolatey.org/
 
 #+BEGIN_SRC sh
-choco install git.commandline emacs VisualStudioCommunity2013 NuGet.commandline firefox
+choco install git.commandline emacs visualstudiocommunity2013 nuget.commandline firefox
 #+END_SRC
 
+** remap CAPS to CTRL
+
+http://www.howtogeek.com/howto/windows-vista/disable-caps-lock-key-in-windows-vista/
+
+** fix GRUB
+
+if Windows has blown away the GRUB boot record, then boot into Ubuntu
+from a live CD and try
+
+#+BEGIN_SRC sh
+sudo add-apt-repository ppa:yannubuntu/boot-repair && sudo apt-get update
+sudo apt-get install -y boot-repair && boot-repair
+#+END_SRC
