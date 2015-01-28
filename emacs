@@ -126,15 +126,15 @@
   (set-face-attribute 'default nil :height face-height :family "Source Code Pro")
   (set-face-attribute 'variable-pitch nil :height face-height :family "Source Sans Pro"))
 
-(exec-path-from-shell-initialize)
-(exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH" "PYTHONPATH"))
-
 ;; linux
 
 (defun ben-linux-setup ()
   (ben-set-default-faces 140)
   (setq frame-maximization-mode 'maximized)
-  (ben-setup-keybindings))
+  (ben-setup-keybindings)
+  ;; exec-path-from-shell is set up on OSX as well
+  (exec-path-from-shell-initialize)
+  (exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH" "PYTHONPATH")))
 
 ;; OSX
 
@@ -165,7 +165,10 @@
   (setq dired-guess-shell-alist-user '(("\\.pdf\\'" "open")))
   (setq frame-maximization-mode 'fullscreen)
   ;; for railwaycat emacs-mac
-  (ben-setup-keybindings))
+  (ben-setup-keybindings)
+  ;; exec-path-from-shell is set up on linux as well
+  (exec-path-from-shell-initialize)
+  (exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH" "PYTHONPATH")))
 
 ;; Windows
 
