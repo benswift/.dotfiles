@@ -8,7 +8,7 @@ osx:
 	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
 
-	ln -sf $(DOTFILES_DIR)/emacs ~/.emacs
+	ln -sf $(DOTFILES_DIR)/init.el ~/.emacs.d/
 	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
 
 	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile

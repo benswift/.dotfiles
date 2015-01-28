@@ -1,4 +1,4 @@
-;;; .emacs --- Ben Swift's Emacs init file
+;;; init.el --- Ben Swift's Emacs init file
 
 ;; Copyright (C) 2008-2015 Ben Swift
 
@@ -1586,4 +1586,4 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
         (toggle-frame-fullscreen)
       (message "toggle-frame-fullscreen not defined - are you on Emacs 24.4 or greater?")))
 
-;;; .emacs ends here
+;;; init.el ends here
