@@ -108,17 +108,56 @@ don't forget to install cask as well
   :header-args:sh:    :tangle windows-setup.bat
   :END:
 
+** path
+
+- for git, make sure =c:\git\bin= is in the path
+- set =Home= environment variable to =c:\Users\ben= (not sure if this
+  is the best, but it seems to work.  you can type 'environment' at
+  the start menu to bring up the editing box)
+
+** ssh
+
+=.ssh= dir seems to need to be in =c:\Users\ben=
+
 ** chocolatey
 
 install from https://chocolatey.org/
 
+*** git
+
+make sure it puts all the unix tools on the path, or you're gonna
+have a bad time
+
 #+BEGIN_SRC sh
-choco install git.commandline emacs visualstudiocommunity2013 nuget.commandline firefox
+choco install git -params '"/GitAndUnixToolsOnPath /NoAutoCrlf"'
 #+END_SRC
 
-** remap CAPS to CTRL
+#+BEGIN_SRC sh
+choco install emacs visualstudiocommunity2013 nuget.commandline firefox
+#+END_SRC
 
-http://www.howtogeek.com/howto/windows-vista/disable-caps-lock-key-in-windows-vista/
+
+** keyboard
+
+use autohotkey (script file goes
+
+#+BEGIN_SRC sh
+choco install autohotkey
+#+END_SRC
+
+- remap CAPS to CTRL (obsolete - use autohotkey instead) http://www.howtogeek.com/howto/windows-vista/disable-caps-lock-key-in-windows-vista/
+
+
+
+** fonts
+
+try the chocolatey package
+
+#+BEGIN_SRC sh
+choco install sourcecodepro
+#+END_SRC
+
+if that doesn't work, install them manually from https://github.com/adobe-fonts/source-code-pro
 
 ** fix GRUB
 
