@@ -6,3 +6,4 @@ mklink /D "C:%HOMEPATH%\.emacs.d\snippets" "C:%HOMEPATH%\.dotfiles\snippets"
 
 mklink "C:%HOMEPATH%\.RProfile" "C:%HOMEPATH%\.dotfiles\RProfile"
 
+mklink "C:%HOMEPATH%\Documents\AutoHotkey.ahk" "C:%HOMEPATH%\.dotfiles\AutoHotkey.ahk"
