@@ -1,9 +1,9 @@
-mklink "C:%HOMEPATH%\.gitconfig" "C:%HOMEPATH%\.dotfiles\gitconfig"
-mklink "C:%HOMEPATH%\.gitignore" "C:%HOMEPATH%\.dotfiles\gitignore"
+mklink "%USERPROFILE%\.gitconfig" "%USERPROFILE%\.dotfiles\gitconfig"
+mklink "%USERPROFILE%\.gitignore" "%USERPROFILE%\.dotfiles\gitignore"
 
-mklink "C:%HOMEPATH%\.emacs" "C:%HOMEPATH%\.dotfiles\emacs"
-mklink /D "C:%HOMEPATH%\.emacs.d\snippets" "C:%HOMEPATH%\.dotfiles\snippets"
+mklink "%USERPROFILE%\.emacs" "%USERPROFILE%\.dotfiles\emacs"
+mklink /D "%USERPROFILE%\.emacs.d\snippets" "%USERPROFILE%\.dotfiles\snippets"
 
-mklink "C:%HOMEPATH%\.RProfile" "C:%HOMEPATH%\.dotfiles\RProfile"
+mklink "%USERPROFILE%\.RProfile" "%USERPROFILE%\.dotfiles\RProfile"
 
-mklink "C:%HOMEPATH%\Documents\AutoHotkey.ahk" "C:%HOMEPATH%\.dotfiles\AutoHotkey.ahk"
+mklink "%USERPROFILE%\Documents\AutoHotkey.ahk" "%USERPROFILE%\.dotfiles\AutoHotkey.ahk"
