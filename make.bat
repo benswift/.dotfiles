@@ -5,5 +5,3 @@ mklink "%USERPROFILE%\.emacs.d\init.el" "%USERPROFILE%\.dotfiles\init.el"
 mklink /D "%USERPROFILE%\.emacs.d\snippets" "%USERPROFILE%\.dotfiles\snippets"
 
 mklink "%USERPROFILE%\.RProfile" "%USERPROFILE%\.dotfiles\RProfile"
-
-mklink "%USERPROFILE%\Documents\AutoHotkey.ahk" "%USERPROFILE%\.dotfiles\AutoHotkey.ahk"
