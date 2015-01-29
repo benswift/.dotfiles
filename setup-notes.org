@@ -132,8 +132,10 @@ have a bad time
 choco install git -params '"/GitAndUnixToolsOnPath /NoAutoCrlf"'
 #+END_SRC
 
+some useful packages
+
 #+BEGIN_SRC sh
-choco install emacs visualstudiocommunity2013 nuget.commandline firefox
+choco install emacs visualstudiocommunity2013 nuget.commandline nugetpackagemanagerforvisualstudio2013 firefox
 #+END_SRC
 
 
