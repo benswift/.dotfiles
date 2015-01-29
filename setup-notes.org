@@ -111,9 +111,9 @@ don't forget to install cask as well
 ** path
 
 - for git, make sure =c:\git\bin= is in the path
-- set =Home= environment variable to =c:\Users\ben= (not sure if this
-  is the best, but it seems to work.  you can type 'environment' at
-  the start menu to bring up the editing box)
+- set =Home= environment variable to =%USERPROFILE%= (not sure if this
+  is the best, but it seems to work. you can type 'environment' at the
+  start menu to bring up the editing box)
 
 ** ssh
 
@@ -145,7 +145,8 @@ use autohotkey
 choco install autohotkey
 #+END_SRC
 
-config file =AutoHotkey.ahk= should be linked to =Documents= folder
+config file =AutoHotkey.ahk= should be placed (shortcut is ok) into
+the Startup folder (Google the location on your version of Windows)
 
 # remap CAPS to CTRL (obsolete - use autohotkey instead) http://www.howtogeek.com/howto/windows-vista/disable-caps-lock-key-in-windows-vista/
 
