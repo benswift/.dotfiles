@@ -459,8 +459,8 @@ i.e. change right window to bottom, or change bottom window to right."
       (setq mu4e-attachment-dir  "~/Downloads")
 
       ;; get mail
-      (setq mu4e-get-mail-command "mbsync fastmail"
-            mu4e-update-interval 300
+      (setq mu4e-get-mail-command "timelimit -T 120 -t 120 mbsync fastmail"
+            mu4e-update-interval 240
             mu4e-headers-auto-update t
             mu4e-compose-signature-auto-include nil
             mu4e-change-filenames-when-moving t)
