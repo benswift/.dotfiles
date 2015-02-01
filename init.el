@@ -1553,6 +1553,15 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 
 ;; church music helper functions
 
+(defun date-of-next-Sunday ()
+  "return's next Sunday's date, as a string"
+  (let ((next-sun (time-add (calendar-current-date)
+                          (days-to-time (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
+  (format "%04d-%02d-%02d"
+          (nth 2 next-sun)
+          (nth 0 next-sun)
+          (nth 1 next-sun))))
+
 (defun compile-church-chord-chart-pdf (num-songs)
   (interactive "nNumber of songs: ")
   (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
@@ -1560,7 +1569,7 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
          (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
          (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
                              (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
-         (output-filename (format "~/Desktop/%s.pdf" (format-time-string "%d-%b-%Y")))
+         (output-filename (format "~/Desktop/%s.pdf" (date-of-next-Sunday)))
          (charts (loop repeat num-songs collect (ido-completing-read "chart: " candidates nil :require-match))))
     (let ((default-directory church-music-dir))
       (shell-command (format "pdfjam %s -o %s && open %s"
