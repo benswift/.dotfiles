@@ -115,9 +115,6 @@ don't forget to install cask as well
   is the best, but it seems to work. you can type 'environment' at the
   start menu to bring up the editing box)
 
-** ssh
-
-=.ssh= dir seems to need to be in =c:\Users\ben=
 
 ** chocolatey
 
@@ -138,6 +135,21 @@ some useful packages
 choco install emacs visualstudiocommunity2013 nuget.commandline nugetpackagemanagerforvisualstudio2013 firefox
 #+END_SRC
 
+** ssh
+
+=.ssh= dir seems to need to be in =c:\Users\ben=
+
+Git (installed through Chocolatey as above) should install all the
+usual ssh utils
+
+*** remote access
+
+#+BEGIN_SRC sh
+winrm quickstart
+#+END_SRC
+
+and follow the prompts.  Although this will only allow connections
+from other Windows boxes
 
 ** keyboard
 
