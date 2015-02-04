@@ -524,6 +524,9 @@ i.e. change right window to bottom, or change bottom window to right."
                   ((mu4e-message-contact-field-matches
                     msg :from "\\(joyli90@gmail.com\\|joy.swift@abs.gov.au\\)")
                    "Hi Bunny\n\n\n\nLove,\nBun\n")
+                  ((mu4e-message-contact-field-matches
+                    msg :from "walknuts@gmail.com")
+                   "Hi Dad\n\n\n\nLove,\nBen\n")
                   (t (format "Hi %s\n\n\n\nCheers,\nBen\n"
                              (car (split-string (or (caar (mu4e-msg-field msg :from)) "mate")))))))
                 (if (mu4e-message-contact-field-matches
