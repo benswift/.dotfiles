@@ -486,6 +486,8 @@ i.e. change right window to bottom, or change bottom window to right."
       ;; bookmarks
       (add-to-list 'mu4e-bookmarks
                    '("list:extemporelang.googlegroups.com" "Extempore list" ?e) t)
+      (add-to-list 'mu4e-bookmarks
+                   '("from:Henry Gardner" "Hballs" ?h) t)
 
       ;; actions
       (add-to-list 'mu4e-view-actions
