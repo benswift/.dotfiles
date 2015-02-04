@@ -142,14 +142,14 @@ choco install 7zip.commandline ag autohotkey autohotkey.install cmake curl depen
 Git (installed through Chocolatey as above) should install all the
 usual ssh utils
 
-*** remote access
+# *** remote access
 
-#+BEGIN_SRC sh
-winrm quickstart
-#+END_SRC
+# #+BEGIN_SRC sh
+# winrm quickstart
+# #+END_SRC
 
-and follow the prompts.  Although this will only allow connections
-from other Windows boxes
+# and follow the prompts.  Although this will only allow connections
+# from other Windows boxes
 
 ** keyboard
 
