@@ -129,10 +129,10 @@ have a bad time
 choco install git -params '"/GitAndUnixToolsOnPath /NoAutoCrlf"'
 #+END_SRC
 
-some useful packages
+*** other packages
 
 #+BEGIN_SRC sh
-choco install emacs visualstudiocommunity2013 nuget.commandline nugetpackagemanagerforvisualstudio2013 firefox
+choco install 7zip.commandline ag autohotkey autohotkey.install cmake curl dependencywalker directx Emacs Firefox git git.install NuGet.CommandLine NugetPackageManagerForVisualStudio2013 PowerShell procmon putty putty.portable python2 VisualStudioCommunity2013 Wget
 #+END_SRC
 
 ** ssh
