@@ -1526,8 +1526,9 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 
 (defun date-of-next-Sunday ()
   "return's next Sunday's date, as a string"
-  (let ((next-sun (time-add (calendar-current-date)
-                          (days-to-time (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
+  (let ((next-sun (calendar-gregorian-from-absolute
+                   (+ (calendar-absolute-from-gregorian (calendar-current-date))
+                      (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
   (format "%04d-%02d-%02d"
           (nth 2 next-sun)
           (nth 0 next-sun)
