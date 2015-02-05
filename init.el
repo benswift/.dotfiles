@@ -1541,7 +1541,7 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
          (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
          (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
                              (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
-         (output-filename (format "~/Desktop/%s.pdf" (date-of-next-Sunday)))
+         (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
          (charts (loop repeat num-songs collect (ido-completing-read "chart: " candidates nil :require-match))))
     (let ((default-directory church-music-dir))
       (shell-command (format "pdfjam %s -o %s && open %s"
