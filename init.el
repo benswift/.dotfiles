@@ -628,7 +628,7 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; rtags ;;
 ;;;;;;;;;;;
 
-(rtags-enable-standard-keybindings)
+;; (rtags-enable-standard-keybindings)
 
 ;;;;;;;;;;;;;
 ;; malinka ;;
