@@ -23,7 +23,7 @@ doi=false]{biblatex}
 % \AtEveryBibitem{\clearfield{month}}
 % \AtEveryCitekey{\clearfield{month}}
 
-\addbibresource{papers.bib}
+\addbibresource{zotero.bib}
 
 \usepackage[english=british,threshold=15,thresholdtype=words]{csquotes}
 \SetCiteCommand{\parencite}
