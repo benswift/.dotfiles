@@ -90,6 +90,7 @@
         ;; nrepl-ritz ;; shadows cider-mode
         osc
         org
+        paradox
         projectile
         rainbow-delimiters
         rtags
