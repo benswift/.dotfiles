@@ -459,7 +459,8 @@ i.e. change right window to bottom, or change bottom window to right."
             mu4e-update-interval 300
             mu4e-headers-auto-update t
             mu4e-compose-signature-auto-include nil
-            mu4e-change-filenames-when-moving t)
+            mu4e-change-filenames-when-moving t
+            mu4e-view-show-addresses t)
 
       ;; html email handling
       (require 'mu4e-contrib)
