@@ -107,6 +107,7 @@
         vimrc-mode
         wgrep
         wgrep-ag
+        workgroups2
         yaml-mode
         yasnippet
         zoom-frm))
@@ -421,6 +422,12 @@ i.e. change right window to bottom, or change bottom window to right."
 (global-set-key (kbd "C-x C--") 'zoom-in/out)
 (global-set-key (kbd "C-x C-=") 'zoom-in/out)
 (global-set-key (kbd "C-x C-0") 'zoom-in/out)
+
+;;;;;;;;;;;;;;;;;
+;; workgroups2 ;;
+;;;;;;;;;;;;;;;;;
+
+(workgroups-mode 1)
 
 ;;;;;;;;;;;;;;;;
 ;; mu (email) ;;
