@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: xtm-lib-header
-# key: libhead
+# name: header-external
+# key: headerext
 # --
 ;;; `(buffer-name)` -- $1
 

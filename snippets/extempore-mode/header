@@ -1,0 +1,20 @@
+# -*- mode: snippet -*-
+# name: header
+# key: header
+# --
+;;; `(buffer-name)` -- $1
+
+;; Author: ${2:$$(yas-choose-value '("Andrew Sorensen" "Ben Swift"))}
+;; Keywords: extempore
+;; Required dylibs: $3
+
+;;; Commentary:
+
+;; $0
+
+;;; Code:
+
+(sys:load-preload-check '${4:libname})
+(define *xtmlib-$4-loaded* #f)
+
+(define *xtmlib-$4-loaded* #t)
