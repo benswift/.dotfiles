@@ -427,7 +427,7 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; workgroups2 ;;
 ;;;;;;;;;;;;;;;;;
 
-(workgroups-mode 1)
+;; (workgroups-mode 1)
 
 ;;;;;;;;;;;;;;;;
 ;; mu (email) ;;
