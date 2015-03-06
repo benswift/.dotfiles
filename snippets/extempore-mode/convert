@@ -2,4 +2,4 @@
 # name: convert
 # key: cv
 # --
-(convert $0)
+(convert$0)
