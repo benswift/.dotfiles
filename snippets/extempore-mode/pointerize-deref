@@ -1,6 +1,6 @@
 # -*- mode: snippet; require-final-newline: nil -*-
-# name: call-as-xtlang
-# key: cax
+# name: pointerize-deref
+# key: pd
 # binding: direct-keybinding
 # --
-(call-as-xtlang$0)
+(pref $0_ptr 0)

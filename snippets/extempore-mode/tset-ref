@@ -1,6 +1,6 @@
 # -*- mode: snippet; require-final-newline: nil -*-
-# name: call-as-xtlang
-# key: cax
+# name: tset-ref
+# key: tsetr
 # binding: direct-keybinding
 # --
-(call-as-xtlang$0)
+(tset! ${1:dat} ${2:index} $0(tref $1 $2))
