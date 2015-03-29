@@ -670,6 +670,9 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (global-set-key (kbd "C-c d") 'dash-at-point)
 
+(add-to-list 'dash-at-point-mode-alist
+             '(cmake-mode . "cmake"))
+
 ;;;;;;;;;;;;
 ;; eshell ;;
 ;;;;;;;;;;;;
