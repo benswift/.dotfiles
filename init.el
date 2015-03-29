@@ -1572,6 +1572,35 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
                              output-filename
                              output-filename)))))
 
+;; lisp debugging
+
+(defun ben-insert-debug-printlns ()
+  "put a debugging println before every single function call"
+  (interactive)
+  (save-excursion
+    (let (beg end count)
+      (setq beg (point))
+      (setq count 0)
+      (end-of-defun)
+      (setq end (point))
+      (goto-char beg)
+      (while (search-forward "(" end :noerror)
+        (backward-char)
+        (sp-wrap-with-paren)
+        (insert (format "begin (println %03d) " count))
+        (setq count (1+ count))
+        (forward-char)))))
+
+(defun ben-wrap-sexp-in-println-checkpoints ()
+  "put a debugging println before every single function call"
+  (interactive)
+  (save-excursion
+    (sp-wrap-with-paren)
+    (insert "begin (println '-------------------checkpoint-BEGIN) ")
+    (sp-up-sexp)
+    (backward-char)
+    (insert "(println '-------------------checkpoint-END)")))
+
 ;;;;;;;;;;;;;;;;;;
 ;; emacs server ;;
 ;;;;;;;;;;;;;;;;;;
