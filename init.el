@@ -515,6 +515,11 @@ i.e. change right window to bottom, or change bottom window to right."
       (setq mu4e-reply-to-address "ben@benswift.me"
             user-mail-address     "ben@benswift.me"
             user-full-name        "Ben Swift")
+      (setq mu4e-user-mail-address-list
+            '("ben@benswift.me"
+              "benjamin.j.swift@gmail.com"
+              "ben.swift@anu.edu.au"))
+      (setq mu4e-compose-dont-reply-to-self t)
 
       ;; mailing lists
       (setq mu4e-user-mailing-lists
