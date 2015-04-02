@@ -497,6 +497,8 @@ i.e. change right window to bottom, or change bottom window to right."
                    '("list:extemporelang.googlegroups.com" "Extempore list" ?e) t)
       (add-to-list 'mu4e-bookmarks
                    '("from:Henry Gardner" "Hballs" ?h) t)
+      (add-to-list 'mu4e-bookmarks
+                   '("to:benjamin.j.swift@gmail.com" "to gmail" ?g) t)
 
       ;; actions
       (add-to-list 'mu4e-view-actions
