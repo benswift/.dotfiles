@@ -5,6 +5,5 @@
 (xtmtest
  '(bind-func test_${1:name}
     (lambda ($2)
-      $3))
- (test_$1 ${4:args})
- ${5:expected})
+      $0))
+ (test_$1))
