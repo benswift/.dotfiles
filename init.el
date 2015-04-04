@@ -91,6 +91,7 @@
         osc
         org
         paradox
+        persistent-scratch
         projectile
         rainbow-delimiters
         rtags
@@ -428,6 +429,12 @@ i.e. change right window to bottom, or change bottom window to right."
 ;;;;;;;;;;;;;;;;;
 
 ;; (workgroups-mode 1)
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+;; persistent-scratch ;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+(persistent-scratch-setup-default)
 
 ;;;;;;;;;;;;;;;;
 ;; mu (email) ;;
