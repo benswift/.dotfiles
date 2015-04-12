@@ -54,6 +54,7 @@
 (setq ben-package-list
       '(ace-jump-mode
         ag
+        async
         bbdb
         auctex
         auto-complete
@@ -116,6 +117,10 @@
 (dolist (package ben-package-list)
   (if (not (package-installed-p package))
       (package-install package)))
+
+;; paradox (souped up package.el)
+
+(setq paradox-execute-asynchronously t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cross-platform setup ;;
