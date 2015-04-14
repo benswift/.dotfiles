@@ -1395,7 +1395,6 @@ instead, and with a prefix argument, justify as well."
 
 (setq yas-prompt-functions '(yas-ido-prompt yas-no-prompt))
 (setq yas-triggers-in-field t)
-(add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
 (yas-global-mode 1)
 
 ;;;;;;;;;;;;;;;;;;
