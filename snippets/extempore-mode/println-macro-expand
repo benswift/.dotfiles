@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: println-macro-expand
+# key: plme
+# binding: direct-keybinding
+# --
+(println (macro-expand$0))
