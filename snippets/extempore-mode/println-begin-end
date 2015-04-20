@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: println-begin-end
+# key: plbe
+# binding: direct-keybinding
+# --
+(println 'begin)(println end)

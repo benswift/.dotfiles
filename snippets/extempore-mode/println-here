@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: println-here
+# key: plh
+# binding: direct-keybinding
+# --
+(println 'here)
