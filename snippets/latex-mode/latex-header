@@ -45,12 +45,16 @@ pdfpagelabels,
 hyperfootnotes=true]{hyperref}
 
 \author{${1:Ben Swift}}
+
 \date{\today}
-\title{$0}
+
+\title{${2:Title}}
 
 \begin{document}
 
+\maketitle
 
+$0Here is the body text.
 
 \printbibliography[title=References]
 
