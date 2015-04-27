@@ -3,4 +3,5 @@
 # key: plbe
 # binding: direct-keybinding
 # --
-(println 'begin)(println end)
+(println 'begin)
+(println end)
