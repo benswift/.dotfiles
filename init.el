@@ -757,7 +757,7 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; type-break ;;
 ;;;;;;;;;;;;;;;;
 
-(type-break-mode 1)
+;; (type-break-mode 1)
 
 ;;;;;;;;;;;;;
 ;; ibuffer ;;
