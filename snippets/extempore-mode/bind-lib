@@ -2,4 +2,4 @@
 # name: bind-lib
 # key: bindl
 # --
-(bind-lib ${1:lib-name} ${2:fn-name} ${3:type})
+(bind-lib ${1:libname} ${2:fn_name} ${3:type})
