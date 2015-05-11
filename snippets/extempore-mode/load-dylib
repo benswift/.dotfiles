@@ -3,4 +3,4 @@
 # key: loaddylib
 # binding: direct-keybinding
 # --
-(define ${1:libname} (sys:load-dylib "$1.${2:$$(yas-choose-value '("dylib" "so" "dll"))}"))
+(define ${1:libname} (sys:load-dylib "$1$0"))
