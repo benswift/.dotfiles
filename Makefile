@@ -5,6 +5,8 @@ osx:
 
 	ln -sf $(DOTFILES_DIR)/mbsyncrc ~/.mbsyncrc
 
+	ln -sf $(DOTFILES_DIR)/lldbinit ~/.lldbinit
+
 	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
 
@@ -21,6 +23,8 @@ linux:
 	ln -sf $(DOTFILES_DIR)/bash_profile.linux ~/.bash_profile
 
 	ln -sf $(DOTFILES_DIR)/mbsyncrc ~/.mbsyncrc
+
+	ln -sf $(DOTFILES_DIR)/lldbinit ~/.lldbinit
 
 	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
 	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
