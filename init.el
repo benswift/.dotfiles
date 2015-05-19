@@ -551,7 +551,7 @@ i.e. change right window to bottom, or change bottom window to right."
                 (insert
                  (cond
                   ((mu4e-message-contact-field-matches
-                    msg :from "\\(joyli90@gmail.com\\|joy.swift@abs.gov.au\\)")
+                    msg :from "\\(joyli90@gmail.com\\|joy.y.swift@gmail.com\\|joy.swift@abs.gov.au\\)")
                    "Hi Bunny\n\n\n\nLove,\nBun\n")
                   ((mu4e-message-contact-field-matches
                     msg :from "walknuts@gmail.com")
@@ -559,7 +559,7 @@ i.e. change right window to bottom, or change bottom window to right."
                   (t (format "Hi %s\n\n\n\nCheers,\nBen\n"
                              (car (split-string (or (caar (mu4e-msg-field msg :from)) "mate")))))))
                 (if (mu4e-message-contact-field-matches
-                     msg :to "\\(benjamin.j.swift@gmail.com\\|benswift@fastmail.com\\)")
+                     msg :to "benjamin.j.swift@gmail.com")
                     (insert "\nP.S. I'm getting rid of this gmail address soon, my new address is ben@benswift.me\n"))
                 (goto-char bomp)
                 (forward-line 2))
