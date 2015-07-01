@@ -2,8 +2,5 @@
 # name: width-height-setup
 # key: whsetup
 # --
-(define width `(display-pixel-width)`.0)
-(define height `(display-pixel-height)`.0)
-(bind-val width float `(display-pixel-width)`.0)
-(bind-val height float `(display-pixel-height)`.0)
-(define fullscreen #t)
+(bind-val width i32 `(display-pixel-width)`)
+(bind-val height i32 `(display-pixel-height)`)
