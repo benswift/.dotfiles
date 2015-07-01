@@ -4,4 +4,4 @@
 # binding: direct-keybinding
 # --
 (println 'begin)
-(println end)
+(println 'end)
