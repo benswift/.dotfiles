@@ -770,8 +770,6 @@ i.e. change right window to bottom, or change bottom window to right."
 ;;;;;;;;;;;
 
 (setq vc-display-status nil)
-(setq magit-save-some-buffers nil)
-(setq magit-last-seen-setup-instructions "1.4.0")
 (global-set-key (kbd "<f5>") 'magit-status)
 
 ;;;;;;;;;;;;;
