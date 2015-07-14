@@ -3,4 +3,4 @@
 # key: tref
 # binding: direct-keybinding
 # --
-(tref$1 ${2:dat} ${3:index})
+(tref ${1:dat} ${2:index})

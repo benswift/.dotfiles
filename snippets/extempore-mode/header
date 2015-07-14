@@ -14,7 +14,3 @@
 
 ;;; Code:
 
-(sys:load-preload-check '${4:libname})
-(define *xtmlib-$4-loaded* #f)
-
-(define *xtmlib-$4-loaded* #t)

@@ -3,4 +3,4 @@
 # key: aref
 # binding: direct-keybinding
 # --
-(aref$1 ${2:dat} ${3:index})
+(aref ${1:dat} ${2:index})
