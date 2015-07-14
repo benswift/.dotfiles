@@ -1488,6 +1488,13 @@ instead, and with a prefix argument, justify as well."
   (insert mc--insert-numbers-number)
   (setq mc--insert-numbers-number (1+ mc--insert-numbers-number)))
 
+;;;;;;;;;;;;;;;;
+;; Processing ;;
+;;;;;;;;;;;;;;;;
+
+(setq processing-application-dir "~/Applications/Processing.app")
+(setq processing-sketchbook-dir "~/Code/processing")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handy, misc. elisp functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
