@@ -83,6 +83,7 @@
         isearch+
         less-css-mode
         jedi
+        json-mode
         magit
         markdown-mode
         malinka
