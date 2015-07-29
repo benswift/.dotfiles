@@ -3,13 +3,13 @@
 # key: aothead
 # binding: direct-keybinding
 # --
-(sys:load "libs/$1.xtm" 'quiet)
+(sys:load "libs/aot-cache/$1.xtm" 'quiet)
 (sys:load-preload-check '$1)
 (define *xtmlib-${1:libname}-loaded* #f)
 
 (impc:aot:suppress-aot-do
  (sys:load "libs/${2:core/std}.xtm"))
-(impc:aot:insert-sexp '(sys:load "libs/$2.xtm" 'quiet))
+(impc:aot:insert-forms (sys:load "libs/$2.xtm" 'quiet))
 
 (impc:aot:insert-header "xtm$1")
 
