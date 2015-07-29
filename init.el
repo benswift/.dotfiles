@@ -772,6 +772,7 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (setq vc-display-status nil)
 (global-set-key (kbd "<f5>") 'magit-status)
+(setq magit-push-always-verify nil)
 
 ;;;;;;;;;;;;;
 ;; cc-mode ;;
