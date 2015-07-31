@@ -1,0 +1,23 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: print-toString-template
+# key: printtostring
+# binding: direct-keybinding
+# --
+(bind-func ${1:type}_print
+  "specialised print function for $1*"
+  (lambda (${1:$(downcase yas/text)}:$1*)
+    (printf "<$1: $2>"
+            (tref ${1:$(downcase yas/text)} 0))
+    void))
+
+(bind-poly print $1_print)
+
+(bind-func $1_toString
+  "specialised toString function for $1*"
+  (lambda (${1:$(downcase yas/text)}:$1*)
+    (let ((str:i8* (salloc 256)))
+      (sprintf str "<$1: $2>"
+               (tref ${1:$(downcase yas/text)} 0))
+      (Str str))))
+
+(bind-poly toString $1_toString)
