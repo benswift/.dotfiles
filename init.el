@@ -96,7 +96,7 @@
         persistent-scratch
         projectile
         rainbow-delimiters
-        rtags
+        ;; rtags
         sane-term
         s
         scss-mode
