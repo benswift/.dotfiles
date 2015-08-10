@@ -86,7 +86,6 @@
         json-mode
         magit
         markdown-mode
-        malinka
         monokai-theme
         multiple-cursors
         ;; nrepl-ritz ;; shadows cider-mode
