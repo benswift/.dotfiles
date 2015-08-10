@@ -1012,23 +1012,23 @@ tags:
 (cond
  ((string= system-name "lonyx")
   (setq extempore-program-args "--device 0 --frames 1024")
-  (setq user-extempore-directory "/home/ben/Code/extempore/")
+  (setq extempore-share-directory "/home/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
  ((string= system-name "debian-vm")
   (setq extempore-program-args "--device 1 --frames 1024")
-  (setq user-extempore-directory "/home/ben/Code/extempore/")
+  (setq extempore-share-directory "/home/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
  ((or (string= system-name "hodgey.local")
       (string= system-name "hodgey.lan")
       t) ;; probably running on hodgey
   (setq extempore-program-args nil)
   ;; (setq extempore-program-args "--device 1 --frames 1024")
-  (setq user-extempore-directory "/Users/ben/Code/extempore/")
+  (setq extempore-share-directory "/Users/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/Users/ben/Code/xtm/lib/")))
 
-(autoload 'extempore-mode (concat user-extempore-directory "extras/extempore.el") nil t)
-(autoload 'extempore-run (concat user-extempore-directory "extras/extempore.el") nil t)
-(autoload 'extempore-repl (concat user-extempore-directory "extras/extempore.el") nil t)
+(autoload 'extempore-mode (concat extempore-share-directory "extras/extempore.el") nil t)
+(autoload 'extempore-run (concat extempore-share-directory "extras/extempore.el") nil t)
+(autoload 'extempore-repl (concat extempore-share-directory "extras/extempore.el") nil t)
 (add-to-list 'auto-mode-alist '("\\.xtm$" . extempore-mode))
 (add-to-list 'dash-at-point-mode-alist '(extempore-mode . "gl4,gl3,gl2,c,c++,osx"))
 
@@ -1048,13 +1048,13 @@ tags:
 
 ;; more extempore-related goodies
 
-(autoload #'llvm-mode (concat user-extempore-directory "extras/llvm-mode.el")
+(autoload #'llvm-mode (concat extempore-share-directory "extras/llvm-mode.el")
   "Major mode for editing LLVM IR files" t)
 
 ;; to pull down the lldb-aware gud.el
-;; (async-shell-command (format "curl -o %sextras/gud-lldb.el http://www.opensource.apple.com/source/lldb/lldb-69/utils/emacs/gud.el?txt" user-extempore-directory))
+;; (async-shell-command (format "curl -o %sextras/gud-lldb.el http://www.opensource.apple.com/source/lldb/lldb-69/utils/emacs/gud.el?txt" extempore-share-directory))
 
-(autoload #'lldb (concat user-extempore-directory "extras/gud-lldb.el")
+(autoload #'lldb (concat extempore-share-directory "extras/gud-lldb.el")
   "A version of gud.el which supports debugging in LLDB." t)
 
 (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode))
