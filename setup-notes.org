@@ -132,7 +132,8 @@ choco install git -params '"/GitAndUnixToolsOnPath /NoAutoCrlf"'
 *** other packages
 
 #+BEGIN_SRC sh
-choco install 7zip.commandline ag autohotkey autohotkey.install cmake curl dependencywalker directx Emacs Firefox git git.install NuGet.CommandLine NugetPackageManagerForVisualStudio2013 PowerShell procmon putty putty.portable python2 VisualStudioCommunity2013 Wget
+choco install 7zip.commandline ag autohotkey autohotkey.install cmake curl dependencywalker directx Emacs Firefox git git.install NuGet.CommandLine NugetPackageManagerForVisualStudio2013 PowerShell procmon putty putty.portable python2 VisualStudio2015Community Wget
+choco install 7zip.commandline ag autohotkey autohotkey.install curl dependencywalker directx Firefox git.install NuGet.CommandLine NugetPackageManagerForVisualStudio2015 PowerShell procmon putty putty.portable python2 VisualStudio2015Community Wget
 #+END_SRC
 
 ** ssh
