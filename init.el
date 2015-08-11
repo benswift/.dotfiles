@@ -1372,8 +1372,9 @@ instead, and with a prefix argument, justify as well."
 
 ;; elpy setup
 
-(elpy-enable)
-(elpy-use-ipython)
+(with-demoted-errors "Error in elpy setup: %s"
+  (elpy-use-ipython)
+  (elpy-enable))
 
 ;; (setq elpy-rpc-backend "jedi")
 
