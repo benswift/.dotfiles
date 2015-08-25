@@ -3,8 +3,8 @@ Host mail.messagingengine.com
 Port 992
 User benswift@fastmail.com
 Pass ****
-UseIMAPS yes # Use SSL
-RequireSSL yes
+SSLType IMAPS
+SSLVersions TLSv1.2
 # CertificateFile /etc/ssl/certs/ca-certificates.crt
 
 IMAPStore fastmail-remote
