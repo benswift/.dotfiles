@@ -1,0 +1,9 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: bind-dylib
+# key: binddy
+# binding: direct-keybinding
+# --
+(bind-dylib lib$1
+  (cond ((string=? (sys:platform) "OSX") "lib$1.dylib")
+        ((string=? (sys:platform) "Linux") "lib$1.so")
+        ((string=? (sys:platform) "Windows") "lib$1.dll")))

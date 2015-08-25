@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: metro-get-tempo
+# key: mgt
+# binding: direct-keybinding
+# --
+(*metro* 'get-tempo)
