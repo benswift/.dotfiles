@@ -1108,6 +1108,14 @@ tags:
      base-path "setup.xtm" setup-header)
     (dired base-path)))
 
+(defun extempore-htmlize-and-open-in-browser (beg end)
+  (interactive "r")
+  (let ((src (buffer-substring beg end)))
+    (with-temp-file "/tmp/out.xtm"
+      (insert src))
+    (htmlize-file "/tmp/out.xtm")
+    (async-shell-command "open -a /Applications/Safari.app /tmp/out.xtm.html")))
+
 ;; yasnippet helpers
 
 
