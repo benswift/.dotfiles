@@ -1025,7 +1025,7 @@ tags:
       (string= system-name "hodgey.lan")
       t) ;; probably running on hodgey
   (setq extempore-program-args nil)
-  ;; (setq extempore-program-args "--device 1 --frames 1024")
+  (setq extempore-program-args "--sharedir /Users/ben/Code/extempore") ;; --device 1 --frames 1024
   (setq extempore-share-directory "/Users/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/Users/ben/Code/xtm/lib/")))
 
