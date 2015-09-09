@@ -628,7 +628,9 @@ i.e. change right window to bottom, or change bottom window to right."
                     "Projectile"
                     "Fly"
                     "Ref"
-                    "Fill")))
+                    "Fill"
+                    "company"
+                    "yas")))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; ace-jump-mode ;;
