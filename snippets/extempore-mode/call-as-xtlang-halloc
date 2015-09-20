@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: call-as-xtlang-halloc
+# key: caxh
+# binding: direct-keybinding
+# --
+(call-as-xtlang-halloc$0)
