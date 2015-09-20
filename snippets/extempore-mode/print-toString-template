@@ -5,7 +5,7 @@
 # --
 (bind-func ${1:type}_print
   "specialised print function for $1*"
-  (lambda (${2:$$(downcase (yas-field-value 1))}:$1*)
+  (lambda (${2:arg}:$1*)
     (if (null? $2)
         (printf "<$1 0x0>")
         (printf "<$1 %p $0>"
@@ -21,9 +21,7 @@
     (let ((str:i8* (salloc 256)))
       (if (null? $2)
           (sprintf str "<$1 0x0>")
-          (sprintf str "<$1 %p >"
-                   $1
-                   (tref $2 0)))
+          (sprintf str))
       (Str str))))
 
 (bind-poly toString $1_toString)
