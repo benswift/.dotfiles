@@ -22,8 +22,11 @@ these instructions are from GitHub
 
 # to set up a new key
 #+BEGIN_SRC sh
-ssh-keygen -t rsa -C "benswift@fastmail.com" && sudo apt-get install xclip && xclip -sel clip < ~/.ssh/id_rsa.pub
+ssh-keygen -t rsa -f vmkey -C "ben@benswift.me" && sudo apt-get install xclip && xclip -sel clip < ~/.ssh/id_rsa.pub
 #+END_SRC
+
+If you're just setting up a VM, then there's a `vmkey` key pair
+kicking around somewhere
 
 *** emacs
 
@@ -34,7 +37,7 @@ sudo add-apt-repository ppa:ubuntu-elisp/ppa && sudo apt-get install emacs-snaps
 *** fonts
 
 #+BEGIN_SRC sh
-sudo add-apt-repository ppa:unit193/sourcecodepro && sudo apt-get install fonts-source-code-pro-otf
+sudo add-apt-repository ppa:unit193/sourcecodepro && sudo apt-get update && sudo apt-get install fonts-source-code-pro-otf
 #+END_SRC
 
 *** graphics
@@ -54,6 +57,11 @@ need these deps
 - libxrandr-dev
 - libxi-dev
 - libxcursor-dev
+
+
+** Ubuntu 15.04
+
+
 
 ** Fedora 20
   :PROPERTIES:
