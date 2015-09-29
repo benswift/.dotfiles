@@ -8,8 +8,9 @@
 (define *xtmlib-${1:libname}-loaded* #f)
 
 (impc:aot:suppress-aot-do
- (sys:load "libs/${2:core/std}.xtm"))
-(impc:aot:insert-forms (sys:load "libs/$2.xtm" 'quiet))
+ (sys:load "libs/core/std.xtm"))
+(impc:aot:insert-forms
+ (sys:load "libs/core/std.xtm" 'quiet))
 
 (impc:aot:insert-header "xtm$1")
 
