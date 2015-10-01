@@ -17,7 +17,7 @@ Inbox ~/Maildir/fastmail/INBOX
 Channel fastmail
 Master :fastmail-remote:
 Slave :fastmail-local:
-Patterns "INBOX" "Drafts" "Sent Items" "Trash" "Archive" "Spam"
+Patterns "INBOX" "*"
 Create Slave
 Sync All
 Expunge Both

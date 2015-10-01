@@ -493,7 +493,7 @@ i.e. change right window to bottom, or change bottom window to right."
               ("/Archive"    . ?a)
               ("/Drafts"     . ?d)
               ("/Trash"      . ?t)
-              ("/Spam"       . ?j)))
+              ("/Junk Mail"  . ?j)))
 
       ;; headers view
       (setq mu4e-headers-date-format "%e %b %y"
