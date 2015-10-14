@@ -1,6 +1,6 @@
 * Linux
 
-** Ubuntu 14.10
+** Ubuntu 15.04
   :PROPERTIES:
   :header-args:sh:    :tangle ubuntu-setup.sh
   :END:
@@ -22,7 +22,7 @@ these instructions are from GitHub
 
 # to set up a new key
 #+BEGIN_SRC sh
-ssh-keygen -t rsa -f vmkey -C "ben@benswift.me" && sudo apt-get install xclip && xclip -sel clip < ~/.ssh/id_rsa.pub
+ssh-keygen -t rsa -C "ben@benswift.me" && sudo apt-get install xclip && xclip -sel clip < ~/.ssh/id_rsa.pub
 #+END_SRC
 
 If you're just setting up a VM, then there's a `vmkey` key pair
@@ -31,37 +31,23 @@ kicking around somewhere
 *** emacs
 
 #+BEGIN_SRC 
-sudo add-apt-repository ppa:ubuntu-elisp/ppa && sudo apt-get install emacs-snapshot
+sudo apt-get install emacs24
 #+END_SRC
 
 *** fonts
 
-#+BEGIN_SRC sh
-sudo add-apt-repository ppa:unit193/sourcecodepro && sudo apt-get update && sudo apt-get install fonts-source-code-pro-otf
-#+END_SRC
+Download fonts from (https://github.com/adobe-fonts/source-code-pro),
+copy them into =/usr/share/fonts/otf= and run =fc-cache -f -v=
 
 *** graphics
+
+launch the 'additional drivers' program/tool to select the latest
+driver
 
 #+BEGIN_SRC sh
 # to get the absolute latest (probably not necessary)
 sudo add-apt-repository ppa:xorg-edgers/ppa -y && sudo apt-get update && sudo apt-get install nvidia-current
 #+END_SRC
-
-launch the 'additional drivers' program/tool to select the latest
-driver
-
-*** GLFW
-
-need these deps
-
-- libxrandr-dev
-- libxi-dev
-- libxcursor-dev
-
-
-** Ubuntu 15.04
-
-
 
 ** Fedora 20
   :PROPERTIES:
