@@ -9,13 +9,7 @@ export DEBEMAIL="ben@benswift.me"
 export DEBFULLNAME="Ben Swift"
 
 # Extempore-patched LLVM directory
-export EXT_LLVM_DIR=~/Code/extempore/llvm-build
-
-# linux homebrew
-
-export PATH=~/.linuxbrew/bin:$PATH
-export LD_LIBRARY_PATH=~/.linuxbrew/lib
-export EXT_LLVM_DIR=~/.linuxbrew/Cellar/extempore-llvm/3.4.1
+export EXT_LLVM_DIR=/home/ben/Code/extempore/llvm-build
 
 # clojure
 
