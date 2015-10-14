@@ -1013,7 +1013,6 @@ tags:
 ;; device-specific Extempore config
 (cond
  ((string= system-name "Lonyx")
-  (setq extempore-program-args "--device 0 --frames 1024")
   (setq extempore-share-directory "/home/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
  ((string= system-name "WINYX")
