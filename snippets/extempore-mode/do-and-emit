@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: do-and-emit
+# key: dae
+# binding: direct-keybinding
+# --
+(impc:aot:do-and-emit$0)
