@@ -1523,6 +1523,7 @@ instead, and with a prefix argument, justify as well."
 
 (setq processing-application-dir "~/Applications/Processing.app")
 (setq processing-sketchbook-dir "~/Code/processing")
+(setq processing-location "/Users/ben/processing-java")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handy, misc. elisp functions ;;
