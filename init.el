@@ -1147,6 +1147,25 @@ tags:
             ('- '(i i6 i64 i7 i^ i^6 i^64 i^7 n n6 ii ii6 ii7 ii- ii-6 ii-7 ii^ ii^7 iii iii6 iii7 iii- iii-6 iii-7 iv iv6 iv7 iv^ iv^6 iv^7 v v^ v6 v7 v- v-6 v-6 v-7 vi vi6 vi7 vi- vi-6 vi-7 vii vii6 vii7 viio viio6 viio7))
             (t nil))))
 
+;; help displaying LLVM IR
+(defun extempore-show-ir-in-temp-buffer (beg end)
+  (interactive "r")
+  (save-excursion
+    (let ((ir-str (buffer-substring-no-properties beg end)))
+      (with-current-buffer (get-buffer-create "*extempore LLVM IR*")
+        (if (not (equalp major-mode 'llvm-mode))
+            (llvm-mode))
+        (delete-region (point-min) (point-max))
+        (insert (replace-regexp-in-string "\\\\n" "\n" ir-str))
+        (display-buffer "*extempore LLVM IR*" #'display-buffer-pop-up-window)))))
+
+;; AOT-compilation help
+
+(defun extempore-AOT-compile-lib (lib-path)
+  (interactive "sLibrary: ")
+  (let ((default-directory extempore-share-directory))
+    (async-shell-command (format "AOT_LIBS=\"%s\" ./compile-stdlib.sh --port=17199" lib-path))))
+
 ;; (let ((extempore-snippet-dir
 ;;        "/Users/ben/.dotfiles/snippets/extempore-mode"))
 ;;   (dolist (name extempore-yas-oscillator-list)
