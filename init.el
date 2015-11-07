@@ -1105,13 +1105,17 @@ tags:
      base-path "setup.xtm" setup-header)
     (dired base-path)))
 
-(defun extempore-htmlize-and-open-in-browser (beg end)
+(defun htmlize-and-open-in-browser (beg end)
   (interactive "r")
-  (let ((src (buffer-substring beg end)))
-    (with-temp-file "/tmp/out.xtm"
-      (insert src))
-    (htmlize-file "/tmp/out.xtm")
-    (async-shell-command "open -a /Applications/Safari.app /tmp/out.xtm.html")))
+  (let ((src (buffer-substring beg end))
+        (mode major-mode)
+        (outfile "/tmp/fontified.html"))
+    (with-temp-buffer
+      (funcall mode)
+      (insert src)
+      (htmlfontify-buffer)
+      (write-file outfile))
+    (async-shell-command (format "open -a /Applications/Safari.app %s" outfile))))
 
 ;; yasnippet helpers
 
