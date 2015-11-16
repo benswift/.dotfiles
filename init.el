@@ -357,12 +357,12 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (defun frame-resize-halfscreen-left ()
   (interactive)
-  (set-frame-size (selected-frame) (/ (display-pixel-width) 2) (display-pixel-height) :pixelwise)
+  (set-frame-size (selected-frame) (- (/ (display-pixel-width) 2) 15) (display-pixel-height) :pixelwise)
   (set-frame-position (selected-frame) 0 0))
 
 (defun frame-resize-halfscreen-right ()
   (interactive)
-  (set-frame-size (selected-frame) (/ (display-pixel-width) 2) (display-pixel-height) :pixelwise)
+  (set-frame-size (selected-frame) (- (/ (display-pixel-width) 2) 15) (display-pixel-height) :pixelwise)
   (set-frame-position (selected-frame) (/ (display-pixel-width) 2) 0))
 
 (define-key global-map (kbd "C-s-h") 'frame-resize-halfscreen-left)
