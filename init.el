@@ -1686,4 +1686,30 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
         (toggle-frame-fullscreen)
       (message "toggle-frame-fullscreen not defined - are you on Emacs 24.4 or greater?")))
 
+;;;;;;;;;
+;; pic ;;
+;;;;;;;;;
+
+;; ppic2
+
+(defun ppic2-mpirun-remote ()
+  (interactive)
+  (let ((default-directory "/Users/ben/Code/src/skeleton-pic/"))
+    (async-shell-command "mpirun --app ppic2/xtm/ppic2.app"
+                         (get-buffer-create "*extempore-remote*"))))
+
+(defun ppic2-run-remote ()
+  (interactive)
+  (let ((default-directory "/Users/ben/Code/src/skeleton-pic/"))
+    (async-shell-command "extempore --port 7097 --run ppic2/xtm/ppic2-run-remote.xtm"
+                         (get-buffer-create "*extempore-remote*"))))
+
+;; pbpic2
+
+(defun pbpic2-mpirun-laptop ()
+  (interactive)
+  (let ((default-directory "/Users/ben/Code/src/skeleton-pic/"))
+    (async-shell-command "mpirun --app pbpic2-laptop/xtm/pbpic2.app"
+                         (get-buffer-create "*extempore-MPI*"))))
+
 ;;; init.el ends here
