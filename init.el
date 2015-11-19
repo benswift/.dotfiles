@@ -1131,6 +1131,12 @@ tags:
       (write-file outfile))
     (async-shell-command (format "open -a /Applications/Safari.app %s" outfile))))
 
+(defun extempore-run-integration-test ()
+  (interactive)
+  (let ((default-directory (concat extempore-share-directory "extras/")))
+    (async-shell-command "./integration-test.sh"
+                         (get-buffer-create "*extempore-integration-test*"))))
+
 ;; yasnippet helpers
 
 
