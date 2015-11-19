@@ -2,5 +2,5 @@
 # name: width-height-setup
 # key: whsetup
 # --
-(bind-val width i32 `(display-pixel-width)`)
-(bind-val height i32 `(display-pixel-height)`)
+(bind-val width i32 (/ `(display-pixel-width)` 2))
+(bind-val height i32 (- `(display-pixel-height)` 50))
