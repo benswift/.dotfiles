@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: convert-width-height
+# key: cvwh
+# binding: direct-keybinding
+# --
+(convert width) (convert height)
