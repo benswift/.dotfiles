@@ -1028,7 +1028,6 @@ tags:
   (setq extempore-share-directory "/Users/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/Users/ben/Code/xtm/lib/")))
 
-(package-install-file (concat extempore-share-directory "extras/extempore-emacs-mode/extempore-mode.el"))
 (add-to-list 'dash-at-point-mode-alist '(extempore-mode . "gl4,gl3,gl2,c,c++,osx"))
 
 (defun ben-extempore-mode-hook ()
