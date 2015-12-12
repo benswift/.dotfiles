@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: console-log
+# key: cl
+# binding: direct-keybinding
+# --
+(js/console.log$0)
