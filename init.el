@@ -105,7 +105,6 @@
         string-utils
         unidecode
         vagrant
-        vagrant-tramp
         vimrc-mode
         wgrep
         wgrep-ag
