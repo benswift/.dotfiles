@@ -529,7 +529,7 @@ i.e. change right window to bottom, or change bottom window to right."
                    '("bView in browser" . mu4e-action-view-in-browser) t)
 
       ;; fancy graphics
-      (setq mu4e-show-images t
+      (setq mu4e-view-show-images t
             mu4e-use-fancy-chars nil)
 
       ;; use imagemagick, if available
@@ -538,7 +538,7 @@ i.e. change right window to bottom, or change bottom window to right."
 
       ;; general emacs mail settings; used when composing e-mail
       ;; the non-mu4e-* stuff is inherited from emacs/message-mode
-      (setq mu4e-reply-to-address "ben@benswift.me"
+      (setq mu4e-compose-reply-to-address "ben@benswift.me"
             user-mail-address     "ben@benswift.me"
             user-full-name        "Ben Swift")
       (setq mu4e-user-mail-address-list
@@ -714,7 +714,7 @@ i.e. change right window to bottom, or change bottom window to right."
                   (base-name (eshell/pwd))
                   (if (= (user-uid) 0) " # " " $ "))))
   ;; helpful bits and pieces
-  (turn-on-eldoc-mode)
+  (eldoc-mode 1)
   (add-to-list 'eshell-command-completions-alist
                '("gunzip" "gz\\'"))
   (add-to-list 'eshell-command-completions-alist
@@ -744,7 +744,7 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; elisp ;;
 ;;;;;;;;;;;
 
-(add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+(add-hook 'emacs-lisp-mode-hook 'eldoc-mode 1)
 
 ;;;;;;;;;;;
 ;; dired ;;
@@ -1030,7 +1030,7 @@ tags:
 (add-to-list 'dash-at-point-mode-alist '(extempore-mode . "gl4,gl3,gl2,c,c++,osx"))
 
 (defun ben-extempore-mode-hook ()
-  (turn-on-eldoc-mode)
+  (eldoc-mode 1)
   (setq eldoc-documentation-function
         'extempore-eldoc-documentation-function)
   ;; (if (and (not extempore-logger-mode)
@@ -1160,7 +1160,7 @@ tags:
   (save-excursion
     (let ((ir-str (buffer-substring-no-properties beg end)))
       (with-current-buffer (get-buffer-create "*extempore LLVM IR*")
-        (if (not (equalp major-mode 'llvm-mode))
+        (if (not (equal major-mode 'llvm-mode))
             (llvm-mode))
         (delete-region (point-min) (point-max))
         (insert (replace-regexp-in-string "\\\\n" "\n" ir-str))
@@ -1239,20 +1239,20 @@ tags:
       sp-hybrid-kill-excessive-whitespace t)
 
 (defun ben-smartparens-mode-hook ()
-  (define-key sp-keymap (kbd "M-<down>") 'sp-splice-sexp-killing-forward)
-  (define-key sp-keymap (kbd "M-<up>") 'sp-splice-sexp-killing-backward)
-  (define-key sp-keymap (kbd "s-<left>") 'sp-backward-up-sexp)
-  (define-key sp-keymap (kbd "s-<right>") 'sp-up-sexp)
-  (define-key sp-keymap (kbd "s-S-<left>") 'sp-backward-down-sexp)
-  (define-key sp-keymap (kbd "s-S-<right>") 'sp-down-sexp)
-  (define-key sp-keymap (kbd "C-<left>") 'sp-forward-barf-sexp)
-  (define-key sp-keymap (kbd "C-<right>") 'sp-forward-slurp-sexp)
-  (define-key sp-keymap (kbd "M-S-<up>") 'sp-splice-sexp-killing-around)
-  (define-key sp-keymap (kbd "M-S-<left>") 'sp-convolute-sexp)
-  (define-key sp-keymap (kbd "M-S-<right>") 'sp-transpose-sexp)
-  (define-key sp-keymap (kbd "s-S-<down>") 'sp-duplicate-next-sexp)
-  (define-key sp-keymap (kbd "M-S-<down>") 'sp-wrap-with-paren)
-  (add-to-list 'sp--lisp-modes 'extempore-mode))
+  (define-key smartparens-mode-map (kbd "M-<down>") 'sp-splice-sexp-killing-forward)
+  (define-key smartparens-mode-map (kbd "M-<up>") 'sp-splice-sexp-killing-backward)
+  (define-key smartparens-mode-map (kbd "s-<left>") 'sp-backward-up-sexp)
+  (define-key smartparens-mode-map (kbd "s-<right>") 'sp-up-sexp)
+  (define-key smartparens-mode-map (kbd "s-S-<left>") 'sp-backward-down-sexp)
+  (define-key smartparens-mode-map (kbd "s-S-<right>") 'sp-down-sexp)
+  (define-key smartparens-mode-map (kbd "C-<left>") 'sp-forward-barf-sexp)
+  (define-key smartparens-mode-map (kbd "C-<right>") 'sp-forward-slurp-sexp)
+  (define-key smartparens-mode-map (kbd "M-S-<up>") 'sp-splice-sexp-killing-around)
+  (define-key smartparens-mode-map (kbd "M-S-<left>") 'sp-convolute-sexp)
+  (define-key smartparens-mode-map (kbd "M-S-<right>") 'sp-transpose-sexp)
+  (define-key smartparens-mode-map (kbd "s-S-<down>") 'sp-duplicate-next-sexp)
+  (define-key smartparens-mode-map (kbd "M-S-<down>") 'sp-wrap-with-paren)
+  (add-to-list 'sp-lisp-modes 'extempore-mode))
 
 (add-hook 'smartparens-enabled-hook 'ben-smartparens-mode-hook)
 
@@ -1299,7 +1299,7 @@ instead, and with a prefix argument, justify as well."
            (goto-char me)
            (save-match-data (looking-at "\\sw\\|\\s_\\|\\s."))))))
 
-(sp-with-modes sp--lisp-modes
+(sp-with-modes sp-lisp-modes
   ;; disable ', it's the quote character!
   (sp-local-pair "'" nil :actions nil)
   ;; also only use the pseudo-quote inside strings where it serve as
@@ -1597,7 +1597,7 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
 
 (defun unstick-ansi-color-codes ()
   (interactive)
-  (end-of-buffer)
+  (goto-char (point-max))
   (insert "echo -e \"\033[m\"")
   (comint-send-input nil t))
 
