@@ -1014,6 +1014,7 @@ tags:
   (setq extempore-share-directory "/home/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
  ((string= system-name "WINYX")
+  (setq extempore-program-args nil)
   (setq extempore-share-directory "c:/Users/ben/Code/extempore/"))
  ((string= system-name "debian-vm")
   (setq extempore-program-args "--device 1 --frames 1024")
