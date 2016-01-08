@@ -1169,7 +1169,7 @@ tags:
 ;; AOT-compilation help
 
 (defun extempore-AOT-compile-lib (lib-path)
-  (interactive "sLibrary: ")
+  (interactive (list (ido-read-file-name "Library: " nil nil)))
   (let ((default-directory extempore-share-directory))
     (async-shell-command (format "AOT_LIBS=\"%s\" ./compile-stdlib.sh --port=17199" lib-path))))
 
