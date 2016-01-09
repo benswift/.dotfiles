@@ -54,6 +54,7 @@
 (defvar ben-package-list
   '(ag
     async
+    avy
     bbdb
     auctex
     auto-complete
@@ -61,6 +62,7 @@
     cmake-mode
     clojure-snippets
     company
+    counsel
     dash-at-point
     dockerfile-mode
     xcscope
@@ -81,6 +83,7 @@
     imenu-anywhere
     isearch+
     less-css-mode
+    lispy
     jedi
     json-mode
     magit
@@ -102,6 +105,7 @@
     smart-mode-line
     smex
     string-utils
+    swiper
     unidecode
     vagrant
     vimrc-mode
@@ -192,31 +196,36 @@
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (load custom-file t)
 
-;;;;;;;;;;;;;;;;
-;; smex & ido ;;
-;;;;;;;;;;;;;;;;
+;;;;;;;;;
+;; ivy ;;
+;;;;;;;;;
 
-(require 'flx-ido)
+(ivy-mode 1)
+(setq ivy-use-virtual-buffers t)
+(global-set-key "\C-s" 'swiper)
+(global-set-key (kbd "C-c C-r") 'ivy-resume)
+(global-set-key (kbd "<f6>") 'ivy-resume)
+(global-set-key (kbd "M-x") 'counsel-M-x)
+(global-set-key (kbd "C-x C-f") 'counsel-find-file)
+(global-set-key (kbd "<f1> f") 'counsel-describe-function)
+(global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+(global-set-key (kbd "<f1> l") 'counsel-load-library)
+(global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+(global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+(global-set-key (kbd "C-c g") 'counsel-git)
+(global-set-key (kbd "C-c j") 'counsel-git-grep)
+(global-set-key (kbd "C-c k") 'counsel-ag)
+(global-set-key (kbd "C-x l") 'counsel-locate)
+(global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
 
-(setq smex-save-file (concat user-emacs-directory ".smex-items"))
-(smex-initialize)
+;;;;;;;;;
+;; avy ;;
+;;;;;;;;;
 
-(setq ido-enable-prefix nil
-      ido-enable-flex-matching t
-      ido-auto-merge-work-directories-length nil
-      ido-create-new-buffer 'always
-      ido-use-filename-at-point 'guess
-      ido-use-virtual-buffers t
-      ido-handle-duplicate-virtual-buffers 2
-      ido-max-prospects 10)
-
-(ido-mode 1)
-(ido-ubiquitous-mode 1)
-(flx-ido-mode 1)
-
-(global-set-key (kbd "M-x") 'smex)
-(global-set-key (kbd "C-c i") 'imenu-anywhere)
-(global-set-key (kbd "C-c o") 'occur)
+(avy-setup-default)
+(global-set-key (kbd "C-:") 'avy-goto-char)
+(global-set-key (kbd "C-'") 'avy-goto-char-2)
+(global-set-key (kbd "M-g w") 'avy-goto-word-1)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; garbage collection ;;
@@ -245,6 +254,8 @@
 (set-default 'tab-width 2)
 (set-default 'indicate-empty-lines t)
 (set-default 'imenu-auto-rescan t)
+
+(global-set-key (kbd "C-c i") 'imenu-anywhere)
 
 (show-paren-mode 1)
 
@@ -772,6 +783,7 @@ i.e. change right window to bottom, or change bottom window to right."
 (setq vc-display-status nil)
 (global-set-key (kbd "<f5>") 'magit-status)
 (setq magit-push-always-verify nil)
+(setq magit-completing-read-function 'ivy-completing-read)
 
 ;;;;;;;;;;;;;
 ;; cc-mode ;;
@@ -918,9 +930,7 @@ tags:
 ;;;;;;;;;;;;;;;;
 
 (projectile-global-mode)
-
-(global-set-key (kbd "<f6>") 'projectile-compile-project)
-
+(setq projectile-completion-system 'ivy)
 
 ;;;;;;;;;
 ;; erc ;;
