@@ -779,7 +779,7 @@ i.e. change right window to bottom, or change bottom window to right."
 ;;;;;;;;;;;
 
 (setq vc-display-status nil)
-(global-set-key (kbd "<f5>") 'magit-status)
+(global-set-key (kbd "C-x g") 'magit-status)
 (setq magit-push-always-verify nil)
 (setq magit-completing-read-function 'ivy-completing-read)
 
