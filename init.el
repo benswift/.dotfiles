@@ -233,6 +233,10 @@
 (add-hook #'clojure-mode-hook #'lispy-mode 1)
 (add-hook #'scheme-mode-hook #'lispy-mode 1)
 
+;; so we don't shadow the avy binding, which I reckon is much more
+;; useful
+(setq iedit-toggle-key-default nil)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; garbage collection ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
