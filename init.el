@@ -101,7 +101,6 @@
     sane-term
     s
     scss-mode
-    smartparens
     smart-mode-line
     smex
     string-utils
@@ -224,6 +223,15 @@
 (global-set-key (kbd "M-g f") 'avy-goto-line)
 (global-set-key (kbd "C-;") 'avy-goto-word-1)
 (global-set-key (kbd "M-g e") 'avy-goto-word-0)
+
+;;;;;;;;;;;
+;; lispy ;;
+;;;;;;;;;;;
+
+(add-hook #'emacs-lisp-mode-hook #'lispy-mode 1)
+(add-hook #'extempore-mode-hook #'lispy-mode 1)
+(add-hook #'clojure-mode-hook #'lispy-mode 1)
+(add-hook #'scheme-mode-hook #'lispy-mode 1)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; garbage collection ;;
@@ -1237,96 +1245,6 @@ tags:
 (require 'opencl-mode nil :noerror)
 (add-to-list 'auto-mode-alist '("\\.cl\\'" . opencl-mode))
 
-;;;;;;;;;;;;;;;;;
-;; smartparens ;;
-;;;;;;;;;;;;;;;;;
-
-(require 'smartparens)
-(require 'smartparens-config)
-
-(add-to-list 'sp-ignore-modes-list 'org-mode)
-(add-to-list 'sp-ignore-modes-list 'shell-mode)
-
-(setq sp-highlight-wrap-tag-overlay nil
-      sp-highlight-wrap-overlay nil
-      sp-highlight-pair-overlay nil
-      sp-hybrid-kill-excessive-whitespace t)
-
-(defun ben-smartparens-mode-hook ()
-  (define-key smartparens-mode-map (kbd "M-<down>") 'sp-splice-sexp-killing-forward)
-  (define-key smartparens-mode-map (kbd "M-<up>") 'sp-splice-sexp-killing-backward)
-  (define-key smartparens-mode-map (kbd "s-<left>") 'sp-backward-up-sexp)
-  (define-key smartparens-mode-map (kbd "s-<right>") 'sp-up-sexp)
-  (define-key smartparens-mode-map (kbd "s-S-<left>") 'sp-backward-down-sexp)
-  (define-key smartparens-mode-map (kbd "s-S-<right>") 'sp-down-sexp)
-  (define-key smartparens-mode-map (kbd "C-<left>") 'sp-forward-barf-sexp)
-  (define-key smartparens-mode-map (kbd "C-<right>") 'sp-forward-slurp-sexp)
-  (define-key smartparens-mode-map (kbd "M-S-<up>") 'sp-splice-sexp-killing-around)
-  (define-key smartparens-mode-map (kbd "M-S-<left>") 'sp-convolute-sexp)
-  (define-key smartparens-mode-map (kbd "M-S-<right>") 'sp-transpose-sexp)
-  (define-key smartparens-mode-map (kbd "s-S-<down>") 'sp-duplicate-next-sexp)
-  (define-key smartparens-mode-map (kbd "M-S-<down>") 'sp-wrap-with-paren)
-  (add-to-list 'sp-lisp-modes 'extempore-mode))
-
-(add-hook 'smartparens-enabled-hook 'ben-smartparens-mode-hook)
-
-(defun sp-wrap-with-paren (&optional arg)
-  (interactive "p")
-  (sp-select-next-thing-exchange arg)
-  (execute-kbd-macro (kbd "(")))
-
-(defun sp-duplicate-next-sexp (&optional arg)
-  (interactive "p")
-  (sp-select-next-thing arg)
-  (kill-ring-save (mark) (point))
-  (reindent-then-newline-and-indent)
-  (yank)
-  (sp-backward-sexp))
-
-(defun sp-reindent-defun (&optional argument)
-  "Reindent the definition that the point is on.
-
-If the point is in a string or a comment, fill the paragraph
-instead, and with a prefix argument, justify as well."
-  (interactive "P")
-  (if (or (sp-point-in-string)
-          (sp-point-in-comment))
-      (lisp-fill-paragraph argument)
-    (save-excursion
-      (end-of-defun)
-      (beginning-of-defun)
-      (indent-sexp))))
-
-(define-key lisp-mode-shared-map (kbd "M-q") 'sp-reindent-defun)
-
-(smartparens-global-mode 1)
-(smartparens-global-strict-mode 1)
-
-;; make the quote (') character work right in lisp modes
-;; taken from https://github.com/Fuco1/smartparens/issues/286
-(defun sp--org-skip-markup (ms mb me)
-  (save-excursion
-    (and (progn
-           (goto-char mb)
-           (save-match-data (looking-back "\\sw\\|\\s_\\|\\s.")))
-         (progn
-           (goto-char me)
-           (save-match-data (looking-at "\\sw\\|\\s_\\|\\s."))))))
-
-(sp-with-modes sp-lisp-modes
-  ;; disable ', it's the quote character!
-  (sp-local-pair "'" nil :actions nil)
-  ;; also only use the pseudo-quote inside strings where it serve as
-  ;; hyperlink.
-  (sp-local-pair "`" "'" :when '(sp-in-string-p sp-in-comment-p))
-  (sp-local-pair "`" nil
-                 :skip-match (lambda (ms mb me)
-                               (cond
-                                ((equal ms "'")
-                                 (or (sp--org-skip-markup ms mb me)
-                                     (not (sp-point-in-string-or-comment))))
-                                (t (not (sp-point-in-string-or-comment)))))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; rainwow-delimiters ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1392,7 +1310,6 @@ instead, and with a prefix argument, justify as well."
 (add-to-list 'auto-mode-alist '("\\.R$" . R-mode))
 
 (defun ben-ess-R-post-run-hook ()
-  (smartparens-mode t)
   (set (make-local-variable 'sp-hybrid-kill-excessive-whitespace) nil))
 
 (add-hook 'ess-R-post-run-hook 'ben-ess-R-post-run-hook)
