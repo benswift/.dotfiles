@@ -313,7 +313,6 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; text mode tweaks
 
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
-(add-hook 'text-mode-hook 'turn-on-flyspell)
 (remove-hook 'text-mode-hook 'smart-spacing-mode)
 
 ;; file visiting
@@ -635,6 +634,13 @@ i.e. change right window to bottom, or change bottom window to right."
       (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 
       )) ;; end "(if (require 'mu4e nil :noerror) ..."
+
+;;;;;;;;;;;;;;
+;; flyspell ;;
+;;;;;;;;;;;;;;
+
+(setq flyspell-auto-correct-binding [(super ?\;)])
+(add-hook 'text-mode-hook 'turn-on-flyspell)
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; smart mode line ;;
