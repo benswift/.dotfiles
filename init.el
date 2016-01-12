@@ -40,10 +40,16 @@
 ;;;;;;;;;;
 
 (require 'package)
-(setq package-archives
-      '(("gnu" . "http://elpa.gnu.org/packages/")
-        ("melpa" . "http://melpa.milkbox.net/packages/")
-        ("elpy" . "http://jorgenschaefer.github.io/packages/")))
+
+(setq
+ package-archives
+ '(("melpa" . "http://melpa.org/packages/")
+   ("org" . "http://orgmode.org/elpa/")
+   ("gnu" . "http://elpa.gnu.org/packages/"))
+ package-archive-exclude-alist
+ '(("melpa" org)
+   ("gnu" org)
+   ("org" org)))
 
 (unless package--initialized
   (package-initialize))
@@ -55,9 +61,7 @@
   '(ag
     async
     avy
-    bbdb
     auctex
-    auto-complete
     cider
     cmake-mode
     clojure-snippets
@@ -65,7 +69,6 @@
     counsel
     dash-at-point
     dockerfile-mode
-    xcscope
     elpy
     erc-hl-nicks
     erc-terminal-notifier
@@ -73,15 +76,10 @@
     exec-path-from-shell
     fasm-mode
     flatui-theme
-    flx-ido
     flycheck
-    ggtags
-    gist
     glsl-mode
     htmlize
-    ido-ubiquitous
     imenu-anywhere
-    isearch+
     less-css-mode
     lispy
     jedi
@@ -90,19 +88,16 @@
     markdown-mode
     monokai-theme
     multiple-cursors
-    ;; nrepl-ritz ;; shadows cider-mode
     osc
     org
     paradox
     persistent-scratch
     projectile
     rainbow-delimiters
-    ;; rtags
     sane-term
     s
     scss-mode
     smart-mode-line
-    smex
     string-utils
     swiper
     unidecode
@@ -110,7 +105,6 @@
     vimrc-mode
     wgrep
     wgrep-ag
-    workgroups2
     yaml-mode
     yasnippet
     zoom-frm)
