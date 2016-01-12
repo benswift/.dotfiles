@@ -1495,7 +1495,8 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
       (comment-or-uncomment-region (line-beginning-position) (line-end-position))
     (comment-dwim arg)))
 
-(global-set-key (kbd "s-'") 'comment-dwim-line)
+;; replace binding for `comment-dwim' as well
+(global-set-key (kbd "M-;") 'comment-dwim-line)
 
 ;; from
 ;; http://stackoverflow.com/questions/88399/how-do-i-duplicate-a-whole-line-in-emacs
