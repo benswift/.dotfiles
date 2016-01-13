@@ -215,6 +215,7 @@
 (global-set-key (kbd "M-g f") 'avy-goto-line)
 (global-set-key (kbd "C-;") 'avy-goto-word-1)
 (global-set-key (kbd "M-g e") 'avy-goto-word-0)
+(global-set-key (kbd "M-g a") 'swiper-avy)
 
 ;;;;;;;;;;;
 ;; lispy ;;
