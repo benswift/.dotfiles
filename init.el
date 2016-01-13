@@ -203,6 +203,7 @@
 (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
 (global-set-key (kbd "C-c k") 'counsel-ag)
 (global-set-key (kbd "C-x l") 'counsel-locate)
+(setq ivy-height 20)
 
 ;;;;;;;;;
 ;; avy ;;
