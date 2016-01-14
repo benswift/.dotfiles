@@ -100,6 +100,7 @@
     smart-mode-line
     string-utils
     swiper
+    undo-tree
     unidecode
     vagrant
     vimrc-mode
@@ -459,6 +460,13 @@ i.e. change right window to bottom, or change bottom window to right."
 ;;;;;;;;;;;;;;;;;
 
 ;; (workgroups-mode 1)
+
+;;;;;;;;;;;;;;;
+;; undo-tree ;;
+;;;;;;;;;;;;;;;
+
+(require 'undo-tree)
+(global-undo-tree-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; persistent-scratch ;;
