@@ -259,7 +259,7 @@
 (set-default 'indicate-empty-lines t)
 (set-default 'imenu-auto-rescan t)
 
-(global-set-key (kbd "C-c i") 'imenu-anywhere)
+(global-set-key (kbd "C-c i") 'counsel-imenu)
 
 (show-paren-mode 1)
 
