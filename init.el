@@ -215,6 +215,8 @@
 (global-set-key (kbd "C-:") 'avy-goto-line)
 (global-set-key (kbd "C-;") 'avy-goto-word-1)
 (global-set-key (kbd "M-g e") 'avy-goto-word-0)
+;; set avy keys to home keys
+(setq avy-keys '(?a ?s ?d ?f ?j ?k ?l ?\;))
 
 ;;;;;;;;;;;
 ;; lispy ;;
