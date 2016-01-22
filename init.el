@@ -424,6 +424,11 @@ i.e. change right window to bottom, or change bottom window to right."
 (global-set-key (kbd "C-c g") 'ag)
 (global-set-key (kbd "C-c u") 'ag-dired)
 
+;; we don't use transpose-lines much - transpose-paragraphs is
+;; probably more useful, so let's change the binding to that
+
+(global-set-key (kbd "C-x C-t") 'transpose-paragraphs)
+
 ;; window navigation
 
 (global-set-key (kbd "s-[") '(lambda () (interactive) (other-window -1)))
