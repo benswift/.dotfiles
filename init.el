@@ -227,6 +227,10 @@
 (add-hook #'clojure-mode-hook #'lispy-mode 1)
 (add-hook #'scheme-mode-hook #'lispy-mode 1)
 
+;; don't know why this doesn't have a keybinding
+(eval-after-load "lispy"
+  '(lispy-define-key lispy-mode-map-special "L" 'lispy-wrap-round))
+
 ;; so we don't shadow the avy binding, which I reckon is much more
 ;; useful
 (setq iedit-toggle-key-default nil)
