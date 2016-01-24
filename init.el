@@ -796,7 +796,7 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (require 'org)
 
-(setq org-completion-use-ido t)
+;; (setq org-completion-use-ido t)
 (setq org-export-with-toc nil)
 
 (defun ben-org-mode-hook ()
@@ -1311,8 +1311,6 @@ tags:
 ;;;;;;;;;;;;;;
 ;; flycheck ;;
 ;;;;;;;;;;;;;;
-
-(setq flycheck-completion-system 'ido)
 
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
