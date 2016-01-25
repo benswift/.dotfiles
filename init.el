@@ -1050,6 +1050,8 @@ tags:
   ;;          (yes-or-no-p "Do you want to log this session?"))
   ;;     (extempore-logger-mode 1))
   (yas-minor-mode-on)
+  ;; extempore-mode and lispy interaction
+  (setq-local lispy-no-space t)
   ;; monokai-bg is #272822 (monokai 20140109.2253)
   (set-face-attribute 'extempore-blink-face nil :foreground "#272822" :background "#FD971F")
   (set-face-attribute 'extempore-sb-blink-face nil :foreground "#272822" :background "#39FF14"))
