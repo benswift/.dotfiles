@@ -353,7 +353,6 @@ i.e. change right window to bottom, or change bottom window to right."
 (add-to-list 'safe-local-variable-values '(lexical-binding . t))
 (setq ediff-window-setup-function 'ediff-setup-windows-plain)
 (setq diff-switches "-u")
-(setq ispell-dictionary "en_GB")
 
 (define-key lisp-mode-shared-map (kbd "RET") 'reindent-then-newline-and-indent)
 
@@ -921,14 +920,8 @@ tags:
 ;; hunspell ;;
 ;;;;;;;;;;;;;;
 
-;; (require 'ispell)
-
-;; (setq ispell-program-name "/usr/local/bin/hunspell")
-;; (setq ispell-dictionary "en_AU")
-;; (add-to-list 'ispell-dictionary-alist
-;;              '("en_AU" "[[:alpha:]]" "[^[:alpha:]]" "" t ("-d" "/Library/Spelling/en_AU") nil iso-8859-1))
-
-;; (setq rw-hunspell-dicpath-list '("/Library/Spelling"))
+(setq ispell-program-name (executable-find "hunspell"))
+(setq ispell-dictionary "en_AU")
 
 ;;;;;;;;;;;;;;;;
 ;; projectile ;;
