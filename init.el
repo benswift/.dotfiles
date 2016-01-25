@@ -650,14 +650,16 @@ i.e. change right window to bottom, or change bottom window to right."
 (setq sml/name-width (cons 10 40))
 
 (setq rm-blacklist
-      (regexp-opt '("SP/s"
-                    "MRev"
+      (regexp-opt '("MRev"
                     "Projectile"
                     "Fly"
                     "Ref"
                     "Fill"
                     "company"
-                    "yas")))
+                    "yas"
+                    "LY"
+                    "Undo-Tree"
+                    "ivy")))
 
 ;;;;;;;;;;;;;
 ;; company ;;
