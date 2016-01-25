@@ -593,7 +593,7 @@ i.e. change right window to bottom, or change bottom window to right."
     '(("from:Henry Gardner" "Hballs" ?h)
       ("to:benjamin.j.swift@gmail.com" "to gmail" ?g)
       ("list:extemporelang.googlegroups.com" "Extempore list" ?e))
-  (lambda (b) (add-to-list 'mu4e-bookmarks b)))
+  (lambda (b) (add-to-list 'mu4e-bookmarks b t)))
 
 (setq mu4e-user-mailing-lists
       '(("extemporelang.googlegroups.com" . "Extempore")
