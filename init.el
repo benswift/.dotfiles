@@ -1302,11 +1302,6 @@ tags:
 (add-to-list 'auto-mode-alist '("\\.r$" . R-mode))
 (add-to-list 'auto-mode-alist '("\\.R$" . R-mode))
 
-(defun ben-ess-R-post-run-hook ()
-  (set (make-local-variable 'sp-hybrid-kill-excessive-whitespace) nil))
-
-(add-hook 'ess-R-post-run-hook 'ben-ess-R-post-run-hook)
-
 ;;;;;;;;;;;
 ;; julia ;;
 ;;;;;;;;;;;
@@ -1565,7 +1560,7 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
       (goto-char beg)
       (while (search-forward "(" end :noerror)
         (backward-char)
-        (sp-wrap-with-paren)
+        (lispy-wrap-round)
         (insert (format "begin (println %03d) " count))
         (setq count (1+ count))
         (forward-char)))))
@@ -1574,7 +1569,7 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
   "put a debugging println before every single function call"
   (interactive)
   (save-excursion
-    (sp-wrap-with-paren)
+    (lispy-wrap-round)
     (insert "begin (println '-------------------checkpoint-BEGIN) ")
     (sp-up-sexp)
     (backward-char)
