@@ -512,7 +512,6 @@ i.e. change right window to bottom, or change bottom window to right."
 (setq mu4e-get-mail-command "timelimit -t 240 -T 270 mbsync fastmail"
       mu4e-update-interval 300
       mu4e-headers-auto-update t
-      mu4e-compose-signature-auto-include nil
       mu4e-change-filenames-when-moving t
       mu4e-view-show-addresses t)
 
@@ -520,6 +519,16 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (setq mu4e-compose-dont-reply-to-self t)
 (add-hook 'mu4e-compose-mode-hook #'flyspell-mode 1)
+
+(defun ben-find-to-firstname ()
+  "search the current buffer for a To: field, and grab the first recipient's name from there"
+  (interactive)
+  (let ((str (buffer-substring-no-properties (point-min) (point-max))))
+    (if (string-match
+         "^To: \"?\\([^ ,<]+\\)"
+         str)
+        (match-string 1 str)
+      nil)))
 
 (require 'gnus-dired)
 
