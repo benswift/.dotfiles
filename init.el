@@ -518,6 +518,7 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; compose
 
 (setq mu4e-compose-dont-reply-to-self t)
+(setq mu4e-compose-signature-auto-include nil)
 (add-hook 'mu4e-compose-mode-hook #'flyspell-mode 1)
 
 (defun ben-find-to-firstname ()
@@ -629,7 +630,6 @@ i.e. change right window to bottom, or change bottom window to right."
                         (mu4e-message-contact-field-matches msg :to "ben@benswift.me")))
         :vars '((user-mail-address . "ben@benswift.me")
                 (user-full-name . "Ben Swift")
-                (mu4e-compose-signature . "\n\nCheers,\nBen\n")
                 (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
                 (smtpmail-smtp-server . "mail.messagingengine.com")))
        (make-mu4e-context
@@ -641,7 +641,6 @@ i.e. change right window to bottom, or change bottom window to right."
                         (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
         :vars '((user-mail-address . "ben.swift@anu.edu.au")
                 (user-full-name . "Dr. Ben Swift")
-                (mu4e-compose-signature . "\n\nCheers,\nBen\n")
                 (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
                 (smtpmail-smtp-server . "smtp.office365.com")))))
 
