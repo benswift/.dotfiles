@@ -1,9 +1,9 @@
 # -*- mode: snippet; require-final-newline: nil -*-
 # name: mate-template
-# key: matet
+# key: mate
 # binding: direct-keybinding
 # --
-Hey ${1:mate}
+Hi ${1:mate}
 
 $0
 
