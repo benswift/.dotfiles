@@ -608,10 +608,13 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; send
 
-(setq message-send-mail-function 'smtpmail-send-it
+(require 'smtpmail-async)
+
+(setq send-mail-function 'async-smtpmail-send-it
+      message-send-mail-function 'async-smtpmail-send-it
       smtpmail-smtp-service 587
       smtpmail-debug-info t
-      smtpmail-queue-dir (expand-file-name "~/Maildir/queued-mail"))
+      smtpmail-queue-dir (expand-file-name "~/Maildir/queue/cur"))
 
 ;; contexts
 
