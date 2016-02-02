@@ -1319,7 +1319,8 @@ tags:
 ;; flycheck ;;
 ;;;;;;;;;;;;;;
 
-(add-hook 'after-init-hook #'global-flycheck-mode)
+;; I reckon this is more trouble than it's worth, usually
+;; (add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;;;;;;;;;;;;
 ;; Python ;;
@@ -1337,9 +1338,8 @@ tags:
 
 (setq  elpy-default-minor-modes
        '(eldoc-mode
-         flycheck-mode
-         highlight-indentation-mode
-         auto-complete-mode))
+         ;; flycheck-mode
+         highlight-indentation-mode))
 
 ;; scons
 
