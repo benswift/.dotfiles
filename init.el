@@ -675,7 +675,7 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; company ;;
 ;;;;;;;;;;;;;
 
-(add-hook 'after-init-hook 'global-company-mode)
+(add-hook 'prog-mode-hook #'global-company-mode)
 
 ;;;;;;;;;;;
 ;; rtags ;;
