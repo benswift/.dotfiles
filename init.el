@@ -1189,11 +1189,6 @@ tags:
 
 ;; AOT-compilation help
 
-(defun extempore-AOT-compile-lib (lib-path)
-  (interactive (list (ido-read-file-name "Library: " nil nil)))
-  (let ((default-directory extempore-share-directory))
-    (async-shell-command (format "AOT_LIBS=\"%s\" ./compile-stdlib.sh --port=17199" lib-path))))
-
 ;; (let ((extempore-snippet-dir
 ;;        "/Users/ben/.dotfiles/snippets/extempore-mode"))
 ;;   (dolist (name extempore-yas-oscillator-list)
@@ -1232,6 +1227,18 @@ tags:
 ;;           (while (re-search-forward "# name: .*$" nil t)
 ;;             (replace-match (concat (match-string 0) "-create") t nil))
 ;;           (save-buffer)))))
+(defun extempore-AOT-compile-lib (&optional initial-input)
+  (interactive)
+  (ivy-read "Library: " 'read-file-name-internal
+            :matcher #'counsel--find-file-matcher
+            :initial-input initial-input
+            :action
+            (lambda (x)
+              (with-ivy-window
+                (let ((default-directory extempore-share-directory))
+                  (async-shell-command (format "AOT_LIBS=\"%s\" ./compile-stdlib.sh --port=17199" x)))))
+            :require-match 'confirm-after-completion
+            :keymap counsel-find-file-map))
 
 ;;;;;;;;;;;;
 ;; OpenCL ;;
