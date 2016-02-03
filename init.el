@@ -1188,45 +1188,6 @@ tags:
         (display-buffer "*extempore LLVM IR*" #'display-buffer-pop-up-window)))))
 
 ;; AOT-compilation help
-
-;; (let ((extempore-snippet-dir
-;;        "/Users/ben/.dotfiles/snippets/extempore-mode"))
-;;   (dolist (name extempore-yas-oscillator-list)
-;;     (with-temp-buffer
-;;       (insert (format "# -*- mode: snippet -*-
-;; # name: %s
-;; # key: %screate
-;; # --
-;; " name name))
-;;       (insert (format "(%s_mc_c ${1:nchan} ${2:})" name))
-;;       (write-region (point-min)
-;;                     (point-max)
-;;                     (format "%s/%s-create"
-;;                             extempore-snippet-dir
-;;                             name)))
-;;     (with-temp-buffer
-;;       (insert (format "# -*- mode: snippet -*-
-;; # name: %s
-;; # key: %scall
-;; # --
-;; " name name))
-;;       (insert (format "(%s ${1:chan} ${2:})" name))
-;;       (write-region (point-min)
-;;                     (point-max)
-;;                     (format "%s/%s-call"
-;;                             extempore-snippet-dir
-;;                             name)))))
-
-;; (let* ((snippet-dir "/Users/ben/.dotfiles/snippets/extempore-mode/")
-;;        (snippets (directory-files snippet-dir)))
-;;   (dolist (filename snippets)
-;;     (if (string-match "\\(-create\\)" filename)
-;;         (with-current-buffer (find-file (format "%s%s"
-;;                                                 snippet-dir
-;;                                                 filename))
-;;           (while (re-search-forward "# name: .*$" nil t)
-;;             (replace-match (concat (match-string 0) "-create") t nil))
-;;           (save-buffer)))))
 (defun extempore-AOT-compile-lib (&optional initial-input)
   (interactive)
   (ivy-read "Library: " 'read-file-name-internal
