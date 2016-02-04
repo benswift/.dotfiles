@@ -509,7 +509,7 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-trash-folder "/Trash"
       mu4e-attachment-dir (expand-file-name "~/Downloads"))
 
-(setq mu4e-get-mail-command "timelimit -t 240 -T 270 mbsync fastmail"
+(setq mu4e-get-mail-command "mbsync -aVq fastmail"
       mu4e-update-interval 300
       mu4e-headers-auto-update t
       mu4e-change-filenames-when-moving t
