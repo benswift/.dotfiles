@@ -509,11 +509,24 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-trash-folder "/Trash"
       mu4e-attachment-dir (expand-file-name "~/Downloads"))
 
-(setq mu4e-get-mail-command "mbsync -aVq fastmail"
+(setq mu4e-get-mail-command "mbsync fastmail"
       mu4e-update-interval 300
       mu4e-headers-auto-update t
       mu4e-change-filenames-when-moving t
       mu4e-view-show-addresses t)
+
+(defun ben-clean-up-mu4e-mbsync-output (proc msg)
+  "clean up the *mu4e-update* buffer"
+  (with-current-buffer (process-buffer proc)
+    (let ((inhibit-read-only t))
+      (goto-char (point-max))
+      (when (search-backward "" nil :noerror)
+        (delete-region (point-min) (+ (point) 1))
+        (goto-char (point-max))))))
+
+(advice-add
+ 'mu4e~get-mail-process-filter
+ :after #'ben-clean-up-mu4e-mbsync-output)
 
 ;; compose
 
