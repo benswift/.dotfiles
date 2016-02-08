@@ -463,12 +463,6 @@ i.e. change right window to bottom, or change bottom window to right."
 (global-set-key (kbd "C-x C-=") 'zoom-in/out)
 (global-set-key (kbd "C-x C-0") 'zoom-in/out)
 
-;;;;;;;;;;;;;;;;;
-;; workgroups2 ;;
-;;;;;;;;;;;;;;;;;
-
-;; (workgroups-mode 1)
-
 ;;;;;;;;;;;;;;;
 ;; undo-tree ;;
 ;;;;;;;;;;;;;;;
@@ -692,32 +686,6 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (add-hook 'prog-mode-hook #'global-company-mode)
 
-;;;;;;;;;;;
-;; rtags ;;
-;;;;;;;;;;;
-
-;; (rtags-enable-standard-keybindings)
-
-;;;;;;;;;;;;;
-;; malinka ;;
-;;;;;;;;;;;;;
-
-;; (require 'malinka)
-
-;; (setq malinka-completion-system 'ido)
-
-;; (add-hook 'c-mode-common-hook 'malinka-mode)
-
-;; (malinka-define-project
-;;  :name "Extempore"
-;;  :root-directory "~/Code/extempore"
-;;  :build-directory "~/Code/extempore"
-;;  ;; :cpp-defines '("TARGET_OS_MAC" "USE_GLUT")
-;;  :compiler-flags '("-Wall" "-g")
-;;  :configure-cmd ""
-;;  :compile-cmd "./all.bash"
-;;  :test-cmd "./test-all.sh")
-
 ;;;;;;;;;;
 ;; dash ;;
 ;;;;;;;;;;
@@ -815,19 +783,12 @@ i.e. change right window to bottom, or change bottom window to right."
 (setq magit-push-always-verify nil)
 (setq magit-completing-read-function 'ivy-completing-read)
 
-;;;;;;;;;;;;;
-;; cc-mode ;;
-;;;;;;;;;;;;;
-
-;; (setq c-default-style "k&r")
-
 ;;;;;;;;;;;;;;
 ;; org mode ;;
 ;;;;;;;;;;;;;;
 
 (require 'org)
 
-;; (setq org-completion-use-ido t)
 (setq org-export-with-toc nil)
 
 (defun ben-org-mode-hook ()
@@ -1337,37 +1298,6 @@ tags:
 (setq yas-prompt-functions '(yas-ido-prompt yas-no-prompt))
 (setq yas-triggers-in-field t)
 (yas-global-mode 1)
-
-;;;;;;;;;;;;;;;;;;
-;; autocomplete ;;
-;;;;;;;;;;;;;;;;;;
-
-;; autocomplete needs to be set up after yasnippet
-
-;; (require 'auto-complete-config)
-
-;; ;; (ac-set-trigger-key "<tab>")
-;; (add-to-list 'ac-dictionary-directories (concat user-emacs-directory ".ac-dict"))
-;; (setq ac-auto-start 2)
-;; (ac-config-default)
-
-;; for using Clang autocomplete
-
-;; (require 'auto-complete-clang)
-
-;; (defun my-ac-cc-mode-setup ()
-;;   (setq ac-sources (append '(ac-source-clang ac-source-yasnippet ac-source-gtags) ac-sources)))
-
-;; (defun my-ac-config ()
-;;   (setq-default ac-sources '(ac-source-abbrev ac-source-dictionary ac-source-words-in-same-mode-buffers))
-;;   (add-hook 'emacs-lisp-mode-hook 'ac-emacs-lisp-mode-setup)
-;;   (add-hook 'c-mode-common-hook 'my-ac-cc-mode-setup)
-;;   (add-hook 'ruby-mode-hook 'ac-ruby-mode-setup)
-;;   (add-hook 'css-mode-hook 'ac-css-mode-setup)
-;;   (add-hook 'auto-complete-mode-hook 'ac-common-setup)
-;;   (global-auto-complete-mode t))
-
-;; (my-ac-config)
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; ttl (Turtle) mode ;;
