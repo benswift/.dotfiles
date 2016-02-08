@@ -516,7 +516,6 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-view-show-addresses t)
 
 (defun mu4e-pretty-mbsync-process-filter (proc msg)
-  "clean up the *mu4e-update* buffer"
   (with-current-buffer (process-buffer proc)
     (let ((inhibit-read-only t))
       (delete-region (point-min) (point-max))
