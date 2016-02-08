@@ -510,21 +510,20 @@ i.e. change right window to bottom, or change bottom window to right."
       mu4e-view-show-addresses t)
 
 (defun mu4e-pretty-mbsync-process-filter (proc msg)
-  (with-current-buffer (process-buffer proc)
-    (let ((inhibit-read-only t)
-          (status-list (split-string msg "\r")))
-      (delete-region (point-min) (point-max))
-      (when (> (length status-list) 1)
-        (insert (cadr status-list)))
-      (when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)" nil :noerror)
-        (add-face-text-property
-         (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
-        (add-face-text-property
-         (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
-        (add-face-text-property
-         (match-beginning 3) (match-end 3) 'font-lock-variable-name-face)
-        (add-face-text-property
-         (match-beginning 4) (match-end 4) 'font-lock-type-face)))))
+  (ignore-errors
+    (with-current-buffer (process-buffer proc)
+      (let ((inhibit-read-only t))
+        (delete-region (point-min) (point-max))
+        (insert (car (reverse (split-string msg "\r"))))
+        (when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)")
+          (add-face-text-property
+           (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
+          (add-face-text-property
+           (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
+          (add-face-text-property
+           (match-beginning 3) (match-end 3) 'font-lock-variable-name-face)
+          (add-face-text-property
+           (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
 
 (advice-add
  'mu4e~get-mail-process-filter
