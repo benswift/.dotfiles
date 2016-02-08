@@ -619,8 +619,8 @@ i.e. change right window to bottom, or change bottom window to right."
         ("mu-discuss@googlegroups.com" . "mu-discuss")
         ("nanomsg@freelists.org" . "nanomsg")))
 
-;; (add-to-list 'mu4e-view-actions
-;;              '("bView in browser" . mu4e-action-view-in-browser) t)
+(add-to-list 'mu4e-view-actions
+             '("bView in browser" . mu4e-action-view-in-browser) t)
 
 ;; send
 
