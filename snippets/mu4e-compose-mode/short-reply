@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: short-reply
-# key: cool
-# --
-${1:Cool}, ${2:thanks mate.}
-
-Ben
