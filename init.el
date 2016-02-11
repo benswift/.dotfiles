@@ -1236,6 +1236,9 @@ tags:
 (setq cider-repl-use-pretty-printing nil)
 (setq cider-repl-use-clojure-font-lock t)
 
+(eval-after-load "clojure"
+  '(define-key clojure-mode-map (kbd "C-:") nil))
+
 ;; for debugging
 (setq nrepl-log-messages t)
 
