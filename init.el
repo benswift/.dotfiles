@@ -79,6 +79,7 @@
     flycheck
     glsl-mode
     htmlize
+    hydra
     imenu-anywhere
     less-css-mode
     lispy
@@ -219,8 +220,36 @@
 (setq avy-keys '(?a ?s ?d ?f ?j ?k ?l ?\;))
 
 ;;;;;;;;;;;
+;; hydra ;;
+;;;;;;;;;;;
+
+;; this here so we don't shadow the avy binding
+(setq iedit-toggle-key-default nil)
+
+(require 'hydra)
+
+(defhydra multiple-cursors-hydra (:hint nil :columns 3)
+  "Multiple cursors"
+  ("f" mc/mark-next-like-this "mark next")
+  ("s" mc/mark-previous-like-this "mark prev")
+  ("d" mc/mark-all-like-this-dwim "mark dwim")
+  ("F" mc/skip-to-next-like-this "skip next")
+  ("S" mc/skip-to-previous-like-this "skip prev")
+  ("r" mc/mark-all-in-region-regexp "mark regexp" :exit t)
+  ("M-f" mc/unmark-next-like-this "unmark next")
+  ("M-s" mc/unmark-previous-like-this "unmark prev")
+  ("a" mc/edit-lines "edit lines" :exit t)
+  ("n" mc/insert-numbers "numbers" :exit t)
+  ("l" mc/insert-letters "letters" :exit t)
+  ("q" nil "exit"))
+
+(global-set-key (kbd "C-c z") #'multiple-cursors-hydra/body)
+
+;;;;;;;;;;;
 ;; lispy ;;
 ;;;;;;;;;;;
+
+(require 'lispy)
 
 (add-hook #'emacs-lisp-mode-hook #'lispy-mode 1)
 (add-hook #'extempore-mode-hook #'lispy-mode 1)
@@ -230,10 +259,6 @@
 ;; don't know why this doesn't have a keybinding
 (eval-after-load "lispy"
   '(lispy-define-key lispy-mode-map-special "L" 'lispy-wrap-round))
-
-;; so we don't shadow the avy binding, which I reckon is much more
-;; useful
-(setq iedit-toggle-key-default nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; garbage collection ;;
