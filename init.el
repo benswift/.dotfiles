@@ -228,7 +228,7 @@
 
 (require 'hydra)
 
-(defhydra multiple-cursors-hydra (:hint nil :columns 3)
+(defhydra hydra-multiple-cursors (:hint nil :columns 3)
   "Multiple cursors"
   ("f" mc/mark-next-like-this "mark next")
   ("s" mc/mark-previous-like-this "mark prev")
@@ -243,7 +243,7 @@
   ("l" mc/insert-letters "letters" :exit t)
   ("q" nil "exit"))
 
-(global-set-key (kbd "C-c z") #'multiple-cursors-hydra/body)
+(global-set-key (kbd "C-c z") #'hydra-multiple-cursors/body)
 
 ;;;;;;;;;;;
 ;; lispy ;;
