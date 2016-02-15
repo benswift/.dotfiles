@@ -556,6 +556,8 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; compose
 
+(global-set-key (kbd "C-x m") #'mu4e-compose-new)
+
 (setq mu4e-compose-dont-reply-to-self t)
 (setq mu4e-compose-signature-auto-include nil)
 (add-hook 'mu4e-compose-mode-hook #'flyspell-mode 1)
