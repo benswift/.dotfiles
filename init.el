@@ -427,18 +427,9 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; color theme ;;
 ;;;;;;;;;;;;;;;;;
 
-(let ((theme 'spacemacs-dark))
-  (if (display-graphic-p)
-      (case theme
-        ('monokai (load-theme 'monokai t)
-                  (add-to-list 'default-frame-alist
-                               '(background-mode . dark))
-                  (set-cursor-color "white"))
-        ('spacemacs-dark (load-theme 'spacemacs-dark t))
-        ;; flatui
-        ('flatui  (load-theme 'flatui t)
-                  (add-to-list 'default-frame-alist
-                               '(background-mode . light))))))
+(load-theme 'spacemacs-dark t)
+;; (load-theme 'monokai t)
+;; (load-theme 'flatui t)
 
 ;;;;;;;;;;;;;;;;;
 ;; keybindings ;;
