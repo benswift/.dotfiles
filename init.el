@@ -964,36 +964,40 @@ tags:
 (require 'reftex)
 
 (setq font-latex-fontify-sectioning 'color)
+(setq TeX-master t)
+(setq TeX-PDF-mode t)
+(setq TeX-auto-untabify t)
+(setq TeX-parse-self t)
+(setq TeX-auto-save t)
 
-(defun ben-latex-mode-hook ()
-  (setq TeX-master t)
-  (setq TeX-PDF-mode t)
-  (setq TeX-auto-untabify t)
-  (setq TeX-parse-self t)
-  (setq TeX-auto-save t)
-  (add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
-  ;; use Skim for pdfs on OSX
-  (add-to-list 'TeX-view-program-list
-               '("Skim" "~/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
-  (if (equal system-type 'darwin)
-      (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
-  ;; synctex
-  (setq TeX-source-correlate-mode t)
-  (setq TeX-source-correlate-method 'synctex)
-  ;; latex keybindings
-  (define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count)
-  ;; reftex
-  (setq reftex-enable-partial-scans t)
-  (setq reftex-save-parse-info t)
-  (setq reftex-plug-into-AUCTeX t)
-  (setq reftex-cite-prompt-optional-args nil)
-  (setq reftex-cite-cleanup-optional-args t)
-  (setq reftex-bibliography-commands '("bibliography" "nobibliography" "setupbibtex\\[.*?database=" "addbibresource"))
-  (reftex-mode 1)
-  ;; reftex keybindings
-  (define-key LaTeX-mode-map (kbd "C-c =") 'reftex-toc)
-  (define-key LaTeX-mode-map (kbd "C-c c") 'reftex-citation)
-  (define-key LaTeX-mode-map (kbd "C-c r") 'reftex-reference))
+(add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
+
+;; use Skim for pdfs on OSX
+(add-to-list 'TeX-view-program-list
+             '("Skim" "~/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
+(if (equal system-type 'darwin)
+    (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
+
+;; synctex
+(setq TeX-source-correlate-mode t)
+(setq TeX-source-correlate-method 'synctex)
+
+;; latex keybindings
+(define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count)
+
+;; reftex
+(setq reftex-enable-partial-scans t)
+(setq reftex-save-parse-info t)
+(setq reftex-plug-into-AUCTeX t)
+(setq reftex-cite-prompt-optional-args nil)
+(setq reftex-cite-cleanup-optional-args t)
+(setq reftex-bibliography-commands '("bibliography" "nobibliography" "setupbibtex\\[.*?database=" "addbibresource"))
+(reftex-mode 1)
+
+;; reftex keybindings
+(define-key LaTeX-mode-map (kbd "C-c =") 'reftex-toc)
+(define-key LaTeX-mode-map (kbd "C-c c") 'reftex-citation)
+(define-key LaTeX-mode-map (kbd "C-c r") 'reftex-reference)
 
 (defun latex-word-count ()
   (interactive)
