@@ -963,6 +963,8 @@ tags:
 (require 'latex)
 (require 'reftex)
 
+(setq font-latex-fontify-sectioning 'color)
+
 (defun ben-latex-mode-hook ()
   (setq TeX-master t)
   (setq TeX-PDF-mode t)
