@@ -698,10 +698,8 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; smart mode line ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
-(sml/setup)
-
+(setq sml/theme 'respectful)
 (setq sml/name-width (cons 10 40))
-
 (setq rm-blacklist
       (regexp-opt '("MRev"
                     "Projectile"
@@ -713,6 +711,7 @@ i.e. change right window to bottom, or change bottom window to right."
                     "LY"
                     "Undo-Tree"
                     "ivy")))
+(sml/setup)
 
 ;;;;;;;;;;;;;
 ;; company ;;
