@@ -74,7 +74,6 @@
     erc-terminal-notifier
     ess
     exec-path-from-shell
-    fasm-mode
     flatui-theme
     flycheck
     glsl-mode
