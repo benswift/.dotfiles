@@ -428,6 +428,8 @@ i.e. change right window to bottom, or change bottom window to right."
 ;;;;;;;;;;;;;;;;;
 
 (load-theme 'spacemacs-dark t)
+(setq frame-background-mode 'dark)
+
 ;; (load-theme 'monokai t)
 ;; (load-theme 'flatui t)
 
