@@ -94,6 +94,7 @@
     persistent-scratch
     projectile
     rainbow-delimiters
+    rainbow-mode
     sane-term
     s
     scss-mode
