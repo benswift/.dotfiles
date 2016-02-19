@@ -561,7 +561,7 @@ i.e. change right window to bottom, or change bottom window to right."
     (interactive)
     (let ((str (buffer-substring-no-properties (point-min) (point-max))))
       (if (string-match
-           "^To: \"?\\([^ ,<]+\\)"
+           "^To: \"?\\([^ ,<\n]+\\)"
            str)
           (match-string 1 str)
         nil)))
