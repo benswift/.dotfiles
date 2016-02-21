@@ -329,9 +329,9 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; show time and battery status in mode line
 
-(display-time-mode 1)
 (setq display-time-format "%H:%M")
-(display-battery-mode -1)
+(display-time-mode 1)
+(display-battery-mode 1)
 
 ;; whitespace
 
