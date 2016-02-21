@@ -1017,8 +1017,6 @@ tags:
               (call-process "texcount" nil t nil "-1" "-merge" enc-opt tex-file)))))
     (message word-count)))
 
-(add-hook 'LaTeX-mode-hook 'ben-latex-mode-hook)
-
 ;; to clean Biber cache, use
 ;; (shell-command "echo rm -r `biber --cache`")
 
