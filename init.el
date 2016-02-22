@@ -1309,16 +1309,8 @@ tags:
 
 ;; elpy setup
 
-(with-demoted-errors "Error in elpy setup: %s"
-  (elpy-use-ipython)
+(when (require 'elpy nil :noerror)
   (elpy-enable))
-
-;; (setq elpy-rpc-backend "jedi")
-
-(setq  elpy-default-minor-modes
-       '(eldoc-mode
-         ;; flycheck-mode
-         highlight-indentation-mode))
 
 ;; scons
 
