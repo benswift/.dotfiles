@@ -677,7 +677,7 @@ i.e. change right window to bottom, or change bottom window to right."
                         (when msg
                           (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
           :vars '((user-mail-address . "ben.swift@anu.edu.au")
-                  (user-full-name . "Dr. Ben Swift")
+                  (user-full-name . "Ben Swift")
                   (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
                   (smtpmail-smtp-server . "smtp.office365.com"))))))
 
