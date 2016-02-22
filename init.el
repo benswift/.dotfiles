@@ -788,6 +788,7 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (setq dired-listing-switches "-alh")
 (setq dired-auto-revert-buffer t)
+(setq dired-dwim-target t)
 
 ;;;;;;;;;;;;;;;;
 ;; type-break ;;
