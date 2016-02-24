@@ -177,7 +177,7 @@
 ;; Windows
 
 (defun ben-windows-setup ()
-  (ben-set-default-faces 160)
+  (ben-set-default-faces 140)
   (setq w32-pass-lwindow-to-system nil)
   (setq w32-lwindow-modifier 'super)
   (ben-setup-keybindings))
