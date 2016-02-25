@@ -1315,6 +1315,7 @@ tags:
 ;; elpy setup
 
 (when (require 'elpy nil :noerror)
+  (setq elpy-modules '(elpy-module-sane-defaults elpy-module-company elpy-module-eldoc elpy-module-highlight-indentation elpy-module-pyvenv elpy-module-yasnippet))
   (elpy-enable))
 
 ;; scons
