@@ -234,10 +234,10 @@
   "Multiple cursors"
   ("f" mc/mark-next-like-this "mark next")
   ("s" mc/mark-previous-like-this "mark prev")
-  ("d" mc/mark-all-like-this-dwim "mark dwim")
+  ("c" mc/mark-all-like-this-dwim "mark dwim")
   ("F" mc/skip-to-next-like-this "skip next")
   ("S" mc/skip-to-previous-like-this "skip prev")
-  ("m" mc--mark-symbol-at-point "mark symbol")
+  ("d" mc--mark-symbol-at-point "mark symbol")
   ("M-f" mc/unmark-next-like-this "unmark next")
   ("M-s" mc/unmark-previous-like-this "unmark prev")
   ("r" mc/mark-all-in-region-regexp "mark regexp" :exit t)
@@ -431,6 +431,11 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (load-theme 'spacemacs-dark t)
 (setq frame-background-mode 'dark)
+
+;; (custom-theme-set-variables
+;;  theme-name
+;;  `(ansi-color-names-vector
+;;    [,bg1 ,red ,green ,yellow ,blue ,magenta ,cyan ,base]))
 
 ;; (load-theme 'monokai t)
 ;; (load-theme 'flatui t)
