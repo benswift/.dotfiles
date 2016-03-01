@@ -36,6 +36,10 @@ LEIN_FAST_TRAMPOLINE=y
 export LEIN_FAST_TRAMPOLINE
 alias cljsbuild="lein trampoline cljsbuild $@"
 
+# perl
+
+source ~/perl5/perlbrew/etc/bashrc
+
 # List all files colorized in long format, including dot files
 alias la="ls -Gla"
 
