@@ -797,31 +797,29 @@ i.e. change right window to bottom, or change bottom window to right."
 
 (require 'org)
 
-(setq org-export-with-toc nil)
+(setq org-todo-keywords
+      '((sequence "TODO" "IN-PROGRESS" "WAITING" "|" "DONE" "CANCELED")))
 
-(defun ben-org-mode-hook ()
-  ;; ;; org-latex export
-  ;; (add-to-list 'org-export-latex-classes
-  ;;              '("scrartcl"
-  ;;                "\\documentclass[12pt,a4paper]{scrartcl}"
-  ;;                ("\\section{%s}" . "\\section*{%s}")
-  ;;                ("\\subsection{%s}" . "\\subsection*{%s}")
-  ;;                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-  ;;                ("\\paragraph{%s}" . "\\paragraph*{%s}")
-  ;;                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-  ;; (setq org-export-latex-default-class "scrartcl")
-  ;; keymappings
-  (define-key org-mode-map (kbd "<M-left>") 'backward-word)
-  (define-key org-mode-map (kbd "<M-right>") 'forward-word)
-  (define-key org-mode-map (kbd "<C-left>") 'org-metaleft)
-  (define-key org-mode-map (kbd "<C-right>") 'org-metaright)
-  ;; stop org-mode shadowing the mc keybindings
-  (define-key org-mode-map (kbd "<C-S-up>") nil)
-  (define-key org-mode-map (kbd "<C-S-down>") nil)
-  (define-key org-mode-map (kbd "<C-S-right>") nil)
-  (define-key org-mode-map (kbd "<C-S-left>") nil))
+(setq org-directory
+      (if (equal system-type 'windows-nt)
+          "c:/Users/ben/Dropbox/org/"
+        "~/Dropbox/org/"))
 
-(add-hook 'org-mode-hook 'ben-org-mode-hook)
+(setq org-agenda-files
+      (if (equal system-type 'windows-nt)
+          '("c:/Users/ben/Dropbox/org/")
+        '("~/Dropbox/org/")))
+
+(setq org-capture-templates
+      '(("a" "My TODO task format." entry
+         (file "todo.org")
+         "* TODO %?\nSCHEDULED: %t")))
+
+(setq org-enforce-todo-dependencies t
+      org-log-done '(time))
+
+(global-set-key (kbd "C-c c") 'org-capture)
+(global-set-key (kbd "C-c t a") 'org-agenda-list)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Ben is On the Tubes ;;
@@ -829,7 +827,8 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; need to use the command `org-html-htmlize-generate-css' to extract
 ;; class definitions
-(setq org-html-htmlize-output-type 'inline-css)
+(setq org-html-htmlize-output-type 'inline-css
+      org-export-with-toc nil)
 
 ;; (setq org-html-htmlize-font-prefix "")
 
