@@ -146,17 +146,7 @@
   (list "mdfind" "-interpret" search-string))
 
 (defun ben-setup-keybindings ()
-  (define-key global-map (kbd "s-a") 'mark-whole-buffer)
-  (define-key global-map (kbd "s-k") 'kill-this-buffer)
-  (define-key global-map (kbd "s-l") 'goto-line)
-  (define-key global-map (kbd "s-n") 'make-frame)
-  (define-key global-map (kbd "s-q") 'save-buffers-kill-emacs)
-  (define-key global-map (kbd "s-s") 'save-buffer)
-  (define-key global-map (kbd "s-u") 'revert-buffer)
-  (define-key global-map (kbd "s-v") 'yank)
-  (define-key global-map (kbd "s-c") 'kill-ring-save)
-  (define-key global-map (kbd "s-w") 'delete-frame)
-  (define-key global-map (kbd "s-x") 'kill-region))
+  (define-key global-map (kbd "s-k") 'kill-this-buffer))
 
 (defun ben-osx-setup ()
   (ben-set-default-faces 140)
@@ -392,8 +382,6 @@ i.e. change right window to bottom, or change bottom window to right."
    (list (read-number "Frame alpha: " 1.0)))
    (set-frame-parameter (selected-frame) 'alpha value))
 
-(global-set-key (kbd "C-c t") 'set-current-frame-alpha)
-
 ;; full/half screen
 
 (define-key global-map (kbd "C-s-f") 'toggle-frame-fullscreen)
@@ -460,23 +448,8 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; window navigation
 
-(global-set-key (kbd "s-[") '(lambda () (interactive) (other-window -1)))
-(global-set-key (kbd "s-]") 'other-window)
-
 (global-set-key (kbd "s-{") 'shrink-window-horizontally)
 (global-set-key (kbd "s-}") 'enlarge-window-horizontally)
-
-;; Mac OS X-like
-
-(global-set-key (kbd "s-z") 'undo)
-
-(global-set-key (kbd "<s-left>") 'move-beginning-of-line)
-(global-set-key (kbd "<s-right>") 'move-end-of-line)
-(global-set-key (kbd "<s-up>") 'beginning-of-buffer)
-(global-set-key (kbd "<s-down>") 'end-of-buffer)
-(global-set-key (kbd "<M-delete>") 'kill-word)
-(global-set-key (kbd "<M-backspace>") 'backward-kill-word)
-(global-set-key (kbd "<s-backspace>") (lambda () (interactive) (kill-visual-line 0)))
 
 ;;;;;;;;;;;;;;
 ;; zoom-frm ;;
