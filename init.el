@@ -813,7 +813,7 @@ i.e. change right window to bottom, or change bottom window to right."
 (setq org-capture-templates
       '(("a" "My TODO task format." entry
          (file "todo.org")
-         "* TODO %?\nSCHEDULED: %t")))
+         "* TODO %?\n\tSCHEDULED: %t\n")))
 
 (setq org-enforce-todo-dependencies t
       org-log-done '(time))
