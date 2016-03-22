@@ -1,0 +1,25 @@
+# -*- mode: snippet -*-
+# name: letter
+# key: letter
+# --
+% -*- TeX-engine: xetex -*-
+\documentclass[brief,12pt]{scrlttr2}
+\usepackage{Alegreya}
+\usepackage{AlegreyaSans}
+
+\begin{document}
+\begin{letter}
+  {Benjamin Swift\\
+   ben.swift@anu.edu.au\\
+   75 Longstaff St\\
+   Lyneham ACT 2602}
+  
+  \opening{$1}
+
+  $0
+
+  \closing{Sincerely,\\
+    \vspace{1cm} Ben Swift}
+
+\end{letter}
+\end{document}

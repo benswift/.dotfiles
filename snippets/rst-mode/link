@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: link
+# key: link
+# --
+\`${1:name}\`_
+.. _$1: ${2:url}

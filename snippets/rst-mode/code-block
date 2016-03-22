@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: code-block
+# key: cb
+# --
+.. code-block:: ${1:extempore}
