@@ -231,10 +231,11 @@
         (extempore-debovinator-insert-globalvar
          (extempore-debovinate-variable name data (and bounds (elt bounds 1)) buffer)))))))
 
+;;;###autoload
 (defun extempore-debovinate-file (filename libname)
   (interactive
-   (find-file-read-args "C File (.c/.h): " t)
-   (read-from-minibuffer "libname : "))
+   (list (find-file-read-args "C File (.c/.h): " t)
+         (read-from-minibuffer "libname : ")))
   (let ((c-buffer (find-file-noselect filename)))
     (with-current-buffer c-buffer
       (let ((data (semantic-parse-region (point-min) (point-max))))
@@ -246,3 +247,4 @@
           (write-file (concat (file-name-sans-extension filename) ".xtm"))))
       (kill-buffer c-buffer))))
 
+(provide 'extempore-debovinator)
