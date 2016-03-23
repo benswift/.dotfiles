@@ -6,7 +6,7 @@ IMAPAccount fastmail
 Host mail.messagingengine.com
 Port 992
 User benswift@fastmail.com
-Pass ee-quab-ud-meuf-ji-w
+Pass ****
 SSLType IMAPS
 SSLVersions TLSv1.2
 # CertificateFile /etc/ssl/certs/ca-certificates.crt
