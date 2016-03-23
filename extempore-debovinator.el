@@ -106,17 +106,17 @@
                     (when val (string-to-number val))))))))
 
 (defun extempore-debovinator-insert-bind-lib (libname name rettype args)
-  (insert (format "%s\n(bind-lib %s %s [%s]*)\n"
-                  (string-join (-map-indexed (lambda (i x) (format ";; %2d: %s" i (cdr (assoc :name x)))) args) "\n")
+  (insert (format "(bind-lib %s %s [%s]* \n\"%s\")\n"
                   libname
                   name
-                  (string-join (cons rettype (-map (lambda (x) (cdr (assoc :type x))) args)) ","))))
+                  (string-join (cons rettype (-map (lambda (x) (cdr (assoc :type x))) args)) ",")
+                  (string-join (-map-indexed (lambda (i x) (format "@param %s - index %d" (cdr (assoc :name x)) i)) args) "\n"))))
 
 (defun extempore-debovinator-insert-named-type (name members)
-  (insert (format "%s\n(bind-type %s <%s>)\n"
-                  (string-join (-map-indexed (lambda (i x) (format ";; %2d: %s" i (cdr (assoc :name x)))) members) "\n")
+  (insert (format "(bind-type %s <%s>\n\"%s\")\n"
                   name
-                  (string-join (-map (lambda (x) (cdr (assoc :type x))) members) ","))))
+                  (string-join (-map (lambda (x) (cdr (assoc :type x))) members) ",")
+                  (string-join (-map-indexed (lambda (i x) (format "@member %s - index %d" (cdr (assoc :name x)) i)) members) "\n"))))
 
 (defun extempore-debovinator-insert-alias (data)
   (insert (format "(bind-alias %s %s)\n"
