@@ -74,7 +74,7 @@
     (or (cdr-safe (assoc c-type type-alist))
         c-type)))
 
-(defun extempore-debovinate-variable (name data pos)
+(defun extempore-debovinate-variable (name data pos &optional buffer)
   (cl-destructuring-bind (&key
                           type
                           pointer
@@ -84,60 +84,62 @@
                           &allow-other-keys) data
     (list (cons :name name)
           (cons :type
-                (if type
-                    (concat
-                     (extempore-debovinator-map-c-type-to-xtlang-type type)
-                     (make-string (or pointer dereference 0) ?*))
-                  "i32"))
+                (cond ((car-safe type))
+                      (type
+                       (concat
+                        (extempore-debovinator-map-c-type-to-xtlang-type type)
+                        (make-string (or pointer dereference 0) ?*)))
+                      (t "i32")))
           (cons :value
                 (let ((val (or
                             (and (stringp default-value) default-value)
                             (and default-value (listp default-value)
                                  (apply #'buffer-substring-no-properties default-value))
-                            (and pos
-                                 (save-excursion
+                            (and buffer pos
+                                 (with-current-buffer buffer
                                    (goto-char pos)
                                    (when (search-forward-regexp "[^,]*=[^,]*\\([x0-9]+\\)" (point-at-eol) :noerror)
                                      (match-string-no-properties 1)))))))
                   (when val (string-to-number val)))))))
 
-(defun extempore-debovinator-insert-closure (name rettype args)
-  (format "%s\n(bind-func %s [%s]*)\n"
-          (string-join (-map-indexed (lambda (i x) (format ";; %d %s" i (cdr (assoc :name x)))) args) "\n")
-          name
-          (string-join (cons rettype (-map (lambda (x) (cdr (assoc :type x))) args)) ",")))
+(defun extempore-debovinator-insert-bind-lib (libname name rettype args)
+  (insert (format "%s\n(bind-lib %s %s [%s]*)\n"
+                  (string-join (-map-indexed (lambda (i x) (format ";; %2d: %s" i (cdr (assoc :name x)))) args) "\n")
+                  libname
+                  name
+                  (string-join (cons rettype (-map (lambda (x) (cdr (assoc :type x))) args)) ","))))
 
 (defun extempore-debovinator-insert-named-type (name members)
-  (format "%s\n(bind-type %s <%s>)\n"
-          (string-join (-map-indexed (lambda (i x) (format ";; %d %s" i (cdr (assoc :name x)))) members) "\n")
-          name
-          (string-join (-map (lambda (x) (cdr (assoc :type x))) members) ",")))
+  (insert (format "%s\n(bind-type %s <%s>)\n"
+                  (string-join (-map-indexed (lambda (i x) (format ";; %2d: %s" i (cdr (assoc :name x)))) members) "\n")
+                  name
+                  (string-join (-map (lambda (x) (cdr (assoc :type x))) members) ","))))
 
 (defun extempore-debovinator-insert-alias (data)
-  (format "(bind-alias %s %s)\n"
-          (cdr (assoc :name data))
-          (cdr (assoc :type data))))
+  (insert (format "(bind-alias %s %s)\n"
+                  (cdr (assoc :name data))
+                  (cdr (assoc :type data)))))
 
 (defun extempore-debovinator-insert-globalvar (data)
-  (format "(bind-val %s %s%s)\n"
-          (cdr (assoc :name data))
-          (cdr (assoc :type data))
-          (if (cdr (assoc :value data))
-              (concat " " (number-to-string (cdr (assoc :value data))))
-              "")))
+  (insert (format "(bind-val %s %s%s)\n"
+                  (cdr (assoc :name data))
+                  (cdr (assoc :type data))
+                  (if (cdr (assoc :value data))
+                      (concat " " (number-to-string (cdr (assoc :value data))))
+                    ""))))
 
 (defvar extempore-debovinate-current-enum-value 0)
 
 (defun extempore-debovinator-insert-enum-globalvar (data)
   (when (cdr (assoc :value data))
-    (setf extempore-debovinate-current-enum-value 
+    (setf extempore-debovinate-current-enum-value
           (cdr (assoc :value data))))
-  (format "(bind-val %s %s %d)\n"
-          (cdr (assoc :name data))
-          (cdr (assoc :type data))
-          (- (incf extempore-debovinate-current-enum-value) 1)))
+  (insert (format "(bind-val %s %s %d)\n"
+                  (cdr (assoc :name data))
+                  (cdr (assoc :type data))
+                  (- (incf extempore-debovinate-current-enum-value) 1))))
 
-(defun extempore-debovinator-dispatch (args)
+(defun extempore-debovinator-dispatch (args libname buffer)
   (cl-destructuring-bind (name class data nil bounds) args
     (cl-destructuring-bind (&key
                             type
@@ -152,13 +154,16 @@
       (cond
        ;; function/function prototype -> bind-func
        ((string-equal class "function")
-        (extempore-debovinator-insert-closure
-         name type
+        (extempore-debovinator-insert-bind-lib
+         libname
+         name
+         (or (car-safe type) type)
          (-map (lambda (x)
                  (extempore-debovinate-variable
                   (car x)
                   (caddr x)
-                  (elt (car (reverse x)) 1)))
+                  (elt (car (reverse x)) 1)
+                  buffer))
                arguments)))
        ;; struct -> bind-type
        ((string-equal class "type")
@@ -170,7 +175,8 @@
                    (extempore-debovinate-variable
                     (car x)
                     (caddr x)
-                    (elt (car (reverse x)) 1)))
+                    (elt (car (reverse x)) 1)
+                    buffer))
                  members)))
          ;; enum -> bind-val
          ((string-equal type "enum")
@@ -183,7 +189,8 @@
                    (extempore-debovinate-variable
                     (car x)
                     (caddr x)
-                    (elt (car (reverse x)) 1))))
+                    (elt (car (reverse x)) 1)
+                    buffer)))
                 members))
          ;; typedef -> bind-alias
          ((string-equal type "typedef")
@@ -195,7 +202,23 @@
                    (cons :type (extempore-debovinator-map-c-type-to-xtlang-type (car typedef))))))
            ((not (member '(:type "struct") typedef))
             ;; probably a typedef'ed enum or something
-            (extempore-debovinator-dispatch (cons name (cdr typedef))))))))
+            (extempore-debovinator-dispatch (cons name (cdr typedef)) libname buffer))))))
        ;; globalvar -> bind-val
        ((string-equal class "variable")
-        (extempore-debovinator-insert-globalvar (extempore-debovinate-variable name data (and bounds (elt bounds 1)))))))))
+        (extempore-debovinator-insert-globalvar
+         (extempore-debovinate-variable name data (and bounds (elt bounds 1)) buffer)))))))
+
+(defun extempore-debovinate-file (filename libname)
+  (interactive
+   (find-file-read-args "C File (.c/.h): " t)
+   (read-from-minibuffer "libname : "))
+  (let ((c-buffer (find-file-existing filename)))
+    (with-current-buffer c-buffer
+      (let ((data (semantic-parse-region (point-min) (point-max))))
+        (with-temp-buffer
+          (insert (format ";; xtlang bindings automatically generated from %s\n;; by extempore-debovinator.el at %s\n\n"
+                          filename
+                          (format-time-string "%F")))
+          (-each data (lambda (x) (extempore-debovinator-dispatch x libname c-buffer)))
+          (write-file (concat (file-name-sans-extension filename) ".xtm")))))))
+
