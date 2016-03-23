@@ -235,7 +235,7 @@
 (defun extempore-debovinate-file (filename libname)
   (interactive
    (list (find-file-read-args "C File (.c/.h): " t)
-         (read-from-minibuffer "libname : ")))
+         (read-string "libname : ")))
   (let ((c-buffer (find-file-noselect filename)))
     (with-current-buffer c-buffer
       (let ((data (semantic-parse-region (point-min) (point-max))))
