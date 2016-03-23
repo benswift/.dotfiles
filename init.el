@@ -1179,6 +1179,8 @@ tags:
             :require-match 'confirm-after-completion
             :keymap counsel-find-file-map))
 
+(load "~/.dotfiles/extempore-debovinator.el" :noerror)
+
 ;;;;;;;;;;;;
 ;; OpenCL ;;
 ;;;;;;;;;;;;
