@@ -86,7 +86,10 @@
     (unless (equal data '(:constant-flag t))
       (list (cons :name name)
             (cons :type
-                  (cond ((car-safe type))
+                  (cond ((car-safe type)
+                         (concat
+                          (extempore-debovinator-map-c-type-to-xtlang-type (car-safe type))
+                          (make-string (or pointer dereference 0) ?*)))
                         (type
                          (concat
                           (extempore-debovinator-map-c-type-to-xtlang-type type)
@@ -113,10 +116,11 @@
                   (string-join (-map-indexed (lambda (i x) (format "@param %s - index %d" (cdr (assoc :name x)) i)) args) "\n"))))
 
 (defun extempore-debovinator-insert-named-type (name members)
-  (insert (format "(bind-type %s <%s>\n\"%s\")\n"
-                  name
-                  (string-join (-map (lambda (x) (cdr (assoc :type x))) members) ",")
-                  (string-join (-map-indexed (lambda (i x) (format "@member %s - index %d" (cdr (assoc :name x)) i)) members) "\n"))))
+  (when members
+    (insert (format "(bind-type %s <%s>\n\"%s\")\n"
+                    name
+                    (string-join (-map (lambda (x) (cdr (assoc :type x))) members) ",")
+                    (string-join (-map-indexed (lambda (i x) (format "@member %s - index %d" (cdr (assoc :name x)) i)) members) "\n")))))
 
 (defun extempore-debovinator-insert-alias (data)
   (insert (format "(bind-alias %s %s)\n"
