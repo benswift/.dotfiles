@@ -108,11 +108,16 @@
                                        (match-string-no-properties 1)))))))
                     (when val (string-to-number val))))))))
 
+(defun extempore-debovinator-insert-sys-load (path)
+  (insert (format "(sys:load \"%s\")\n"
+                  (concat (file-name-sans-extension path) ".xtm"))))
+
 (defun extempore-debovinator-insert-bind-lib (libname name rettype args)
   (insert (format "(bind-lib %s %s [%s]* \n\"%s\")\n"
                   libname
                   name
-                  (string-join (cons rettype (-map (lambda (x) (cdr (assoc :type x))) args)) ",")
+                  (string-join (cons (extempore-debovinator-map-c-type-to-xtlang-type rettype)
+                                     (-map (lambda (x) (cdr (assoc :type x))) args)) ",")
                   (string-join (-map-indexed (lambda (i x) (format "@param %s - index %d" (cdr (assoc :name x)) i)) args) "\n"))))
 
 (defun extempore-debovinator-insert-named-type (name members)
@@ -159,8 +164,12 @@
                             dereference
                             default-value
                             constant-flag
+                            system-flag
                             &allow-other-keys) data
       (cond
+       ((string-equal class "include")
+        (unless system-flag
+          (extempore-debovinator-insert-sys-load name)))
        ;; function/function prototype -> bind-func
        ((string-equal class "function")
         (extempore-debovinator-insert-bind-lib
