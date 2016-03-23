@@ -156,15 +156,16 @@
 (defun extempore-debovinator-dispatch (args libname buffer)
   (cl-destructuring-bind (name class data nil bounds) args
     (cl-destructuring-bind (&key
+                            arguments
+                            constant-flag
+                            default-value
+                            dereference
+                            members
+                            pointer
+                            system-flag
                             type
                             typedef
-                            pointer
-                            members
-                            arguments
-                            dereference
-                            default-value
-                            constant-flag
-                            system-flag
+                            typemodifiers
                             &allow-other-keys) data
       (cond
        ((string-equal class "include")
@@ -172,17 +173,18 @@
           (extempore-debovinator-insert-sys-load name)))
        ;; function/function prototype -> bind-func
        ((string-equal class "function")
-        (extempore-debovinator-insert-bind-lib
-         libname
-         name
-         (or (car-safe type) type)
-         (-map (lambda (x)
-                 (extempore-debovinate-variable
-                  (car x)
-                  (caddr x)
-                  (elt (car (reverse x)) 1)
-                  buffer))
-               arguments)))
+        (unless (member "inline" typemodifiers)
+          (extempore-debovinator-insert-bind-lib
+             libname
+             name
+             (or (car-safe type) type)
+             (-map (lambda (x)
+                     (extempore-debovinate-variable
+                      (car x)
+                      (caddr x)
+                      (elt (car (reverse x)) 1)
+                      buffer))
+                   arguments))))
        ;; struct -> bind-type
        ((string-equal class "type")
         (cond
