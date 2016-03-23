@@ -82,25 +82,28 @@
                           default-value
                           constant-flag
                           &allow-other-keys) data
-    (list (cons :name name)
-          (cons :type
-                (cond ((car-safe type))
-                      (type
-                       (concat
-                        (extempore-debovinator-map-c-type-to-xtlang-type type)
-                        (make-string (or pointer dereference 0) ?*)))
-                      (t "i32")))
-          (cons :value
-                (let ((val (or
-                            (and (stringp default-value) default-value)
-                            (and default-value (listp default-value)
-                                 (apply #'buffer-substring-no-properties default-value))
-                            (and buffer pos
-                                 (with-current-buffer buffer
-                                   (goto-char pos)
-                                   (when (search-forward-regexp "[^,]*=[^,]*\\([x0-9]+\\)" (point-at-eol) :noerror)
-                                     (match-string-no-properties 1)))))))
-                  (when val (string-to-number val)))))))
+    ;; if it's just a preprocessor define used at compile-time, ignore it
+    (unless (equal data '(:constant-flag t))
+      (list (cons :name name)
+            (cons :type
+                  (cond ((car-safe type))
+                        (type
+                         (concat
+                          (extempore-debovinator-map-c-type-to-xtlang-type type)
+                          (make-string (or pointer dereference 0) ?*)))
+                        (t "i32")))
+            (cons :value
+                  (let ((val (or
+                              (and (stringp default-value) default-value)
+                              (and default-value (listp default-value)
+                                   (with-current-buffer buffer
+                                     (apply #'buffer-substring-no-properties default-value)))
+                              (and buffer pos
+                                   (with-current-buffer buffer
+                                     (goto-char pos)
+                                     (when (search-forward-regexp "[^,]*=[^,]*\\([x0-9]+\\)" (point-at-eol) :noerror)
+                                       (match-string-no-properties 1)))))))
+                    (when val (string-to-number val))))))))
 
 (defun extempore-debovinator-insert-bind-lib (libname name rettype args)
   (insert (format "%s\n(bind-lib %s %s [%s]*)\n"
@@ -121,14 +124,16 @@
                   (cdr (assoc :type data)))))
 
 (defun extempore-debovinator-insert-globalvar (data)
-  (insert (format "(bind-val %s %s%s)\n"
-                  (cdr (assoc :name data))
-                  (cdr (assoc :type data))
-                  (if (cdr (assoc :value data))
-                      (concat " " (number-to-string (cdr (assoc :value data))))
-                    ""))))
+  (when data
+    (insert (format "(bind-val %s %s%s)\n"
+                    (cdr (assoc :name data))
+                    (cdr (assoc :type data))
+                    (if (cdr (assoc :value data))
+                        (concat " " (number-to-string (cdr (assoc :value data))))
+                      "")))))
 
 (defvar extempore-debovinate-current-enum-value 0)
+(defvar extempore-debovinate-current-enum-typedef "enum")
 
 (defun extempore-debovinator-insert-enum-globalvar (data)
   (when (cdr (assoc :value data))
@@ -136,7 +141,7 @@
           (cdr (assoc :value data))))
   (insert (format "(bind-val %s %s %d)\n"
                   (cdr (assoc :name data))
-                  (cdr (assoc :type data))
+                  extempore-debovinate-current-enum-typedef
                   (- (incf extempore-debovinate-current-enum-value) 1))))
 
 (defun extempore-debovinator-dispatch (args libname buffer)
@@ -184,6 +189,8 @@
            (list (cons :name name)
                  (cons :type (extempore-debovinator-map-c-type-to-xtlang-type type))))
           (setf extempore-debovinate-current-enum-value 0)
+          (unless (string-equal extempore-debovinate-current-enum-typedef name)
+            (setf extempore-debovinate-current-enum-typedef "enum"))
           (-map (lambda (x)
                   (extempore-debovinator-insert-enum-globalvar
                    (extempore-debovinate-variable
@@ -202,6 +209,7 @@
                    (cons :type (extempore-debovinator-map-c-type-to-xtlang-type (car typedef))))))
            ((not (member '(:type "struct") typedef))
             ;; probably a typedef'ed enum or something
+            (setf extempore-debovinate-current-enum-typedef name)
             (extempore-debovinator-dispatch (cons name (cdr typedef)) libname buffer))))))
        ;; globalvar -> bind-val
        ((string-equal class "variable")
@@ -212,13 +220,14 @@
   (interactive
    (find-file-read-args "C File (.c/.h): " t)
    (read-from-minibuffer "libname : "))
-  (let ((c-buffer (find-file-existing filename)))
+  (let ((c-buffer (find-file-noselect filename)))
     (with-current-buffer c-buffer
       (let ((data (semantic-parse-region (point-min) (point-max))))
         (with-temp-buffer
-          (insert (format ";; xtlang bindings automatically generated from %s\n;; by extempore-debovinator.el at %s\n\n"
+          (insert (format ";; xtlang bindings automatically generated from %s\n;; by extempore-debovinator.el on %s\n\n"
                           filename
                           (format-time-string "%F")))
           (-each data (lambda (x) (extempore-debovinator-dispatch x libname c-buffer)))
-          (write-file (concat (file-name-sans-extension filename) ".xtm")))))))
+          (write-file (concat (file-name-sans-extension filename) ".xtm"))))
+      (kill-buffer c-buffer))))
 
