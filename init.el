@@ -727,7 +727,7 @@ i.e. change right window to bottom, or change bottom window to right."
   (setq eshell-prompt-function
         (lambda ()
           (concat (user-login-name) "@" (host-name) " "
-                  (base-name (eshell/pwd))
+                  (file-name-nondirectory (eshell/pwd))
                   (if (= (user-uid) 0) " # " " $ "))))
   ;; helpful bits and pieces
   (eldoc-mode 1)
@@ -738,15 +738,6 @@ i.e. change right window to bottom, or change bottom window to right."
   (add-to-list 'eshell-visual-commands "ssh"))
 
 (add-hook 'eshell-mode-hook 'ben-eshell-mode-hook)
-
-(defun base-name (path)
-  "Returns the base name of the given path."
-  (let ((path (abbreviate-file-name path)))
-    (if (string-match "\\(.*\\)/\\(.*\\)$" path)
-        (if (= 0 (length (match-string 1 path)))
-            (concat "/" (match-string 2 path))
-          (match-string 2 path))
-      path)))
 
 (defun host-name ()
   "Returns the name of the current host minus the domain."
