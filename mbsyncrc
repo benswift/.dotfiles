@@ -6,7 +6,7 @@ IMAPAccount fastmail
 Host mail.messagingengine.com
 Port 992
 User benswift@fastmail.com
-Pass ****
+PassCmd "cat ~/.mbsync-fastmail"
 SSLType IMAPS
 SSLVersions TLSv1.2
 
@@ -35,7 +35,7 @@ Host outlook.office365.com
 Port 993
 User u2548636@uds.anu.edu.au
 # User ben.swift@anu.edu.au
-Pass ****
+PassCmd "cat ~/.mbsync-anu"
 AuthMechs PLAIN
 SSLType IMAPS
 SSLVersions TLSv1.2
