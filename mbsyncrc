@@ -9,7 +9,6 @@ User benswift@fastmail.com
 Pass ****
 SSLType IMAPS
 SSLVersions TLSv1.2
-# CertificateFile /etc/ssl/certs/ca-certificates.crt
 
 IMAPStore fastmail-remote
 Account fastmail
