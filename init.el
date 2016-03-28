@@ -782,6 +782,11 @@ i.e. change right window to bottom, or change bottom window to right."
 (setq magit-push-always-verify nil)
 (setq magit-completing-read-function 'ivy-completing-read)
 
+;; this isn't really about magit, but if you're exclusively using
+;; magit then turning off the other vc modes might speed things up a
+;; bit
+(setq vc-handled-backends nil)
+
 ;;;;;;;;;;;;;;
 ;; org mode ;;
 ;;;;;;;;;;;;;;
