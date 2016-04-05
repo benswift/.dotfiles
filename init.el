@@ -535,6 +535,7 @@ i.e. change right window to bottom, or change bottom window to right."
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-signature-auto-include nil)
   (add-hook 'mu4e-compose-mode-hook #'flyspell-mode 1)
+  (add-hook 'mu4e-compose-mode-hook #'company-mode-on)
 
   (defun ben-find-to-firstname ()
     "search the current buffer for a To: field, and grab the first recipient's name from there"
