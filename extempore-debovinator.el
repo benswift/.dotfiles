@@ -1,4 +1,4 @@
-;;; extempore-debovinator.el --- Parse C files and generate xtlang
+;;; extempore-debovinator.el -*- lexical-binding: t -*-
 ;; Author: Ben Swift <ben@benswift.me>
 ;; Keywords: Extempore
 
@@ -154,91 +154,119 @@
                   (- (incf extempore-debovinate-current-enum-value) 1))))
 
 (defun extempore-debovinator-dispatch (args libname buffer)
-  (cl-destructuring-bind (name class data nil bounds) args
-    (cl-destructuring-bind (&key
-                            arguments
-                            constant-flag
-                            default-value
-                            dereference
-                            members
-                            pointer
-                            system-flag
-                            type
-                            typedef
-                            typemodifiers
-                            &allow-other-keys) data
-      (cond
-       ((string-equal class "include")
-        (unless system-flag
-          (extempore-debovinator-insert-sys-load name)))
-       ;; function/function prototype -> bind-func
-       ((string-equal class "function")
-        (unless (member "inline" typemodifiers)
-          (extempore-debovinator-insert-bind-lib
-             libname
-             name
-             (or (car-safe type) type)
-             (-map (lambda (x)
-                     (extempore-debovinate-variable
-                      (car x)
-                      (caddr x)
-                      (elt (car (reverse x)) 1)
-                      buffer))
-                   arguments))))
-       ;; struct -> bind-type
-       ((string-equal class "type")
-        (cond
-         ((string-equal type "struct")
-          (extempore-debovinator-insert-named-type
-           name
-           (-map (lambda (x)
+  (let ((name (nth 0 args))
+        (class (nth 1 args))
+        (data (nth 2 args))
+        (bounds (nth 4 args)))
+    (cl-destructuring-bind
+        (&key
+         arguments
+         constant-flag
+         default-value
+         dereference
+         members
+         pointer
+         system-flag
+         type
+         typedef
+         typemodifiers
+         &allow-other-keys)
+        data
+      (cond ((string-equal class "include")
+             (unless system-flag
+               (extempore-debovinator-insert-sys-load
+                name)))
+            ;; function/function prototype -> bind-func
+            ((string-equal class "function")
+             (unless (member "inline" typemodifiers)
+               (extempore-debovinator-insert-bind-lib
+                libname
+                name
+                (or (car-safe type) type)
+                (-map
+                 (lambda (x)
                    (extempore-debovinate-variable
                     (car x)
                     (caddr x)
                     (elt (car (reverse x)) 1)
                     buffer))
-                 members)))
-         ;; enum -> bind-val
-         ((string-equal type "enum")
-          (extempore-debovinator-insert-alias
-           (list (cons :name name)
-                 (cons :type (extempore-debovinator-map-c-type-to-xtlang-type type))))
-          (setf extempore-debovinate-current-enum-value 0)
-          (unless (string-equal extempore-debovinate-current-enum-typedef name)
-            (setf extempore-debovinate-current-enum-typedef "enum"))
-          (-map (lambda (x)
-                  (extempore-debovinator-insert-enum-globalvar
-                   (extempore-debovinate-variable
-                    (car x)
-                    (caddr x)
-                    (elt (car (reverse x)) 1)
-                    buffer)))
-                members))
-         ;; typedef -> bind-alias
-         ((string-equal type "typedef")
-          (cond
-           ((and (listp typedef) (= (length typedef) 1))
-            ;; probably a typedef'ed enum or something
-            (extempore-debovinator-insert-alias
-             (list (cons :name name)
-                   (cons :type (extempore-debovinator-map-c-type-to-xtlang-type (car typedef))))))
-           ((not (member '(:type "struct") typedef))
-            ;; probably a typedef'ed enum or something
-            (setf extempore-debovinate-current-enum-typedef name)
-            (extempore-debovinator-dispatch (cons name (cdr typedef)) libname buffer))))))
-       ;; globalvar -> bind-val
-       ((string-equal class "variable")
-        (extempore-debovinator-insert-globalvar
-         (extempore-debovinate-variable name data (and bounds (elt bounds 1)) buffer)))))))
+                 arguments))))
+            ;; struct -> bind-type
+            ((string-equal class "type")
+             (cond ((string-equal type "struct")
+                    (extempore-debovinator-insert-named-type
+                     name
+                     (-map
+                      (lambda (x)
+                        (extempore-debovinate-variable
+                         (car x)
+                         (caddr x)
+                         (elt (car (reverse x)) 1)
+                         buffer))
+                      members)))
+                   ;; enum -> bind-val
+                   ((string-equal type "enum")
+                    (extempore-debovinator-insert-alias
+                     (list
+                      (cons :name name)
+                      (cons :type (extempore-debovinator-map-c-type-to-xtlang-type
+                                   type))))
+                    (setf
+                     extempore-debovinate-current-enum-value
+                     0)
+                    (unless (string-equal
+                             extempore-debovinate-current-enum-typedef
+                             name)
+                      (setf
+                       extempore-debovinate-current-enum-typedef
+                       "enum"))
+                    (-map
+                     (lambda (x)
+                       (extempore-debovinator-insert-enum-globalvar
+                        (extempore-debovinate-variable
+                         (car x)
+                         (caddr x)
+                         (elt (car (reverse x)) 1)
+                         buffer)))
+                     members))
+                   ;; typedef -> bind-alias
+                   ((string-equal type "typedef")
+                    (cond ((and (listp typedef)
+                                (= (length typedef) 1))
+                           ;; probably a typedef'ed enum or something
+                           (extempore-debovinator-insert-alias
+                            (list
+                             (cons :name name)
+                             (cons :type (extempore-debovinator-map-c-type-to-xtlang-type
+                                          (car typedef))))))
+                          ((not (member
+                                 '(:type "struct")
+                                 typedef))
+                           ;; probably a typedef'ed enum or something
+                           (setf
+                            extempore-debovinate-current-enum-typedef
+                            name)
+                           (extempore-debovinator-dispatch
+                            (cons name (cdr typedef))
+                            libname
+                            buffer))))))
+            ;; globalvar -> bind-val
+            ((string-equal class "variable")
+             (extempore-debovinator-insert-globalvar
+              (extempore-debovinate-variable
+               name
+               data
+               (and bounds (elt bounds 1))
+               buffer)))))))
 
 ;;;###autoload
 (defun extempore-debovinate-file (filename libname)
   (interactive
-   (list (find-file-read-args "C File (.c/.h): " t)
+   (list (car (find-file-read-args "C File (.c/.h): " t))
          (read-string "libname : ")))
   (let ((c-buffer (find-file-noselect filename)))
     (with-current-buffer c-buffer
-      (let ((data (semantic-parse-region (point-min) (point-max))))
+      (let ((data (reverse (semantic-parse-region (point-min) (point-max)))))
         (with-temp-buffer
           (insert (format ";; xtlang bindings automatically generated from %s\n;; by extempore-debovinator.el on %s\n\n"
                           filename
