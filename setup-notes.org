@@ -39,6 +39,15 @@ sudo apt-get install emacs24
 Download fonts from (https://github.com/adobe-fonts/source-code-pro),
 copy them into =/usr/share/fonts/otf= and run =fc-cache -f -v=
 
+*** mu4e
+
+```
+sudo apt-get install mu4e libdb-dev
+```
+
+Need to compile mbsync from source, since my mbsyncrc requires v1.2,
+and the Ubuntu repo only has v1.1
+
 *** graphics
 
 launch the 'additional drivers' program/tool to select the latest
