@@ -911,8 +911,9 @@ tags:
 ;; hunspell ;;
 ;;;;;;;;;;;;;;
 
-(setq ispell-program-name (executable-find "hunspell"))
-(setq ispell-dictionary "en_AU")
+(when (executable-find "hunspell")
+  (setq ispell-program-name (executable-find "hunspell"))
+  (setq ispell-dictionary "en_AU"))
 
 ;;;;;;;;;;;;;;;;
 ;; projectile ;;
