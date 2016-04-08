@@ -167,6 +167,7 @@
 ;; Windows
 
 (defun ben-windows-setup ()
+  (setq default-directory "C:/Users/ben/" )
   (ben-set-default-faces 140)
   (setq w32-pass-lwindow-to-system nil)
   (setq w32-lwindow-modifier 'super)
