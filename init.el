@@ -171,6 +171,7 @@
   (ben-set-default-faces 140)
   (setq w32-pass-lwindow-to-system nil)
   (setq w32-lwindow-modifier 'super)
+  (setq compile-command "cmake -G\"Visual Studio 14 2015 Win64\" .. && cmake --build . --config Release --target")
   (ben-setup-keybindings))
 
 (cond ((equal system-type 'gnu/linux) (ben-linux-setup))
