@@ -251,8 +251,8 @@
 (add-hook #'scheme-mode-hook #'lispy-mode 1)
 
 ;; don't know why this doesn't have a keybinding
-(eval-after-load "lispy"
-  '(lispy-define-key lispy-mode-map-special "L" 'lispy-wrap-round))
+(with-eval-after-load "lispy"
+  (lispy-define-key lispy-mode-map-special "L" 'lispy-wrap-round))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; garbage collection ;;
@@ -1236,8 +1236,8 @@ tags:
 (setq cider-repl-use-pretty-printing nil)
 (setq cider-repl-use-clojure-font-lock t)
 
-(eval-after-load "clojure"
-  '(define-key clojure-mode-map (kbd "C-:") nil))
+(with-eval-after-load "clojure"
+  (define-key clojure-mode-map (kbd "C-:") nil))
 
 ;; for debugging
 (setq nrepl-log-messages t)
