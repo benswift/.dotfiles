@@ -974,28 +974,27 @@ tags:
 (add-to-list 'auto-mode-alist '("\\.cls" . LaTeX-mode))
 
 ;; use Skim for pdfs on OSX
-(add-to-list 'TeX-view-program-list
-             '("Skim" "~/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
-(if (equal system-type 'darwin)
-    (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
+(when (equal system-type 'darwin)
+  (add-to-list
+   'TeX-view-program-list
+   '("Skim" "~/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
+  (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
 
 ;; synctex
 (setq TeX-source-correlate-mode t)
 (setq TeX-source-correlate-method 'synctex)
 
-;; latex keybindings
-(define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count)
-
 ;; reftex
+
 (setq reftex-enable-partial-scans t)
 (setq reftex-save-parse-info t)
 (setq reftex-plug-into-AUCTeX t)
 (setq reftex-cite-prompt-optional-args nil)
 (setq reftex-cite-cleanup-optional-args t)
 (setq reftex-bibliography-commands '("bibliography" "nobibliography" "setupbibtex\\[.*?database=" "addbibresource"))
-(reftex-mode 1)
 
 ;; reftex keybindings
+
 (define-key LaTeX-mode-map (kbd "C-c =") 'reftex-toc)
 (define-key LaTeX-mode-map (kbd "C-c c") 'reftex-citation)
 (define-key LaTeX-mode-map (kbd "C-c r") 'reftex-reference)
@@ -1003,8 +1002,8 @@ tags:
 (defun latex-word-count ()
   (interactive)
   (let* ((tex-file (if (stringp TeX-master)
-		       TeX-master
-		     (buffer-file-name)))
+                       TeX-master
+                     (buffer-file-name)))
          (enc-str (symbol-name buffer-file-coding-system))
          (enc-opt (cond
                    ((string-match "utf-8" enc-str) "-utf8")
