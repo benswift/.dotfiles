@@ -831,12 +831,14 @@ i.e. change right window to bottom, or change bottom window to right."
                  "% -*- TeX-engine: xetex; TeX-command-extra-options: \"-shell-escape\"; -*-
 \\documentclass{beamer}
 \\usetheme{metropolis}
+\\setbeamertemplate{itemize items}{$\\bullet$}
 [NO-DEFAULT-PACKAGES]
 [PACKAGES]
 [EXTRA]"
                  ("\\section{%s}" . "\\section*{%s}")
                  ("\\subsection{%s}" . "\\subsection*{%s}")
                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
+               nil
                (lambda (a b) (string= (car a) (car b)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
