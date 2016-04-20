@@ -419,6 +419,8 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; color theme ;;
 ;;;;;;;;;;;;;;;;;
 
+(setq spacemacs-theme-org-height nil)
+
 (load-theme 'spacemacs-dark t)
 (setq frame-background-mode 'dark)
 
