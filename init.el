@@ -821,6 +821,22 @@ i.e. change right window to bottom, or change bottom window to right."
 (global-set-key (kbd "C-c c") 'org-capture)
 (global-set-key (kbd "C-c t a") 'org-agenda-list)
 
+;; beamer export
+
+(with-eval-after-load "ox-latex"
+  (add-to-list 'org-latex-classes
+               '("beamer"
+                 "% -*- TeX-engine: xetex; TeX-command-extra-options: \"-shell-escape\"; -*-
+\\documentclass{beamer}
+\\usetheme{metropolis}
+[NO-DEFAULT-PACKAGES]
+[PACKAGES]
+[EXTRA]"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
+               (lambda (a b) (string= (car a) (car b)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Ben is On the Tubes ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
