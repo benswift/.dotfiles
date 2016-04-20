@@ -13,7 +13,7 @@ export DEBFULLNAME="Ben Swift"
 export PYTHONPATH=`brew --prefix`/lib/python2.7/site-packages
 
 # Extempore-patched LLVM directory
-export EXT_LLVM_DIR=~/Code/extempore/llvm-build
+# export EXT_LLVM_DIR=~/Code/extempore/llvm-build
 
 # set up rbenv
 export RBENV_ROOT=/usr/local/var/rbenv
