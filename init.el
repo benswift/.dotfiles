@@ -1017,6 +1017,68 @@ tags:
               (call-process "texcount" nil t nil "-1" "-merge" enc-opt tex-file)))))
     (message word-count)))
 
+(define-key LaTeX-mode-map (kbd "C-c w") 'latex-word-count)
+
+;; beamer helpers
+
+(defun latex-minted-bounds ()
+  "Determine if point is inside a minted environment, and if true return the bounds of teh minted region"
+  (let ((case-fold-search nil))
+    (save-excursion
+      (re-search-backward "\\\\\\(begin\\|end\\){\\([^}]+\\)}" nil :noerror)
+      (let ((minted-begin (match-end 0)))
+        (when (and (string= (match-string 1) "begin")
+                   (string= (match-string 2) "minted"))
+          (search-forward "\\end{minted}" nil :noerror)
+          (list minted-begin (match-beginning 0)))))))
+
+(defvar latex-minted-source-markers nil)
+
+(defun latex-minted-jump-to-src-buffer ()
+  (interactive)
+  (let* ((latex-buffer (current-buffer))
+         (bounds (latex-minted-bounds))
+         (str (and bounds (apply #'buffer-substring-no-properties bounds))))
+    (unless bounds
+      (error "Not currently in a {minted} environment"))
+    (string-match "^{\\([^}]+\\)}\\(.*\\)" str)
+    (let* ((minted-lang (match-string 1 str))
+           (minted-begin (+ 1 (match-end 1) (car bounds)))
+           (minted-lang-mode (intern (concat minted-lang "-mode")))
+           (minted-body (substring str (+ 1 (match-end 2)))))
+      (unless (fboundp minted-lang-mode)
+        (error "Cannot find major mode for %s" minted-lang))
+      (with-current-buffer (get-buffer-create "*minted*")
+        (delete-region (point-min) (point-max))
+        (funcall minted-lang-mode)
+        (insert minted-body)
+        (indent-region (point-min) (point-max))
+        (whitespace-cleanup)
+        (setq latex-minted-source-markers
+              (list (set-marker (make-marker) minted-begin latex-buffer)
+                    (set-marker (make-marker) (cadr bounds) latex-buffer)))
+        (pop-to-buffer (current-buffer))))))
+
+(defun latex-minted-update-buffer ()
+  (interactive)
+  (when (string= (buffer-name) "*minted*")
+    (let ((src (buffer-substring-no-properties (point-min) (point-max)))
+          (buffer (marker-buffer (car latex-minted-source-markers))))
+      (with-current-buffer buffer
+        (save-excursion
+          (apply #'delete-region latex-minted-source-markers)
+          (insert (concat "\n" src)))
+        (delete-window)))))
+
+(defun latex-minted-dwim ()
+  (interactive)
+  (if (string= (buffer-name) "*minted*")
+      (latex-minted-update-buffer)
+    (latex-minted-jump-to-src-buffer)))
+
+(with-eval-after-load "latex"
+  (global-set-key (kbd "C-c C-'") 'latex-minted-dwim))
+
 ;; to clean Biber cache, use
 ;; (shell-command "echo rm -r `biber --cache`")
 
