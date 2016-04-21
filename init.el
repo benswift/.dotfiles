@@ -823,11 +823,11 @@ i.e. change right window to bottom, or change bottom window to right."
 (global-set-key (kbd "C-c c") 'org-capture)
 (global-set-key (kbd "C-c t a") 'org-agenda-list)
 
-;; beamer export
+;; org-beamer
 
 (with-eval-after-load "ox-latex"
   (add-to-list 'org-latex-classes
-               '("beamer"
+               '("metropolis"
                  "% -*- TeX-engine: xetex; TeX-command-extra-options: \"-shell-escape\"; -*-
 \\documentclass{beamer}
 \\usetheme{metropolis}
@@ -837,9 +837,7 @@ i.e. change right window to bottom, or change bottom window to right."
 [EXTRA]"
                  ("\\section{%s}" . "\\section*{%s}")
                  ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
-               nil
-               (lambda (a b) (string= (car a) (car b)))))
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Ben is On the Tubes ;;
