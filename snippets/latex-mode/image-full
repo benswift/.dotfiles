@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: image-full
+# key: image
+# --
+% fullscreen image slide
+{
+\usebackgroundtemplate{\includegraphics[width=\paperwidth]{${1:filename}}}
+\begin{frame}[plain]
+\end{frame}
+}
