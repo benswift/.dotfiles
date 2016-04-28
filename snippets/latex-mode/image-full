@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
 # name: image-full
-# key: image
+# key: imgf
 # --
 % fullscreen image slide
 {

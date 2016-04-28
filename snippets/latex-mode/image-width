@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: image-width
+# key: imgw
+# --
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{${1:filename}}
+\end{figure}

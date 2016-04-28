@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: block
+# key: block
+# --
+\begin{block}{${1:name}}
+  $0
+\end{block}
