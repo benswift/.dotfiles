@@ -650,7 +650,8 @@ i.e. change right window to bottom, or change bottom window to right."
           ;; leave-func not defined
           :match-func (lambda (msg)
                         (when msg
-                          (mu4e-message-contact-field-matches msg :to "ben@benswift.me")))
+                          (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
+                              (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
           :vars '((user-mail-address . "ben@benswift.me")
                   (user-full-name . "Ben Swift")
                   (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
