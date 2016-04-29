@@ -3,6 +3,6 @@
 # key: nw
 # binding: direct-keybinding
 # --
-No worries ${1:`(ben-find-to-firstname)`}.
+No worries ${1:`(ben-find-to-firstname)`}.$0
 
 Ben

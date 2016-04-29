@@ -2,6 +2,6 @@
 # name: great-thanks-name
 # key: thanks
 # --
-Great, thanks ${1:`(ben-find-to-firstname)`}.
+Great, thanks ${1:`(ben-find-to-firstname)`}.$0
 
 Ben
