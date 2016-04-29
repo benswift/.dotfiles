@@ -4,5 +4,5 @@
 # --
 \begin{figure}
   \centering
-  \includegraphics[height=\textheight]{${1:filename}}
+  \includegraphics[height=$1\textheight]{${2:filename}}
 \end{figure}
