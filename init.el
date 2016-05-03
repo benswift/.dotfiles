@@ -1076,7 +1076,7 @@ tags:
     (latex-minted-jump-to-src-buffer)))
 
 (with-eval-after-load "latex"
-  (global-set-key (kbd "C-c C-'") 'latex-minted-dwim))
+  (define-key LaTeX-mode-map (kbd "C-c C-'") 'latex-minted-dwim))
 
 ;; to clean Biber cache, use
 ;; (shell-command "echo rm -r `biber --cache`")
