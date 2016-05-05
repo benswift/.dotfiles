@@ -129,15 +129,22 @@ make sure it puts all the unix tools on the path, or you're gonna
 have a bad time
 
 #+BEGIN_SRC sh
-choco install git -params '"/GitAndUnixToolsOnPath /NoAutoCrlf"'
+choco install git -params '"/GitAndUnixToolsOnPath"'
 #+END_SRC
 
 *** other packages
 
 #+BEGIN_SRC sh
-choco install 7zip.commandline ag autohotkey autohotkey.install cmake curl dependencywalker directx Emacs Firefox git git.install NuGet.CommandLine NugetPackageManagerForVisualStudio2013 PowerShell procmon putty putty.portable python2 VisualStudio2015Community Wget
-choco install 7zip.commandline ag autohotkey autohotkey.install curl dependencywalker directx Firefox git.install NuGet.CommandLine NugetPackageManagerForVisualStudio2015 PowerShell procmon putty putty.portable python2 VisualStudio2015Community Wget
+choco install 7zip.commandline ag cmake.portable directx Emacs firefox nuget.commandline procmon dependencywalker python2
 #+END_SRC
+
+Don't get VS from here - need to specify custom install
+
+** Visual Studio
+
+- Download VS Community 2015
+- select "custom" install
+- specify C++ language support, Win8 SDK
 
 ** ssh
 
