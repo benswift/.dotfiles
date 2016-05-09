@@ -495,7 +495,8 @@ i.e. change right window to bottom, or change bottom window to right."
   (setq mu4e-user-mail-address-list
         '("ben@benswift.me"
           "ben.swift@anu.edu.au"
-          "benjamin.j.swift@gmail.com"))
+          "benjamin.j.swift@gmail.com"
+          "ben.swift@simeonnetwork.org"))
 
   ;; recieve
 
@@ -506,7 +507,7 @@ i.e. change right window to bottom, or change bottom window to right."
         mu4e-trash-folder "/Trash"
         mu4e-attachment-dir (expand-file-name "~/Downloads"))
 
-  (setq mu4e-get-mail-command "mbsync fastmail"
+  (setq mu4e-get-mail-command "mbsync fastmail sn"
         mu4e-update-interval 300
         mu4e-headers-auto-update t
         mu4e-change-filenames-when-moving t
@@ -666,7 +667,18 @@ i.e. change right window to bottom, or change bottom window to right."
           :vars '((user-mail-address . "ben.swift@anu.edu.au")
                   (user-full-name . "Ben Swift")
                   (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
-                  (smtpmail-smtp-server . "smtp.office365.com"))))))
+                  (smtpmail-smtp-server . "smtp.office365.com")))
+         (make-mu4e-context
+          :name "simeon-network"
+          :enter-func (lambda () (mu4e-message "switching to Simeon Network context"))
+          ;; leave-fun not defined
+          :match-func (lambda (msg)
+                        (when msg
+                          (mu4e-message-contact-field-matches msg :to "ben.swift@simeonnetwork.org")))
+          :vars '((user-mail-address . "ben.swift@simeonnetwork.org")
+                  (user-full-name . "Ben Swift")
+                  (smtpmail-starttls-credentials '(("mail.simeonnetwork.org" 587 nil nil)))
+                  (smtpmail-smtp-server . "mail.simeonnetwork.org"))))))
 
 ;;;;;;;;;;;;;;
 ;; flyspell ;;

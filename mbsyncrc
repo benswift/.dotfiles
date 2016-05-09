@@ -56,6 +56,33 @@ Sync All
 # Expunge Both
 SyncState *
 
+##################
+# Simeon Network #
+##################
+
+IMAPAccount sn
+Host mail.simeonnetwork.org
+Port 143
+User ben.swift
+PassCmd "cat ~/.mbsync-sn"
+# SSLType none
+
+IMAPStore sn-remote
+Account sn
+
+MaildirStore sn-local
+Path ~/Maildir/sn/
+Inbox ~/Maildir/sn/INBOX
+
+Channel sn
+Master :sn-remote:
+Slave :sn-local:
+Patterns "INBOX" "*"
+Create Slave
+Sync All
+# Expunge Both
+SyncState *
+
 ## Local Variables:
 ## mode: conf-unix
 ## End:
