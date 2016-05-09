@@ -3,8 +3,10 @@
 ############
 
 IMAPAccount fastmail
-Host mail.messagingengine.com
-Port 992
+# Host mail.messagingengine.com
+# Port 992
+Host imaps-proxy.messagingengine.com
+Port 80
 User benswift@fastmail.com
 PassCmd "cat ~/.mbsync-fastmail"
 SSLType IMAPS
