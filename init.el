@@ -1470,6 +1470,16 @@ tags:
 (setq processing-sketchbook-dir "~/Code/processing")
 (setq processing-location "/Users/ben/processing-java")
 
+;;;;;;;;;;;;;;;;;;
+;; clang-format ;;
+;;;;;;;;;;;;;;;;;;
+
+;; we get it through homebrew on OSX
+
+(load "/usr/local/opt/clang-format/share/clang/clang-format.el" :noerror)
+
+(setq clang-format-style "LLVM")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; handy, misc. elisp functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
