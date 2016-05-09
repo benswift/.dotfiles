@@ -67,7 +67,7 @@ Host mail.simeonnetwork.org
 Port 143
 User ben.swift
 PassCmd "cat ~/.mbsync-sn"
-# SSLType none
+SSLType none # connection is upgraded using SASL
 
 IMAPStore sn-remote
 Account sn
