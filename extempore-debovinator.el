@@ -104,9 +104,9 @@
                               (and buffer pos
                                    (with-current-buffer buffer
                                      (goto-char pos)
-                                     (when (search-forward-regexp "[^,]*=[^,]*\\([x0-9]+\\)" (point-at-eol) :noerror)
+                                     (when (search-forward-regexp "[ =]*\\([x0-9A-Fa-f]?+\\)" (point-at-eol) :noerror)
                                        (match-string-no-properties 1)))))))
-                    (when val (string-to-number val))))))))
+                    (unless (string-empty-p val) val)))))))
 
 (defun extempore-debovinator-insert-sys-load (path)
   (insert (format "(sys:load \"%s\")\n"
@@ -138,7 +138,7 @@
                     (cdr (assoc :name data))
                     (cdr (assoc :type data))
                     (if (cdr (assoc :value data))
-                        (concat " " (number-to-string (cdr (assoc :value data))))
+                        (concat " " (cdr (assoc :value data)))
                       "")))))
 
 (defvar extempore-debovinate-current-enum-value 0)
@@ -148,10 +148,14 @@
   (when (cdr (assoc :value data))
     (setf extempore-debovinate-current-enum-value
           (cdr (assoc :value data))))
-  (insert (format "(bind-val %s %s %d)\n"
+  (insert (format "(bind-val %s %s %s)\n"
                   (cdr (assoc :name data))
                   extempore-debovinate-current-enum-typedef
-                  (- (incf extempore-debovinate-current-enum-value) 1))))
+                  extempore-debovinate-current-enum-value))
+  (if (numberp extempore-debovinate-current-enum-value)
+      (incf extempore-debovinate-current-enum-value)
+    (message "warning: didn't increment enum out the value for %s"
+             (cdr (assoc :name data)))))
 
 (defun extempore-debovinator-dispatch (args libname buffer)
   (let ((name (nth 0 args))
@@ -206,11 +210,12 @@
                       members)))
                    ;; enum -> bind-val
                    ((string-equal type "enum")
-                    (extempore-debovinator-insert-alias
-                     (list
-                      (cons :name name)
-                      (cons :type (extempore-debovinator-map-c-type-to-xtlang-type
-                                   type))))
+                    (unless (string-empty-p name)
+                      (extempore-debovinator-insert-alias
+                       (list
+                        (cons :name name)
+                        (cons :type (extempore-debovinator-map-c-type-to-xtlang-type
+                                     type)))))
                     (setf
                      extempore-debovinate-current-enum-value
                      0)
