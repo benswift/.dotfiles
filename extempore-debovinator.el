@@ -104,9 +104,13 @@
                               (and buffer pos
                                    (with-current-buffer buffer
                                      (goto-char pos)
-                                     (when (search-forward-regexp "[ =]*\\([x0-9A-Fa-f]?+\\)" (point-at-eol) :noerror)
+                                     (when (search-forward-regexp "[ =]*\\(0x[0-9A-Fa-f]?+\\|[0-9]?+\\)" (point-at-eol) :noerror)
                                        (match-string-no-properties 1)))))))
-                    (unless (string-empty-p val) val)))))))
+                    (cond
+                     ((string-empty-p val) nil)
+                     ((ignore-errors (string= (substring val 0 2) "0x"))
+                      (concat "#" (substring val 1)))
+                     (val))))))))
 
 (defun extempore-debovinator-insert-sys-load (path)
   (insert (format "(sys:load \"%s\")\n"
