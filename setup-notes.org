@@ -194,3 +194,14 @@ from a live CD and try
 sudo add-apt-repository ppa:yannubuntu/boot-repair && sudo apt-get update
 sudo apt-get install -y boot-repair && boot-repair
 #+END_SRC
+* cross-platform
+
+** calibre
+
+to convert a folder of html into an ebook, first, zip up the files
+(don't forget -r for recursive) then use:
+
+#+BEGIN_SRC sh
+/Applications/calibre.app/Contents/MacOS/ebook-convert file.zip .epub -vv --authors "Ben Swift" --language en --level1-toc '//*[@class="title"]' --disable-font-rescaling --page-breaks-before / --no-default-epub-cover
+#+END_SRC
+
