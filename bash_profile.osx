@@ -8,10 +8,6 @@ export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 export DEBEMAIL="ben@benswift.me"
 export DEBFULLNAME="Ben Swift"
 
-# python
-
-export PYTHONPATH=`brew --prefix`/lib/python2.7/site-packages
-
 # Extempore-patched LLVM directory
 # export EXT_LLVM_DIR=~/Code/extempore/llvm-build
 

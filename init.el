@@ -138,7 +138,7 @@
   (ben-setup-keybindings)
   ;; exec-path-from-shell is set up on OSX as well
   (exec-path-from-shell-initialize)
-  (exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH" "PYTHONPATH")))
+  (exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH")))
 
 ;; OSX
 
@@ -162,7 +162,7 @@
   (ben-setup-keybindings)
   ;; exec-path-from-shell is set up on linux as well
   (exec-path-from-shell-initialize)
-  (exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH" "PYTHONPATH")))
+  (exec-path-from-shell-copy-envs '("EDITOR" "EXT_LLVM_DIR" "LD_LIBRARY_PATH")))
 
 ;; Windows
 
@@ -1383,9 +1383,9 @@ tags:
 
 ;; elpy setup
 
-(when (require 'elpy nil :noerror)
-  (setq elpy-modules '(elpy-module-sane-defaults elpy-module-highlight-indentation elpy-module-pyvenv elpy-module-yasnippet))
-  (elpy-enable))
+;; (when (require 'elpy nil :noerror)
+;;   (setq elpy-modules '(elpy-module-sane-defaults elpy-module-highlight-indentation elpy-module-pyvenv elpy-module-yasnippet)))
+(elpy-enable)
 
 ;; scons
 
