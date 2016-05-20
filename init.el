@@ -1281,7 +1281,7 @@ tags:
             :require-match 'confirm-after-completion
             :keymap counsel-find-file-map))
 
-(load "~/.dotfiles/extempore-debovinator.el" :noerror)
+(autoload 'extempore-debovinate-file "~/.dotfiles/extempore-debovinator.el" "debovinate all the things!" :interactive)
 
 ;;;;;;;;;;;;
 ;; OpenCL ;;
