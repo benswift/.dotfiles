@@ -47,32 +47,34 @@
 (require 'dash)
 (require 'cl-lib)
 
-(defun extempore-debovinator-map-c-type-to-xtlang-type (c-type)
+(defun extempore-debovinator-map-c-type-to-xtlang-type (c-type ptr-depth)
   "currently assumes x86_64 architecture - and maps unsigned type to signed types (since xtlang has no unsigned types)"
-  (let ((type-alist '(("void" . "i8") ;; for void pointers
-                      ("char" . "i8")
-                      ("unsigned char" . "i8")
-                      ("short" . "i16")
-                      ("unsigned short" . "i16")
-                      ("int" . "i32")
-                      ("unsigned int" . "i32")
-                      ("long" . "i32")
-                      ("unsigned long" . "i32")
-                      ("long long" . "i64")
-                      ("unsigned long long" . "i64")
-                      ("int8_t" . "i8")
-                      ("uint8_t" . "i8")
-                      ("int16_t" . "i16")
-                      ("uint16_t" . "i16")
-                      ("int32_t" . "i32")
-                      ("uint32_t" . "i32")
-                      ("int64_t" . "i64")
-                      ("uint64_t" . "i64")
-                      ;; ("float" . "float")
-                      ;; ("double" . "double")
-                      )))
-    (or (cdr-safe (assoc c-type type-alist))
-        c-type)))
+  (let ((type-alist
+         '(("void" . "i8") ;; for void pointers
+           ("char" . "i8")
+           ("unsigned char" . "i8")
+           ("short" . "i16")
+           ("unsigned short" . "i16")
+           ("int" . "i32")
+           ("unsigned int" . "i32")
+           ("long" . "i32")
+           ("unsigned long" . "i32")
+           ("long long" . "i64")
+           ("unsigned long long" . "i64")
+           ("int8_t" . "i8")
+           ("uint8_t" . "i8")
+           ("int16_t" . "i16")
+           ("uint16_t" . "i16")
+           ("int32_t" . "i32")
+           ("uint32_t" . "i32")
+           ("int64_t" . "i64")
+           ("uint64_t" . "i64")
+           ;; ("float" . "float")
+           ;; ("double" . "double")
+           )))
+    (concat (or (cdr-safe (assoc c-type type-alist))
+                c-type)
+            (make-string ptr-depth ?*))))
 
 (defun extempore-debovinate-variable (name data pos &optional buffer)
   (cl-destructuring-bind (&key
@@ -88,12 +90,14 @@
             (cons :type
                   (cond ((car-safe type)
                          (concat
-                          (extempore-debovinator-map-c-type-to-xtlang-type (car-safe type))
-                          (make-string (or pointer dereference 0) ?*)))
+                          (extempore-debovinator-map-c-type-to-xtlang-type
+                           (car-safe type)
+                           (or pointer dereference 0))))
                         (type
                          (concat
-                          (extempore-debovinator-map-c-type-to-xtlang-type type)
-                          (make-string (or pointer dereference 0) ?*)))
+                          (extempore-debovinator-map-c-type-to-xtlang-type
+                           type
+                           (or pointer dereference 0))))
                         (t "i32")))
             (cons :value
                   (let ((val (or
@@ -120,7 +124,10 @@
   (insert (format "(bind-lib %s %s [%s]* \n\"%s\")\n"
                   libname
                   name
-                  (string-join (cons (extempore-debovinator-map-c-type-to-xtlang-type rettype)
+                  (string-join (cons (if (string= rettype "void") "void"
+                                       (extempore-debovinator-map-c-type-to-xtlang-type rettype 0))
+                                     ;; todo - this needs to return
+                                     ;; nil when there are no args
                                      (-map (lambda (x) (cdr (assoc :type x))) args)) ",")
                   (string-join (-map-indexed (lambda (i x) (format "@param %s - index %d" (cdr (assoc :name x)) i)) args) "\n"))))
 
@@ -191,14 +198,17 @@
                 libname
                 name
                 (or (car-safe type) type)
-                (-map
-                 (lambda (x)
-                   (extempore-debovinate-variable
-                    (car x)
-                    (caddr x)
-                    (elt (car (reverse x)) 1)
-                    buffer))
-                 arguments))))
+                ;; this here for the main(void) case
+                (unless (and (= (length arguments) 1)
+                             (member '(:type "void") (car arguments)))
+                  (-map
+                   (lambda (x)
+                     (extempore-debovinate-variable
+                      (car x)
+                      (caddr x)
+                      (elt (car (reverse x)) 1)
+                      buffer))
+                   arguments)))))
             ;; struct -> bind-type
             ((string-equal class "type")
              (cond ((string-equal type "struct")
@@ -218,8 +228,7 @@
                       (extempore-debovinator-insert-alias
                        (list
                         (cons :name name)
-                        (cons :type (extempore-debovinator-map-c-type-to-xtlang-type
-                                     type)))))
+                        (cons :type (extempore-debovinator-map-c-type-to-xtlang-type type 0)))))
                     (setf
                      extempore-debovinate-current-enum-value
                      0)
@@ -246,8 +255,7 @@
                            (extempore-debovinator-insert-alias
                             (list
                              (cons :name name)
-                             (cons :type (extempore-debovinator-map-c-type-to-xtlang-type
-                                          (car typedef))))))
+                             (cons :type (extempore-debovinator-map-c-type-to-xtlang-type (car typedef) 0)))))
                           ((not (member
                                  '(:type "struct")
                                  typedef))
