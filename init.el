@@ -1383,9 +1383,9 @@ tags:
 
 ;; elpy setup
 
-;; (when (require 'elpy nil :noerror)
-;;   (setq elpy-modules '(elpy-module-sane-defaults elpy-module-highlight-indentation elpy-module-pyvenv elpy-module-yasnippet)))
-(elpy-enable)
+(when (require 'elpy nil :noerror)
+  (setq elpy-rpc-backend "jedi")
+  (elpy-enable))
 
 ;; scons
 
