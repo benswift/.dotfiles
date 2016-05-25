@@ -470,8 +470,8 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; undo-tree ;;
 ;;;;;;;;;;;;;;;
 
-(require 'undo-tree)
-(global-undo-tree-mode)
+;; (require 'undo-tree)
+;; (global-undo-tree-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; persistent-scratch ;;
