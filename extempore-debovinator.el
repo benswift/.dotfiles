@@ -124,10 +124,7 @@
   (insert (format "(bind-lib %s %s [%s]* \n\"%s\")\n"
                   libname
                   name
-                  (string-join (cons (if (string= rettype "void") "void"
-                                       (extempore-debovinator-map-c-type-to-xtlang-type rettype 0))
-                                     ;; todo - this needs to return
-                                     ;; nil when there are no args
+                  (string-join (cons rettype
                                      (-map (lambda (x) (cdr (assoc :type x))) args)) ",")
                   (string-join (-map-indexed (lambda (i x) (format "@param %s - index %d" (cdr (assoc :name x)) i)) args) "\n"))))
 
@@ -197,7 +194,9 @@
                (extempore-debovinator-insert-bind-lib
                 libname
                 name
-                (or (car-safe type) type)
+                (if (and (stringp type) (string= type "void")) "void"
+                  (extempore-debovinator-map-c-type-to-xtlang-type
+                   (or (car-safe type) type) (or pointer dereference 0)))
                 ;; this here for the main(void) case
                 (unless (and (= (length arguments) 1)
                              (member '(:type "void") (car arguments)))
