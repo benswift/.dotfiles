@@ -9,7 +9,7 @@ export DEBEMAIL="ben@benswift.me"
 export DEBFULLNAME="Ben Swift"
 
 # Extempore-patched LLVM directory
-export EXT_LLVM_DIR=/home/ben/Code/extempore/llvm-build
+# export EXT_LLVM_DIR=/home/ben/Code/extempore/llvm-build
 
 # clojure
 
