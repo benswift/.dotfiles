@@ -1466,9 +1466,7 @@ tags:
 ;; Processing ;;
 ;;;;;;;;;;;;;;;;
 
-(setq processing-application-dir "~/Applications/Processing.app")
 (setq processing-sketchbook-dir "~/Code/processing")
-(setq processing-location "/Users/ben/processing-java")
 
 ;;;;;;;;;;;;;;;;;;
 ;; clang-format ;;
