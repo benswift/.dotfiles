@@ -1467,6 +1467,7 @@ tags:
 ;;;;;;;;;;;;;;;;
 
 (setq processing-sketchbook-dir "~/Code/processing")
+(setq processing-location "/usr/local/bin/processing-java")
 
 ;;;;;;;;;;;;;;;;;;
 ;; clang-format ;;
