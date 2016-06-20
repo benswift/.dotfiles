@@ -37,6 +37,9 @@ secrets/
 *.toc
 auto/
 *.synctex.gz
+*.nav
+*.snm
+*.vrb
 
 # emacs
 
