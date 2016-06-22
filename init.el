@@ -1469,6 +1469,25 @@ tags:
 (setq processing-sketchbook-dir "~/Code/processing")
 (setq processing-location "/usr/local/bin/processing-java")
 
+;;;;;;;;;;;;;;;;
+;; kubernetes ;;
+;;;;;;;;;;;;;;;;
+
+(require 's)
+
+(defun minikube-env-export (line)
+  (let ((split-string (s-split "=" (s-chop-prefix "export " line))))
+    (setenv (car split-string) (cadr split-string))))
+
+(defun minikube-docker-env ()
+  (interactive)
+  "Parse and set environment variables from 'minikube docker-env' output"
+  (--each-while
+      (s-lines (shell-command-to-string "minikube docker-env"))
+      (s-prefix? "export" it)
+    (minikube-env-export it)))
+
+
 ;;;;;;;;;;;;;;;;;;
 ;; clang-format ;;
 ;;;;;;;;;;;;;;;;;;
