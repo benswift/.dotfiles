@@ -1384,7 +1384,6 @@ tags:
 ;; elpy setup
 
 (when (require 'elpy nil :noerror)
-  (setq elpy-rpc-backend "jedi")
   (elpy-enable))
 
 ;; scons
