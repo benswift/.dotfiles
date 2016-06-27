@@ -424,26 +424,6 @@ i.e. change right window to bottom, or change bottom window to right."
 (load-theme 'spacemacs-dark t)
 (setq frame-background-mode 'dark)
 
-;; these colors taken from spacemacs-common.el on 23/6/16
-(let ((base          "#b2b2b2")
-      (bg4           "#0a0814")
-      (aqua          "#2d9574")
-      (aqua-bg       "#293235")
-      (green         "#67b11d")
-      (green-bg      "#293235")
-      (green-bg-s    "#29422d")
-      (cyan          "#28def0")
-      (red           "#f2241f")
-      (red-bg        "#3c2a2c")
-      (red-bg-s      "#512e31")
-      (blue          "#4f97d7")
-      (blue-bg       "#293239")
-      (violet        "#a31db1")
-      (yellow        "#b1951d")
-      (yellow-bg     "#32322c"))
-  (setq ansi-color-names-vector
-        (vector bg4 red green yellow blue violet cyan base)))
-
 ;; (load-theme 'monokai t)
 ;; (load-theme 'flatui t)
 
