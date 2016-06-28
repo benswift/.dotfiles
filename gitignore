@@ -40,6 +40,8 @@ auto/
 *.nav
 *.snm
 *.vrb
+*.pygtex
+*.pygstyle
 
 # emacs
 
