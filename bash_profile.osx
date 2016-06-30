@@ -16,10 +16,6 @@ export RBENV_ROOT=/usr/local/var/rbenv
 
 eval "$(rbenv init -)"
 
-# fleet
-
-export FLEETCTL_TUNNEL=10.211.55.11:22 # parallels vagrant provider
-
 # clojure
 
 LEIN_FAST_TRAMPOLINE=y
