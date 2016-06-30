@@ -30,6 +30,11 @@ alias cljsbuild="lein trampoline cljsbuild $@"
 
 source ~/perl5/perlbrew/etc/bashrc
 
+# go
+
+export GOPATH=/Users/ben/Code/go
+export PATH=$GOPATH/bin:$PATH
+
 # List all files colorized in long format, including dot files
 alias la="ls -Gla"
 
