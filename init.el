@@ -189,8 +189,9 @@
 ;; ivy ;;
 ;;;;;;;;;
 
-(ivy-mode 1)
+(setq ivy-height 20)
 (setq ivy-use-virtual-buffers t)
+(ivy-mode 1)
 (global-set-key "\C-s" 'swiper)
 (global-set-key (kbd "M-x") 'counsel-M-x)
 (global-set-key (kbd "C-x C-f") 'counsel-find-file)
@@ -199,7 +200,9 @@
 (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
 (global-set-key (kbd "C-c k") 'counsel-ag)
 (global-set-key (kbd "C-x l") 'counsel-locate)
-(setq ivy-height 20)
+;; push/pop view
+(global-set-key (kbd "C-c v") 'ivy-push-view)
+(global-set-key (kbd "C-c V") 'ivy-pop-view)
 
 ;;;;;;;;;
 ;; avy ;;
