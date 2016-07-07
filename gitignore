@@ -73,3 +73,7 @@ GPATH
 GRTAGS
 GSYMS
 GTAGS
+
+# python
+
+*-venv/
