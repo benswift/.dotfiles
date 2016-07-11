@@ -988,7 +988,7 @@ tags:
 (when (equal system-type 'darwin)
   (add-to-list
    'TeX-view-program-list
-   '("Skim" "~/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
+   '("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b"))
   (add-to-list 'TeX-view-program-selection '(output-pdf "Skim")))
 
 ;; synctex
