@@ -1639,6 +1639,16 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
         (toggle-frame-fullscreen)
       (message "toggle-frame-fullscreen not defined - are you on Emacs 24.4 or greater?")))
 
+;;;;;;;;;;;;;;;;;;;;
+;; screen capture ;;
+;;;;;;;;;;;;;;;;;;;;
+
+;; OSX-only for now, should add others in future
+
+(defun osx-screencapture (filename)
+  (interactive "sfilename: ")
+  (shell-command (format "screencapture -i \"%s.png\"" filename)))
+
 ;;;;;;;;;
 ;; pic ;;
 ;;;;;;;;;
