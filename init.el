@@ -185,6 +185,13 @@
 (setq custom-file (concat user-emacs-directory "custom.el"))
 (load custom-file t)
 
+;;;;;;;;;;;;;;
+;; movement ;;
+;;;;;;;;;;;;;;
+
+(global-set-key (kbd "C-<") 'beginning-of-buffer-other-window)
+(global-set-key (kbd "C->") 'end-of-buffer-other-window)
+
 ;;;;;;;;;
 ;; ivy ;;
 ;;;;;;;;;
