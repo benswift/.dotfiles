@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: frame-standout
+# key: standout
+# --
+\begin{frame}[standout]
+  $0
+\end{frame}

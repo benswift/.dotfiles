@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: resizebox
+# key: resizebox
+# --
+\resizebox{$1\textwidth}{!}{$0}

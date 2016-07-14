@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: mint-inline
+# key: minl
+# --
+\mintinline{${1:lang}}{$0}
