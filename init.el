@@ -96,6 +96,7 @@
     projectile
     rainbow-delimiters
     rainbow-mode
+    realgud
     sane-term
     s
     scss-mode
