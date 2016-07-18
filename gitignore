@@ -37,6 +37,7 @@ secrets/
 *.toc
 auto/
 *.synctex.gz
+_region_.tex
 *.nav
 *.snm
 *.vrb
