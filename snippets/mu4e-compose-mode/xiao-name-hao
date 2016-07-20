@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: xiao-name-hao
+# key: xiao
+# --
+Xiao $1 hao
+
+$0
+
+Cheers,
+Ben
