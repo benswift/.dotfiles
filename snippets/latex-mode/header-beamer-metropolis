@@ -1,0 +1,60 @@
+# -*- mode: snippet -*-
+# name: header-beamer-metropolis
+# key: header
+# --
+\documentclass[14pt]{beamer} % [aspectratio=169] for widescreen
+\usetheme{metropolis}
+
+\usepackage{color}
+\definecolor{headergrey}{rgb}{.1640625,.16015625,.17578125}
+\definecolor{alertblue}{rgb}{0.5703125,0.69921875,0.8359375}
+\setbeamercolor{normal text}{fg=headergrey}
+\setbeamercolor{alerted text}{fg=alertblue}
+
+\usepackage{Alegreya}
+\usepackage{AlegreyaSans}
+\usepackage{sourcecodepro}
+
+\usepackage{graphicx}
+
+\usepackage{minted}
+% \usemintedstyle{pastie}
+% \usemintedstyle{friendly}
+
+\usepackage{url}
+\renewcommand\UrlFont{\sffamily}
+
+\title{COMP1720/6720}
+\subtitle{Art and Interaction in New Media}
+\date{}
+\author{Ben Swift}
+\institute{Australian National University\\
+  \makebox[\textwidth][r]{\includegraphics[height=2em]{figures/by-sa.eps}}}
+
+\begin{document}
+\maketitle
+
+\section{$0}
+
+\begin{frame}{Recap}
+  \begin{itemize}
+  \item 
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Today's lecture}
+  \begin{itemize}
+  \item 
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[standout]
+  \resizebox{!}{.15\textheight}{\alert{questions?}}
+\end{frame}
+
+\end{document}
+
+% Local Variables:
+% TeX-engine: xetex
+% TeX-command-extra-options: "-shell-escape"
+% End:
