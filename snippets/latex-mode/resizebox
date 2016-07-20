@@ -2,4 +2,4 @@
 # name: resizebox
 # key: resizebox
 # --
-\resizebox{$1\textwidth}{!}{$0}
+\resizebox{!}{${1:.15}\textheight}{$0}
