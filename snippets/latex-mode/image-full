@@ -4,7 +4,7 @@
 # --
 % fullscreen image slide
 {
-\usebackgroundtemplate{\includegraphics[width=\paperwidth]{${0:filename}}}
+\usebackgroundtemplate{\includegraphics[width=\paperwidth]{${1:figures/}$0}}
 \begin{frame}[plain]
 \end{frame}
 }
