@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: mint-inline-processing
+# key: minlp
+# --
+\mintinline{processing}{$0}
