@@ -1,0 +1,38 @@
+% -*- TeX-engine: xetex -*-
+\documentclass[a4paper,fontsize=12pt]{scrartcl}
+\usepackage{Alegreya}
+\usepackage{AlegreyaSans}
+\usepackage{sourcecodepro}
+
+\usepackage[svgnames,hyperref]{xcolor}
+\usepackage{url}
+\usepackage{graphicx}
+
+% \usepackage{fullpage}
+
+\usepackage[%
+unicode=true,
+hyperindex=true,
+bookmarks=true,
+colorlinks=true, % change to false for final
+pdfborder=0,
+allcolors=DarkBlue,
+% plainpages=false,
+pdfpagelabels,
+hyperfootnotes=true]{hyperref}
+
+\author{Ben Swift}
+
+\date{\today}
+
+\title{$title$}
+
+\begin{document}
+
+\maketitle
+
+$body$
+
+\printbibliography[title=References]
+
+\end{document}
