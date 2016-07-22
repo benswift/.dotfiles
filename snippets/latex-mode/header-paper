@@ -1,11 +1,12 @@
 # -*- mode: snippet -*-
-# name: latex-header
+# name: header-paper
 # key: header
 # --
 % -*- TeX-engine: xetex -*-
 \documentclass[a4paper,fontsize=12pt]{scrartcl}
 \usepackage{Alegreya}
 \usepackage{AlegreyaSans}
+\usepackage{sourcecodepro}
 
 \usepackage[svgnames,hyperref]{xcolor}
 \usepackage{url}
