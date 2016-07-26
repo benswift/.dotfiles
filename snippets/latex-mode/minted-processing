@@ -1,9 +1,9 @@
 # -*- mode: snippet -*-
-# name: minted
-# key: minted
+# name: minted-processing
+# key: mintedp
 # --
 \begin{frame}[fragile]{${1:title}}
-\begin{minted}{${2:language}}
+\begin{minted}{processing}
 $0
 \end{minted}
 \end{frame}
