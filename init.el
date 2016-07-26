@@ -615,7 +615,9 @@ i.e. change right window to bottom, or change bottom window to right."
   (setq mu4e-view-show-images t
         mu4e-html2text-command #'mu4e-shr2text
         ;; make sure fg-bg contrast is high enough
-        shr-color-visible-luminance-min 80)
+        shr-color-visible-luminance-min 80
+        ;; don't use variable pitch fonts
+        shr-use-fonts nil)
 
   (require 'dash)
 
