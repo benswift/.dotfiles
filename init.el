@@ -414,7 +414,6 @@ i.e. change right window to bottom, or change bottom window to right."
 ;; hide certain minor modes from mode line
 
 (setq eldoc-minor-mode-string nil)
-(setq eldoc-argument-case 'downcase)
 
 ;; pretty lambdas
 
@@ -1115,18 +1114,18 @@ tags:
 
 ;; device-specific Extempore config
 (cond
- ((string= system-name "Lonyx")
+ ((string= (system-name) "Lonyx")
   (setq extempore-share-directory "/home/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
- ((string= system-name "WINYX")
+ ((string= (system-name) "WINYX")
   (setq extempore-program-args nil)
   (setq extempore-share-directory "c:/Users/ben/Code/extempore/"))
- ((string= system-name "debian-vm")
+ ((string= (system-name) "debian-vm")
   (setq extempore-program-args "--device 1 --frames 1024")
   (setq extempore-share-directory "/home/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
- ((or (string= system-name "hodgey.local")
-      (string= system-name "hodgey.lan")
+ ((or (string= (system-name) "hodgey.local")
+      (string= (system-name) "hodgey.lan")
       t) ;; probably running on hodgey
   (setq extempore-program-args nil)
   (setq extempore-share-directory "/Users/ben/Code/extempore/")
