@@ -691,6 +691,17 @@ i.e. change right window to bottom, or change bottom window to right."
                   (smtpmail-starttls-credentials '(("mail.simeonnetwork.org" 587 nil nil)))
                   (smtpmail-smtp-server . "mail.simeonnetwork.org"))))))
 
+;; spamming all the mateys
+
+(defun ben-send-anu-email (email-address subject body &optional async)
+  (with-temp-buffer
+    (mu4e-context-switch nil "anu")
+    (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\nSubject: %s\n--text follows this line--\n%s"
+                    email-address subject body))
+    (if async
+        (async-smtpmail-send-it)
+      (message-smtpmail-send-it))))
+
 ;;;;;;;;;;;;;;
 ;; flyspell ;;
 ;;;;;;;;;;;;;;
