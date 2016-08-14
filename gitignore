@@ -18,6 +18,14 @@ cmake-build/
 
 secrets/
 
+# compressed files
+
+*.tar.gz
+*.tar.bz2
+*.zip
+*.rar
+*.7z
+
 # R
 
 .Rhistory
