@@ -29,7 +29,7 @@
 \date{}
 \author{Ben Swift}
 \institute{Australian National University\\
-  \makebox[\textwidth][r]{\includegraphics[height=2em]{figures/by-sa.eps}}}
+  \makebox[\textwidth][r]{\includegraphics[height=2em]{../figures/by-sa.eps}}}
 
 \begin{document}
 \maketitle
