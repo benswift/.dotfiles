@@ -93,6 +93,7 @@
     org
     paradox
     persistent-scratch
+    processing-mode
     projectile
     rainbow-delimiters
     rainbow-mode
