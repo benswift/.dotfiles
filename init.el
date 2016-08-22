@@ -120,10 +120,6 @@
   (if (not (package-installed-p package))
       (package-install package)))
 
-;; paradox (souped up package.el)
-
-(setq paradox-execute-asynchronously t)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cross-platform setup ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
