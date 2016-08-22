@@ -13,7 +13,7 @@
 
 \usepackage{Alegreya}
 \usepackage{AlegreyaSans}
-\usepackage{sourcecodepro}
+\usepackage[scale=.85]{sourcecodepro}
 
 \usepackage{graphicx}
 

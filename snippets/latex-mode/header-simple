@@ -6,7 +6,7 @@
 \documentclass[a4paper,fontsize=12pt]{scrartcl}
 \usepackage{Alegreya}
 \usepackage{AlegreyaSans}
-\usepackage{sourcecodepro}
+\usepackage[scale=.85]{sourcecodepro}
 
 \usepackage[svgnames,hyperref]{xcolor}
 \usepackage{url}
