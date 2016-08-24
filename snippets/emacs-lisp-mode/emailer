@@ -1,0 +1,18 @@
+# -*- mode: snippet -*-
+# name: emailer
+# key: emailer
+# --
+(-each
+    '(${1:("email-address" . "name")})
+  (lambda (x)
+    (ben-send-anu-email (car x)
+                        "${2:subject}"
+                        (format "Hi %s
+
+$0
+
+Cheers,
+Ben
+"
+                                (cdr x))
+                        :async)))
