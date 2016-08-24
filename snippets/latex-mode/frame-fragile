@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: href-processing-reference
+# key: hrefp
+# --
+\href{https://processing.org/reference/${1:name}_.html}{\mintinline{processing}{$1$0}}
