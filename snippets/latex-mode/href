@@ -2,4 +2,4 @@
 # name: href
 # key: href
 # --
-\href{${1:link}}{${2:label}}
+\href{${1:link}}{\textbf{${2:label}}}
