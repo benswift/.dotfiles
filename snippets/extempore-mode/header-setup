@@ -2,9 +2,9 @@
 # name: header-setup
 # key: headers
 # --
-(sys:load "libs/xtm.xtm")
-(sys:load "/Users/ben/Code/xtm/lib/ben-lib-xtlang.xtm")
 (sys:load "/Users/ben/Code/xtm/lib/ben-lib-scheme.xtm")
 (ipc:load "utility" "/Users/ben/Code/xtm/lib/ben-lib-scheme.xtm")
 (sys:load "/Users/ben/Code/xtm/lib/sampler-maps.xtm")
 (ipc:load "utility" "/Users/ben/Code/xtm/lib/sampler-maps.xtm")
+(ipc:load "utility" "libs/core/instruments-scm.xtm")
+(ipc:load "utility" "libs/core/pc_ivl.xtm")
