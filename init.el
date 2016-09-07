@@ -1498,7 +1498,7 @@ tags:
 
 (defun minikube-env-export (line)
   (let ((split-string (s-split "=" (s-chop-prefix "export " line))))
-    (setenv (car split-string) (cadr split-string))))
+    (setenv (car split-string) (read (cadr split-string)))))
 
 (defun minikube-docker-env ()
   (interactive)
