@@ -68,6 +68,7 @@
     company
     counsel
     dash-at-point
+    docker
     dockerfile-mode
     elpy
     erc-hl-nicks
