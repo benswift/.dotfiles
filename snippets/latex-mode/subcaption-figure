@@ -1,0 +1,8 @@
+# key: subcap
+# name: subcaption-figure
+# --
+\begin{figure}
+  \centering
+  \subcaptionbox{}{\includegraphics[width=\textwidth]{${1:figures/}}}\\
+  \subcaptionbox{}{\includegraphics[width=\textwidth]{$1}}
+\end{figure}
