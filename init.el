@@ -1399,6 +1399,12 @@ tags:
 ;; I reckon this is more trouble than it's worth, usually
 ;; (add-hook 'after-init-hook #'global-flycheck-mode)
 
+;;;;;;;;;;;;;
+;; haskell ;;
+;;;;;;;;;;;;;
+
+(add-hook 'haskell-mode-hook 'intero-mode)
+
 ;;;;;;;;;;;;
 ;; Python ;;
 ;;;;;;;;;;;;
