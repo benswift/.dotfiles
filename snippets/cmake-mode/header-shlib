@@ -1,0 +1,20 @@
+# -*- mode: snippet -*-
+# name: header-shlib
+# key: header
+# --
+cmake_minimum_required(VERSION 3.1)
+
+project(${1:name})
+
+add_library($1 SHARED src/$1.c)
+
+target_include_directories($1 PRIVATE include)
+target_compile_definitions($1 PRIVATE -D$2)
+target_link_libraries($1 PRIVATE $3)
+
+install(TARGETS $1
+  RUNTIME DESTINATION lib
+  ARCHIVE DESTINATION lib # for .lib files on Windows
+  LIBRARY DESTINATION lib)
+
+install(FILES include/$1.h DESTINATION include)
