@@ -82,6 +82,7 @@
     htmlize
     hydra
     imenu-anywhere
+    intero
     less-css-mode
     lispy
     jedi
