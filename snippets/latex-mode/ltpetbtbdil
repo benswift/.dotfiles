@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: ltpetbtbdil
+# key: ltp
+# --
+\begin{frame}[standout]
+  \resizebox{.6\textwidth}{!}{\alert{LTPETBTBDIL}}
+  \vskip 1cm
+  \resizebox{\textwidth}{!}{\url{$0}}
+\end{frame}
