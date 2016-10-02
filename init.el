@@ -692,14 +692,23 @@ i.e. change right window to bottom, or change bottom window to right."
 
 ;; spamming all the mateys
 
-(defun ben-send-anu-email (email-address subject body &optional async)
+(defun ben-send-anu-email (email-address subject body &optional blocking)
   (with-temp-buffer
     (mu4e-context-switch nil "anu")
     (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\nSubject: %s\n--text follows this line--\n%s"
                     email-address subject body))
-    (if async
-        (async-smtpmail-send-it)
-      (message-smtpmail-send-it))))
+    (if blocking
+        (message-smtpmail-send-it)
+      (async-smtpmail-send-it))))
+
+(defun ben-send-benswift-email (email-address subject body &optional blocking)
+  (with-temp-buffer
+    (mu4e-context-switch nil "personal")
+    (insert (format "From: Ben Swift <ben@@benswift.me>\nTo: %s\nSubject: %s\n--text follows this line--\n%s"
+                    email-address subject body))
+    (if blocking
+        (message-smtpmail-send-it)
+      (async-smtpmail-send-it))))
 
 ;;;;;;;;;;;;;;
 ;; flyspell ;;
