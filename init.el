@@ -1328,17 +1328,8 @@ tags:
 
 ;; cider
 
-(setq nrepl-hide-special-buffers t)
-(setq cider-auto-select-error-buffer nil)
-(setq cider-repl-use-pretty-printing nil)
-(setq cider-repl-use-clojure-font-lock t)
-(setq cider-jack-in-auto-inject-clojure t)
-
 (with-eval-after-load "clojure"
   (define-key clojure-mode-map (kbd "C-:") nil))
-
-;; for debugging
-(setq nrepl-log-messages t)
 
 ;;;;;;;;;;;;;;
 ;; markdown ;;
