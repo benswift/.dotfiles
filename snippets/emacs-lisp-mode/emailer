@@ -14,5 +14,4 @@ $0
 Cheers,
 Ben
 "
-                                (cdr x))
-                        :async)))
+                                (cdr x)))))
