@@ -7,6 +7,6 @@
 \usebackgroundtemplate{\includegraphics[width=\paperwidth]{${1:figures/}$0}}
 \begin{frame}[plain]
 \vspace{.8\paperheight}
-\resizebox{.5\textwidth}{!}{\color{white}\url{}}
+\resizebox{.5\textwidth}{!}{\color[gray]{.2}\url{}}
 \end{frame}
 }
