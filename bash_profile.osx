@@ -4,9 +4,6 @@ export PATH="/Users/ben/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sb
 
 export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 
-# Extempore-patched LLVM directory
-# export EXT_LLVM_DIR=~/Code/extempore/llvm-build
-
 # set up rbenv
 export RBENV_ROOT=/usr/local/var/rbenv
 

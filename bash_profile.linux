@@ -4,9 +4,6 @@ export PATH="/home/ben/.rbenv/shims:~/bin:/usr/local/bin:/usr/bin:/bin:/usr/loca
 
 export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 
-# Extempore-patched LLVM directory
-# export EXT_LLVM_DIR=/home/ben/Code/extempore/llvm-build
-
 # Local Variables:
 # mode: sh
 # End:
