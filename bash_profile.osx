@@ -9,12 +9,6 @@ export RBENV_ROOT=/usr/local/var/rbenv
 
 eval "$(rbenv init -)"
 
-# clojure
-
-LEIN_FAST_TRAMPOLINE=y
-export LEIN_FAST_TRAMPOLINE
-alias cljsbuild="lein trampoline cljsbuild $@"
-
 # perl
 
 source ~/perl5/perlbrew/etc/bashrc
