@@ -1412,6 +1412,11 @@ tags:
 
 (setq python-indent-offset 4)
 
+(defun pyvenv-create (name)
+  "create a virtualenv, just the way Ben likes it"
+  (interactive "Sname: ")
+  (shell-command (format "virtualenv -p python3 --always-copy %s" name)))
+
 ;; elpy setup
 
 (when (require 'elpy nil :noerror)
