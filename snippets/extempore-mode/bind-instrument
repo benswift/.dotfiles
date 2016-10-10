@@ -3,7 +3,7 @@
 # name: bind-instrument
 # --
 (bind-func ${1:name}_note_c
-  (lambda (nargs:i64 dargs:SAMPLE*)
+  (lambda (data:NoteInitData* nargs:i64 dargs:SAMPLE*)
     (lambda (time:i64 chan:i64 freq:SAMPLE amp:SAMPLE)
       $0)))
 
