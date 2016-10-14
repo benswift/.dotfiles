@@ -1,5 +1,7 @@
 # -*- mode: snippet -*-
-# name: href-processing-reference
-# key: hrefp
+# name: frame-fragile
+# key: framef
 # --
-\href{https://processing.org/reference/${1:name}_.html}{\mintinline{processing}{$1$0}}
+\begin{frame}[fragile]{${1:title}}
+  $0
+\end{frame}

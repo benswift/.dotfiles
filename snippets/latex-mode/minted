@@ -2,8 +2,6 @@
 # name: minted
 # key: minted
 # --
-\begin{frame}[fragile]{${1:title}}
 \begin{minted}{${2:language}}
 $0
 \end{minted}
-\end{frame}
