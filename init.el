@@ -1414,8 +1414,12 @@ tags:
 
 (defun pyvenv-create (name)
   "create a virtualenv, just the way Ben likes it"
-  (interactive "Sname: ")
-  (shell-command (format "virtualenv -p python3 --always-copy %s" name)))
+  (interactive "sname: ")
+  (let* ((cmd (format "virtualenv -p python3 --always-copy %s" name))
+         (retcode (shell-command cmd)))
+    (if (= retcode 0)
+        (pyvenv-activate name)
+      (error "Error: % failed with code %d" cmd retcode))))
 
 ;; elpy setup
 
