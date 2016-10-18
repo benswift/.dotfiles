@@ -1663,6 +1663,19 @@ Replaces default behaviour of `comment-dwim', when it inserts comment at the end
     (backward-char)
     (insert "(println '-------------------checkpoint-END)")))
 
+(defun titlecase-word ()
+  "Convert word at point (or selected region) to Title Case."
+  (interactive)
+  (let* ((bounds (if (use-region-p)
+                     (cons (region-beginning) (region-end))
+                   (bounds-of-thing-at-point 'word)))
+         (text   (buffer-substring-no-properties (car bounds) (cdr bounds))))
+    (when bounds
+      (delete-region (car bounds) (cdr bounds))
+      (insert (s-titleize text)))))
+
+(global-set-key (kbd "M-t") 'titlecase-word)
+
 ;;;;;;;;;;;;;;;;;;
 ;; emacs server ;;
 ;;;;;;;;;;;;;;;;;;
