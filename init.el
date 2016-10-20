@@ -983,7 +983,7 @@ tags:
 ;; projectile ;;
 ;;;;;;;;;;;;;;;;
 
-(projectile-global-mode)
+(projectile-mode)
 (setq projectile-completion-system 'ivy)
 
 ;;;;;;;;;
