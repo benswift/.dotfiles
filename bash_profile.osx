@@ -11,8 +11,8 @@ eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
 # set up rbenv
-export RBENV_ROOT=/usr/local/var/rbenv
 
+export RBENV_ROOT=/usr/local/var/rbenv
 eval "$(rbenv init -)"
 
 # # perl
