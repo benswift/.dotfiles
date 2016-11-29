@@ -9,7 +9,7 @@
 options(prompt="R> ", digits=4, show.signif.stars=FALSE)
 options(showWarnCalls=T, showErrorCalls=T)
 options(menu.graphics = FALSE)
-options(repos="http://cran.csiro.au")
+options(repos="https://cran.csiro.au")
 options(digits.secs=3)              # show sub-second time stamps
 options(max.print=1000)         # do not print more than 1000 lines
 options(device="quartz")
