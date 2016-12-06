@@ -954,20 +954,13 @@ i.e. change right window to bottom, or change bottom window to right."
   (let ((post-url-basename
          (concat (format-time-string "%Y-%m-%d-")
                  (downcase (biott-sanitise-post-name post-name)))))
-    (find-file (concat "~/Documents/biott/posts/"
-                       post-url-basename
-                       ".org"))
+    (find-file (format "~/Code/clojure/biott-redux/resources/templates/md/posts/%s.md"
+                       post-url-basename))
     (insert (format
-             "#+PROPERTY: header-args:extempore :tangle /tmp/%s.xtm
-#+begin_html
----
-title: %s
-alias: [\"./%s.html\"]
-tags:
----
-#+end_html
+             "{:title \"%s\"
+ :layout :post}
 "
-             post-url-basename post-name post-url-basename))))
+             post-name))))
 
 (defun biott-push-to-gh-pages ()
   (interactive)
