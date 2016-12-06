@@ -600,6 +600,9 @@ i.e. change right window to bottom, or change bottom window to right."
 
   ;; read
 
+  (define-key mu4e-main-mode-map "m" nil)
+  (define-key mu4e-main-mode-map "Q" 'mu4e~main-toggle-mail-sending-mode)
+
   (setq mu4e-maildir-shortcuts
         '(("/INBOX" . ?i)
           ("/Sent Items" . ?s)
