@@ -332,7 +332,195 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-  )
+
+  ;; mu4e
+  (require 'mu4e-contrib) ;; for mu4e-shr2text
+  (require 'smtpmail)
+
+  (setq mu4e-user-mail-address-list
+        '("ben@benswift.me"
+          "ben.swift@anu.edu.au"
+          "benjamin.j.swift@gmail.com"
+          "ben.swift@simeonnetwork.org"))
+
+  ;; recieve
+
+  (setq mu4e-maildir (expand-file-name "~/Maildir/fastmail")
+        mu4e-sent-folder "/Sent Items"
+        mu4e-refile-folder "/Archive"
+        mu4e-drafts-folder "/Drafts"
+        mu4e-trash-folder "/Trash"
+        mu4e-attachment-dir (expand-file-name "~/Downloads"))
+
+  (setq mu4e-get-mail-command "mbsync fastmail"
+        mu4e-update-interval 300
+        mu4e-headers-auto-update t
+        mu4e-change-filenames-when-moving t
+        mu4e-view-show-addresses t)
+
+  (defun mu4e-pretty-mbsync-process-filter (proc msg)
+    (ignore-errors
+      (with-current-buffer (process-buffer proc)
+        (let ((inhibit-read-only t))
+          (delete-region (point-min) (point-max))
+          (insert (car (reverse (split-string msg "\r"))))
+          (when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)")
+            (add-face-text-property
+             (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
+            (add-face-text-property
+             (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
+            (add-face-text-property
+             (match-beginning 3) (match-end 3) 'font-lock-variable-name-face)
+            (add-face-text-property
+             (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
+
+  (advice-add
+   'mu4e~get-mail-process-filter
+   :override #'mu4e-pretty-mbsync-process-filter)
+
+  ;; compose
+
+  (global-set-key (kbd "C-x m") #'mu4e-compose-new)
+
+  (setq mu4e-compose-dont-reply-to-self t)
+  (setq mu4e-compose-signature-auto-include nil)
+  (add-hook 'mu4e-compose-mode-hook #'flyspell-mode 1)
+  (require 'company)
+  (add-hook 'mu4e-compose-mode-hook #'company-mode-on)
+
+  (defun ben-find-to-firstname ()
+    "search the current buffer for a To: field, and grab the first recipient's name from there"
+    (interactive)
+    (let ((str (buffer-substring-no-properties (point-min) (point-max))))
+      (if (string-match
+           "^To: \"?\\([^ ,<\n]+\\)"
+           str)
+          (match-string 1 str)
+        nil)))
+
+  (require 'gnus-dired)
+
+  ;; make the `gnus-dired-mail-buffers' function also work on
+  ;; message-mode derived modes, such as mu4e-compose-mode
+  (defun gnus-dired-mail-buffers ()
+    "Return a list of active message buffers."
+    (let (buffers)
+      (save-current-buffer
+        (dolist (buffer (buffer-list t))
+          (set-buffer buffer)
+          (when (and (derived-mode-p 'message-mode)
+                     (null message-sent-message-via))
+            (push (buffer-name buffer) buffers))))
+      (nreverse buffers)))
+
+  (setq gnus-dired-mail-mode 'mu4e-user-agent)
+  (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
+
+  ;; this used to be called as part of the compose message hook
+  (defun ben-asciify-buffer-or-region (beg end)
+    (interactive "r")
+    (let ((asciify-alist '(("’" . "'")
+                           ("‘" . "'")
+                           ("“" . "\"")
+                           ("”" . "\"")
+                           ("—" . "---")
+                           ("…" . "..."))))
+      (unless (region-active-p)
+        (setq beg (point-min))
+        (setq end (point-max)))
+      (save-excursion
+        (-each asciify-alist
+          (lambda (nonascii-char-pair)
+            (goto-char beg)
+            (while (search-forward (car nonascii-char-pair) end :noerror)
+              (replace-match (cdr nonascii-char-pair) nil :literal)))))))
+  (setq mu4e-maildir-shortcuts
+        '(("/INBOX" . ?i)
+          ("/Sent Items" . ?s)
+          ("/Archive" . ?a)
+          ("/Drafts" . ?d)
+          ("/Trash" . ?t)
+          ("/Junk Mail" . ?j)))
+
+  (setq mu4e-headers-date-format "%e %b %y"
+        mu4e-headers-fields '((:human-date . 12)
+                              (:flags . 6)
+                              (:maildir . 10)
+                              (:from . 22)
+                              (:subject)))
+
+  (setq mu4e-view-show-images t
+        mu4e-html2text-command #'mu4e-shr2text
+        ;; make sure fg-bg contrast is high enough
+        shr-color-visible-luminance-min 80
+        ;; don't use variable pitch fonts
+        shr-use-fonts nil)
+
+  (-each
+      '(("from:Henry Gardner" "Hballs" ?h)
+        ("to:benjamin.j.swift@gmail.com" "to gmail" ?g)
+        ("list:extemporelang.googlegroups.com" "Extempore list" ?e))
+    (lambda (b) (add-to-list 'mu4e-bookmarks b t)))
+
+  (setq mu4e-user-mailing-lists
+        '(("extemporelang.googlegroups.com" . "Extempore")
+          ("livecode.group.lurk.org" . "TOPLAP")
+          ("acma-l.list.waikato.ac.nz" . "ACMA")
+          ("llvm-dev@lists.llvm.org" . "LLVM")
+          ("mu-discuss@googlegroups.com" . "mu-discuss")
+          ("nanomsg@freelists.org" . "nanomsg")))
+
+  (add-to-list 'mu4e-view-actions
+               '("bView in browser" . mu4e-action-view-in-browser) t)
+
+  ;; send
+
+  (require 'smtpmail-async))
+
+(setq send-mail-function 'async-smtpmail-send-it
+      message-send-mail-function 'async-smtpmail-send-it
+      smtpmail-smtp-service 587
+      smtpmail-debug-info t
+      smtpmail-queue-dir (expand-file-name "~/Maildir/queue/cur"))
+
+;; contexts
+
+(setq mu4e-contexts
+      (list
+       (make-mu4e-context
+        :name "personal"
+        :enter-func (lambda () (mu4e-message "switching to personal context"))
+        ;; leave-func not defined
+        :match-func (lambda (msg)
+                      (when msg
+                        (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
+                            (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
+        :vars '((user-mail-address . "ben@benswift.me")
+                (user-full-name . "Ben Swift")
+                (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
+                (smtpmail-smtp-server . "mail.messagingengine.com")))
+       (make-mu4e-context
+        :name "anu"
+        :enter-func (lambda () (mu4e-message "switching to ANU context"))
+        ;; leave-fun not defined
+        :match-func (lambda (msg)
+                      (when msg
+                        (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
+        :vars '((user-mail-address . "ben.swift@anu.edu.au")
+                (user-full-name . "Ben Swift")
+                (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
+                (smtpmail-smtp-server . "smtp.office365.com")))
+       (make-mu4e-context
+        :name "simeon-network"
+        :enter-func (lambda () (mu4e-message "switching to Simeon Network context"))
+        ;; leave-fun not defined
+        :match-func (lambda (msg)
+                      (when msg
+                        (mu4e-message-contact-field-matches msg :to "ben.swift@simeonnetwork.org")))
+        :vars '((user-mail-address . "ben.swift@simeonnetwork.org")
+                (user-full-name . "Ben Swift")
+                (smtpmail-starttls-credentials '(("mail.simeonnetwork.org" 587 nil nil)))
+                (smtpmail-smtp-server . "mail.simeonnetwork.org")))))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
