@@ -333,6 +333,13 @@ This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
 
+  ;; spacemacs
+  (setq dotspacemacs-enable-paste-transient-state t)
+
+  ;; emacs
+  (setq mac-option-modifier 'meta)
+  (setq mac-command-modifier 'super)
+
   ;; mu4e
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
