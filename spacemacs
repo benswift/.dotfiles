@@ -482,52 +482,52 @@ you should place your code here."
 
   ;; send
 
-  (require 'smtpmail-async))
+  (require 'smtpmail-async)
 
-(setq send-mail-function 'async-smtpmail-send-it
-      message-send-mail-function 'async-smtpmail-send-it
-      smtpmail-smtp-service 587
-      smtpmail-debug-info t
-      smtpmail-queue-dir (expand-file-name "~/Maildir/queue/cur"))
+  (setq send-mail-function 'async-smtpmail-send-it
+        message-send-mail-function 'async-smtpmail-send-it
+        smtpmail-smtp-service 587
+        smtpmail-debug-info t
+        smtpmail-queue-dir (expand-file-name "~/Maildir/queue/cur"))
 
-;; contexts
+  ;; contexts
 
-(setq mu4e-contexts
-      (list
-       (make-mu4e-context
-        :name "personal"
-        :enter-func (lambda () (mu4e-message "switching to personal context"))
-        ;; leave-func not defined
-        :match-func (lambda (msg)
-                      (when msg
-                        (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
-                            (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
-        :vars '((user-mail-address . "ben@benswift.me")
-                (user-full-name . "Ben Swift")
-                (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
-                (smtpmail-smtp-server . "mail.messagingengine.com")))
-       (make-mu4e-context
-        :name "anu"
-        :enter-func (lambda () (mu4e-message "switching to ANU context"))
-        ;; leave-fun not defined
-        :match-func (lambda (msg)
-                      (when msg
-                        (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
-        :vars '((user-mail-address . "ben.swift@anu.edu.au")
-                (user-full-name . "Ben Swift")
-                (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
-                (smtpmail-smtp-server . "smtp.office365.com")))
-       (make-mu4e-context
-        :name "simeon-network"
-        :enter-func (lambda () (mu4e-message "switching to Simeon Network context"))
-        ;; leave-fun not defined
-        :match-func (lambda (msg)
-                      (when msg
-                        (mu4e-message-contact-field-matches msg :to "ben.swift@simeonnetwork.org")))
-        :vars '((user-mail-address . "ben.swift@simeonnetwork.org")
-                (user-full-name . "Ben Swift")
-                (smtpmail-starttls-credentials '(("mail.simeonnetwork.org" 587 nil nil)))
-                (smtpmail-smtp-server . "mail.simeonnetwork.org")))))
+  (setq mu4e-contexts
+        (list
+         (make-mu4e-context
+          :name "personal"
+          :enter-func (lambda () (mu4e-message "switching to personal context"))
+          ;; leave-func not defined
+          :match-func (lambda (msg)
+                        (when msg
+                          (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
+                              (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
+          :vars '((user-mail-address . "ben@benswift.me")
+                  (user-full-name . "Ben Swift")
+                  (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
+                  (smtpmail-smtp-server . "mail.messagingengine.com")))
+         (make-mu4e-context
+          :name "anu"
+          :enter-func (lambda () (mu4e-message "switching to ANU context"))
+          ;; leave-fun not defined
+          :match-func (lambda (msg)
+                        (when msg
+                          (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
+          :vars '((user-mail-address . "ben.swift@anu.edu.au")
+                  (user-full-name . "Ben Swift")
+                  (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
+                  (smtpmail-smtp-server . "smtp.office365.com")))
+         (make-mu4e-context
+          :name "simeon-network"
+          :enter-func (lambda () (mu4e-message "switching to Simeon Network context"))
+          ;; leave-fun not defined
+          :match-func (lambda (msg)
+                        (when msg
+                          (mu4e-message-contact-field-matches msg :to "ben.swift@simeonnetwork.org")))
+          :vars '((user-mail-address . "ben.swift@simeonnetwork.org")
+                  (user-full-name . "Ben Swift")
+                  (smtpmail-starttls-credentials '(("mail.simeonnetwork.org" 587 nil nil)))
+                  (smtpmail-smtp-server . "mail.simeonnetwork.org"))))))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -538,7 +538,7 @@ you should place your code here."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (yapfify yaml-mode x86-lookup wolfram-mode web-mode web-beautify toml-mode thrift tagedit swift-mode stan-mode sql-indent slime-company slime slim-mode scss-mode scad-mode sass-mode rvm ruby-tools ruby-test-mode rubocop rspec-mode robe rbenv rake racket-mode faceup racer qml-mode pyvenv pytest pyenv-mode py-isort pug-mode powershell pip-requirements phpunit phpcbf php-extras php-auto-yasnippets org-ref key-chord omnisharp nasm-mode mu4e-maildirs-extension mu4e-alert ht minitest matlab-mode lua-mode livid-mode skewer-mode simple-httpd live-py-mode less-css-mode json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc intero insert-shebang hy-mode hlint-refactor hindent helm-bibtex parsebib haskell-snippets haml-mode graphviz-dot-mode go-guru go-eldoc glsl-mode geiser fsharp-mode flycheck company-quickhelp pos-tip fish-mode ess-smart-equals ess-R-object-popup ess-R-data-view ctable ess julia-mode erc-yt erc-view-log erc-terminal-notifier erc-social-graph erc-image erc-hl-nicks emmet-mode ein websocket drupal-mode php-mode disaster cython-mode csv-mode csharp-mode company-web web-completion-data company-tern dash-functional tern company-shell company-go go-mode company-ghci company-ghc ghc haskell-mode company-emacs-eclim eclim company-cabal company-c-headers company-auctex company-anaconda common-lisp-snippets coffee-mode cmm-mode cmake-mode clojure-snippets clj-refactor inflections edn multiple-cursors paredit peg clang-format cider-eval-sexp-fu cider seq queue clojure-mode chruby cargo rust-mode bundler inf-ruby biblio biblio-core auctex-latexmk auctex arduino-mode anaconda-mode pythonic ahk-mode adoc-mode markup-faces smeargle orgit org-projectile org-present org org-pomodoro alert log4e gntp org-download mmm-mode markdown-toc markdown-mode magit-gitflow htmlize gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md evil-magit magit magit-popup git-commit with-editor company-statistics company auto-yasnippet yasnippet ac-ispell auto-complete ws-butler window-numbering which-key wgrep volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline smex restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint ivy-hydra info+ indent-guide ido-vertical-mode hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-make helm helm-core google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump popup f s diminish define-word counsel-projectile projectile pkg-info epl counsel swiper ivy column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed dash async aggressive-indent adaptive-wrap ace-window ace-link avy quelpa package-build spacemacs-theme))))
+    (helm-themes helm-swoop helm-projectile helm-mode-manager helm-flx helm-descbinds helm-ag ace-jump-helm-line yapfify yaml-mode x86-lookup ws-butler wolfram-mode window-numbering which-key wgrep web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toml-mode toc-org thrift tagedit swift-mode stan-mode sql-indent spacemacs-theme spaceline smex smeargle slime-company slim-mode scss-mode scad-mode sass-mode rvm ruby-tools ruby-test-mode rubocop rspec-mode robe restart-emacs rbenv rake rainbow-delimiters racket-mode racer quelpa qml-mode pyvenv pytest pyenv-mode py-isort pug-mode powershell popwin pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode paradox orgit org-ref org-projectile org-present org-pomodoro org-plus-contrib org-download org-bullets open-junk-file omnisharp neotree nasm-mode mu4e-maildirs-extension mu4e-alert move-text mmm-mode minitest matlab-mode markdown-toc magit-gitflow lua-mode lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc ivy-hydra intero insert-shebang info+ indent-guide ido-vertical-mode hy-mode hungry-delete htmlize hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-make haskell-snippets graphviz-dot-mode google-translate golden-ratio go-guru go-eldoc gnuplot glsl-mode gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md geiser fsharp-mode flx-ido fish-mode fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu ess-smart-equals ess-R-object-popup ess-R-data-view erc-yt erc-view-log erc-terminal-notifier erc-social-graph erc-image erc-hl-nicks emmet-mode elisp-slime-nav ein dumb-jump drupal-mode disaster define-word cython-mode csv-mode counsel-projectile company-web company-tern company-statistics company-shell company-go company-ghci company-ghc company-emacs-eclim company-cabal company-c-headers company-auctex company-anaconda common-lisp-snippets column-enforce-mode coffee-mode cmm-mode cmake-mode clojure-snippets clj-refactor clean-aindent-mode clang-format cider-eval-sexp-fu chruby cargo bundler auto-yasnippet auto-highlight-symbol auto-compile auctex-latexmk arduino-mode ahk-mode aggressive-indent adoc-mode adaptive-wrap ace-window ace-link ac-ispell))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
