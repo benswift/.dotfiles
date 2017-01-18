@@ -38,7 +38,7 @@ values."
      ;; ----------------------------------------------------------------
      erc
      ivy
-     auto-completion
+     (auto-completion :variables auto-completion-tab-key-behavior 'cycle)
      emacs-lisp
      git
      markdown
