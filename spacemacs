@@ -524,7 +524,34 @@ you should place your code here."
           :vars '((user-mail-address . "ben.swift@simeonnetwork.org")
                   (user-full-name . "Ben Swift")
                   (smtpmail-starttls-credentials '(("mail.simeonnetwork.org" 587 nil nil)))
-                  (smtpmail-smtp-server . "mail.simeonnetwork.org"))))))
+                  (smtpmail-smtp-server . "mail.simeonnetwork.org")))))
+
+
+  (require 'url-util) ; needed for url-unerserved-chars
+
+  (defun biott-sanitise-post-name (post-name)
+    (apply #'string (reverse (cl-reduce (lambda (processed char)
+                                          (if (member char url-unreserved-chars)
+                                              (cons char processed)
+                                            (if (and processed
+                                                     (= (first processed) ?-))
+                                                processed
+                                              (cons ?- processed))))
+                                        (string-to-list post-name)
+                                        :initial-value '()))))
+
+  (defun biott-new-post (post-name)
+    (interactive "sPost title: ")
+    (let ((post-url-basename
+           (concat (format-time-string "%Y-%m-%d-")
+                   (downcase (biott-sanitise-post-name post-name)))))
+      (find-file (format "~/Code/clojure/biott-redux/resources/templates/md/posts/%s.md"
+                         post-url-basename))
+      (insert (format
+               "{:title \"%s\"
+ :layout :post}
+"
+               post-name)))))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
