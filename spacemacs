@@ -38,7 +38,8 @@ values."
      ;; ----------------------------------------------------------------
      erc
      ivy
-     (auto-completion :variables auto-completion-tab-key-behavior 'cycle)
+     (auto-completion :variables auto-completion-tab-key-behavior 'cycle
+                      :disabled-for mu4e)
      emacs-lisp
      git
      markdown
