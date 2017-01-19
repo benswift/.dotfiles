@@ -345,6 +345,11 @@ you should place your code here."
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
 
+  ;; ispell
+  (when (executable-find "hunspell")
+    (setq ispell-program-name (executable-find "hunspell"))
+    (setq ispell-dictionary "en_AU"))
+
   (setq mu4e-user-mail-address-list
         '("ben@benswift.me"
           "ben.swift@anu.edu.au"
