@@ -38,8 +38,7 @@ values."
      ;; ----------------------------------------------------------------
      erc
      ivy
-     (auto-completion :variables auto-completion-tab-key-behavior 'cycle
-                      :disabled-for mu4e)
+     (auto-completion :variables auto-completion-tab-key-behavior 'cycle)
      emacs-lisp
      git
      markdown
@@ -342,6 +341,8 @@ you should place your code here."
   (setq mac-command-modifier 'super)
 
   ;; mu4e
+  (spacemacs|disable-company mu4e-compose-mode)
+
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
 
