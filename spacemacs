@@ -79,8 +79,8 @@ values."
      swift
      windows-scripts
      yaml
-     ;; spell-checking
-     ;; syntax-checking
+     spell-checking
+     syntax-checking
      )
 
    ;; List of additional packages that will be installed without being
