@@ -393,8 +393,6 @@ you should place your code here."
 
   ;; compose
 
-  (global-set-key (kbd "C-x m") #'mu4e-compose-new)
-
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-signature-auto-include nil)
   (add-hook 'mu4e-compose-mode-hook #'spacemacs/toggle-yasnippet-on)
