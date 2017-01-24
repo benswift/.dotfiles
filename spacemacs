@@ -323,6 +323,12 @@ executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
+
+  ;; ispell
+  (when (executable-find "hunspell")
+    (setq ispell-program-name (executable-find "hunspell"))
+    (setq ispell-dictionary "en_AU"))
+
   )
 
 (defun dotspacemacs/user-config ()
@@ -345,11 +351,6 @@ you should place your code here."
 
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
-
-  ;; ispell
-  (when (executable-find "hunspell")
-    (setq ispell-program-name (executable-find "hunspell"))
-    (setq ispell-dictionary "en_AU"))
 
   (setq mu4e-user-mail-address-list
         '("ben@benswift.me"
