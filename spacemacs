@@ -74,6 +74,7 @@ values."
      rust
      scheme
      shaders
+     (shell :variables shell-default-shell 'shell)
      shell-scripts
      sql
      swift
