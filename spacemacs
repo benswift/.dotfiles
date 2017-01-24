@@ -46,7 +46,6 @@ values."
      org
      asciidoc
      asm
-     autohotkey
      bibtex
      c-c++
      clojure
