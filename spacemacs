@@ -347,8 +347,6 @@ you should place your code here."
   (setq mac-command-modifier 'super)
 
   ;; mu4e
-  (spacemacs|disable-company mu4e-compose-mode)
-
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
 
@@ -399,9 +397,7 @@ you should place your code here."
 
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-signature-auto-include nil)
-  (add-hook 'mu4e-compose-mode-hook #'flyspell-mode 1)
-  (require 'company)
-  (add-hook 'mu4e-compose-mode-hook #'company-mode-on)
+  (add-hook 'mu4e-compose-mode-hook #'spacemacs/toggle-yasnippet-on)
 
   (defun ben-find-to-firstname ()
     "search the current buffer for a To: field, and grab the first recipient's name from there"
