@@ -342,6 +342,10 @@ you should place your code here."
   ;; spacemacs
   (setq spacemacs-theme-org-height nil)
 
+  ;; time
+  (setq display-time-format "%H:%M")
+  (display-time-mode 1)
+
   ;; emacs
   (setq mac-option-modifier 'meta)
   (setq mac-command-modifier 'super)
