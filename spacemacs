@@ -351,6 +351,10 @@ you should place your code here."
   (setq mac-command-modifier 'super)
 
   (add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+  ;; processing
+  (setq processing-sketchbook-dir "~/Code/processing")
+  (setq processing-location "/usr/local/bin/processing-java")
   ;; mu4e
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
