@@ -359,6 +359,10 @@ you should place your code here."
   (defun osx-screencapture (filename)
     (interactive "sfilename: ")
     (shell-command (format "screencapture -i \"%s.png\"" filename)))
+
+  ;; yasnippet
+  (add-to-list 'yas-snippet-dirs "~/.dotfiles/snippets/")
+
   ;; mu4e
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
