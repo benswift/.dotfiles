@@ -350,6 +350,7 @@ you should place your code here."
   (setq mac-option-modifier 'meta)
   (setq mac-command-modifier 'super)
 
+  (add-hook 'text-mode-hook 'turn-on-auto-fill)
   ;; mu4e
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
