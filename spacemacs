@@ -355,6 +355,10 @@ you should place your code here."
   ;; processing
   (setq processing-sketchbook-dir "~/Code/processing")
   (setq processing-location "/usr/local/bin/processing-java")
+
+  (defun osx-screencapture (filename)
+    (interactive "sfilename: ")
+    (shell-command (format "screencapture -i \"%s.png\"" filename)))
   ;; mu4e
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
