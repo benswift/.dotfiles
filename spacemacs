@@ -61,7 +61,7 @@ values."
      haskell
      html
      ipython-notebook
-     java
+     ;; java ;; because eclim is balls
      javascript
      latex
      lua
