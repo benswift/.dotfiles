@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: anu-jekyll-link
+# key: link
+# --
+[$1]({{site.baseurl}}/`(yas-choose-value (projectile-current-project-files))`)
