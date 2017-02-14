@@ -1,8 +1,8 @@
 # -*- mode: snippet -*-
-# name: xiao-name-hao
-# key: xiao
+# name: name-hao
+# key: hao
 # --
-Xiao $1 hao
+$1 hao
 
 $0
 
