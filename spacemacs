@@ -329,6 +329,9 @@ before packages are loaded. If you are unsure, you should try in setting them in
     (setq ispell-program-name (executable-find "hunspell"))
     (setq ispell-dictionary "en_AU"))
 
+  ;; spacemacs
+  (setq spacemacs-theme-org-height nil)
+
   )
 
 (defun dotspacemacs/user-config ()
@@ -338,9 +341,6 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-
-  ;; spacemacs
-  (setq spacemacs-theme-org-height nil)
 
   ;; time
   (setq display-time-format "%H:%M")
