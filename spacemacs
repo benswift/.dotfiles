@@ -573,7 +573,32 @@ you should place your code here."
                "{:title \"%s\"
  :layout :post}
 "
-               post-name)))))
+               post-name))))
+
+  (defun date-of-next-Sunday ()
+    "return's next Sunday's date, as a string"
+    (let ((next-sun (calendar-gregorian-from-absolute
+                     (+ (calendar-absolute-from-gregorian (calendar-current-date))
+                        (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
+      (format "%04d-%02d-%02d"
+              (nth 2 next-sun)
+              (nth 0 next-sun)
+              (nth 1 next-sun))))
+
+  (defun compile-church-chord-chart-pdf (num-songs)
+    (interactive "nNumber of songs: ")
+    (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
+           (chord-charts-dir (concat church-music-dir "chord-charts/"))
+           (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
+           (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
+                               (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
+           (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
+           (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
+      (let ((default-directory church-music-dir))
+        (shell-command (format "pdfjam %s -o %s && open %s"
+                               (mapconcat #'identity charts " ")
+                               output-filename
+                               output-filename))))))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
