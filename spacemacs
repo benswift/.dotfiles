@@ -549,6 +549,23 @@ you should place your code here."
                   (smtpmail-smtp-server . "mail.simeonnetwork.org")))))
 
 
+  (defun ben-send-anu-email (email-address subject body &optional blocking)
+    (with-temp-buffer
+      (mu4e-context-switch nil "anu")
+      (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\nSubject: %s\n--text follows this line--\n%s"
+                      email-address subject body))
+      (if blocking
+          (message-smtpmail-send-it)
+        (async-smtpmail-send-it))))
+
+  (defun ben-send-benswift-email (email-address subject body &optional blocking)
+    (with-temp-buffer
+      (mu4e-context-switch nil "personal")
+      (insert (format "From: Ben Swift <ben@@benswift.me>\nTo: %s\nSubject: %s\n--text follows this line--\n%s"
+                      email-address subject body))
+      (if blocking
+          (message-smtpmail-send-it)
+        (async-smtpmail-send-it))))
   (require 'url-util) ; needed for url-unerserved-chars
 
   (defun biott-sanitise-post-name (post-name)
