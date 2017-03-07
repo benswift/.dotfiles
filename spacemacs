@@ -342,6 +342,8 @@ This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
 
+  (ben-mu4e-config)
+
   ;; time
   (setq display-time-format "%H:%M")
   (display-time-mode 1)
@@ -363,7 +365,62 @@ you should place your code here."
   ;; yasnippet
   (add-to-list 'yas-snippet-dirs "~/.dotfiles/snippets/")
 
-  ;; mu4e
+  ;; biott
+  (require 'url-util) ; needed for url-unerserved-chars
+
+  (defun biott-sanitise-post-name (post-name)
+    (apply #'string (reverse (cl-reduce (lambda (processed char)
+                                          (if (member char url-unreserved-chars)
+                                              (cons char processed)
+                                            (if (and processed
+                                                     (= (first processed) ?-))
+                                                processed
+                                              (cons ?- processed))))
+                                        (string-to-list post-name)
+                                        :initial-value '()))))
+
+  (defun biott-new-post (post-name)
+    (interactive "sPost title: ")
+    (let ((post-url-basename
+           (concat (format-time-string "%Y-%m-%d-")
+                   (downcase (biott-sanitise-post-name post-name)))))
+      (find-file (format "~/Code/clojure/biott-redux/resources/templates/md/posts/%s.md"
+                         post-url-basename))
+      (insert (format
+               "{:title \"%s\"
+ :layout :post}
+"
+               post-name))))
+
+  ;; chord charts
+  (defun date-of-next-Sunday ()
+    "return's next Sunday's date, as a string"
+    (let ((next-sun (calendar-gregorian-from-absolute
+                     (+ (calendar-absolute-from-gregorian (calendar-current-date))
+                        (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
+      (format "%04d-%02d-%02d"
+              (nth 2 next-sun)
+              (nth 0 next-sun)
+              (nth 1 next-sun))))
+
+  (defun compile-church-chord-chart-pdf (num-songs)
+    (interactive "nNumber of songs: ")
+    (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
+           (chord-charts-dir (concat church-music-dir "chord-charts/"))
+           (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
+           (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
+                               (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
+           (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
+           (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
+      (let ((default-directory church-music-dir))
+        (shell-command (format "pdfjam %s -o %s && open %s"
+                               (mapconcat #'identity charts " ")
+                               output-filename
+                               output-filename))))))
+
+(defun ben-mu4e-config ()
+  "user-config for mu4e"
+
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
 
@@ -565,57 +622,7 @@ you should place your code here."
                       email-address subject body))
       (if blocking
           (message-smtpmail-send-it)
-        (async-smtpmail-send-it))))
-  (require 'url-util) ; needed for url-unerserved-chars
-
-  (defun biott-sanitise-post-name (post-name)
-    (apply #'string (reverse (cl-reduce (lambda (processed char)
-                                          (if (member char url-unreserved-chars)
-                                              (cons char processed)
-                                            (if (and processed
-                                                     (= (first processed) ?-))
-                                                processed
-                                              (cons ?- processed))))
-                                        (string-to-list post-name)
-                                        :initial-value '()))))
-
-  (defun biott-new-post (post-name)
-    (interactive "sPost title: ")
-    (let ((post-url-basename
-           (concat (format-time-string "%Y-%m-%d-")
-                   (downcase (biott-sanitise-post-name post-name)))))
-      (find-file (format "~/Code/clojure/biott-redux/resources/templates/md/posts/%s.md"
-                         post-url-basename))
-      (insert (format
-               "{:title \"%s\"
- :layout :post}
-"
-               post-name))))
-
-  (defun date-of-next-Sunday ()
-    "return's next Sunday's date, as a string"
-    (let ((next-sun (calendar-gregorian-from-absolute
-                     (+ (calendar-absolute-from-gregorian (calendar-current-date))
-                        (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
-      (format "%04d-%02d-%02d"
-              (nth 2 next-sun)
-              (nth 0 next-sun)
-              (nth 1 next-sun))))
-
-  (defun compile-church-chord-chart-pdf (num-songs)
-    (interactive "nNumber of songs: ")
-    (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
-           (chord-charts-dir (concat church-music-dir "chord-charts/"))
-           (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
-           (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
-                               (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
-           (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
-           (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
-      (let ((default-directory church-music-dir))
-        (shell-command (format "pdfjam %s -o %s && open %s"
-                               (mapconcat #'identity charts " ")
-                               output-filename
-                               output-filename))))))
+        (async-smtpmail-send-it)))))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
