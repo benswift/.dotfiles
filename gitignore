@@ -51,6 +51,9 @@ _region_.tex
 *.vrb
 *.pygtex
 *.pygstyle
+*.fdb_latexmk
+*.fls
+*.xdv
 
 # emacs
 
