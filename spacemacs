@@ -354,6 +354,17 @@ you should place your code here."
 
   (add-hook 'text-mode-hook 'turn-on-auto-fill)
 
+  ;; ERC
+  (if (load "~/.dotfiles/secrets/ercpass" t)
+      (progn
+        (erc-services-mode 1)
+        (setq erc-nick "benswift")
+        (setq erc-prompt-for-password nil)
+        (setq erc-prompt-for-nickserv-password nil)
+        (setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
+        (setq erc-notify-list '("digego")))
+    (message "Couldn't find the secrets file, you need to pull it down from dropbox."))
+
   ;; processing
   (setq processing-sketchbook-dir "~/Code/processing")
   (setq processing-location "/usr/local/bin/processing-java")
