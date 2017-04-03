@@ -2,4 +2,4 @@
 # name: mint-inline
 # key: minl
 # --
-\mintinline{${1:lang}}{$0}
+\mintinline{${1:asm}}{$0}
