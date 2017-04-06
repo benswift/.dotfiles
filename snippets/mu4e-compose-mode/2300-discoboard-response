@@ -1,0 +1,16 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: 2300-discoboard-response
+# key: disc
+# binding: direct-keybinding
+# --
+Hi ${1:`(ben-find-to-firstname)`}
+
+Thanks for getting back to me - and sorry about the confusion. The serial number
+list from one of the labs had got lost in communication between the tutors and
+I, but I've found it now and you were indeed in the system.
+
+Good luck with the course, and keep pestering your tutors with questions in the
+labs :)
+
+Cheers,
+Ben
