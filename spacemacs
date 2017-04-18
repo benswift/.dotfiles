@@ -54,6 +54,7 @@ values."
      csv
      emacs-lisp
      ess
+     (extempore :location local)
      extra-langs
      fsharp
      go
@@ -87,7 +88,7 @@ values."
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
-   dotspacemacs-additional-packages '(processing-mode dockerfile-mode extempore-mode lice)
+   dotspacemacs-additional-packages '(processing-mode dockerfile-mode lice)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -673,7 +674,7 @@ you should place your code here."
     (set-face-attribute 'extempore-blink-face nil :foreground "#272822" :background "#FD971F")
     (set-face-attribute 'extempore-sb-blink-face nil :foreground "#272822" :background "#39FF14"))
 
-  (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
+  ;; (add-hook 'extempore-mode-hook 'ben-extempore-mode-hook)
 
   ;; more extempore-related goodies
 
