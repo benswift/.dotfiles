@@ -39,26 +39,22 @@
   (use-package extempore-mode
     :mode
     (("\\.xtm$" . extempore-mode))
-    ;; :init
-    ;; (progn
-    ;;   (spacemacs/register-repl 'extempore 'extempore-repl "extempore REPL"))
     :config
     (progn
-      (spacemacs/declare-prefix-for-mode 'extempore-mode "ms" "repl")
+      (spacemacs/declare-prefix-for-mode 'extempore-mode "mc" "process")
+      (spacemacs/declare-prefix-for-mode 'extempore-mode "me" "eval")
 
       (spacemacs/set-leader-keys-for-major-mode 'extempore-mode
         "'"  'extempore-repl
         ","  'lisp-state-toggle-lisp-state
 
-        "cc" 'extempore-send-buffer-or-region
+        "cc" 'switch-to-extempore
         "cj" 'extempore-connect-or-disconnect
 
         "ee" 'extempore-send-last-sexp
         "ef" 'extempore-send-definition
-        "el" 'lisp-state-eval-sexp-end-of-line
         "er" 'extempore-send-region
-
-        "mf" 'extempore-expand-definition
-        "mx" 'extempore-expand-region))))
+        "eb" 'extempore-send-buffer-or-region
+        ))))
 
 ;;; packages.el ends here
