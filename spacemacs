@@ -73,6 +73,7 @@ values."
      php
      python
      racket
+     restclient
      ruby
      rust
      scheme
