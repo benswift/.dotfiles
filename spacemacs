@@ -401,11 +401,14 @@ you should place your code here."
     (let ((post-url-basename
            (concat (format-time-string "%Y-%m-%d-")
                    (downcase (biott-sanitise-post-name post-name)))))
-      (find-file (format "~/Code/clojure/biott-redux/resources/templates/md/posts/%s.md"
-                         post-url-basename))
+      (find-file (concat "~/Documents/anu-cs-blog/_posts/"
+                         post-url-basename
+                         ".md"))
       (insert (format
-               "{:title \"%s\"
- :layout :post}
+               "---
+title: %s
+tags:
+---
 "
                post-name))))
 
