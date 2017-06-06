@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: function
+# key: function
+# --
+${1:name}:
+  push {lr}
+  $0 
+  pop {lr}
+  bx lr
