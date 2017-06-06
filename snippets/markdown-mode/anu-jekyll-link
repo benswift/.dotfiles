@@ -2,4 +2,4 @@
 # name: anu-jekyll-link
 # key: link
 # --
-[$1]({{site.baseurl}}/`(yas-choose-value (projectile-current-project-files))`)
+[$1]({{site.baseurl}}/`(s-replace "\.md" "/" (s-replace "/_" "/" (yas-choose-value (projectile-current-project-files))))`)
