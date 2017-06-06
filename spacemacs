@@ -45,7 +45,10 @@ values."
      mu4e
      org
      asciidoc
-     asm
+     (asm
+      :variables
+      indent-tabs-mode t
+      tab-width 4)
      bibtex
      c-c++
      clojure
