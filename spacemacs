@@ -82,6 +82,7 @@ values."
      shell-scripts
      sql
      swift
+     typescript
      windows-scripts
      yaml
      spell-checking
