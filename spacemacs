@@ -37,7 +37,6 @@ values."
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
      erc
-     ivy
      (auto-completion :variables auto-completion-tab-key-behavior 'cycle)
      emacs-lisp
      git
@@ -63,6 +62,7 @@ values."
      go
      graphviz
      haskell
+     helm
      html
      ipython-notebook
      ;; java ;; because eclim is balls
