@@ -43,7 +43,7 @@ values."
      markdown
      mu4e
      org
-     asciidoc
+     ;; asciidoc
      (asm
       :variables
       indent-tabs-mode t
@@ -51,39 +51,38 @@ values."
      bibtex
      c-c++
      clojure
-     common-lisp
-     csharp
+     ;; csharp
      csv
      emacs-lisp
      ess
      (extempore :location local)
      extra-langs
-     fsharp
-     go
-     graphviz
+     ;; fsharp
+     ;; go
+     ;; graphviz
      haskell
      helm
      html
-     ipython-notebook
+     ;; ipython-notebook
      ;; java ;; because eclim is balls
      javascript
      latex
-     lua
+     ;; lua
      markdown
-     php
+     ;; php
      python
-     racket
+     ;; racket
      restclient
      ruby
-     rust
+     ;; rust
      scheme
      shaders
      (shell :variables shell-default-shell 'shell)
      shell-scripts
      sql
-     swift
-     typescript
-     windows-scripts
+     ;; swift
+     ;; typescript
+     ;; windows-scripts
      yaml
      spell-checking
      syntax-checking
