@@ -2,4 +2,4 @@
 # name: anu-jekyll-image
 # key: image
 # --
-![$1]({{site.baseurl}}/`(yas-choose-value (projectile-current-project-files))`){:.image-center}
+![$1]({{site.baseurl}}/`(yas-choose-value (projectile-current-project-files))`){:.center}
