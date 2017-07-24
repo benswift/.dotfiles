@@ -1,0 +1,24 @@
+# -*- mode: snippet -*-
+# name: comp2300-mid-sem-exam-meeting
+# key: ms
+# --
+Hi ${1:`(ben-find-to-firstname)`}
+
+Ok, I can see you at $2 on Wednesday April 19 - come to my office (N214) at that
+time and take a seat on the colourful chairs outside. The meeting will have to
+be fairly quick (I have a lot of students to get through).
+
+I'm keen to help you learn where you went wrong, and to help clear up anything
+you're confused about. I should say, though, that Uwe and I were pretty careful
+to mark the exams fairly for all students, so this isn't a chance to complain
+and get a better mark. There are formal processes for appealing a grade at the
+end of the course[0], but these happen after a course is finished.
+
+I'm not saying this to be mean, I just want to be clear. I want to help you make
+the most of your time in COMP2300, and to learn skills which will set you up in
+life and further study.
+
+Cheers,
+Ben
+
+[0] http://www.anu.edu.au/students/program-administration/assessments-exams/assessment-appeals
