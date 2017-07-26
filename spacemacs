@@ -349,6 +349,9 @@ you should place your code here."
 
   (ben-mu4e-config)
 
+  ;; dired
+  (setq dired-listing-switches "-alh")
+
   ;; time
   (setq display-time-format "%H:%M")
   (display-time-mode 1)
