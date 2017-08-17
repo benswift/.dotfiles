@@ -628,23 +628,25 @@ tags:
                   (smtpmail-smtp-server . "mail.simeonnetwork.org")))))
 
 
-  (defun ben-send-anu-email (email-address subject body &optional blocking)
+  (defun ben-send-anu-email (email-address subject body &optional cc-string)
     (with-temp-buffer
       (mu4e-context-switch nil "anu")
-      (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\nSubject: %s\n--text follows this line--\n%s"
-                      email-address subject body))
-      (if blocking
-          (message-smtpmail-send-it)
-        (async-smtpmail-send-it))))
+      (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
+                      email-address
+                      (if cc-string (format "Cc: %s\n" cc-string) "")
+                      subject
+                      body))
+      (async-smtpmail-send-it)))
 
-  (defun ben-send-benswift-email (email-address subject body &optional blocking)
+  (defun ben-send-benswift-email (email-address subject body &optional cc-string)
     (with-temp-buffer
       (mu4e-context-switch nil "personal")
       (insert (format "From: Ben Swift <ben@@benswift.me>\nTo: %s\nSubject: %s\n--text follows this line--\n%s"
-                      email-address subject body))
-      (if blocking
-          (message-smtpmail-send-it)
-        (async-smtpmail-send-it)))))
+                      email-address
+                      (if cc-string (format "Cc: %s\n" cc-string) "")
+                      subject
+                      body))
+      (async-smtpmail-send-it))))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -655,7 +657,13 @@ tags:
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (flyspell-correct-ivy cider eclim counsel ess company-quickhelp haskell-mode flycheck helm helm-core magit with-editor rust-mode js2-mode flycheck-rust flycheck-pos-tip flycheck-haskell flyspell-correct auto-dictionary helm-themes helm-swoop helm-projectile helm-mode-manager helm-flx helm-descbinds helm-ag ace-jump-helm-line yapfify yaml-mode x86-lookup ws-butler wolfram-mode window-numbering which-key wgrep web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toml-mode toc-org thrift tagedit swift-mode stan-mode sql-indent spacemacs-theme spaceline smex smeargle slime-company slim-mode scss-mode scad-mode sass-mode rvm ruby-tools ruby-test-mode rubocop rspec-mode robe restart-emacs rbenv rake rainbow-delimiters racket-mode racer quelpa qml-mode pyvenv pytest pyenv-mode py-isort pug-mode powershell popwin pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode paradox orgit org-ref org-projectile org-present org-pomodoro org-plus-contrib org-download org-bullets open-junk-file omnisharp neotree nasm-mode mu4e-maildirs-extension mu4e-alert move-text mmm-mode minitest matlab-mode markdown-toc magit-gitflow lua-mode lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc ivy-hydra intero insert-shebang info+ indent-guide ido-vertical-mode hy-mode hungry-delete htmlize hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-make haskell-snippets graphviz-dot-mode google-translate golden-ratio go-guru go-eldoc gnuplot glsl-mode gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md geiser fsharp-mode flx-ido fish-mode fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu ess-smart-equals ess-R-object-popup ess-R-data-view erc-yt erc-view-log erc-terminal-notifier erc-social-graph erc-image erc-hl-nicks emmet-mode elisp-slime-nav ein dumb-jump drupal-mode disaster define-word cython-mode csv-mode counsel-projectile company-web company-tern company-statistics company-shell company-go company-ghci company-ghc company-emacs-eclim company-cabal company-c-headers company-auctex company-anaconda common-lisp-snippets column-enforce-mode coffee-mode cmm-mode cmake-mode clojure-snippets clj-refactor clean-aindent-mode clang-format cider-eval-sexp-fu chruby cargo bundler auto-yasnippet auto-highlight-symbol auto-compile auctex-latexmk arduino-mode ahk-mode aggressive-indent adoc-mode adaptive-wrap ace-window ace-link ac-ispell))))
+    (org-category-capture restclient-helm helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-hoogle helm-gitignore helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag flyspell-correct-helm ace-jump-helm-line tide typescript-mode yapfify yaml-mode xterm-color x86-lookup ws-butler wolfram-mode winum which-key wgrep web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toml-mode toc-org thrift tagedit swift-mode stan-mode sql-indent spaceline powerline smex smeargle slime-company slime slim-mode shell-pop scss-mode scad-mode sass-mode rvm ruby-tools ruby-test-mode rubocop rspec-mode robe restart-emacs rbenv rake rainbow-delimiters racket-mode faceup racer qml-mode pyvenv pytest pyenv-mode py-isort pug-mode processing-mode powershell popwin pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode pcre2el paradox orgit org-ref pdf-tools key-chord tablist org-projectile org-present org-pomodoro org-plus-contrib org-download org-bullets open-junk-file omnisharp shut-up ob-restclient ob-http neotree nasm-mode multi-term mu4e-maildirs-extension mu4e-alert ht alert log4e gntp move-text mmm-mode minitest matlab-mode markdown-toc markdown-mode magit-gitflow macrostep lua-mode lorem-ipsum livid-mode skewer-mode simple-httpd live-py-mode linum-relative link-hint lice less-css-mode json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc ivy-hydra intero insert-shebang info+ indent-guide hy-mode hungry-delete htmlize hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-make helm-bibtex parsebib helm helm-core haskell-snippets haml-mode graphviz-dot-mode google-translate golden-ratio go-guru go-eldoc gnuplot glsl-mode gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md geiser fuzzy fsharp-mode company-quickhelp flyspell-correct-ivy flyspell-correct flycheck-rust flycheck-pos-tip pos-tip flycheck-haskell flycheck flx-ido flx fish-mode fill-column-indicator fancy-battery eyebrowse extempore-mode expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit magit-popup git-commit with-editor evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree ess-smart-equals ess-R-object-popup ess-R-data-view ctable ess julia-mode eshell-z eshell-prompt-extras esh-help erc-yt erc-view-log erc-terminal-notifier erc-social-graph erc-image erc-hl-nicks emmet-mode elisp-slime-nav ein deferred request websocket dumb-jump drupal-mode php-mode dockerfile-mode disaster diminish define-word cython-mode csv-mode csharp-mode counsel-projectile projectile counsel swiper ivy company-web web-completion-data company-tern dash-functional tern company-statistics company-shell company-restclient restclient know-your-http-well company-go go-mode company-glsl company-ghci company-ghc ghc haskell-mode company-cabal company-c-headers company-auctex company-anaconda company common-lisp-snippets column-enforce-mode coffee-mode cmm-mode cmake-mode clojure-snippets clj-refactor hydra inflections edn multiple-cursors paredit peg clean-aindent-mode clang-format cider-eval-sexp-fu eval-sexp-fu highlight cider seq spinner queue pkg-info clojure-mode epl chruby cargo rust-mode bundler inf-ruby bind-map bind-key biblio biblio-core auto-yasnippet yasnippet auto-highlight-symbol auto-dictionary auto-compile packed auctex-latexmk auctex async arduino-mode anaconda-mode pythonic f dash s aggressive-indent adoc-mode markup-faces adaptive-wrap ace-window ace-link avy ac-ispell auto-complete popup)))
+ '(safe-local-variable-values
+   (quote
+    ((TeX-command-extra-options . "-shell-escape")
+     (extempore-default-port . 7098)
+     (extempore-program-args . "--inchannels 2 --device 2")
+     (whitespace-style face tabs spaces trailing lines space-before-tab::space newline indentation::space empty space-after-tab::space space-mark tab-mark newline-mark)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
