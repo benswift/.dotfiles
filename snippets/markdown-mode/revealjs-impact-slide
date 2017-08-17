@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: revealjs-impact-slide
+# key: impact
+# --
+## {.center .impact}
+
+$0

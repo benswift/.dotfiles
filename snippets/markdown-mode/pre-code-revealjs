@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: pre-code-revealjs
+# key: code
+# --
+<section>
+  <pre><code data-trim data-noescape>
+$0
+<mark class="fragment">
+
+</mark>
+  </code></pre>
+</section>
