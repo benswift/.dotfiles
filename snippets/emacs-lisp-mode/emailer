@@ -5,7 +5,7 @@
 (-each
     '(${1:("name" "email-address")})
   (lambda (x)
-    (cl-destructuring-bind x (name email)
+    (cl-destructuring-bind (name email) x
       (ben-send-anu-email email
                           "${2:subject}"
                           (format "Hi %s
