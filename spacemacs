@@ -349,6 +349,9 @@ you should place your code here."
 
   (ben-mu4e-config)
 
+  ;; comp1720
+  (load-file "~/Documents/School/Teaching/comp-1720-2017/marks/utils.el")
+
   ;; dired
   (setq dired-listing-switches "-alh")
 
