@@ -463,6 +463,9 @@ tags:
           "benjamin.j.swift@gmail.com"
           "ben.swift@simeonnetwork.org"))
 
+  ;; headers
+  (setq mu4e-headers-include-related nil)
+
   ;; receive
 
   (setq mu4e-maildir (expand-file-name "~/Maildir/fastmail")
