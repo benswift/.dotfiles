@@ -351,7 +351,8 @@ you should place your code here."
   (require 'helm-bookmark)
 
   (ben-mu4e-config)
-  (ben-org-config)
+  (with-eval-after-load 'org
+    (ben-org-config))
 
   ;; comp1720
   (load-file "~/Documents/School/Teaching/comp-1720-2017/marks/utils.el")
@@ -657,12 +658,16 @@ tags:
 
 (defun ben-org-config ()
   ;; Set to the location of your Org files on your local system
-  (setq org-directory "~/Dropbox/org/")
+  (setq org-directory "~/Dropbox/org")
   ;; Set to the name of the file where new notes will be stored
-  (setq org-mobile-inbox-for-pull (concat org-directory "unfiled.org"))
-  (setq org-mobile-directory (concat org-directory "MobileOrg"))
-  ;; Set to <your Dropbox root directory>/MobileOrg
-  (setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
+  (setq org-mobile-inbox-for-pull (concat org-directory "/unfiled.org"))
+  (setq org-mobile-directory (concat org-directory "/MobileOrg"))
+  (setq org-default-notes-file (concat org-directory "/unfiled.org"))
+  (setq org-agenda-files (list org-directory))
+  (setq org-refile-targets '((nil :maxlevel . 9)
+                             (org-agenda-files :maxlevel . 9)))
+  (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
+  (setq org-refile-use-outline-path t)                  ; Show full paths for refiling
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
