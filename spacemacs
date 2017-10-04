@@ -351,6 +351,7 @@ you should place your code here."
   (require 'helm-bookmark)
 
   (ben-mu4e-config)
+  (ben-org-config)
 
   ;; comp1720
   (load-file "~/Documents/School/Teaching/comp-1720-2017/marks/utils.el")
@@ -653,6 +654,16 @@ tags:
                       subject
                       body))
       (async-smtpmail-send-it))))
+
+(defun ben-org-config ()
+  ;; Set to the location of your Org files on your local system
+  (setq org-directory "~/Dropbox/org/")
+  ;; Set to the name of the file where new notes will be stored
+  (setq org-mobile-inbox-for-pull (concat org-directory "unfiled.org"))
+  (setq org-mobile-directory (concat org-directory "MobileOrg"))
+  ;; Set to <your Dropbox root directory>/MobileOrg
+  (setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
+  )
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
