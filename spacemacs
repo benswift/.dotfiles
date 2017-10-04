@@ -54,7 +54,7 @@ values."
      ;; csharp
      csv
      emacs-lisp
-     ess
+     ;; ess
      (extempore :location local)
      extra-langs
      ;; fsharp
