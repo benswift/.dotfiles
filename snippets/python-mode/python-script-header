@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: python-script-header
+# key: header
+# --
+#/usr/bin/env python
+# pyenv install --list # to see the latest versions
+# pyenv virtualenv ${1:3.6.2} ${2:venv-name}
+from altair import Chart, load_dataset

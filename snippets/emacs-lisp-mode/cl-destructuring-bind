@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: cl-destructuring-bind
+# key: cldb
+# --
+(cl-destructuring-bind (${1:bindings}) ${2:data}
+  $0)
