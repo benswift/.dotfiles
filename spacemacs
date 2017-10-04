@@ -354,6 +354,9 @@ you should place your code here."
   (with-eval-after-load 'org
     (ben-org-config))
 
+  ;; IoT@BIT
+  (add-to-list 'org-agenda-files "~/Documents/School/Teaching/IoTatBIT-2017/notes.org" 'append)
+
   ;; comp1720
   (load-file "~/Documents/School/Teaching/comp-1720-2017/marks/utils.el")
 
