@@ -460,7 +460,7 @@ tags:
           "benjamin.j.swift@gmail.com"
           "ben.swift@simeonnetwork.org"))
 
-  ;; recieve
+  ;; receive
 
   (setq mu4e-maildir (expand-file-name "~/Maildir/fastmail")
         mu4e-sent-folder "/Sent Items"
