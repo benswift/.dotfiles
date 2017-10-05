@@ -1,6 +1,6 @@
 # Exports
 
-export PATH="/Users/ben/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/Library/TeX/texbin"
+export PATH="/Users/ben/bin:/Users/ben/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/Library/TeX/texbin"
 
 export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 
