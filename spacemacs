@@ -60,7 +60,7 @@ values."
      ;; fsharp
      ;; go
      ;; graphviz
-     haskell
+     ;; haskell
      helm
      html
      ;; ipython-notebook
