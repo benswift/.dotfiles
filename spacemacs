@@ -347,6 +347,8 @@ This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
 
+  (setq mac-option-modifier 'meta)
+
   ;; workaround for https://github.com/syl20bnr/spacemacs/issues/9549
   (require 'helm-bookmark)
 
