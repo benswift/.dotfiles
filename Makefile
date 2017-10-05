@@ -1,53 +1,30 @@
-DOTFILES_DIR=$(shell pwd)
+unix:
+	ln -sf mbsyncrc ~/.mbsyncrc
 
-osx:
-	ln -sf $(DOTFILES_DIR)/bash_profile.osx ~/.bash_profile
+	ln -sf lldbinit ~/.lldbinit
 
-	ln -sf $(DOTFILES_DIR)/mbsyncrc ~/.mbsyncrc
+	ln -sf gitconfig ~/.gitconfig
+	ln -sf gitignore ~/.gitignore
 
-	ln -sf $(DOTFILES_DIR)/lldbinit ~/.lldbinit
+	ln -sf RProfile ~/.RProfile
+	ln -sf profiles.clj ~/.lein/
+	ln -sf ssh_config ~/.ssh/config
 
-	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
-	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
+	ln -sf scripts ~/bin
 
-	ln -sf $(DOTFILES_DIR)/init.el ~/.emacs.d/
-	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
+osx: unix
+	ln -sf bash_profile.osx ~/.bash_profile
 
-	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
-	ln -sf $(DOTFILES_DIR)/profiles.clj ~/.lein/
-	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
-
-	ln -sf $(DOTFILES_DIR)/pandoc ~/.pandoc
-
-	ln -sf $(DOTFILES_DIR)/scripts ~/bin
-
-linux:
-	ln -sf $(DOTFILES_DIR)/bash_profile.linux ~/.bash_profile
-
-	ln -sf $(DOTFILES_DIR)/mbsyncrc ~/.mbsyncrc
-
-	ln -sf $(DOTFILES_DIR)/lldbinit ~/.lldbinit
-
-	ln -sf $(DOTFILES_DIR)/gitconfig ~/.gitconfig
-	ln -sf $(DOTFILES_DIR)/gitignore ~/.gitignore
-
-	ln -sf $(DOTFILES_DIR)/emacs ~/.emacs
-	ln -sf $(DOTFILES_DIR)/snippets ~/.emacs.d/
-
-	ln -sf $(DOTFILES_DIR)/RProfile ~/.RProfile
-# ln -sf $(DOTFILES_DIR)/profiles.clj ~/.lein/
-	ln -sf $(DOTFILES_DIR)/ssh_config ~/.ssh/config
-
-	ln -sf $(DOTFILES_DIR)/pandoc ~/.pandoc
-
-	ln -sf $(DOTFILES_DIR)/scripts ~/bin
+linux: unix
+	ln -sf bash_profile.linux ~/.bash_profile
 
 clean:
-	rm -f ~/.RProfile
-	rm -f -d ~/.emacs.d/snippets
-	rm -f ~/.emacs
-	rm -f ~/.gitignore
-	rm -f ~/.gitconfig
-	rm -f ~/.bash_profile
-	rm -f ~/.ssh/config
-	rm -f ~/bin
+	rm -r ~/bin
+	rm ~/.RProfile
+	rm ~/.bash_profile
+	rm ~/.gitconfig
+	rm ~/.gitignore
+	rm ~/.lldbinit
+	rm ~/.mbsyncrc
+	rm ~/.spacemacs
+	rm ~/.ssh/config
