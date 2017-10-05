@@ -37,7 +37,10 @@ values."
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
      erc
-     (auto-completion :variables auto-completion-tab-key-behavior 'cycle)
+     (auto-completion
+      :variables
+      auto-completion-tab-key-behavior 'cycle
+      auto-completion-private-snippets-directory "~/.dotfiles/snippets/")
      emacs-lisp
      git
      markdown
@@ -393,9 +396,6 @@ you should place your code here."
   (defun osx-screencapture (filename)
     (interactive "sfilename: ")
     (shell-command (format "screencapture -i \"%s.png\"" filename)))
-
-  ;; yasnippet
-  (add-to-list 'yas-snippet-dirs "~/.dotfiles/snippets/")
 
   ;; biott
   (require 'url-util) ; needed for url-unerserved-chars
