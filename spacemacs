@@ -392,36 +392,6 @@ you should place your code here."
   (interactive "sfilename: ")
   (shell-command (format "screencapture -i \"%s.png\"" filename)))
 
-;; biott
-(require 'url-util) ; needed for url-unerserved-chars
-
-(defun biott-sanitise-post-name (post-name)
-  (apply #'string (reverse (cl-reduce (lambda (processed char)
-                                        (if (member char url-unreserved-chars)
-                                            (cons char processed)
-                                          (if (and processed
-                                                   (= (first processed) ?-))
-                                              processed
-                                            (cons ?- processed))))
-                                      (string-to-list post-name)
-                                      :initial-value '()))))
-
-(defun biott-new-post (post-name)
-  (interactive "sPost title: ")
-  (let ((post-url-basename
-         (concat (format-time-string "%Y-%m-%d-")
-                 (downcase (biott-sanitise-post-name post-name)))))
-    (find-file (concat "~/Documents/anu-cs-blog/_posts/"
-                       post-url-basename
-                       ".md"))
-    (insert (format
-             "---
-title: %s
-tags:
----
-"
-             post-name))))
-
 ;; chord charts
 (defun date-of-next-Sunday ()
   "return's next Sunday's date, as a string"
