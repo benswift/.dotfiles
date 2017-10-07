@@ -36,7 +36,16 @@ values."
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     erc
+     (erc
+      :variables
+      erc-nick "benswift"
+      erc-prompt-for-password nil
+      erc-prompt-for-nickserv-password nil
+      erc-autojoin-channels-alist '(("freenode.net" "#extempore"))
+      erc-notify-list '("digego")
+      :config
+      (unless (load "~/.dotfiles/secrets/ercpass" t)
+        (message "Couldn't find the secrets file, you need to pull it down from dropbox.")))
      (auto-completion
       :variables
       auto-completion-tab-key-behavior 'cycle
@@ -44,19 +53,19 @@ values."
      emacs-lisp
      git
      markdown
-     mu4e
+     (mu4e :config (ben-mu4e-config))
      (org
       :variables
       org-directory "~/Dropbox/org"
-      ;; Set to the name of the file where new notes will be stored
       org-mobile-inbox-for-pull (concat org-directory "/unfiled.org")
       org-mobile-directory (concat org-directory "/MobileOrg")
       org-default-notes-file (concat org-directory "/unfiled.org")
       org-agenda-files (list org-directory)
-      org-refile-targets '((nil :maxlevel . 9)
-                           (org-agenda-files :maxlevel . 9))
+      org-refile-targets '((nil :maxlevel . 9) (org-agenda-files :maxlevel . 9))
       org-outline-path-complete-in-steps nil         ; Refile in a single go
       org-refile-use-outline-path t                  ; Show full paths for refiling
+      :config
+      (add-to-list 'org-agenda-files "~/Documents/School/Teaching/IoTatBIT-2017/notes.org" 'append)
       )
      ;; asciidoc
      (asm
@@ -97,7 +106,11 @@ values."
      ;; typescript
      ;; windows-scripts
      yaml
-     spell-checking
+     (spell-checking
+      :init
+      (when (executable-find "hunspell")
+        (setq ispell-program-name (executable-find "hunspell"))
+        (setq ispell-dictionary "en_AU")))
      syntax-checking
      )
 
@@ -342,14 +355,8 @@ executes.
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
 
-  ;; ispell
-  (when (executable-find "hunspell")
-    (setq ispell-program-name (executable-find "hunspell"))
-    (setq ispell-dictionary "en_AU"))
-
   ;; spacemacs
   (setq spacemacs-theme-org-height nil)
-
   )
 
 (defun dotspacemacs/user-config ()
@@ -360,17 +367,12 @@ This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
 
+  ;; emacs
   (setq mac-option-modifier 'meta)
+  (setq mac-command-modifier 'super)
 
   ;; workaround for https://github.com/syl20bnr/spacemacs/issues/9549
   (require 'helm-bookmark)
-
-  (ben-mu4e-config)
-  (with-eval-after-load 'org
-    (ben-org-config))
-
-  ;; IoT@BIT
-  (add-to-list 'org-agenda-files "~/Documents/School/Teaching/IoTatBIT-2017/notes.org" 'append)
 
   ;; comp1720
   (load-file "~/Documents/School/Teaching/comp-1720-2017/marks/utils.el")
@@ -382,86 +384,69 @@ you should place your code here."
   (setq display-time-format "%H:%M")
   (display-time-mode 1)
 
-  ;; emacs
-  (setq mac-option-modifier 'meta)
-  (setq mac-command-modifier 'super)
+  (add-hook 'text-mode-hook 'turn-on-auto-fill))
 
-  (add-hook 'text-mode-hook 'turn-on-auto-fill)
+;; some Ben functions
 
-  ;; ERC
-  (if (load "~/.dotfiles/secrets/ercpass" t)
-      (progn
-        (erc-services-mode 1)
-        (setq erc-nick "benswift")
-        (setq erc-prompt-for-password nil)
-        (setq erc-prompt-for-nickserv-password nil)
-        (setq erc-autojoin-channels-alist '(("freenode.net" "#extempore")))
-        (setq erc-notify-list '("digego")))
-    (message "Couldn't find the secrets file, you need to pull it down from dropbox."))
+(defun osx-screencapture (filename)
+  (interactive "sfilename: ")
+  (shell-command (format "screencapture -i \"%s.png\"" filename)))
 
-  ;; processing
-  (setq processing-sketchbook-dir "~/Code/processing")
-  (setq processing-location "/usr/local/bin/processing-java")
+;; biott
+(require 'url-util) ; needed for url-unerserved-chars
 
-  (defun osx-screencapture (filename)
-    (interactive "sfilename: ")
-    (shell-command (format "screencapture -i \"%s.png\"" filename)))
+(defun biott-sanitise-post-name (post-name)
+  (apply #'string (reverse (cl-reduce (lambda (processed char)
+                                        (if (member char url-unreserved-chars)
+                                            (cons char processed)
+                                          (if (and processed
+                                                   (= (first processed) ?-))
+                                              processed
+                                            (cons ?- processed))))
+                                      (string-to-list post-name)
+                                      :initial-value '()))))
 
-  ;; biott
-  (require 'url-util) ; needed for url-unerserved-chars
-
-  (defun biott-sanitise-post-name (post-name)
-    (apply #'string (reverse (cl-reduce (lambda (processed char)
-                                          (if (member char url-unreserved-chars)
-                                              (cons char processed)
-                                            (if (and processed
-                                                     (= (first processed) ?-))
-                                                processed
-                                              (cons ?- processed))))
-                                        (string-to-list post-name)
-                                        :initial-value '()))))
-
-  (defun biott-new-post (post-name)
-    (interactive "sPost title: ")
-    (let ((post-url-basename
-           (concat (format-time-string "%Y-%m-%d-")
-                   (downcase (biott-sanitise-post-name post-name)))))
-      (find-file (concat "~/Documents/anu-cs-blog/_posts/"
-                         post-url-basename
-                         ".md"))
-      (insert (format
-               "---
+(defun biott-new-post (post-name)
+  (interactive "sPost title: ")
+  (let ((post-url-basename
+         (concat (format-time-string "%Y-%m-%d-")
+                 (downcase (biott-sanitise-post-name post-name)))))
+    (find-file (concat "~/Documents/anu-cs-blog/_posts/"
+                       post-url-basename
+                       ".md"))
+    (insert (format
+             "---
 title: %s
 tags:
 ---
 "
-               post-name))))
+             post-name))))
 
-  ;; chord charts
-  (defun date-of-next-Sunday ()
-    "return's next Sunday's date, as a string"
-    (let ((next-sun (calendar-gregorian-from-absolute
-                     (+ (calendar-absolute-from-gregorian (calendar-current-date))
-                        (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
-      (format "%04d-%02d-%02d"
-              (nth 2 next-sun)
-              (nth 0 next-sun)
-              (nth 1 next-sun))))
+;; chord charts
+(defun date-of-next-Sunday ()
+  "return's next Sunday's date, as a string"
+  (let ((next-sun (calendar-gregorian-from-absolute
+                   (+ (calendar-absolute-from-gregorian (calendar-current-date))
+                      (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
+    (format "%04d-%02d-%02d"
+            (nth 2 next-sun)
+            (nth 0 next-sun)
+            (nth 1 next-sun))))
 
-  (defun compile-church-chord-chart-pdf (num-songs)
-    (interactive "nNumber of songs: ")
-    (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
-           (chord-charts-dir (concat church-music-dir "chord-charts/"))
-           (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
-           (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
-                               (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
-           (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
-           (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
-      (let ((default-directory church-music-dir))
-        (shell-command (format "pdfjam %s -o %s && open %s"
-                               (mapconcat #'identity charts " ")
-                               output-filename
-                               output-filename))))))
+(defun compile-church-chord-chart-pdf (num-songs)
+  (interactive "nNumber of songs: ")
+  (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
+         (chord-charts-dir (concat church-music-dir "chord-charts/"))
+         (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
+         (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
+                             (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
+         (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
+         (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
+    (let ((default-directory church-music-dir))
+      (shell-command (format "pdfjam %s -o %s && open %s"
+                             (mapconcat #'identity charts " ")
+                             output-filename
+                             output-filename)))))
 
 (defun ben-mu4e-config ()
   "user-config for mu4e"
