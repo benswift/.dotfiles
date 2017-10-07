@@ -45,7 +45,19 @@ values."
      git
      markdown
      mu4e
-     org
+     (org
+      :variables
+      org-directory "~/Dropbox/org"
+      ;; Set to the name of the file where new notes will be stored
+      org-mobile-inbox-for-pull (concat org-directory "/unfiled.org")
+      org-mobile-directory (concat org-directory "/MobileOrg")
+      org-default-notes-file (concat org-directory "/unfiled.org")
+      org-agenda-files (list org-directory)
+      org-refile-targets '((nil :maxlevel . 9)
+                           (org-agenda-files :maxlevel . 9))
+      org-outline-path-complete-in-steps nil         ; Refile in a single go
+      org-refile-use-outline-path t                  ; Show full paths for refiling
+      )
      ;; asciidoc
      (asm
       :variables
@@ -661,20 +673,6 @@ tags:
                       subject
                       body))
       (async-smtpmail-send-it))))
-
-(defun ben-org-config ()
-  ;; Set to the location of your Org files on your local system
-  (setq org-directory "~/Dropbox/org")
-  ;; Set to the name of the file where new notes will be stored
-  (setq org-mobile-inbox-for-pull (concat org-directory "/unfiled.org"))
-  (setq org-mobile-directory (concat org-directory "/MobileOrg"))
-  (setq org-default-notes-file (concat org-directory "/unfiled.org"))
-  (setq org-agenda-files (list org-directory))
-  (setq org-refile-targets '((nil :maxlevel . 9)
-                             (org-agenda-files :maxlevel . 9)))
-  (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
-  (setq org-refile-use-outline-path t)                  ; Show full paths for refiling
-  )
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
