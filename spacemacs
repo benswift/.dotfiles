@@ -53,7 +53,7 @@ values."
      emacs-lisp
      git
      markdown
-     (mu4e :config (ben-mu4e-config))
+     mu4e
      (org
       :variables
       org-directory "~/Dropbox/org"
@@ -384,7 +384,10 @@ you should place your code here."
   (setq display-time-format "%H:%M")
   (display-time-mode 1)
 
-  (add-hook 'text-mode-hook 'turn-on-auto-fill))
+  (add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+  (ben-mu4e-config)
+  )
 
 ;; some Ben functions
 
