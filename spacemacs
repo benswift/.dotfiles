@@ -661,24 +661,3 @@ tags:
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
-(defun dotspacemacs/emacs-custom-settings ()
-  "Emacs custom settings.
-This is an auto-generated function, do not modify its content directly, use
-Emacs customize menu instead.
-This function is called at the very end of Spacemacs initialization."
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (swift-mode org-brain mmm-mode helm-make evil-surround editorconfig evil org-plus-contrib magit git-commit simple-httpd yapfify yaml-mode xterm-color x86-lookup ws-butler wolfram-mode with-editor winum which-key web-mode web-beautify volatile-highlights vi-tilde-fringe vala-snippets vala-mode uuidgen use-package undo-tree toc-org thrift tagedit symon string-inflection stan-mode sql-indent spaceline smeargle slim-mode shell-pop scss-mode scad-mode sayid sass-mode rvm ruby-tools ruby-test-mode ruby-refactor rubocop rspec-mode robe restclient-helm restart-emacs realgud rbenv rake rainbow-delimiters qml-mode pyvenv pytest pyenv-mode py-isort pug-mode processing-mode popwin pkgbuild-mode pip-requirements persp-mode password-generator paradox orgit org-ref org-projectile org-present org-pomodoro org-download org-bullets open-junk-file ob-restclient ob-http neotree nasm-mode multi-term mu4e-maildirs-extension mu4e-alert move-text minitest matlab-mode markdown-toc magit-gitflow macrostep lorem-ipsum logcat livid-mode live-py-mode linum-relative link-hint lice less-css-mode kivy-mode julia-mode json-mode js2-refactor js-doc insert-shebang info+ indent-guide impatient-mode hy-mode hungry-delete hoon-mode hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-mode-manager helm-gitignore helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag goto-chg google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md geiser fuzzy flyspell-correct-helm flycheck-pos-tip flycheck-bashate flx-ido fish-mode fill-column-indicator fancy-battery eyebrowse extempore-mode expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-search-highlight-persist evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eshell-z eshell-prompt-extras esh-help erc-yt erc-view-log erc-terminal-notifier erc-social-graph erc-image erc-hl-nicks emmet-mode elisp-slime-nav ebuild-mode dumb-jump dockerfile-mode disaster define-word cython-mode csv-mode company-web company-tern company-statistics company-shell company-restclient company-c-headers company-auctex company-anaconda column-enforce-mode coffee-mode cmake-mode cmake-ide clojure-snippets clj-refactor clean-aindent-mode clang-format cider-eval-sexp-fu chruby bundler auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile auctex-latexmk arduino-mode aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line ac-ispell)))
- '(safe-local-variable-values (quote ((TeX-command-extra-options . "-shell-escape")))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-)
