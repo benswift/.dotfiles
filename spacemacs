@@ -78,7 +78,7 @@ values."
      ;; csharp
      csv
      emacs-lisp
-     ;; ess
+     ess
      (extempore :location local)
      ;; fsharp
      ;; go
