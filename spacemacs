@@ -88,7 +88,7 @@ values."
      html
      ;; ipython-notebook
      ;; java ;; because eclim is balls
-     javascript
+     (javascript :variables js-indent-level 2)
      latex
      ;; lua
      markdown
