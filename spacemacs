@@ -386,6 +386,9 @@ you should place your code here."
 
   (add-hook 'text-mode-hook 'turn-on-auto-fill)
 
+  ;; indentation
+  (setq standard-indent 2)
+
   (ben-mu4e-config)
   )
 
