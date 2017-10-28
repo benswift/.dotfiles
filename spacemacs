@@ -389,6 +389,9 @@ you should place your code here."
   ;; indentation
   (setq standard-indent 2)
 
+  ;; for python's Wand package
+  (setenv "MAGICK_HOME" "/usr/local/opt/imagemagick@6")
+
   (ben-mu4e-config)
   )
 
