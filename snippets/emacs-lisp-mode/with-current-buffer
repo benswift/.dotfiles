@@ -2,5 +2,5 @@
 # name: with-current-buffer
 # key: wcb
 # --
-(with-current-buffer (get-buffer `(yas-choose-value (-map #'buffer-name (buffer-list)))`)
+(with-current-buffer (get-buffer "`(yas-choose-value (-map #'buffer-name (buffer-list)))`")
   $0)
