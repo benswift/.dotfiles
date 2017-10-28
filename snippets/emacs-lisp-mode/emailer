@@ -3,11 +3,11 @@
 # key: emailer
 # --
 (-each
-    '(${1:("name" "email-address")})
-  (lambda (x)
-    (cl-destructuring-bind (name email) x
-      (ben-send-anu-email email
-                          "${2:subject}"
+    '($1)
+  (lambda (data)
+    (cl-destructuring-bind (${2:bindings}) data
+      (ben-send-anu-email ${3:email}
+                          "${4:subject}"
                           (format "Hi %s
 
 $0
