@@ -30,9 +30,7 @@
 ;;; Code:
 
 (defconst extempore-packages
-  '(extempore-mode
-    company
-    yasnippet))
+  '(extempore-mode))
 
 (defun extempore/init-extempore-mode ()
   "Initialize extempore mode"
