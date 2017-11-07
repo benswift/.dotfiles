@@ -139,12 +139,6 @@
              base-path "setup.xtm" setup-header)
             (dired base-path)))
 
-        (defun extempore-run-integration-test ()
-          (interactive)
-          (let ((default-directory (concat extempore-share-directory "extras/")))
-            (async-shell-command "./integration-test.sh"
-                                 (get-buffer-create "*extempore-integration-test*"))))
-
         ;; used in extempore-mode's print-line-debug snippet
         (defun extempore-yas-println-debug-expander (pl-str format-str)
           (if (not (string= pl-str ""))
