@@ -1,0 +1,8 @@
+{
+  "vim.disableAnnoyingNeovimMessage": true,
+  "workbench.startupEditor": "welcomePage",
+  "editor.fontSize": 14,
+  "editor.fontFamily":"'Source Code Pro', Menlo, Monaco, 'Courier New', monospace",
+  "editor.tabSize": 2,
+  "window.zoomLevel": 2
+}
