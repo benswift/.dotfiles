@@ -14,6 +14,7 @@ unix:
 
 osx: unix
 	ln -sf bash_profile.osx ~/.bash_profile
+	ln -sf vscode-settings.json ~/Library/Application Support/Code/settings.json
 
 linux: unix
 	ln -sf bash_profile.linux ~/.bash_profile
