@@ -1,3 +1,5 @@
+# symlink all the things!
+
 unix:
 	ln -sf mbsyncrc ~/.mbsyncrc
 
