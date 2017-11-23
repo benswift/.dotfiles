@@ -8,6 +8,7 @@ unix:
 	ln -sf mbsyncrc ~/.mbsyncrc
 	ln -sf profiles.clj ~/.lein/
 	ln -sf scripts ~/bin
+	ln -sf spacemacs-layers ~/.emacs.d/private/extempore
 	ln -sf spacemacs ~/.spacemacs
 	ln -sf ssh_config ~/.ssh/config
 
