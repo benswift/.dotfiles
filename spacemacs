@@ -107,7 +107,7 @@ values."
      ;; windows-scripts
      yaml
      (spell-checking
-      :init
+      :config
       (when (executable-find "hunspell")
         (setq ispell-program-name (executable-find "hunspell"))
         (setq ispell-dictionary "en_AU")))
