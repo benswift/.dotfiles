@@ -36,7 +36,6 @@ IMAPAccount anu
 Host outlook.office365.com
 Port 993
 User u2548636@uds.anu.edu.au
-# User ben.swift@anu.edu.au
 PassCmd "cat ~/.mbsync-anu"
 AuthMechs PLAIN
 SSLType IMAPS
