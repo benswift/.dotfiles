@@ -18,11 +18,6 @@ eval "$(rbenv init -)"
 
 # source ~/perl5/perlbrew/etc/bashrc
 
-# go
-
-export GOPATH=/Users/ben/Code/go
-export PATH=$GOPATH/bin:$PATH
-
 # Local Variables:
 # mode: sh
 # End:
