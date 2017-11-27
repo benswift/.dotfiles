@@ -16,8 +16,8 @@ IMAPStore fastmail-remote
 Account fastmail
 
 MaildirStore fastmail-local
-Path ~/Maildir/fastmail/
-Inbox ~/Maildir/fastmail/INBOX
+Path ~/Maildir/
+Inbox ~/Maildir/INBOX
 
 Channel fastmail
 Master :fastmail-remote:

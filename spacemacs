@@ -445,7 +445,7 @@ you should place your code here."
 
   ;; receive
 
-  (setq mu4e-maildir (expand-file-name "~/Maildir/fastmail")
+  (setq mu4e-maildir (expand-file-name "~/Maildir")
         mu4e-sent-folder "/Sent Items"
         mu4e-refile-folder "/Archive"
         mu4e-drafts-folder "/Drafts"
