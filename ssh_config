@@ -1,31 +1,3 @@
-Host simstim
-    HostName mai.anu.edu.au
-    User ben
-
-Host lonyx
-    HostName 192.168.11.129
-    User ben
-
-Host simlonyx
-    ProxyCommand ssh -q simstim nc -q0 %h 22
-    HostName 192.168.11.129
-    User ben
-
-Host flanny     
-    HostName 192.168.11.109
-    User ben
-
-Host simflanny
-    ProxyCommand ssh -q simstim nc -q0 %h 22
-    HostName 192.168.11.109
-    User ben
-
-Host *.hpc
-     IdentityFile ~/.ssh/id_dsa.jabberwocky
-     ForwardX11 yes
-     User ben
-     ProxyCommand ssh -q ben@jabberwocky.anu.edu.au nc %h %p
-
 # Local Variables:
 # mode: conf
 # End:
