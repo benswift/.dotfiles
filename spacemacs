@@ -376,8 +376,7 @@ you should place your code here."
   (require 'helm-bookmark)
 
   ;; comp1720
-  ;; (with-demoted-errors
-  ;;     (load-file "~/Documents/School/Teaching/comp-1720-2017/marks/utils.el"))
+  (load-file "/Users/ben/Documents/teaching/comp1720-2017/marks/utils.el")
 
   ;; dired
   (setq dired-listing-switches "-alh")
