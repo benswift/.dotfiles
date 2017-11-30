@@ -55,6 +55,7 @@ values."
      markdown
      mu4e
      (org
+      :disabled-for ess
       :variables
       org-directory "~/Dropbox/org"
       org-mobile-inbox-for-pull (concat org-directory "/unfiled.org")
