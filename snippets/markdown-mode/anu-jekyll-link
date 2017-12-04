@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: anu-jekyll-link
-# key: link
+# key: ln
 # --
-[$1]({{site.baseurl}}/`(s-replace "\.md" "/" (s-replace "/_" "/" (yas-choose-value (projectile-current-project-files))))`)
+[$1]({{site.baseurl}}{% link `(yas-choose-value (projectile-current-project-files))))` %})
