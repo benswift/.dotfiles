@@ -3,23 +3,43 @@
 # key: letter
 # --
 % -*- TeX-engine: xetex -*-
-\documentclass[brief,12pt]{scrlttr2}
+%
+% based on http://texblog.org/2013/11/11/latexs-alternative-letter-class-newlfm/
+%
+\documentclass[12pt,stdletter,orderfromtodate,sigleft]{newlfm}
+
 \usepackage{Alegreya}
 \usepackage{AlegreyaSans}
 
+\newlfmP{dateskipbefore=50pt}
+\newlfmP{sigsize=50pt}
+\newlfmP{sigskipbefore=50pt}
+
+\newlfmP{Headlinewd=0pt,Footlinewd=0pt}
+
+\namefrom{Dr. Ben Swift}
+\addrfrom{%
+    Research School of Computer Science\\
+    Australian National University\\
+    Canberra, Australia
+}
+
+% \addrto{%
+%     Basil of Baker Street\\
+%     221 Baker Street\\
+%     London, UK
+% }
+
+\dateset{\today}
+
+\greetto{${1:To Whom It May Concern,}}
+
+\closeline{Sincerely,}
+
 \begin{document}
-\begin{letter}
-  {Benjamin Swift\\
-   ben.swift@anu.edu.au\\
-   75 Longstaff St\\
-   Lyneham ACT 2602}
-  
-  \opening{$1}
+\begin{newlfm}
 
   $0
 
-  \closing{Sincerely,\\
-    \vspace{1cm} Ben Swift}
-
-\end{letter}
+\end{newlfm}
 \end{document}
