@@ -397,6 +397,7 @@ you should place your code here."
   (setenv "MAGICK_HOME" "/usr/local/opt/imagemagick@6")
 
   (ben-mu4e-config)
+  (ben-extempore-config)
   )
 
 ;; some Ben functions
@@ -641,6 +642,27 @@ you should place your code here."
                       subject
                       body))
       (async-smtpmail-send-it))))
+
+(defun ben-extempore-config ()
+  "user-config for Extempore"
+
+  ;; device-specific Extempore config
+  (cond
+   ((string= (system-name) "Lonyx")
+    (setq extempore-share-directory "/home/ben/Code/extempore/")
+    (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
+   ((string= (system-name) "WINYX")
+    (setq extempore-program-args nil)
+    (setq extempore-share-directory "c:/Users/ben/Code/extempore/"))
+   ((string= (system-name) "debian-vm")
+    (setq extempore-program-args "--device 1 --frames 1024")
+    (setq extempore-share-directory "/home/ben/Code/extempore/")
+    (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
+   (t ;; probably running on roughy
+    (setq extempore-program-args nil)
+    (setq extempore-share-directory "~/Documents/research/extemporelang/extempore/")
+    (setq user-extempore-lib-directory "~/Documents/research/extemporelang/xtm/")))
+  )
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
