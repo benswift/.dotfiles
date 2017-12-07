@@ -8,7 +8,7 @@ ln -sf $PWD/gitignore ~/.gitignore
 ln -sf $PWD/mbsyncrc ~/.mbsyncrc
 # ln -sf $PWD./profiles.clj ~/.lein/
 ln -sf $PWD/scripts ~/bin
-ln -sf $PWD/spacemacs-layers ~/.emacs.d/private/extempore
+ln -sf $PWD/spacemacs-layers/extempore ~/.emacs.d/private/extempore
 ln -sf $PWD/spacemacs ~/.spacemacs
 ln -sf $PWD/ssh_config ~/.ssh/config
 
