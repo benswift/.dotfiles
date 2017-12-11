@@ -55,89 +55,11 @@
         "eb" 'extempore-send-buffer-or-region
         (setq extempore-tab-completion nil)
 
-        ;; device-specific Extempore config
-        (cond
-         ((string= (system-name) "Lonyx")
-          (setq extempore-share-directory "/home/ben/Code/extempore/")
-          (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
-         ((string= (system-name) "WINYX")
-          (setq extempore-program-args nil)
-          (setq extempore-share-directory "c:/Users/ben/Code/extempore/"))
-         ((string= (system-name) "debian-vm")
-          (setq extempore-program-args "--device 1 --frames 1024")
-          (setq extempore-share-directory "/home/ben/Code/extempore/")
-          (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
-         ((or (string= (system-name) "hodgey.local")
-              (string= (system-name) "hodgey.lan")
-              t) ;; probably running on hodgey
-          (setq extempore-program-args nil)
-          (setq extempore-share-directory "/Users/ben/Code/extempore/")
-          (setq user-extempore-lib-directory "/Users/ben/Code/xtm/lib/")))
-
         (setq eldoc-documentation-function
               'extempore-eldoc-documentation-function)
 
         (set-face-attribute 'extempore-blink-face nil :foreground "#272822" :background "#FD971F")
         (set-face-attribute 'extempore-sb-blink-face nil :foreground "#272822" :background "#39FF14")
-
-        ;; more extempore-related goodies
-
-        (autoload #'llvm-mode (concat extempore-share-directory "extras/llvm-mode.el")
-          "Major mode for editing LLVM IR files" t)
-
-        ;; to pull down the lldb-aware gud.el
-        ;; (async-shell-command (format "curl -o %sextras/gud-lldb.el http://www.opensource.apple.com/source/lldb/lldb-69/utils/emacs/gud.el?txt" extempore-share-directory))
-
-        (autoload #'lldb (concat extempore-share-directory "extras/gud-lldb.el")
-          "A version of gud.el which supports debugging in LLDB." t)
-
-        (add-to-list 'auto-mode-alist '("\\.ir$" . llvm-mode))
-        (add-to-list 'auto-mode-alist '("\\.ll$" . llvm-mode))
-
-        ;; lldb-GUD integration
-
-        (defun ben-lldb-mode-hook ()
-          (if (string-match "^.*-extempore.*\\*$" (buffer-name))
-              (setq extempore-buffer (buffer-name))))
-
-        (add-hook 'lldb-mode-hook 'ben-lldb-mode-hook)
-
-        (defun extempore-create-template-file (base-path filename &optional header)
-          (let ((full-path (format "%s/%s" base-path filename)))
-            (unless (file-exists-p full-path)
-              (progn
-                (find-file full-path)
-                (if header (insert header))
-                (save-buffer)
-                (kill-buffer)))))
-
-        (defun extempore-create-template (name)
-          "Set up the directory structure and files for a new extempore session/gig."
-          (interactive "sSession name: ")
-          (let* ((xtm-dir (expand-file-name "~/Code/xtm/"))
-                 (base-path (concat xtm-dir "sessions/" name))
-                 (setup-header
-                  (concat ";;; setup.xtm --- setup file for " name "\n"
-                          "(sys:load \"" xtm-dir "lib/benlib-scm.xtm\")\n"
-                          "(ipc:load \"utility\" \"" xtm-dir "lib/benlib-scm.xtm\")\n\n"
-                          "dspmt")))
-            (if (file-exists-p base-path)
-                (error "Cannot create xtm session: directory already exists."))
-            (make-directory base-path)
-            ;; practice files
-            (extempore-create-template-file
-             base-path "prac-utility.xtm" "headeru")
-            (extempore-create-template-file
-             base-path "prac-primary.xtm" "headerp")
-            ;; gig files
-            (extempore-create-template-file
-             base-path "gig-utility.xtm" "headeru")
-            (extempore-create-template-file
-             base-path "gig-primary.xtm" "headerp")
-            ;; setup file
-            (extempore-create-template-file
-             base-path "setup.xtm" setup-header)
-            (dired base-path)))
 
         ;; used in extempore-mode's print-line-debug snippet
         (defun extempore-yas-println-debug-expander (pl-str format-str)
@@ -195,9 +117,6 @@
                           (async-shell-command (format "extempore --port=17199 --eval \"(impc:aot:compile-xtm-file \\\"%s\\\" #t #t)\"" x)))))
                     :require-match 'confirm-after-completion
                     :keymap counsel-find-file-map))
-
-        (autoload 'extempore-debovinate-file "~/.dotfiles/extempore-debovinator.el" "debovinate all the things!" :interactive)
-
         ))))
 
 ;;; packages.el ends here
