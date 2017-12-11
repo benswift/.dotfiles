@@ -13,7 +13,7 @@ ln -sf $PWD/spacemacs ~/.spacemacs
 ln -sf $PWD/ssh_config ~/.ssh/config
 
 case "$OSTYPE" in
-    darwin*) ln -sf $PWD/bash_profile.osx ~/.bash_profile && ln -sf $PWD/vscode-settings.json ~/Library/Application\ Support/Code/settings.json ;;
+    darwin*) ln -sf $PWD/bash_profile.osx ~/.bash_profile && ln -sf $PWD/vscode-settings.json ~/Library/Application\ Support/Code/User/settings.json ;;
     linux*)  ln -sf $PWD/bash_profile.linux ~/.bash_profile ;;
     *)       echo "unknown OS: $OSTYPE" ;;
 esac
