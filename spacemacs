@@ -662,7 +662,39 @@ you should place your code here."
     (setq extempore-program-args nil)
     (setq extempore-share-directory "~/Documents/research/extemporelang/extempore/")
     (setq user-extempore-lib-directory "~/Documents/research/extemporelang/xtm/")))
+
+  (defun extempore-create-template-file (base-path filename &optional header)
+    (let ((full-path (format "%s/%s" base-path filename)))
+      (unless (file-exists-p full-path)
+        (progn
+          (find-file full-path)
+          (if header (insert header))
+          (save-buffer)
+          (kill-buffer)))))
+
+  (defun extempore-create-template (name)
+    "Set up the directory structure and files for a new extempore session/gig."
+    (interactive "sSession name: ")
+    (let* ((xtm-dir (expand-file-name "~/Documents/research/extemporelang/xtm/"))
+           (base-path (concat xtm-dir "sessions/" name))
+           (setup-header
+            (format ";;; setup.xtm --- setup file for %s
+
+(sys:load \"%slib/benlib-scm.xtm\")
+
+dspmt" name xtm-dir)))
+      (if (file-exists-p base-path)
+          (error "Cannot create xtm session: directory already exists."))
+      (make-directory base-path)
+      (extempore-create-template-file
+       base-path "practise.xtm" "headerp")
+      (extempore-create-template-file
+       base-path "gig.xtm" "headerp")
+      (extempore-create-template-file
+       base-path "setup.xtm" setup-header)
+      (dired base-path)))
   )
+
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
