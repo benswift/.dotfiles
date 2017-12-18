@@ -1,8 +1,10 @@
 {
-  "vim.disableAnnoyingNeovimMessage": true,
-  "workbench.startupEditor": "welcomePage",
+  "workbench.startupEditor": "newUntitledFile",
   "editor.fontSize": 14,
   "editor.fontFamily":"'Operator Mono', 'Source Code Pro', Menlo, Monaco, 'Courier New', monospace",
   "editor.tabSize": 2,
-  "window.zoomLevel": 2
+  "window.zoomLevel": 1.5,
+  "git.confirmSync": false,
+  "explorer.confirmDelete": false,
+  "extempore.sharedir": "/Users/ben/extempore"
 }
