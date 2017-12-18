@@ -402,6 +402,14 @@ you should place your code here."
 
 ;; some Ben functions
 
+(require 'url)
+
+(defun devdocs-lookup (language name)
+  (interactive "slanguage: \nsname: ")
+  (shell-command
+   (format "open devdocs://search/%s"
+           (url-hexify-string (concat language " " name)))))
+
 (defun osx-screencapture (filename)
   (interactive "sfilename: ")
   (shell-command (format "screencapture -i \"%s.png\"" filename)))
