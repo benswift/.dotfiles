@@ -444,6 +444,8 @@ you should place your code here."
 (defun ben-mu4e-config ()
   "user-config for mu4e"
 
+  (message "setting up mu4e...")
+
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
 
