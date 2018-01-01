@@ -3,7 +3,7 @@
   "editor.fontSize": 14,
   "editor.fontFamily":"'Operator Mono', 'Source Code Pro', Menlo, Monaco, 'Courier New', monospace",
   "editor.tabSize": 2,
-  "window.zoomLevel": 1.5,
+  "window.zoomLevel": 1,
   "git.confirmSync": false,
   "explorer.confirmDelete": false,
   "extempore.sharedir": "/Users/ben/extempore"
