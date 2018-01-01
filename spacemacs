@@ -380,7 +380,7 @@ you should place your code here."
   (load-file "/Users/ben/Documents/teaching/tools/scripts/anu-cs-utils.el")
 
   ;; comp1720
-  (load-file "/Users/ben/Documents/teaching/comp1720-2017/marks/utils.el")
+  (load-file "/Users/ben/Documents/teaching/archive/comp1720-2017/marks/utils.el")
 
   ;; dired
   (setq dired-listing-switches "-alh")
