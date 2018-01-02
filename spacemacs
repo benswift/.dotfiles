@@ -54,20 +54,7 @@ values."
      git
      markdown
      mu4e
-     (org
-      :disabled-for ess
-      :variables
-      org-directory "~/Dropbox/org"
-      org-mobile-inbox-for-pull (concat org-directory "/unfiled.org")
-      org-mobile-directory (concat org-directory "/MobileOrg")
-      org-default-notes-file (concat org-directory "/unfiled.org")
-      org-agenda-files (list org-directory)
-      org-refile-targets '((nil :maxlevel . 9) (org-agenda-files :maxlevel . 9))
-      org-outline-path-complete-in-steps nil         ; Refile in a single go
-      org-refile-use-outline-path t                  ; Show full paths for refiling
-      :config
-      (add-to-list 'org-agenda-files "~/Documents/School/Teaching/IoTatBIT-2017/notes.org" 'append)
-      )
+     (org :disabled-for ess)
      ;; asciidoc
      (asm
       :variables
@@ -399,6 +386,7 @@ you should place your code here."
 
   (ben-mu4e-config)
   (ben-extempore-config)
+  (ben-org-config)
   )
 
 ;; some Ben functions
@@ -703,9 +691,22 @@ dspmt" name xtm-dir)))
        base-path "gig.xtm" "headerp")
       (extempore-create-template-file
        base-path "setup.xtm" setup-header)
-      (dired base-path)))
-  )
+      (dired base-path))))
 
+(defun ben-org-config ()
+  "user-config for org-mode"
+
+  (setq org-directory (expand-file-name "~/Dropbox/org")
+        org-mobile-inbox-for-pull (concat org-directory "/unfiled.org")
+        org-mobile-directory (concat org-directory "/MobileOrg")
+        org-default-notes-file (concat org-directory "/unfiled.org")
+        org-agenda-files (list org-directory)
+        org-refile-targets '((nil :maxlevel . 9) (org-agenda-files :maxlevel . 9))
+        org-outline-path-complete-in-steps nil         ; Refile in a single go
+        org-refile-use-outline-path t)                 ; Show full paths for refiling
+
+  ;; stuff I'm using at the moment
+  (add-to-list 'org-agenda-files "~/Documents/School/Teaching/IoTatBIT-2017/notes.org" 'append))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
