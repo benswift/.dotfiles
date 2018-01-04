@@ -706,7 +706,7 @@ dspmt" name xtm-dir)))
         org-refile-use-outline-path t)                 ; Show full paths for refiling
 
   ;; stuff I'm using at the moment
-  (add-to-list 'org-agenda-files "~/Documents/School/Teaching/IoTatBIT-2017/notes.org" 'append))
+  (add-to-list 'org-agenda-files "/Users/ben/Documents/teaching/comp2710-china-study-tour/admin/notes.org" 'append))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
