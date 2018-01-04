@@ -81,7 +81,7 @@ values."
      ;; lua
      markdown
      ;; php
-     (parinfer :init (add-hook 'extempore-mode-hook #'parinfer-mode))
+     ;; (parinfer :init (add-hook 'extempore-mode-hook #'parinfer-mode))
      python
      ;; racket
      restclient
