@@ -381,6 +381,9 @@ you should place your code here."
   ;; indentation
   (setq standard-indent 2)
 
+  ;; warnings to suppress
+  (add-to-list 'warning-suppress-types '(yasnippet backquote-change))
+
   ;; for python's Wand package
   (setenv "MAGICK_HOME" "/usr/local/opt/imagemagick@6")
 
