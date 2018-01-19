@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: mplay
+# key: mplay
+# --
+(mplay ${1:*midi-out*} ${2:60} ${3:80} ${4:dur} ${5:chan})
