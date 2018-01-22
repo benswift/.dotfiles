@@ -36,7 +36,6 @@ secrets/
 *.aux
 *.rel
 *.log
-*.pdf
 *.bbl
 *.blg
 *.bcf
