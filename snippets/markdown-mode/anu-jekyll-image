@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: anu-jekyll-image
-# key: image
+# key: asset
 # --
-![$1]({{site.baseurl}}/`(yas-choose-value (projectile-current-project-files))`){:.center}
+{% ${1:img} `(yas-choose-value (anu-jekyll-asset-filenames))` alt:'$2' %}
