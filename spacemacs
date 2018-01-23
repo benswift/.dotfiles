@@ -63,6 +63,7 @@ values."
      bibtex
      c-c++
      clojure
+     cmake
      ;; csharp
      csv
      emacs-lisp
