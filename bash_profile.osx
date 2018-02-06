@@ -18,10 +18,6 @@ eval "$(rbenv init -)"
 
 # source ~/perl5/perlbrew/etc/bashrc
 
-# for macOS high sierra, need to do this
-
-ssh-add -K ~/.ssh/id_rsa
-
 # Local Variables:
 # mode: sh
 # End:
