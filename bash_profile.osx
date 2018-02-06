@@ -14,10 +14,6 @@ export WORKON_HOME=/usr/local/var/pyenv/versions
 export RBENV_ROOT=/usr/local/var/rbenv
 eval "$(rbenv init -)"
 
-# # perl
-
-# source ~/perl5/perlbrew/etc/bashrc
-
 # Local Variables:
 # mode: sh
 # End:
