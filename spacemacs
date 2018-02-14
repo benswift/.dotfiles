@@ -406,6 +406,18 @@ you should place your code here."
   (interactive "sfilename: ")
   (shell-command (format "screencapture -i \"%s.png\"" filename)))
 
+(defun osx-screencapture-fullscreen (filename)
+  (interactive "sfilename: ")
+  (shell-command (format "screencapture -m \"%s.png\"" filename)))
+
+(defun move-from-downloads (filename)
+  (interactive
+   (completing-read "filename: "
+                    (directory-files (expand-file-name "~/Downloads") :full)
+                    nil
+                    :require-match))
+  (rename-file filename (file-name-nondirectory filename)))
+
 ;; chord charts
 (defun date-of-next-Sunday ()
   "return's next Sunday's date, as a string"
