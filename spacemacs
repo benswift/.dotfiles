@@ -445,6 +445,24 @@ you should place your code here."
                              output-filename
                              output-filename)))))
 
+(require 'csv)
+
+(defun read-csv (filename headerp)
+  (with-temp-buffer
+    (insert-file-contents filename)
+    (csv-parse-buffer headerp)))
+
+(defun slurp (f)
+  (with-temp-buffer
+    (insert-file-contents f)
+    (buffer-substring-no-properties
+     (point-min)
+     (point-max))))
+
+(defun current-filename ()
+  "Copy the full path of the current buffer."
+  (buffer-file-name (window-buffer (minibuffer-selected-window))))
+
 ;; Jekyll helpers
 
 (defun anu-jekyll-asset-filenames ()
