@@ -445,6 +445,52 @@ you should place your code here."
                              output-filename
                              output-filename)))))
 
+;; Jekyll helpers
+
+(defun anu-jekyll-asset-filenames ()
+  (->> (projectile-current-project-files)
+       (--filter (s-starts-with? "assets/" it))
+       (--remove (s-starts-with? "assets/js/" it))
+       (--map (s-chop-prefix "assets/" it))))
+
+(defun kramdown-slugified-headers ()
+  "try to guess what the kramdown-generated ids for the different headings will because
+
+This is taken from the regexps in basic_generate_id() available at:
+
+https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98908/lib/kramdown/converter/base.rb#L232"
+
+  (--map
+   (->> it
+        (s-downcase)
+        (s-replace " " "-")
+        (s-replace-regexp "[^a-z0-9-]" ""))
+   (progn
+     (imenu--make-index-alist :noerror)
+     imenu--index-alist)))
+
+(defun kramdown-list-anchors (filename)
+  "return a list of the (explicit) ids from a kramdown md file"
+  (let* ((md-text (slurp filename))
+         (matches (s-match-strings-all "{#\\([^}]*\\)}" md-text)))
+    (--map (nth 1 it) matches)))
+
+(defun anu-jekyll-link-with-anchor (filename)
+  (interactive
+   (list (completing-read "file: "
+                          (--remove (s-starts-with? "assets/" it)
+                                    (projectile-current-project-files))
+                          nil
+                          :require-match)))
+  (format "{%% link %s %%}#%s"
+          filename
+          (completing-read "anchor: "
+                           (kramdown-list-anchors (concat (projectile-project-root) filename))
+                           nil
+                           :require-match)))
+
+;; mu4e, obviously
+
 (defun ben-mu4e-config ()
   "user-config for mu4e"
 
