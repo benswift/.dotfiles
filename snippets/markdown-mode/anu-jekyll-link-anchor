@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: anu-jekyll-link-anchor
+# key: lna
+# --
+[$0]({{site.baseurl}}`(call-interactively #'anu-jekyll-link-with-anchor)`)

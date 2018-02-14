@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: liquid-include
+# key: inc
+# --
+{% include $0 %}

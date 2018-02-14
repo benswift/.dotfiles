@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: javascript-fragment
-# key: js
-# --
-``` {.javascript .fragment}
-$0
-```

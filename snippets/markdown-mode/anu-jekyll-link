@@ -2,4 +2,4 @@
 # name: anu-jekyll-link
 # key: ln
 # --
-[$1]({{site.baseurl}}{% link `(yas-choose-value (projectile-current-project-files))))` %})
+[$0]({{site.baseurl}}{% link `(yas-choose-value (--remove (s-starts-with? "assets/" it) (projectile-current-project-files)))))` %})

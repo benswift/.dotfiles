@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: data-background-image
-# key: dbi
-# --
-{data-background-image="`(yas-choose-value (projectile-current-project-files))`" .text-hl}
