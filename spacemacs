@@ -412,10 +412,11 @@ you should place your code here."
 
 (defun move-from-downloads (filename)
   (interactive
-   (completing-read "filename: "
-                    (directory-files (expand-file-name "~/Downloads") :full)
-                    nil
-                    :require-match))
+   (list
+    (completing-read "filename: "
+                     (directory-files (expand-file-name "~/Downloads") :full)
+                     nil
+                     :require-match)))
   (rename-file filename (file-name-nondirectory filename)))
 
 ;; chord charts
