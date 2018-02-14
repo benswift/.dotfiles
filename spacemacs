@@ -366,9 +366,6 @@ you should place your code here."
   ;; ANU CS utils
   (load-file "/Users/ben/Documents/teaching/tools/scripts/anu-cs-utils.el")
 
-  ;; comp1720
-  (load-file "/Users/ben/Documents/teaching/archive/comp1720-2017/marks/utils.el")
-
   ;; dired
   (setq dired-listing-switches "-alh")
 
