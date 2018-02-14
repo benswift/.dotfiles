@@ -52,7 +52,7 @@ values."
       auto-completion-private-snippets-directory "~/.dotfiles/snippets/")
      emacs-lisp
      git
-     markdown
+     (markdown :variables markdown-asymmetric-header t)
      mu4e
      (org :disabled-for ess)
      ;; asciidoc
@@ -80,7 +80,6 @@ values."
      (javascript :variables js-indent-level 2)
      latex
      ;; lua
-     markdown
      ;; php
      ;; (parinfer :init (add-hook 'extempore-mode-hook #'parinfer-mode))
      python
