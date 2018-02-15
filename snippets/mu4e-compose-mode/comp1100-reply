@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: comp1100-reply
-# key: comp1100
-# --
-Thanks for the detailed feedback, ${1:`(ben-find-to-firstname)`}. Much appreciated.
-
-Cheers,
-Ben

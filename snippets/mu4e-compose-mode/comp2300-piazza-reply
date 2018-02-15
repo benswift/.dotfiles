@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: comp2300-piazza-reply
+# key: piazza
+# --
+Hi ${1:`(ben-find-to-firstname)`}
+
+I'm sure you're not the only person having trouble with this stuff, so I'd
+suggest that you post the question on Piazza
+(https://piazza.com/class/jcl9myd7deu17x) so that you can draw on the combined
+knowledge of everyone in the course, not just me.
+
+Cheers,
+Ben
