@@ -491,7 +491,7 @@ https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98
 (defun anu-jekyll-link-with-anchor (filename)
   (interactive
    (list (completing-read "file: "
-                          (--remove (s-starts-with? "assets/" it)
+                          (--filter (s-ends-with? ".md" it)
                                     (projectile-current-project-files))
                           nil
                           :require-match)))
