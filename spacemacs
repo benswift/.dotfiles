@@ -466,18 +466,19 @@ you should place your code here."
        (--remove (s-starts-with? "assets/js/" it))
        (--map (s-chop-prefix "assets/" it))))
 
-(defun kramdown-slugified-headers ()
-  "try to guess what the kramdown-generated ids for the different headings will because
-
-This is taken from the regexps in basic_generate_id() available at:
+(defun kramdown-slugify (text)
+  "slugify text (as kramdown would) based on the regexps in
+  basic_generate_id() available at:
 
 https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98908/lib/kramdown/converter/base.rb#L232"
+  (->> text
+       (s-downcase)
+       (s-replace " " "-")
+       (s-replace-regexp "[^a-z0-9-]" "")))
 
-  (--map
-   (->> it
-        (s-downcase)
-        (s-replace " " "-")
-        (s-replace-regexp "[^a-z0-9-]" ""))
+(defun kramdown-slugified-headers ()
+  (-map
+   #'kramdown-slugify
    (progn
      (imenu--make-index-alist :noerror)
      imenu--index-alist)))
