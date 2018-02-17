@@ -2,5 +2,5 @@
 # name: background-image-slide
 # key: bg
 # --
-{:data-background-image="{{site.baseurl}}/assets/`(yas-choose-value (anu-jekyll-asset-filenames))`" data-background-size="${1:contain}" .text-hl}
+{:data-background-image="{{site.baseurl}}/assets/`(yas-choose-value (anu-jekyll-asset-filenames))`" data-background-size="${1:`(yas-choose-value '("cover" "contain"))`}" .overlay-text}
 ## $0
