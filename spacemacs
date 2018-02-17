@@ -503,6 +503,17 @@ https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98
                            nil
                            :require-match)))
 
+(defun kramdown-id-for-current-line ()
+  (interactive)
+  (->> (buffer-substring-no-properties
+        (line-beginning-position)
+        (line-end-position))
+       (replace-regexp-in-string "#+" "")
+       (s-collapse-whitespace)
+       (s-trim)
+       (kramdown-slugify)
+       (format "{#%s}")))
+
 ;; mu4e, obviously
 
 (defun ben-mu4e-config ()
