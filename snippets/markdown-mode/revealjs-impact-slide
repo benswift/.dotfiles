@@ -2,6 +2,6 @@
 # name: revealjs-impact-slide
 # key: impact
 # --
-## {.center .impact}
+{% include slides/impact.html %}
 
 $0
