@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: theme-slide
+# key: theme
+# --
+{:data-background-image="{{site.baseurl}}/assets/lectures/all/`(call-interactively #'comp2300-theme-slide-picture)`" data-background-size="cover" .overlay-text}
+## $0
