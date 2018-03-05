@@ -514,6 +514,15 @@ https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98
        (kramdown-slugify)
        (format "{#%s}")))
 
+(defun mogrify-files-recursively (dir max-width)
+  (interactive
+   (list (read-directory-name "directory: ")
+         (read-number "max-width: " 1920)))
+  (-each
+      (directory-files-recursively dir "\.\\(jpg\\|jpeg\\|png\\)$")
+    (lambda (fname)
+      (shell-command (format "mogrify -resize \"%d\" %s" max-width fname)))))
+
 ;; mu4e, obviously
 
 (defun ben-mu4e-config ()
