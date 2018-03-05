@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: stretch
+# key: str
+# --
+{:.stretch}
