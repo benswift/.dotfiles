@@ -489,6 +489,12 @@ https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98
          (matches (s-match-strings-all "{#\\([^}]*\\)}" md-text)))
     (--map (nth 1 it) matches)))
 
+(defun yaml-list-top-level-keys (filename)
+  "return a list of the top-level keys in a yaml file"
+  (let* ((yaml-text (slurp filename))
+         (matches (s-match-strings-all "^\\([a-zA-Z0-9_-]+\\):" yaml-text)))
+    (--map (nth 1 it) matches)))
+
 (defun anu-jekyll-link-with-anchor (filename)
   (interactive
    (list (completing-read "file: "
