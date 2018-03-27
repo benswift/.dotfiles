@@ -520,6 +520,12 @@ https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98
        (kramdown-slugify)
        (format "{#%s}")))
 
+(defun mogrify-file (filename max-width)
+  (interactive
+   (list (read-file-name "file: ")
+         (read-number "max-width: " 1920)))
+  (shell-command (format "mogrify -resize \"%d\" %s" max-width filename)))
+
 (defun mogrify-files-recursively (dir max-width)
   (interactive
    (list (read-directory-name "directory: ")
