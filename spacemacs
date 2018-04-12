@@ -509,6 +509,29 @@ https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98
                            nil
                            :require-match)))
 
+(defun comp2300-jekyll-kill-link (filename)
+  "this has some filthy comp2300-specific hacks
+
+it also doesn't respect jekyll permalinks, so always inspect the
+link before you post it"
+  (interactive
+   ;; sadly, projectile uses lexical binding, so this doesn't work :(
+   (let ((default-directory "/Users/ben/Documents/teaching/comp2300-2018/website/"))
+     (list (completing-read "file: "
+                            (--filter (s-ends-with? ".md" it)
+                                      (projectile-current-project-files))
+                            nil
+                            :require-match))))
+  ;; this really shouldn't just assume we're in the COMP2300 website, but
+  ;; hardcoding it will do for now...
+  (kill-new
+   (format "https://cs.anu.edu.au/courses/comp2300/%s#%s"
+           (s-replace-regexp "\.md$" "/" filename)
+           (completing-read "anchor: "
+                            (kramdown-list-anchors (concat (projectile-project-root) filename))
+                            nil
+                            :require-match))))
+
 (defun kramdown-id-for-current-line ()
   (interactive)
   (->> (buffer-substring-no-properties
