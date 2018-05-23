@@ -2,6 +2,6 @@
 # name: minted
 # key: minted
 # --
-\begin{minted}{${2:language}}
+\begin{minted}{${2:asm}}
 $0
 \end{minted}
