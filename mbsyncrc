@@ -45,6 +45,7 @@ IMAPStore anu-remote
 Account anu
 
 MaildirStore anu-local
+SubFolders Verbatim
 Path ~/Maildir/anu/
 Inbox ~/Maildir/anu/INBOX
 
