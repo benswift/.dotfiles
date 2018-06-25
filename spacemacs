@@ -382,9 +382,6 @@ you should place your code here."
   ;; warnings to suppress
   (add-to-list 'warning-suppress-types '(yasnippet backquote-change))
 
-  ;; for python's Wand package
-  (setenv "MAGICK_HOME" "/usr/local/opt/imagemagick@6")
-
   (ben-mu4e-config)
   (ben-extempore-config)
   (ben-org-config)
