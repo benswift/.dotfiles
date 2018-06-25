@@ -820,8 +820,6 @@ dspmt" name xtm-dir)))
   "user-config for org-mode"
 
   (setq org-directory (expand-file-name "~/Dropbox/org")
-        org-mobile-inbox-for-pull (concat org-directory "/unfiled.org")
-        org-mobile-directory (concat org-directory "/MobileOrg")
         org-default-notes-file (concat org-directory "/unfiled.org")
         org-agenda-files (list org-directory)
         org-refile-targets '((nil :maxlevel . 9) (org-agenda-files :maxlevel . 9))
