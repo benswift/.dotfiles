@@ -69,6 +69,7 @@ values."
      emacs-lisp
      ess
      (extempore :location local)
+	 finance
      ;; fsharp
      ;; go
      ;; graphviz
