@@ -453,10 +453,6 @@ you should place your code here."
      (point-min)
      (point-max))))
 
-(defun current-filename ()
-  "Copy the full path of the current buffer."
-  (buffer-file-name (window-buffer (minibuffer-selected-window))))
-
 ;; Jekyll helpers
 
 (defun anu-jekyll-asset-filenames ()
