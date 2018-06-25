@@ -695,9 +695,6 @@ link before you post it"
           ("mu-discuss@googlegroups.com" . "mu-discuss")
           ("nanomsg@freelists.org" . "nanomsg")))
 
-  (add-to-list 'mu4e-view-actions
-               '("bView in browser" . mu4e-action-view-in-browser) t)
-
   ;; send
 
   (require 'smtpmail-async)
