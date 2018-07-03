@@ -1,0 +1,24 @@
+# -*- mode: snippet -*-
+# name: org-table-emailer
+# key: emailer
+# --
+#+NAME: $1-email
+#+BEGIN_EXAMPLE
+Hi %s
+
+
+
+Cheers,
+Ben
+#+END_EXAMPLE
+#+NAME: ${1:name}-table
+||
+#+BEGIN_SRC emacs-lisp :var table=$1-table text=$1-email
+  (-each
+	  table
+	(lambda (row)
+	  (cl-destructuring-bind (${2:columns}) row
+		(ben-send-anu-email (concat uid "@anu.edu.au")
+							"${3:subject}"
+							(format text$0)))))
+#+END_SRC
