@@ -2,5 +2,6 @@
 # name: theme-slide
 # key: theme
 # --
-{:data-background-image="{{site.baseurl}}/assets/lectures/all/`(call-interactively #'comp2300-theme-slide-picture)`" data-background-size="cover" .overlay-text}
-## $0
+{% include slides/theme.html slide="${1:$$(yas-choose-value '("big-picture" "feeling-list" "live-demo" "quiz" "quirks-of-history" "questions" "further-reading"))}" heading="$2" %}
+
+$0
