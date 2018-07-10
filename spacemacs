@@ -457,9 +457,9 @@ you should place your code here."
 
 (defun anu-jekyll-asset-filenames ()
   (->> (projectile-current-project-files)
-       (--filter (s-starts-with? "assets/" it))
-       (--remove (s-starts-with? "assets/js/" it))
-       (--map (s-chop-prefix "assets/" it))))
+       (--filter (s-starts-with? "_assets/" it))
+       (--remove (s-starts-with? "_assets/js/" it))
+       (--map (s-chop-prefix "_assets/" it))))
 
 (defun kramdown-slugify (text)
   "slugify text (as kramdown would) based on the regexps in
