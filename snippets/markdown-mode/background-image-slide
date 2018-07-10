@@ -2,5 +2,6 @@
 # name: background-image-slide
 # key: bg
 # --
-{:data-background-image="{{site.baseurl}}/assets/`(yas-choose-value (anu-jekyll-asset-filenames))`" data-background-size="${1:`(yas-choose-value '("cover" "contain"))`}" .overlay-text}
-## $0
+{% include slides/background-image.html image="`(yas-choose-value (anu-jekyll-asset-filenames))`" title="$1" %}
+
+$0
