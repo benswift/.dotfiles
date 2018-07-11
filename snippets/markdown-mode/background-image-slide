@@ -2,6 +2,6 @@
 # name: background-image-slide
 # key: bg
 # --
-{% include slides/background-image.html image="`(yas-choose-value (anu-jekyll-asset-filenames))`" title="$1" %}
+{% include slides/background-image.html image="`(yas-choose-value (anu-jekyll-asset-filenames))`" heading="$1" %}
 
 $0
