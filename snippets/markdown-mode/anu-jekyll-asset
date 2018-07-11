@@ -2,4 +2,4 @@
 # name: anu-jekyll-image
 # key: asset
 # --
-{% asset `(yas-choose-value (anu-jekyll-asset-filenames))` alt='$1' %}
+{% asset `(yas-choose-value (anu-jekyll-asset-filenames))` alt="$1" %}
