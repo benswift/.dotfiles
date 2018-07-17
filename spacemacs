@@ -365,7 +365,7 @@ you should place your code here."
   (require 'helm-bookmark)
 
   ;; ANU CS utils
-  (load-file "/Users/ben/Documents/teaching/tools/scripts/anu-cs-utils.el")
+  (load-file "~/Documents/teaching/comp1720-2018/admin/anu-cs-utils.el")
 
   ;; dired
   (setq dired-listing-switches "-alh")
