@@ -470,7 +470,7 @@ you should place your code here."
          (format "%-%.md"
 				 (format-time-string "%Y-%m-%d")
                  (downcase (jekyll-sanitise-post-name post-name)))))
-    (find-file (f-join (projectile-project-root) post-url-basename))
+    (find-file (f-join (projectile-project-root) "_posts" post-url-basename))
     (insert (format
              "---
 title: %s
