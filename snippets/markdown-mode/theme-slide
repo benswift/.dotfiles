@@ -2,6 +2,4 @@
 # name: theme-slide
 # key: theme
 # --
-{% include slides/theme.html slide="${1:$$(yas-choose-value '("big-picture" "feeling-list" "live-demo" "quiz" "quirks-of-history" "questions" "further-reading" "praxis" "story" "theory" "denouement"))}" heading="$2" %}
-
-$0
+{% include slides/theme.html slide="${1:$$(yas-choose-value '("big-picture" "feeling-list" "live-demo" "quiz" "quirks-of-history" "questions" "further-reading" "praxis" "story" "theory" "denouement"))}" heading="${2:$$(yas-field-value 1)}" %}
