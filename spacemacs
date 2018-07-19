@@ -65,7 +65,6 @@ values."
      clojure
      cmake
      ;; csharp
-     csv
      emacs-lisp
      ess
      (extempore :location local)
