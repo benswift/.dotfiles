@@ -365,7 +365,9 @@ you should place your code here."
   (require 'helm-bookmark)
 
   ;; ANU CS utils
-  (load-file "~/Documents/teaching/comp1720-2018/admin/anu-cs-utils.el")
+  (defconst anu-cs-jekyll-website-directory  (expand-file-name "~/Documents/teaching/comp1720-2018/website"))
+  (defconst anu-cs-lucy-directory  (expand-file-name "~/Documents/teaching/comp1720-2018/lucy"))
+  (load-file (expand-file-name "~/Documents/teaching/comp1720-2018/admin/anu-cs-utils.el"))
 
   ;; dired
   (setq dired-listing-switches "-alh")
