@@ -441,12 +441,6 @@ you should place your code here."
                              output-filename
                              output-filename)))))
 
-(defun read-csv (filename headerp)
-  (require 'csv)
-  (with-temp-buffer
-    (insert-file-contents filename)
-    (csv-parse-buffer headerp)))
-
 (defun slurp (f)
   (with-temp-buffer
     (insert-file-contents f)
