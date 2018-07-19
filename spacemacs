@@ -448,6 +448,39 @@ you should place your code here."
      (point-min)
      (point-max))))
 
+;; jekyll helpers
+
+(require 'f)        ; file utils
+(require 'url-util) ; needed for url-unerserved-chars
+
+(defun jekyll-sanitise-post-name (post-name)
+  (apply #'string (reverse (cl-reduce (lambda (processed char)
+                                        (if (member char url-unreserved-chars)
+                                            (cons char processed)
+                                          (if (and processed
+                                                   (= (first processed) ?-))
+                                              processed
+                                            (cons ?- processed))))
+                                      (string-to-list post-name)
+                                      :initial-value '()))))
+
+(defun jekyll-new-post (post-name)
+  (interactive "sPost title: ")
+  (let ((post-url-basename
+         (format "%-%.md"
+				 (format-time-string "%Y-%m-%d")
+                 (downcase (jekyll-sanitise-post-name post-name)))))
+    (find-file (f-join (projectile-project-root) post-url-basename))
+    (insert (format
+             "---
+title: %s
+date: \"%s\"
+tags:
+---
+"
+             post-name
+			 (format-time-string "%F %T %z")))))
+
 ;; mu4e, obviously
 
 (defun ben-mu4e-config ()
