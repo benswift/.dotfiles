@@ -1,3 +1,7 @@
+Host varese.anu.edu.au
+  User comp1720
+  IdentityFile ~/.ssh/comp1720
+
 Host *
  AddKeysToAgent yes
  UseKeychain yes
