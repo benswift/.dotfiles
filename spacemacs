@@ -388,6 +388,7 @@ you should place your code here."
   (ben-mu4e-config)
   (ben-extempore-config)
   (ben-org-config)
+  (ben-misc-utils)
   )
 
 ;; some Ben functions
