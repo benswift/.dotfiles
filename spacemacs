@@ -67,7 +67,7 @@ values."
      ;; csharp
 	 csv
      emacs-lisp
-     (ess :variables ess-smart-S-assign nil)
+     (ess :variables ess-smart-S-assign-key nil)
      (extempore :location local)
 	 finance
      ;; fsharp
