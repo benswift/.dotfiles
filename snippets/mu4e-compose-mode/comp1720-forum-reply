@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: comp1720-forum-reply
+# key: forum
+# --
+It's a good question; can I ask you to ask it on the forum? That way everyone benefits :)
+
+Perhaps in the "${1:$$(yas-choose-value '("Visual Diary" "Assignments" "Discourse help" "Labs" "Software" "Admin" "Artist talks" "Major project" "Lectures"))}" subcategory?
+
+https://discourse.cecs.anu.edu.au/c/comp1720/${2:$$(kramdown-slugify (yas-field-value 1))}
