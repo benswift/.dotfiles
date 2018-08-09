@@ -91,7 +91,7 @@ values."
      scheme
      (shell :variables shell-default-shell 'shell)
      shell-scripts
-     sql
+     ;; sql
      ;; swift
      typescript
      ;; windows-scripts
