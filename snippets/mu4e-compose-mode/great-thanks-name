@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
 # name: great-thanks-name
-# key: thanks
+# key: gt
 # --
 Great, thanks ${1:`(ben-find-to-firstname)`}.$0
 
