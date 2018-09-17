@@ -1,0 +1,6 @@
+{
+ :aliases
+ {:nrepl
+  {:extra-deps {cider/cider-nrepl {:mvn/version "0.18.0"}}}
+  }
+}
