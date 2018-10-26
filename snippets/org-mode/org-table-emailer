@@ -20,5 +20,6 @@ Ben
 	  (cl-destructuring-bind (${2:columns}) row
 		(ben-send-anu-email (concat uid "@anu.edu.au")
 							"${3:subject}"
-							(format text$0)))))
+							(format text$0)
+							:async))))
 #+END_SRC

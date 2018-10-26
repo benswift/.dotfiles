@@ -673,7 +673,7 @@ tags:
                   (smtpmail-smtp-server . "mail.simeonnetwork.org")))))
 
 
-  (defun ben-send-anu-email (email-address subject body &optional cc-string)
+  (defun ben-send-anu-email (email-address subject body &optional async cc-string)
     (with-temp-buffer
       (mu4e-context-switch nil "anu")
       (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
@@ -681,17 +681,10 @@ tags:
                       (if cc-string (format "Cc: %s\n" cc-string) "")
                       subject
                       body))
-      (async-smtpmail-send-it)))
-
-  (defun ben-send-benswift-email (email-address subject body &optional cc-string)
-    (with-temp-buffer
-      (mu4e-context-switch nil "personal")
-      (insert (format "From: Ben Swift <ben@@benswift.me>\nTo: %s\nSubject: %s\n--text follows this line--\n%s"
-                      email-address
-                      (if cc-string (format "Cc: %s\n" cc-string) "")
-                      subject
-                      body))
-      (async-smtpmail-send-it))))
+	  (if async
+		  (async-smtpmail-send-it)
+		(smtpmail-send-it))))
+  )
 
 (defun ben-extempore-config ()
   "user-config for Extempore"
