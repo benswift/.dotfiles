@@ -2,4 +2,4 @@
 # name: to-admin
 # key: a
 # --
-CECS - Student Enquiries <studentadmin.cecs@anu.edu.au>
+${1:$$(yas-choose-value '("studentadmin.cecs" "admins.cs.cecs"))}@anu.edu.au
