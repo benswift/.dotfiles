@@ -465,7 +465,7 @@ you should place your code here."
   (defun jekyll-new-post (post-name)
 	(interactive "sPost title: ")
 	(let ((post-url-basename
-		   (format "%-%.md"
+		   (format "%s-%s.md"
 				   (format-time-string "%Y-%m-%d")
 				   (downcase (jekyll-sanitise-post-name post-name)))))
 	  (find-file (f-join (projectile-project-root) "_posts" post-url-basename))
