@@ -384,6 +384,14 @@ you should place your code here."
   ;; warnings to suppress
   (add-to-list 'warning-suppress-types '(yasnippet backquote-change))
 
+  ;; keybindings
+  (spacemacs/declare-prefix "o" "user-prefix")
+  (spacemacs/set-leader-keys "op" 'comp1720-print-student)
+  (spacemacs/set-leader-keys "of" 'fais-visit-student)
+  (spacemacs/set-leader-keys "os" 'comp1720-visit-submission)
+  (spacemacs/set-leader-keys "og" 'comp1720-visit-gitlab)
+
+  ;; now call all the other "config" functions
   (ben-jekyll-config)
   (ben-mu4e-config)
   (ben-extempore-config)
