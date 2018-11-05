@@ -390,6 +390,7 @@ you should place your code here."
   (spacemacs/set-leader-keys "of" 'fais-visit-student)
   (spacemacs/set-leader-keys "os" 'comp1720-visit-submission)
   (spacemacs/set-leader-keys "og" 'comp1720-visit-gitlab)
+  (spacemacs/set-leader-keys "om" 'jekyll-move-download-and-mogrify)
 
   ;; now call all the other "config" functions
   (ben-jekyll-config)
