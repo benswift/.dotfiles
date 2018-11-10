@@ -81,6 +81,7 @@ values."
      (javascript :variables js-indent-level 2)
      latex
      ;; lua
+	 multiple-cursors
      ;; php
      ;; (parinfer :init (add-hook 'extempore-mode-hook #'parinfer-mode))
      python
