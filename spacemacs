@@ -389,7 +389,9 @@ you should place your code here."
   (spacemacs/declare-prefix "o" "user-prefix")
   (spacemacs/set-leader-keys "op" 'comp1720-print-student)
   (spacemacs/set-leader-keys "of" 'fais-visit-student)
-  (spacemacs/set-leader-keys "os" 'comp1720-visit-submission)
+  (spacemacs/set-leader-keys "os" 'comp1720-visit-major-project)
+  (spacemacs/set-leader-keys "ob" 'comp1720-visit-major-project-feedback-file)
+  (spacemacs/set-leader-keys "ov" 'comp1720-start-major-project-server)
   (spacemacs/set-leader-keys "og" 'comp1720-visit-gitlab)
   (spacemacs/set-leader-keys "om" 'jekyll-move-download-and-mogrify)
 
