@@ -394,7 +394,7 @@ you should place your code here."
   (spacemacs/set-leader-keys "ov" 'comp1720-start-major-project-server)
   (spacemacs/set-leader-keys "og" 'comp1720-visit-gitlab)
   (spacemacs/set-leader-keys "om" 'jekyll-move-download-and-mogrify)
-  (spacemacs/set-leader-keys "oc" '(lambda () (interactive) (pop-to-buffer "*compilation*")))
+  (spacemacs/set-leader-keys "oc" '(lambda () (interactive) (switch-to-buffer "*compilation*")))
 
   ;; now call all the other "config" functions
   (ben-jekyll-config)
