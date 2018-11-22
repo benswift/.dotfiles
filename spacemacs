@@ -506,6 +506,7 @@ tags:
 
   (setq mu4e-user-mail-address-list
         '("ben@benswift.me"
+          "benswift@fastmail.com"
           "ben.swift@anu.edu.au"
           "benjamin.j.swift@gmail.com"
           "ben.swift@simeonnetwork.org"))
