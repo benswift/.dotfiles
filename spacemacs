@@ -641,11 +641,8 @@ tags:
 
   (require 'smtpmail-async)
 
-  (setq send-mail-function 'async-smtpmail-send-it
-        message-send-mail-function 'async-smtpmail-send-it
-        smtpmail-smtp-service 587
-        smtpmail-debug-info t
-        smtpmail-queue-dir (expand-file-name "~/Maildir/queue/cur"))
+  (setq message-send-mail-function 'message-send-mail-with-sendmail
+		sendmail-program "/usr/local/bin/msmtp")
 
   ;; contexts
 
@@ -660,9 +657,7 @@ tags:
                           (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
                               (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
           :vars '((user-mail-address . "ben@benswift.me")
-                  (user-full-name . "Ben Swift")
-                  (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
-                  (smtpmail-smtp-server . "mail.messagingengine.com")))
+                  (user-full-name . "Ben Swift")))
          (make-mu4e-context
           :name "anu"
           :enter-func (lambda () (mu4e-message "switching to ANU context"))
@@ -671,9 +666,7 @@ tags:
                         (when msg
                           (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
           :vars '((user-mail-address . "ben.swift@anu.edu.au")
-                  (user-full-name . "Ben Swift")
-                  (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
-                  (smtpmail-smtp-server . "smtp.office365.com")))
+                  (user-full-name . "Ben Swift")))
          (make-mu4e-context
           :name "simeon-network"
           :enter-func (lambda () (mu4e-message "switching to Simeon Network context"))
@@ -682,9 +675,7 @@ tags:
                         (when msg
                           (mu4e-message-contact-field-matches msg :to "ben.swift@simeonnetwork.org")))
           :vars '((user-mail-address . "ben.swift@simeonnetwork.org")
-                  (user-full-name . "Ben Swift")
-                  (smtpmail-starttls-credentials '(("mail.simeonnetwork.org" 587 nil nil)))
-                  (smtpmail-smtp-server . "mail.simeonnetwork.org")))))
+                  (user-full-name . "Ben Swift")))))
 
 
   (defun ben-send-anu-email (email-address subject body &optional async cc-string)
