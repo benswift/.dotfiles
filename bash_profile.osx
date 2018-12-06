@@ -14,6 +14,10 @@ export WORKON_HOME=/usr/local/var/pyenv/versions
 export RBENV_ROOT=/usr/local/var/rbenv
 eval "$(rbenv init -)"
 
+# msmtpq
+
+EMAIL_QUEUE_QUIET=t
+
 # Local Variables:
 # mode: sh
 # End:

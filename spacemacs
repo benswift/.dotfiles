@@ -642,7 +642,7 @@ tags:
   (require 'smtpmail-async)
 
   (setq message-send-mail-function 'message-send-mail-with-sendmail
-		sendmail-program "/usr/local/bin/msmtp")
+		sendmail-program "/usr/local/share/msmtp/scripts/msmtpq/msmtpq")
 
   ;; contexts
 
