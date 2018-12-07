@@ -504,6 +504,7 @@ tags:
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
 
+  (setq user-full-name "Ben Swift")
   (setq mu4e-user-mail-address-list
         '("ben@benswift.me"
           "benswift@fastmail.com"
@@ -659,7 +660,6 @@ tags:
                           (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
                               (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
           :vars '((user-mail-address . "ben@benswift.me")
-                  (user-full-name . "Ben Swift")
                   (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
                   (smtpmail-smtp-server . "mail.messagingengine.com")))
          (make-mu4e-context
@@ -670,7 +670,6 @@ tags:
                         (when msg
                           (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
           :vars '((user-mail-address . "ben.swift@anu.edu.au")
-                  (user-full-name . "Ben Swift")
                   (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
                   (smtpmail-smtp-server . "smtp.office365.com")))
          (make-mu4e-context
@@ -681,7 +680,6 @@ tags:
                         (when msg
                           (mu4e-message-contact-field-matches msg :to "ben.swift@simeonnetwork.org")))
           :vars '((user-mail-address . "ben.swift@simeonnetwork.org")
-                  (user-full-name . "Ben Swift")
                   (smtpmail-starttls-credentials '(("mail.simeonnetwork.org" 587 nil nil)))
                   (smtpmail-smtp-server . "mail.simeonnetwork.org")))))
 
