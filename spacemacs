@@ -671,17 +671,7 @@ tags:
                           (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
           :vars '((user-mail-address . "ben.swift@anu.edu.au")
                   (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
-                  (smtpmail-smtp-server . "smtp.office365.com")))
-         (make-mu4e-context
-          :name "simeon-network"
-          :enter-func (lambda () (mu4e-message "switching to Simeon Network context"))
-          ;; leave-fun not defined
-          :match-func (lambda (msg)
-                        (when msg
-                          (mu4e-message-contact-field-matches msg :to "ben.swift@simeonnetwork.org")))
-          :vars '((user-mail-address . "ben.swift@simeonnetwork.org")
-                  (smtpmail-starttls-credentials '(("mail.simeonnetwork.org" 587 nil nil)))
-                  (smtpmail-smtp-server . "mail.simeonnetwork.org")))))
+                  (smtpmail-smtp-server . "smtp.office365.com")))))
 
 
   (defun ben-send-anu-email (email-address subject body &optional async cc-string)
