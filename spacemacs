@@ -72,7 +72,7 @@ This function should only modify configuration layer settings."
      emacs-lisp
      (ess :variables ess-smart-S-assign-key nil)
      (extempore :location local)
-	 finance
+	 ;; finance
      ;; fsharp
      ;; go
      ;; graphviz
