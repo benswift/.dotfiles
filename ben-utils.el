@@ -3,7 +3,7 @@
 ;; Author: Ben Swift
 ;; Maintainer: Ben Swift
 ;; Version: 1.0
-;; Package-Requires: ()
+;; Package-Requires: (url-util mu4e-contrib smtpmail smtpmail-async gnus-dired)
 ;; Homepage: https://github.com/benswift/.dotfiles
 
 ;; Copyright 2018 Ben Swift
