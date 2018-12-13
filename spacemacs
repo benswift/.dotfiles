@@ -100,11 +100,7 @@ This function should only modify configuration layer settings."
      typescript
      ;; windows-scripts
      yaml
-     (spell-checking
-      :config
-      (when (executable-find "hunspell")
-        (setq ispell-program-name (executable-find "hunspell"))
-        (setq ispell-dictionary "en_AU")))
+     spell-checking
      syntax-checking
      )
 
@@ -483,6 +479,11 @@ configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
   (setq spacemacs-theme-org-height nil)
+  ;; hunspell stuff needs to be set in init
+  (setq ispell-program-name (executable-find "hunspell")
+		ispell-dictionary "en_AU"
+		ispell-dictionary-alist
+		'(("en_AU" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_AU") nil utf-8)))
   )
 
 (defun dotspacemacs/user-load ()
