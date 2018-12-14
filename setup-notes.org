@@ -96,16 +96,6 @@ sudo yum install gcc-c++ && sudo yum install patch
 - copy the font files into =~/.fonts= 
 - =fc-cache -f -v= to re-build your fonts info cache files
 
-* OSX
-
-** homebrew
-
-here are some useful packages:
-
-TODO populate list
-
-don't forget to install cask as well
-
 * Windows
   :PROPERTIES:
   :header-args:sh:    :tangle windows-setup.bat
@@ -195,7 +185,6 @@ sudo add-apt-repository ppa:yannubuntu/boot-repair && sudo apt-get update
 sudo apt-get install -y boot-repair && boot-repair
 #+END_SRC
 * cross-platform
-
 ** calibre
 
 to convert a folder of html into an ebook, first, zip up the files
