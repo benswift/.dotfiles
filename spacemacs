@@ -478,13 +478,19 @@ This function is called immediately after `dotspacemacs/init', before layer
 configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
+
+  ;; don't use tall headings in org/md files
   (setq spacemacs-theme-org-height nil)
+
   ;; hunspell stuff needs to be set in init
   (setq ispell-program-name (executable-find "hunspell")
 		ispell-dictionary "en_AU"
 		ispell-dictionary-alist
 		'(("en_AU" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_AU") nil utf-8)))
-  )
+
+  ;; so that the bottom of this file doesn't get polluted with custom stuff
+  (setq custom-file (expand-file-name "~/.emacs.d/.cache/.custom-settings"))
+  (load custom-file))
 
 (defun dotspacemacs/user-load ()
   "Library to load while dumping.
@@ -502,6 +508,3 @@ before packages are loaded."
   (add-to-load-path (expand-file-name "~/.dotfiles/"))
   (require 'ben-utils)
   )
-
-;; Do not write anything past this comment. This is where Emacs will
-;; auto-generate custom variable definitions.
