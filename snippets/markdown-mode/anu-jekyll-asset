@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: anu-jekyll-image
-# key: asset
-# --
-{% asset `(yas-choose-value (anu-jekyll-asset-filenames))` alt="$1" style="width:100%;" %}

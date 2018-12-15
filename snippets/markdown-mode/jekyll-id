@@ -1,5 +1,4 @@
 # -*- mode: snippet -*-
-# name: anu-jekyll-id
 # key: id
 # --
 `(call-interactively #'kramdown-id-for-current-line)`

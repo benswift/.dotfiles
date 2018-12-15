@@ -3,7 +3,7 @@
 ;; Author: Ben Swift
 ;; Maintainer: Ben Swift
 ;; Version: 1.0
-;; Package-Requires: (url-util mu4e-contrib smtpmail smtpmail-async gnus-dired)
+;; Package-Requires: (csv url-util mu4e-contrib smtpmail smtpmail-async gnus-dired)
 ;; Homepage: https://github.com/benswift/.dotfiles
 
 ;; Copyright 2018 Ben Swift
@@ -53,26 +53,133 @@
 ;; warnings to suppress
 (add-to-list 'warning-suppress-types '(yasnippet backquote-change))
 
-;; keybindings
+;;;;;;;;;;;;
+;; Jekyll ;;
+;;;;;;;;;;;;
+
+;; I do a *lot* of work with Jekyll static websites (including all my ANU course
+;; websites) so these helpers save me heaps of time
+
+(require 'projectile)
+
+(defun jekyll-list-asset-filenames ()
+  (->> (projectile-current-project-files)
+	   (--filter (s-starts-with? "_assets/" it))
+	   ;; in case there's heaps of js guff that you *probably* don't want
+	   (--remove (s-starts-with? "_assets/js/" it))
+	   (--map (s-chop-prefix "_assets/" it))))
+
+(defun kramdown-slugify (text)
+  "slugify text (as kramdown would) based on the regexps in
+  basic_generate_id() available at:
+
+https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98908/lib/kramdown/converter/base.rb#L232"
+  (->> text
+	   (s-downcase)
+	   (s-replace " " "-")
+	   (s-replace-regexp "[^a-z0-9-]" "")))
+
+(defun kramdown-list-slugified-headers ()
+  (-map
+   #'kramdown-slugify
+   (progn
+	 (imenu--make-index-alist :noerror)
+	 imenu--index-alist)))
+
+(defun kramdown-list-anchors (filename)
+  "return a list of the (explicit) ids from a kramdown md file"
+  (let* ((md-text (slurp filename))
+		 (matches (s-match-strings-all "{#\\([^}]*\\)}" md-text)))
+	(--map (nth 1 it) matches)))
+
+(defun yaml-list-top-level-keys (filename)
+  "return a list of the top-level keys in a yaml file"
+  (let* ((yaml-text (slurp filename))
+		 (matches (s-match-strings-all "^\\([a-zA-Z0-9_-]+\\):" yaml-text)))
+	(--map (nth 1 it) matches)))
+
+(defun jekyll-link-with-anchor (filename)
+  (interactive
+   (list (completing-read "file: "
+						  (--filter (s-ends-with? ".md" it)
+									(projectile-current-project-files))
+						  nil
+						  :require-match)))
+  (format "{%% link %s %%}#%s"
+		  filename
+		  (completing-read "anchor: "
+						   (kramdown-list-anchors (concat (projectile-project-root) filename))
+						   nil
+						   :require-match)))
+
+(defun kramdown-id-for-current-line ()
+  (interactive)
+  (->> (buffer-substring-no-properties
+		(line-beginning-position)
+		(line-end-position))
+	   (replace-regexp-in-string "#+" "")
+	   (s-collapse-whitespace)
+	   (s-trim)
+	   (kramdown-slugify)
+	   (format "{#%s}")))
+
+(defun image-width (image-filename)
+  "get image width (in pixels)
+
+requires `identify' CLI program"
+  (string-to-number (shell-command-to-string (format "identify -format \"%%w\" \"%s\"" image-filename))))
+
+(defun image-height (image-filename)
+  "get image height (in pixels)
+
+requires `identify' CLI program"
+  (string-to-number (shell-command-to-string (format "identify -format \"%%h\" \"%s\"" image-filename))))
+
+(defun jekyll-move-download-and-mogrify (filename width)
+  "move file by default into the appropriate subfolder of _assets/"
+  (interactive
+   (let ((image-filename (completing-read "filename: "
+										  (f-files (expand-file-name "~/Downloads")
+												   (lambda (fname)
+													 (--any (s-ends-with? it fname)
+															'(".jpg" ".jpeg" ".png"))))
+										  nil
+										  :require-match)))
+	 (list
+	  image-filename
+	  (read-number (format "width (current %spx): " (image-width image-filename)) 1920))))
+  (when (= (shell-command (format "mogrify -resize \"%d\" \"%s\"" width filename)) 0)
+	(let ((asset-root (f-join (projectile-project-root) "_assets")))
+	  (unless (f-directory? asset-root)
+		(error "no _assets/ folder in projectile root - are you sure you're in the right project?"))
+	  (f-move filename
+			  (f-join asset-root
+					  (completing-read "_assets/" (cons "." (--map (f-relative it asset-root)
+																   (f-directories asset-root
+																				  (lambda (fname) (not (s-contains? ".git" fname)))
+																				  :recursive))))
+					  (f-filename filename))))))
+
+(defun mogrify-image-file (filename max-width)
+  (interactive
+   (list (read-file-name "file: ")
+		 (read-number "max-width: " 1920)))
+  (shell-command (format "mogrify -resize \"%d\" %s" max-width filename)))
+
+;; TODO it'd be nice if this worked on the currently selected files in a dired buffer
+(defun mogrify-image-files-recursively (dir max-width)
+  (interactive
+   (list (read-directory-name "directory: ")
+		 (read-number "max-width: " 1920)))
+  (-each
+	  (directory-files-recursively dir "\.\\(jpg\\|jpeg\\|png\\)$")
+	(lambda (fname)
+	  (shell-command (format "mogrify -resize \"%d\" %s" max-width fname)))))
+
+;; helpful keybindings
 (spacemacs/declare-prefix "o" "user-prefix")
-(spacemacs/set-leader-keys "op" 'comp1720-print-student)
-(spacemacs/set-leader-keys "of" 'fais-visit-student)
-(spacemacs/set-leader-keys "os" 'comp1720-visit-major-project)
-(spacemacs/set-leader-keys "ob" 'comp1720-visit-major-project-feedback-file)
-(spacemacs/set-leader-keys "ov" 'comp1720-start-major-project-server)
-(spacemacs/set-leader-keys "og" 'comp1720-visit-gitlab)
 (spacemacs/set-leader-keys "om" 'jekyll-move-download-and-mogrify)
 (spacemacs/set-leader-keys "oc" '(lambda () (interactive) (switch-to-buffer "*compilation*")))
-
-;;;;;;;;;;;;;;;;;;;
-;; Jekyll config ;;
-;;;;;;;;;;;;;;;;;;;
-
-;; and some other teaching stuff
-
-(defconst anu-cs-jekyll-website-directory  (expand-file-name "~/Documents/teaching/comp1720-2018/website"))
-(defconst anu-cs-lucy-directory  (expand-file-name "~/Documents/teaching/comp1720-2018/lucy"))
-(load-file (expand-file-name "~/Documents/teaching/comp1720-2018/admin/anu-cs-utils.el"))
 
 ;;;;;;;;;;
 ;; mu4e ;;
@@ -232,7 +339,6 @@
                 (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
                 (smtpmail-smtp-server . "smtp.office365.com")))))
 
-
 (defun ben-send-anu-email (email-address subject body &optional async cc-string)
   (with-temp-buffer
     (mu4e-context-switch nil "anu")
@@ -318,6 +424,13 @@ dspmt" name xtm-dir)))
      (point-min)
      (point-max))))
 
+(require 'csv)
+
+(defun read-csv (filename headerp)
+  (with-temp-buffer
+	(insert-file-contents filename)
+	(csv-parse-buffer headerp)))
+
 (defun devdocs-lookup (language name)
   (interactive "slanguage: \nsname: ")
   (shell-command
@@ -379,6 +492,217 @@ dspmt" name xtm-dir)))
                              (mapconcat #'identity charts " ")
                              output-filename
                              output-filename)))))
+
+;;;;;;;;;;;;;;
+;; teaching ;;
+;;;;;;;;;;;;;;
+
+;; this file includes the data specific to the course I'm currently teaching
+;; (not included in dotfiles repo for obvious reasons)
+(load-file (expand-file-name "~/Documents/teaching/comp1720-2018/admin/comp1720.el"))
+
+(defconst anu-cs-uid-regex "[uU][0-9]\\{7\\}")
+(defvar anu-cs-uid-input-history nil
+  "variable for holding the history of interactive commands which require a UID")
+
+(defun anu-cs-get-uid-at-point ()
+  (interactive)
+  (let ((tap (thing-at-point 'word :no-properties)))
+	(if (and tap (s-matches? anu-cs-uid-regex tap))
+		(downcase tap)
+	  nil)))
+
+(defun anu-cs-is-uid? (uid)
+  (s-matches? anu-cs-uid-regex uid))
+
+(defun anu-cs-validate-uid (uid)
+  (if (s-matches? anu-cs-uid-regex uid)
+	  uid
+	(error "user-error: bad UID %s" uid)))
+
+;; csv header: uid,name,status,mark,grade,degree,group,special,course
+(defvar anu-cs-student-data nil)
+
+(defconst anu-cs-student-data-columns
+  '("uid" "name" "status" "mark" "grade" "degree" "group" "special" "course")
+  "columns in students.csv")
+
+(defun anu-cs-lucy-sync ()
+  (interactive)
+  (setq anu-cs-student-data
+		(cdr (read-csv (format "%s/data/students.csv" anu-cs-lucy-directory) nil)))
+  (message "lucy: succesfully synced %d students" (length anu-cs-student-data)))
+
+(defun anu-cs-get-student-data (uid)
+  (or (--first (string= uid (car it)) anu-cs-student-data)
+	  (error "Error: could not find student with uid %s" uid)))
+
+(defun anu-cs-student-firstname (uid)
+  (or (cdr-safe (assoc uid anu-cs-firstname-alist))
+	  (car (s-split-words (anu-cs-student-info uid "name")))))
+
+(defun anu-cs-student-info (uid field)
+  (if (-contains? anu-cs-student-data-columns field)
+	  (nth (-elem-index field anu-cs-student-data-columns)
+		   (anu-cs-get-student-data uid))
+	(error "Error: no field \"%s\" in anu-cs-student-data" uid)))
+
+(defun anu-cs-tutors-for-student (uid)
+  (let ((group (anu-cs-student-info uid "group")))
+	(and (not (s-blank? group))
+		 (cdr (--first (string= group (car it)) anu-cs-tutor-data)))))
+
+(defun anu-cs-tutor-cc-string-for-student (uid)
+  (let ((tutors (anu-cs-tutors-for-student uid)))
+	(s-join "," (--map (format "%s@anu.edu.au" (cdr (assoc it anu-cs-tutor-uid-alist))) tutors))))
+
+(defun anu-cs-tutor-cc-string-for-group (group)
+  (let ((tutors (cdr (assoc group anu-cs-tutor-data))))
+	(s-join "," (--map (format "%s@anu.edu.au" (cdr (assoc it anu-cs-tutor-uid-alist))) tutors))))
+
+(defun anu-cs-pretty-format-student (uid)
+  (format
+   "uid: %s
+firstname: %s
+full name: %s
+group: %s
+course: %s
+degree: %s
+tutors: %s"
+   uid
+   (anu-cs-student-firstname uid)
+   (anu-cs-student-info uid "name")
+   (anu-cs-student-info uid "group")
+   (anu-cs-student-info uid "course")
+   (anu-cs-student-info uid "degree")
+   (s-join " " (anu-cs-tutors-for-student uid))))
+
+;; helpers for interactive use
+
+(defun anu-cs-completing-read-uid ()
+  (completing-read "uid: "
+				   (-map #'car anu-cs-student-data)
+				   nil
+				   :require-match
+				   (anu-cs-get-uid-at-point)))
+
+(defun anu-cs-completing-read-name ()
+  (completing-read "name: "
+				   (-map #'cadr anu-cs-student-data)
+				   nil
+				   :require-match))
+
+(defun anu-cs-completing-read-uid-dwim ()
+  (let ((uid-or-name (or (anu-cs-get-uid-at-point)
+						 (anu-cs-completing-read-name))))
+	(if (s-match anu-cs-uid-regex uid-or-name)
+		uid-or-name
+	  (car (--first (string= (cadr it) uid-or-name) anu-cs-student-data)))))
+
+(defun anu-cs-completing-read-field ()
+  (completing-read "field: "
+				   anu-cs-student-data-columns
+				   nil
+				   :require-match))
+
+(defun anu-cs-completing-read-project ()
+  (completing-read "project: "
+				   anu-cs-project-list
+				   nil
+				   :require-match))
+
+(defun anu-cs-completing-read-group ()
+  (completing-read "group: "
+				   (-map #'car anu-cs-tutor-data)
+				   nil
+				   :require-match))
+
+(defun anu-cs-print-student (uid)
+  (interactive
+   (list (anu-cs-completing-read-uid-dwim)))
+  ;; also add uid to kill ring
+  (kill-new uid)
+  (message (anu-cs-pretty-format-student uid)))
+
+(defun fais-visit-student (uid)
+  (interactive
+   (list (anu-cs-completing-read-uid-dwim)))
+  (anu-cs-validate-uid uid)
+  (ffap (concat "https://cs.anu.edu.au/fais/staff/Students.php?StudID=" (substring uid 1))))
+
+(defun discourse-visit-student (uid)
+  (interactive
+   (list (anu-cs-completing-read-uid-dwim)))
+  (anu-cs-validate-uid uid)
+  (ffap (format "https://discourse.cecs.anu.edu.au/u/%s/" uid)))
+
+(defun anu-cs-visit-gitlab (uid project)
+  (interactive
+   (list (anu-cs-completing-read-uid-dwim)
+		 (anu-cs-completing-read-project)))
+  (if (s-suffix? "-marking-origin" project)
+	  (ffap (format "https://gitlab.cecs.anu.edu.au/%s/%s-%s/" anu-cs-gitlab-marker-username uid (s-chop-suffix "-marking-origin" project)))
+	(ffap (format "https://gitlab.cecs.anu.edu.au/%s/%s/" uid project))))
+
+(defun anu-cs-student-dir (uid project)
+  (expand-file-name (format "%s/submissions/%s/%s/%s"
+							anu-cs-lucy-directory project
+							(anu-cs-student-info uid "group")
+							uid)))
+
+(defun anu-cs-visit-submission (uid project)
+  (interactive
+   (list (anu-cs-completing-read-uid-dwim)
+		 (anu-cs-completing-read-project)))
+  (let ((submission-dir (anu-cs-student-dir uid project)))
+	(if (f-dir? submission-dir)
+		(dired submission-dir)
+	  (error "no %s submission found for %s" project uid))))
+
+;; all the emails
+
+(defun anu-cs-email-student-copy-tutors (uid)
+  (interactive
+   (list (anu-cs-completing-read-uid-dwim)))
+  (mu4e-compose-new)
+  (message-add-header (format "Cc: %s" (anu-cs-tutor-cc-string-for-student uid)))
+  (message-add-header (format "To: %s@anu.edu.au" uid)))
+
+(defun anu-cs-cc-tutors (group)
+  (interactive
+   (list (let ((uid-or-name-or-group
+				(or (anu-cs-get-uid-at-point)
+					(completing-read "name: "
+									 (append (-map #'cadr anu-cs-student-data)
+											 (-map #'car anu-cs-tutor-data))
+									 nil
+									 :require-match))))
+		   (cond
+			;; if it's a uid
+			((s-match anu-cs-uid-regex uid-or-name-or-group)
+			 (anu-cs-student-info uid-or-name-or-group "group"))
+			;; if it's a group name
+			((member uid-or-name-or-group (-map #'car anu-cs-tutor-data))
+			 uid-or-name-or-group)
+			;; if it's a student name
+			(t (anu-cs-student-info
+				(car (--first (string= (cadr it) uid-or-name-or-group) anu-cs-student-data))
+				"group"))))))
+  (message-add-header (format "Cc: %s" (anu-cs-tutor-cc-string-for-group group))))
+
+(defun anu-cs-email-tutors (group)
+  (interactive
+   (list (anu-cs-completing-read-group)))
+  (mu4e-compose-new)
+  (message-add-header (format "To: %s" (anu-cs-tutor-cc-string-for-student uid))))
+
+;; keybindings
+(spacemacs/set-leader-keys "op" 'anu-cs-print-student)
+(spacemacs/set-leader-keys "of" 'fais-visit-student)
+(spacemacs/set-leader-keys "og" 'anu-cs-visit-gitlab)
+
+;; now, run the lucy sync...
+(anu-cs-lucy-sync)
 
 (provide 'ben-utils)
 
