@@ -74,37 +74,6 @@
 (defconst anu-cs-lucy-directory  (expand-file-name "~/Documents/teaching/comp1720-2018/lucy"))
 (load-file (expand-file-name "~/Documents/teaching/comp1720-2018/admin/anu-cs-utils.el"))
 
-(require 'url-util) ; needed for url-unerserved-chars
-
-(defun jekyll-sanitise-post-name (post-name)
-  (apply #'string (reverse (cl-reduce (lambda (processed char)
-                                        (if (member char url-unreserved-chars)
-                                            (cons char processed)
-                                          (if (and processed
-                                                   (= (first processed) ?-))
-                                              processed
-                                            (cons ?- processed))))
-                                      (string-to-list post-name)
-                                      :initial-value '()))))
-
-(defun jekyll-new-post (post-name)
-  (interactive "sPost title: ")
-  (let ((post-url-basename
-         (format "%s-%s.md"
-                 (format-time-string "%Y-%m-%d")
-                 (downcase (jekyll-sanitise-post-name post-name)))))
-    (find-file (f-join (projectile-project-root) "_posts" post-url-basename))
-    (insert (format
-             "---
-title: %s
-date: \"%s\"
-tags:
----
-"
-             post-name
-             (format-time-string "%F %T %z")))))
-
-
 ;;;;;;;;;;
 ;; mu4e ;;
 ;;;;;;;;;;
