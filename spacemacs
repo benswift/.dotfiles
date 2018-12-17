@@ -69,6 +69,7 @@ This function should only modify configuration layer settings."
      cmake
      ;; csharp
 	 csv
+	 docker
      emacs-lisp
      (ess :variables ess-smart-S-assign-key nil)
      (extempore :location local)
