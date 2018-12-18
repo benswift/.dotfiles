@@ -464,6 +464,23 @@ dspmt" name xtm-dir)))
           (while (search-forward (car nonascii-char-pair) end :noerror)
             (replace-match (cdr nonascii-char-pair) nil :literal)))))))
 
+
+(defun ben-symlink-dotfiles ()
+  (interactive)
+  (cl-flet ((linker (lambda (target linkname)
+				  (make-symbolic-link (expand-file-name (format "~/.dotfiles/%s" target))
+									  (expand-file-name (format "~/%s" linkname))
+									  :ok-if-it-already-exists))))
+	(linker "bash_profile.osx" ".bash_profile")
+	(linker "spacemacs" ".spacemacs")
+	(linker "gitconfig" ".gitconfig")
+	(linker "gitignore" ".gitignore")
+	(linker "mbsyncrc" ".mbsyncrc")
+	(linker "spacemacs-layers/extempore" ".emacs.d/private/extempore")
+	(linker "ssh_config" ".ssh/config")
+	(linker "scripts" "bin")
+	(linker "RProfile" ".RProfile")))
+
 ;;;;;;;;;;;;
 ;; church ;;
 ;;;;;;;;;;;;
