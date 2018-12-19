@@ -98,7 +98,7 @@ This function should only modify configuration layer settings."
      shell-scripts
      ;; sql
      ;; swift
-     typescript
+     ;; typescript
      ;; windows-scripts
      yaml
      spell-checking
