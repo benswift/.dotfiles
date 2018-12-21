@@ -721,6 +721,9 @@ tutors: %s"
 ;; now, run the lucy sync...
 (anu-cs-lucy-sync)
 
+;; and, for the moment, add the info for compCHST
+(load (expand-file-name "~/Documents/teaching/compchst-2018/admin/compCHST.el"))
+
 (provide 'ben-utils)
 
 ;;; ben-utils.el ends here
