@@ -464,6 +464,13 @@ dspmt" name xtm-dir)))
           (while (search-forward (car nonascii-char-pair) end :noerror)
             (replace-match (cdr nonascii-char-pair) nil :literal)))))))
 
+(require 'sgml-mode)
+
+(defun ben-reformat-xml ()
+  (interactive)
+  (save-excursion
+    (sgml-pretty-print (point-min) (point-max))
+    (indent-region (point-min) (point-max))))
 
 (defun ben-symlink-dotfiles ()
   (interactive)
