@@ -236,8 +236,11 @@ requires `identify' CLI program"
 
 ;; compose
 
-(setq mu4e-compose-dont-reply-to-self t)
-(setq mu4e-compose-signature-auto-include nil)
+(setq mu4e-compose-dont-reply-to-self t
+	  mu4e-compose-signature-auto-include nil
+	  mu4e-compose-format-flowed t
+	  fill-flowed-encode-column fill-column)
+
 (add-hook 'mu4e-compose-mode-hook #'spacemacs/toggle-yasnippet-on)
 
 (defun ben-find-to-firstname ()
