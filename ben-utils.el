@@ -410,7 +410,7 @@ dspmt" name xtm-dir)))
 ;;;;;;;;;;;;;;
 
 (setq org-directory (expand-file-name "~/Dropbox/org")
-      org-default-notes-file (concat org-directory "/unfiled.org")
+      org-default-notes-file (concat org-directory "/inbox.org")
       org-agenda-files (list org-directory)
       org-refile-targets '((nil :maxlevel . 9) (org-agenda-files :maxlevel . 9))
       org-outline-path-complete-in-steps nil         ; Refile in a single go
@@ -439,6 +439,15 @@ dspmt" name xtm-dir)))
   (shell-command
    (format "open devdocs://search/%s"
            (url-hexify-string (concat language " " name)))))
+
+(defun ben-send-iMessage (to-number message-text)
+  (do-applescript
+   (format
+	"tell application \"Messages\"
+          send %s to buddy \"+61%s\" of service \"E:benswift@me.com\"
+end tell"
+	(prin1-to-string message-text)
+	to-number)))
 
 (defun osx-screencapture (filename)
   (interactive "sfilename: ")
