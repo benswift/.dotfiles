@@ -40,7 +40,6 @@ secrets/
 *.blg
 *.bcf
 *.out
-*.xml
 *.toc
 auto/
 *.synctex.gz
