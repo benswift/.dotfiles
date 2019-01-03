@@ -64,6 +64,7 @@ TAGS
 .dir-locals.el
 .projectile
 .yas-compiled-snippets.el
+scratch.el
 
 # this is just a symlink, so that the snippets
 # work in the repl as well
