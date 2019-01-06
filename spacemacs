@@ -78,8 +78,8 @@ This function should only modify configuration layer settings."
      ;; go
      ;; graphviz
      ;; haskell
-     helm
      html
+	 ivy
      ;; ipython-notebook
      ;; java ;; because eclim is balls
      (javascript :variables js-indent-level 2)
