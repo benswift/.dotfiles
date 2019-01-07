@@ -190,11 +190,11 @@ requires `identify' CLI program"
 
 (setq user-full-name "Ben Swift")
 (setq mu4e-user-mail-address-list
-      '("ben@benswift.me"
-        "benswift@fastmail.com"
-        "ben.swift@anu.edu.au"
-        "benjamin.j.swift@gmail.com"
-        "ben.swift@simeonnetwork.org"))
+	  '("ben@benswift.me"
+		"benswift@fastmail.com"
+		"ben.swift@anu.edu.au"
+		"benjamin.j.swift@gmail.com"
+		"ben.swift@simeonnetwork.org"))
 
 ;; headers
 (setq mu4e-headers-include-related nil)
@@ -202,33 +202,33 @@ requires `identify' CLI program"
 ;; receive
 
 (setq mu4e-maildir (expand-file-name "~/Maildir")
-      mu4e-sent-folder "/Sent Items"
-      mu4e-refile-folder "/Archive"
-      mu4e-drafts-folder "/Drafts"
-      mu4e-trash-folder "/Trash"
-      mu4e-attachment-dir (expand-file-name "~/Downloads"))
+	  mu4e-sent-folder "/Sent Items"
+	  mu4e-refile-folder "/Archive"
+	  mu4e-drafts-folder "/Drafts"
+	  mu4e-trash-folder "/Trash"
+	  mu4e-attachment-dir (expand-file-name "~/Downloads"))
 
 (setq mu4e-get-mail-command "mbsync fastmail"
-      mu4e-update-interval 300
-      mu4e-headers-auto-update t
-      mu4e-change-filenames-when-moving t
-      mu4e-view-show-addresses t)
+	  mu4e-update-interval 300
+	  mu4e-headers-auto-update t
+	  mu4e-change-filenames-when-moving t
+	  mu4e-view-show-addresses t)
 
 (defun mu4e-pretty-mbsync-process-filter (proc msg)
   (ignore-errors
-    (with-current-buffer (process-buffer proc)
-      (let ((inhibit-read-only t))
-        (delete-region (point-min) (point-max))
-        (insert (car (reverse (split-string msg "\r"))))
-        (when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)")
-          (add-face-text-property
-           (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
-          (add-face-text-property
-           (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
-          (add-face-text-property
-           (match-beginning 3) (match-end 3) 'font-lock-variable-name-face)
-          (add-face-text-property
-           (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
+	(with-current-buffer (process-buffer proc)
+	  (let ((inhibit-read-only t))
+		(delete-region (point-min) (point-max))
+		(insert (car (reverse (split-string msg "\r"))))
+		(when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)")
+		  (add-face-text-property
+		   (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
+		  (add-face-text-property
+		   (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
+		  (add-face-text-property
+		   (match-beginning 3) (match-end 3) 'font-lock-variable-name-face)
+		  (add-face-text-property
+		   (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
 
 (advice-add
  'mu4e~get-mail-process-filter
@@ -247,7 +247,7 @@ requires `identify' CLI program"
   "search the current buffer for a To: field, and grab the first recipient's name from there"
   (interactive)
   (let ((str (buffer-substring-no-properties (point-min) (point-max))))
-    (if (string-match
+	(if (string-match
          "^To: \"?\\([^ ,<\n]+\\)"
          str)
         (match-string 1 str)
@@ -431,8 +431,8 @@ dspmt" name xtm-dir)))
 
 (defun read-csv (filename headerp)
   (with-temp-buffer
-	(insert-file-contents filename)
-	(csv-parse-buffer headerp)))
+    (insert-file-contents filename)
+    (csv-parse-buffer headerp)))
 
 (defun devdocs-lookup (language name)
   (interactive "slanguage: \nsname: ")
@@ -443,11 +443,11 @@ dspmt" name xtm-dir)))
 (defun ben-send-iMessage (to-number message-text)
   (do-applescript
    (format
-	"tell application \"Messages\"
+    "tell application \"Messages\"
           send %s to buddy \"+61%s\" of service \"E:benswift@me.com\"
 end tell"
-	(prin1-to-string message-text)
-	to-number)))
+    (prin1-to-string message-text)
+    to-number)))
 
 (defun osx-screencapture (filename)
   (interactive "sfilename: ")
@@ -481,15 +481,15 @@ end tell"
 (defun ben-reformat-xml ()
   (interactive)
   (save-excursion
-    (sgml-pretty-print (point-min) (point-max))
-    (indent-region (point-min) (point-max))))
+	(sgml-pretty-print (point-min) (point-max))
+	(indent-region (point-min) (point-max))))
 
 (defun ben-symlink-dotfiles ()
   (interactive)
   (cl-flet ((linker (lambda (target linkname)
-				  (make-symbolic-link (expand-file-name (format "~/.dotfiles/%s" target))
-									  (expand-file-name (format "~/%s" linkname))
-									  :ok-if-it-already-exists))))
+					  (make-symbolic-link (expand-file-name (format "~/.dotfiles/%s" target))
+										  (expand-file-name (format "~/%s" linkname))
+										  :ok-if-it-already-exists))))
 	(linker "bash_profile.osx" ".bash_profile")
 	(linker "spacemacs" ".spacemacs")
 	(linker "gitconfig" ".gitconfig")
@@ -507,27 +507,27 @@ end tell"
 (defun date-of-next-Sunday ()
   "return's next Sunday's date, as a string"
   (let ((next-sun (calendar-gregorian-from-absolute
-                   (+ (calendar-absolute-from-gregorian (calendar-current-date))
-                      (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
-    (format "%04d-%02d-%02d"
-            (nth 2 next-sun)
-            (nth 0 next-sun)
-            (nth 1 next-sun))))
+				   (+ (calendar-absolute-from-gregorian (calendar-current-date))
+					  (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
+	(format "%04d-%02d-%02d"
+			(nth 2 next-sun)
+			(nth 0 next-sun)
+			(nth 1 next-sun))))
 
 (defun compile-church-chord-chart-pdf (num-songs)
   (interactive "nNumber of songs: ")
   (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
-         (chord-charts-dir (concat church-music-dir "chord-charts/"))
-         (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
-         (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
-                             (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
-         (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
-         (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
-    (let ((default-directory church-music-dir))
-      (shell-command (format "pdfjam %s -o %s && open %s"
-                             (mapconcat #'identity charts " ")
-                             output-filename
-                             output-filename)))))
+		 (chord-charts-dir (concat church-music-dir "chord-charts/"))
+		 (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
+		 (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
+							 (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
+		 (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
+		 (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
+	(let ((default-directory church-music-dir))
+	  (shell-command (format "pdfjam %s -o %s && open %s"
+							 (mapconcat #'identity charts " ")
+							 output-filename
+							 output-filename)))))
 
 ;;;;;;;;;;;;;;
 ;; teaching ;;
