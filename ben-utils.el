@@ -239,7 +239,8 @@ requires `identify' CLI program"
 (setq mu4e-compose-dont-reply-to-self t
 	  mu4e-compose-signature-auto-include nil
 	  mu4e-compose-format-flowed t
-	  fill-flowed-encode-column fill-column)
+	  fill-flowed-encode-column fill-column
+	  message-citation-line-format "On %Y-%m-%d at %R %Z, %f wrote...")
 
 (add-hook 'mu4e-compose-mode-hook #'spacemacs/toggle-yasnippet-on)
 
