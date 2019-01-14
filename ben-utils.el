@@ -64,10 +64,10 @@
 
 (defun jekyll-list-asset-filenames ()
   (->> (projectile-current-project-files)
-	   (--filter (s-starts-with? "_assets/" it))
+	   (--filter (s-starts-with? "assets/" it))
 	   ;; in case there's heaps of js guff that you *probably* don't want
-	   (--remove (s-starts-with? "_assets/js/" it))
-	   (--map (s-chop-prefix "_assets/" it))))
+	   (--remove (s-starts-with? "assets/js/" it))
+	   (--map (s-chop-prefix "assets/" it))))
 
 (defun kramdown-slugify (text)
   "slugify text (as kramdown would) based on the regexps in
@@ -136,7 +136,7 @@ requires `identify' CLI program"
   (string-to-number (shell-command-to-string (format "identify -format \"%%h\" \"%s\"" image-filename))))
 
 (defun jekyll-move-download-and-mogrify (filename width)
-  "move file by default into the appropriate subfolder of _assets/"
+  "move file by default into the appropriate subfolder of assets/"
   (interactive
    (let ((image-filename (completing-read "filename: "
 										  (f-files (expand-file-name "~/Downloads")
@@ -149,15 +149,15 @@ requires `identify' CLI program"
 	  image-filename
 	  (read-number (format "width (current %spx): " (image-width image-filename)) 1920))))
   (when (= (shell-command (format "mogrify -resize \"%d\" \"%s\"" width filename)) 0)
-	(let ((asset-root (f-join (projectile-project-root) "_assets")))
+	(let ((asset-root (f-join (projectile-project-root) "assets")))
 	  (unless (f-directory? asset-root)
-		(error "no _assets/ folder in projectile root - are you sure you're in the right project?"))
+		(error "no assets/ folder in projectile root - are you sure you're in the right project?"))
 	  (f-move filename
 			  (f-join asset-root
-					  (completing-read "_assets/" (cons "." (--map (f-relative it asset-root)
-																   (f-directories asset-root
-																				  (lambda (fname) (not (s-contains? ".git" fname)))
-																				  :recursive))))
+					  (completing-read "assets/" (cons "." (--map (f-relative it asset-root)
+																  (f-directories asset-root
+																				 (lambda (fname) (not (s-contains? ".git" fname)))
+																				 :recursive))))
 					  (f-filename filename))))))
 
 (defun jekyll-insert-date-frontmatter ()
