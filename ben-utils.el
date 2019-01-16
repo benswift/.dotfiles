@@ -160,10 +160,6 @@ requires `identify' CLI program"
 																				 :recursive))))
 					  (f-filename filename))))))
 
-(defun jekyll-insert-date-frontmatter ()
-  (interactive)
-  (insert (format "date: \"%s\"" (format-time-string "%F %T %z" (current-time)))))
-
 (defun mogrify-image-file (filename max-width)
   (interactive
    (list (read-file-name "file: ")
