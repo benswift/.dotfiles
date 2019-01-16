@@ -135,6 +135,17 @@ requires `identify' CLI program"
 requires `identify' CLI program"
   (string-to-number (shell-command-to-string (format "identify -format \"%%h\" \"%s\"" image-filename))))
 
+(defun mogrify-width (image-filename width)
+  "resize image (in-place) to `width'
+
+requires `mogrify' CLI program"
+  (shell-command (format "mogrify -resize \"%d\" \"%s\"" width image-filename)))
+
+(defun imageoptim-file (filename-or-glob)
+  "also apply some standard, useful optimisations"
+  (interactive "sfilename-or-glob: ")
+  (call-process "imageoptim" nil nil nil "--jpegmini" filename-or-glob))
+
 (defun jekyll-move-download-and-mogrify (filename width)
   "move file by default into the appropriate subfolder of assets/"
   (interactive
@@ -148,7 +159,8 @@ requires `identify' CLI program"
 	 (list
 	  image-filename
 	  (read-number (format "width (current %spx): " (image-width image-filename)) 1920))))
-  (when (= (shell-command (format "mogrify -resize \"%d\" \"%s\"" width filename)) 0)
+  (when (and (= (mogrify-width fname) 0)
+			 (= (imageoptim-file fname) 0))
 	(let ((asset-root (f-join (projectile-project-root) "assets")))
 	  (unless (f-directory? asset-root)
 		(error "no assets/ folder in projectile root - are you sure you're in the right project?"))
