@@ -174,7 +174,8 @@ requires `identify' CLI program"
   (-each
 	  (directory-files-recursively dir "\.\\(jpg\\|jpeg\\|png\\)$")
 	(lambda (fname)
-	  (shell-command (format "mogrify -resize \"%d\" %s" max-width fname)))))
+	  (when (> (image-width fname) max-width)
+		(shell-command (format "mogrify -resize \"%d\" %s" max-width fname))))))
 
 ;; helpful keybindings
 (spacemacs/declare-prefix "o" "user-prefix")
