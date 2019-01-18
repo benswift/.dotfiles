@@ -430,6 +430,11 @@ dspmt" name xtm-dir)))
       org-outline-path-complete-in-steps nil         ; Refile in a single go
       org-refile-use-outline-path t)
 
+;; org-ref & helm-bibtex
+
+(setq org-ref-bibliography-notes (concat org-directory "/zotero-notes.org")
+	  bibtex-completion-bibliography (expand-file-name "~/Documents/Zotero/export.bib"))
+
 ;;;;;;;;;;
 ;; misc ;;
 ;;;;;;;;;;
