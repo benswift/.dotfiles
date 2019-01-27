@@ -159,8 +159,8 @@ requires `mogrify' CLI program"
 	 (list
 	  image-filename
 	  (read-number (format "width (current %spx): " (image-width image-filename)) 1920))))
-  (when (and (= (mogrify-width fname) 0)
-			 (= (imageoptim-file fname) 0))
+  (when (and (= (mogrify-width filename width) 0)
+			 (= (imageoptim-file filename) 0))
 	(let ((asset-root (f-join (projectile-project-root) "assets")))
 	  (unless (f-directory? asset-root)
 		(error "no assets/ folder in projectile root - are you sure you're in the right project?"))
