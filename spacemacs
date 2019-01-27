@@ -65,7 +65,7 @@ This function should only modify configuration layer settings."
       tab-width 4)
      bibtex
      c-c++
-	 (clojure :packages (not clojure-cheatsheet))
+	 clojure
      cmake
      ;; csharp
 	 csv
