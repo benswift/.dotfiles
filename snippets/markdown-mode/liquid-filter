@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: liquid-filter
+# key: lf
+# --
+{{ $0 }}
