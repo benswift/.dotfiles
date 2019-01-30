@@ -59,3 +59,9 @@
 
 [magit]
 	hideCampaign = true
+[magithub]
+	online = true
+[magithub "status"]
+	includeStatusHeader = true
+	includePullRequestsSection = true
+	includeIssuesSection = true
