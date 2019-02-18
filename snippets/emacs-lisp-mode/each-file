@@ -2,11 +2,13 @@
 # name: each-file
 # key: eachfile
 # --
-(-each
-    (directory-files "${1:`(expand-file-name "~")`}" :full "\.${2:ext}$")
-  (lambda (fname)
-    (with-current-buffer (find-file fname)
-      (goto-char (point-min))
-      $0
-      (write-file fname)
-      (kill-buffer (current-buffer)))))
+(->> (f-entries ${1:dir}
+                nil
+                :recursive)
+     (-map (-rpartial #'f-relative default-directory))
+	 (lambda (fname)
+       (with-current-buffer (find-file fname)
+         (goto-char (point-min))
+         $0
+         (save-buffer)
+         (kill-buffer))))
