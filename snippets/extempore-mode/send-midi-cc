@@ -1,0 +1,4 @@
+# key: midicc
+# name: send-midi-cc
+# --
+(send-midi-cc (now) *midi-out* ${1:cc} ${2:val} ${3:chan})
