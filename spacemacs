@@ -89,6 +89,7 @@ This function should only modify configuration layer settings."
 	 multiple-cursors
      ;; php
      ;; (parinfer :init (add-hook 'extempore-mode-hook #'parinfer-mode))
+	 prettier
      python
      ;; racket
      restclient
