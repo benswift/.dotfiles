@@ -56,7 +56,10 @@ This function should only modify configuration layer settings."
      emacs-lisp
      git
      github
-     (markdown :variables markdown-asymmetric-header t)
+     (markdown
+	  :variables
+	  markdown-asymmetric-header t
+	  markdown-italic-underscore t)
      mu4e
      (org :disabled-for ess)
      ;; asciidoc
