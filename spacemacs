@@ -60,7 +60,7 @@ This function should only modify configuration layer settings."
 	  :variables
 	  markdown-asymmetric-header t
 	  markdown-italic-underscore t)
-     mu4e
+     (mu4e :variables mu4e-view-use-gnus nil)
      (org :disabled-for ess)
      ;; asciidoc
      (asm
