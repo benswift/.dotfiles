@@ -82,3 +82,7 @@ sublime-text-user-dir/Package Control.*
 
 .tern-port
 /scripts/comp2300-lucy-sync.sh
+
+# open MS Office documents
+
+~*
