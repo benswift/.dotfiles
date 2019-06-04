@@ -19,3 +19,5 @@ eval "$(rbenv init -)"
 # Local Variables:
 # mode: sh
 # End:
+
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
