@@ -6,14 +6,11 @@ export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
 
 # pyenv
 
-export PYENV_ROOT=/usr/local/var/pyenv
-export WORKON_HOME=/usr/local/var/pyenv/versions
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
 # set up rbenv
 
-export RBENV_ROOT=/usr/local/var/rbenv
 eval "$(rbenv init -)"
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
