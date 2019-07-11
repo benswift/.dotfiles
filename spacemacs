@@ -96,7 +96,7 @@ This function should only modify configuration layer settings."
      ;; racket
      restclient
      ruby
-     ;; rust
+     rust
      scheme
      (shell :variables shell-default-shell 'shell)
      shell-scripts
