@@ -616,10 +616,6 @@ Version 2017-01-11"
 							 output-filename
 							 output-filename)))))
 
-;; this file includes the data specific to the course I'm currently teaching
-;; (not included in dotfiles repo for obvious reasons)
-(load-file (expand-file-name "~/Documents/teaching/comp1720-2018/admin/comp1720.el"))
-
 (provide 'ben-utils)
 
 ;;; ben-utils.el ends here
