@@ -55,7 +55,6 @@ This function should only modify configuration layer settings."
       auto-completion-private-snippets-directory "~/.dotfiles/snippets/")
      emacs-lisp
      git
-     github
      (markdown
 	  :variables
 	  markdown-asymmetric-header t
