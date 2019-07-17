@@ -245,7 +245,7 @@ tutors: %s"
 (spacemacs/set-leader-keys "og" 'anu-cs-visit-gitlab)
 
 ;; now, run the lucy sync...
-;; (anu-cs-lucy-sync)
+(anu-cs-lucy-sync)
 
 (provide 'anu-cs-utils)
 
