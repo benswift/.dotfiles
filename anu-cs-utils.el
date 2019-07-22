@@ -93,14 +93,14 @@
 (defun anu-cs-tutors-for-student (uid)
   (let ((group (anu-cs-student-info uid "group")))
 	(and (not (s-blank? group))
-		 (cdr (--first (string= group (car it)) anu-cs-tutor-data)))))
+		 (cdr (--first (string= group (car it)) anu-cs-group-tutors)))))
 
 (defun anu-cs-tutor-cc-string-for-student (uid)
   (let ((tutors (anu-cs-tutors-for-student uid)))
 	(s-join "," (--map (format "%s@anu.edu.au" (cdr (assoc it anu-cs-tutor-uid-alist))) tutors))))
 
 (defun anu-cs-tutor-cc-string-for-group (group)
-  (let ((tutors (cdr (assoc group anu-cs-tutor-data))))
+  (let ((tutors (cdr (assoc group anu-cs-group-tutors))))
 	(s-join "," (--map (format "%s@anu.edu.au" (cdr (assoc it anu-cs-tutor-uid-alist))) tutors))))
 
 (defun anu-cs-pretty-format-student (uid)
@@ -156,7 +156,7 @@ tutors: %s"
 
 (defun anu-cs-completing-read-group ()
   (completing-read "group: "
-				   (-map #'car anu-cs-tutor-data)
+				   (-map #'car anu-cs-group-tutors)
 				   nil
 				   :require-match))
 
@@ -217,7 +217,7 @@ tutors: %s"
 				(or (anu-cs-get-uid-at-point)
 					(completing-read "name: "
 									 (append (-map #'cadr anu-cs-student-data)
-											 (-map #'car anu-cs-tutor-data))
+											 (-map #'car anu-cs-group-tutors))
 									 nil
 									 :require-match))))
 		   (cond
@@ -225,7 +225,7 @@ tutors: %s"
 			((s-match anu-cs-uid-regex uid-or-name-or-group)
 			 (anu-cs-student-info uid-or-name-or-group "group"))
 			;; if it's a group name
-			((member uid-or-name-or-group (-map #'car anu-cs-tutor-data))
+			((member uid-or-name-or-group (-map #'car anu-cs-group-tutors))
 			 uid-or-name-or-group)
 			;; if it's a student name
 			(t (anu-cs-student-info
