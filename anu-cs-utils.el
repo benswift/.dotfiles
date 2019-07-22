@@ -74,7 +74,15 @@
   (interactive)
   (setq anu-cs-student-data
 		(cdr (read-csv (format "%s/data/students.csv" anu-cs-lucy-directory) nil)))
-  (message "lucy: succesfully synced %d students" (length anu-cs-student-data)))
+  (message "lucy: succesfully synced %d students" (length anu-cs-student-data))
+
+  ;; if there are known tutors (in `anu-cs-tutor-data'), it's handy to have
+  ;; their info in the `anu-cs-student-data' list as well
+  (when anu-cs-tutor-data
+	(setq anu-cs-student-data
+		  (append anu-cs-student-data
+				  (--map (list (cdr it) (car it) "Norm" "" "" "tutors" "" "")
+						 anu-cs-tutor-data)))))
 
 (defun anu-cs-get-student-data (uid)
   (or (--first (string= uid (car it)) anu-cs-student-data)
