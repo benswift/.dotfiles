@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# key: labtime
+# --
+Hi Brent
+
+Can we see what we can do to accommodate ${2:`(progn (message-add-header "Cc: brent.schuetze@anu.edu.au")(ben-find-to-firstname))`} in a suitable lab group?
+
+Cheers,
+Ben
