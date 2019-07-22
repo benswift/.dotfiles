@@ -73,16 +73,12 @@
 (defun anu-cs-lucy-sync ()
   (interactive)
   (setq anu-cs-student-data
-		(cdr (read-csv (format "%s/data/students.csv" anu-cs-lucy-directory) nil)))
-  (message "lucy: succesfully synced %d students" (length anu-cs-student-data))
-
-  ;; if there are known tutors (in `anu-cs-tutor-data'), it's handy to have
-  ;; their info in the `anu-cs-student-data' list as well
-  (when anu-cs-tutor-data
-	(setq anu-cs-student-data
-		  (append anu-cs-student-data
-				  (--map (list (cdr it) (car it) "Norm" "" "" "tutors" "" "")
-						 anu-cs-tutor-data)))))
+		(append
+		 ;; these ones auto-synced from FAIS
+		 (cdr (read-csv (format "%s/data/students.csv" anu-cs-lucy-directory) nil))
+		 ;; these ones pre-populated by hand
+		 anu-cs-other-student-data))
+  (message "lucy: succesfully synced %d students" (length anu-cs-student-data)))
 
 (defun anu-cs-get-student-data (uid)
   (or (--first (string= uid (car it)) anu-cs-student-data)
@@ -98,35 +94,33 @@
 		   (anu-cs-get-student-data uid))
 	(error "Error: no field \"%s\" in anu-cs-student-data" uid)))
 
-(defun anu-cs-tutors-for-student (uid)
-  (let ((group (anu-cs-student-info uid "group")))
-	(and (not (s-blank? group))
-		 (cdr (--first (string= group (car it)) anu-cs-group-tutors)))))
+(defun anu-cs-tutor-cc-string-for-group (group)
+  (->> (cdr (assoc group anu-cs-group-tutors))
+	   (--map (format "%s@anu.edu.au" it))
+	   (s-join ",")))
 
 (defun anu-cs-tutor-cc-string-for-student (uid)
-  (let ((tutors (anu-cs-tutors-for-student uid)))
-	(s-join "," (--map (format "%s@anu.edu.au" (cdr (assoc it anu-cs-tutor-uid-alist))) tutors))))
-
-(defun anu-cs-tutor-cc-string-for-group (group)
-  (let ((tutors (cdr (assoc group anu-cs-group-tutors))))
-	(s-join "," (--map (format "%s@anu.edu.au" (cdr (assoc it anu-cs-tutor-uid-alist))) tutors))))
+  (anu-cs-tutor-cc-string-for-group (anu-cs-student-info uid "group")))
 
 (defun anu-cs-pretty-format-student (uid)
-  (format
-   "uid: %s
+  (let ((group (anu-cs-student-info uid "group")))
+	(format
+	 "uid: %s
 firstname: %s
 full name: %s
 group: %s
 course: %s
 degree: %s
 tutors: %s"
-   uid
-   (anu-cs-student-firstname uid)
-   (anu-cs-student-info uid "name")
-   (anu-cs-student-info uid "group")
-   (anu-cs-student-info uid "course")
-   (anu-cs-student-info uid "degree")
-   (s-join " " (anu-cs-tutors-for-student uid))))
+	 uid
+	 (anu-cs-student-firstname uid)
+	 (anu-cs-student-info uid "name")
+	 group
+	 (anu-cs-student-info uid "course")
+	 (anu-cs-student-info uid "degree")
+	 (->> (cdr (assoc group anu-cs-group-tutors))
+		  (--map (anu-cs-student-firstname it))
+		  (s-join " and ")))))
 
 ;; helpers for interactive use
 
@@ -175,13 +169,13 @@ tutors: %s"
   (kill-new uid)
   (message (anu-cs-pretty-format-student uid)))
 
-(defun fais-visit-student (uid)
+(defun anu-cs-visit-fais (uid)
   (interactive
    (list (anu-cs-completing-read-uid-dwim)))
   (anu-cs-validate-uid uid)
   (ffap (concat "https://cs.anu.edu.au/fais/staff/Students.php?StudID=" (substring uid 1))))
 
-(defun discourse-visit-student (uid)
+(defun anu-cs-visit-discourse (uid)
   (interactive
    (list (anu-cs-completing-read-uid-dwim)))
   (anu-cs-validate-uid uid)
@@ -249,8 +243,9 @@ tutors: %s"
 
 ;; keybindings
 (spacemacs/set-leader-keys "op" 'anu-cs-print-student)
-(spacemacs/set-leader-keys "of" 'fais-visit-student)
+(spacemacs/set-leader-keys "of" 'anu-cs-visit-fais)
 (spacemacs/set-leader-keys "og" 'anu-cs-visit-gitlab)
+(spacemacs/set-leader-keys "od" 'anu-cs-visit-discourse)
 
 ;; now, run the lucy sync...
 (anu-cs-lucy-sync)
