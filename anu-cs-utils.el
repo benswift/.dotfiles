@@ -78,7 +78,10 @@
 		 (cdr (read-csv (format "%s/data/students.csv" anu-cs-lucy-directory) nil))
 		 ;; these ones pre-populated by hand
 		 anu-cs-other-student-data))
-  (message "lucy: succesfully synced %d students" (length anu-cs-student-data)))
+  (let ((others-count (length anu-cs-other-student-data)))
+	(message "lucy: succesfully synced %d students and %s tutors/project students"
+			 (- (length anu-cs-student-data) others-count)
+			 others-count)))
 
 (defun anu-cs-get-student-data (uid)
   (or (--first (string= uid (car it)) anu-cs-student-data)
