@@ -2,4 +2,4 @@
 # name: play-midi-note
 # key: mplaynote
 # --
-(play-note (now) ${1:*midi-out*} ${2:60} ${3:80} ${4:44100} ${5:chan})
+(play-midi-note (now) ${1:*midi-out*} ${2:60} ${3:80} ${4:44100} ${5:chan})
