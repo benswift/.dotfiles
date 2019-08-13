@@ -3,5 +3,4 @@
 # key: inc
 # --
 {% include `(yas-choose-value (->> (projectile-current-project-files) (--filter (s-starts-with? "_includes/" it)) (--map (s-chop-prefix "_includes/" it))))))` %}
-
 $0
