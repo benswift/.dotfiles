@@ -139,7 +139,11 @@ requires `identify' CLI program"
   "resize image (in-place) to `width'
 
 requires `mogrify' CLI program"
-  (shell-command (format "mogrify -resize \"%d\" \"%s\"" width image-filename)))
+  (let ((iw (image-width image-filename))
+		(command-string (format "mogrify -resize \"%d\" \"%s\"" width image-filename)))
+	(if (>= width iw)
+		(message "image is already %dpx wide---so I'll just leave it as-is" iw)
+	  (shell-command command-string))))
 
 (defun imageoptim-file (filename-or-glob)
   "also apply some standard, useful optimisations"
