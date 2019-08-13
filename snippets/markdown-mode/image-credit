@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: image-credit
+# key: ic
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+{% include slides/image-credit.html
+   artist="$0"
+   title=""
+   year=""
+   materials=""
+%}
