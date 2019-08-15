@@ -79,7 +79,7 @@
 		 ;; these ones pre-populated by hand
 		 anu-cs-other-student-data))
   (let ((others-count (length anu-cs-other-student-data)))
-	(message "lucy: succesfully synced %d students and %s tutors/project students"
+	(message "lucy: succesfully synced %d COMP1720 students and %s tutors/other students"
 			 (- (length anu-cs-student-data) others-count)
 			 others-count)))
 
