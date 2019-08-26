@@ -198,10 +198,18 @@ tutors: %s"
 							(anu-cs-student-info uid "group")
 							uid)))
 
+(defvar anu-cs-default-submission-project "comp1720-2019-assignment-1"
+  "this is the 'default' project that we'll jump to
+
+This works because you're usually not jumping between projects a
+lot, just between student submissions for the same project.")
+
 (defun anu-cs-visit-submission (uid project)
   (interactive
    (list (anu-cs-completing-read-uid-dwim)
-		 (anu-cs-completing-read-project)))
+		 (or
+		  anu-cs-default-submission-project
+		  (anu-cs-completing-read-project))))
   (let ((submission-dir (anu-cs-student-dir uid project)))
 	(if (f-dir? submission-dir)
 		(dired submission-dir)
