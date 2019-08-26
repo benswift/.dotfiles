@@ -247,6 +247,7 @@ tutors: %s"
 ;; keybindings
 (spacemacs/set-leader-keys "op" 'anu-cs-print-student)
 (spacemacs/set-leader-keys "of" 'anu-cs-visit-fais)
+(spacemacs/set-leader-keys "os" 'anu-cs-visit-submission)
 (spacemacs/set-leader-keys "og" 'anu-cs-visit-gitlab)
 (spacemacs/set-leader-keys "od" 'anu-cs-visit-discourse)
 
