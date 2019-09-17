@@ -142,7 +142,7 @@ requires `mogrify' CLI program"
   (let ((iw (image-width image-filename))
 		(command-string (format "mogrify -resize \"%d\" \"%s\"" width image-filename)))
 	(if (>= width iw)
-		(message "image is already %dpx wide---so I'll just leave it as-is" iw)
+		(progn (message "image is already %dpx wide---so I'll just leave it as-is" iw) 0)
 	  (shell-command command-string))))
 
 (defun imageoptim-file (filename-or-glob)
