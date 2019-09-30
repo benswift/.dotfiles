@@ -270,10 +270,10 @@ requires `mogrify' CLI program"
   (interactive)
   (let ((str (buffer-substring-no-properties (point-min) (point-max))))
 	(if (string-match
-         "^To: \"?\\([^ ,<\n]+\\)"
-         str)
-        (match-string 1 str)
-      nil)))
+		 "^To: \"?\\([^ ,<\n]+\\)"
+		 str)
+		(match-string 1 str)
+	  nil)))
 
 (require 'gnus-dired)
 
@@ -282,99 +282,99 @@ requires `mogrify' CLI program"
 (defun gnus-dired-mail-buffers ()
   "Return a list of active message buffers."
   (let (buffers)
-    (save-current-buffer
-      (dolist (buffer (buffer-list t))
-        (set-buffer buffer)
-        (when (and (derived-mode-p 'message-mode)
-                   (null message-sent-message-via))
-          (push (buffer-name buffer) buffers))))
-    (nreverse buffers)))
+	(save-current-buffer
+	  (dolist (buffer (buffer-list t))
+		(set-buffer buffer)
+		(when (and (derived-mode-p 'message-mode)
+				   (null message-sent-message-via))
+		  (push (buffer-name buffer) buffers))))
+	(nreverse buffers)))
 
 (setq gnus-dired-mail-mode 'mu4e-user-agent)
 (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 
 (setq mu4e-maildir-shortcuts
-      '(("/INBOX" . ?i)
-        ("/Sent Items" . ?s)
-        ("/Archive" . ?a)
-        ("/Drafts" . ?d)
-        ("/Trash" . ?t)
-        ("/Junk Mail" . ?j)))
+	  '(("/INBOX" . ?i)
+		("/Sent Items" . ?s)
+		("/Archive" . ?a)
+		("/Drafts" . ?d)
+		("/Trash" . ?t)
+		("/Junk Mail" . ?j)))
 
 (setq mu4e-headers-date-format "%e %b %y"
-      mu4e-headers-fields '((:human-date . 12)
-                            (:flags . 6)
-                            (:maildir . 10)
-                            (:from . 22)
-                            (:subject)))
+	  mu4e-headers-fields '((:human-date . 12)
+							(:flags . 6)
+							(:maildir . 10)
+							(:from . 22)
+							(:subject)))
 
 (setq mu4e-view-show-images t
-      mu4e-html2text-command #'mu4e-shr2text
-      ;; make sure fg-bg contrast is high enough
-      shr-color-visible-luminance-min 80
-      ;; don't use variable pitch fonts
-      shr-use-fonts nil)
+	  mu4e-html2text-command #'mu4e-shr2text
+	  ;; make sure fg-bg contrast is high enough
+	  shr-color-visible-luminance-min 80
+	  ;; don't use variable pitch fonts
+	  shr-use-fonts nil)
 
 (-each
-    '(("from:Henry Gardner" "Hballs" ?h)
-      ("to:benjamin.j.swift@gmail.com" "to gmail" ?g)
-      ("list:extemporelang.googlegroups.com" "Extempore list" ?e))
+	'(("from:Henry Gardner" "Hballs" ?h)
+	  ("to:benjamin.j.swift@gmail.com" "to gmail" ?g)
+	  ("list:extemporelang.googlegroups.com" "Extempore list" ?e))
   (lambda (b) (add-to-list 'mu4e-bookmarks b t)))
 
 (setq mu4e-user-mailing-lists
-      '(("extemporelang.googlegroups.com" . "Extempore")
-        ("livecode.group.lurk.org" . "TOPLAP")
-        ("acma-l.list.waikato.ac.nz" . "ACMA")
-        ("llvm-dev@lists.llvm.org" . "LLVM")
-        ("mu-discuss@googlegroups.com" . "mu-discuss")
-        ("nanomsg@freelists.org" . "nanomsg")))
+	  '(("extemporelang.googlegroups.com" . "Extempore")
+		("livecode.group.lurk.org" . "TOPLAP")
+		("acma-l.list.waikato.ac.nz" . "ACMA")
+		("llvm-dev@lists.llvm.org" . "LLVM")
+		("mu-discuss@googlegroups.com" . "mu-discuss")
+		("nanomsg@freelists.org" . "nanomsg")))
 
 ;; send
 
 (require 'smtpmail-async)
 
 (setq send-mail-function 'async-smtpmail-send-it
-      message-send-mail-function 'async-smtpmail-send-it
-      smtpmail-smtp-service 587
-      smtpmail-debug-info t)
+	  message-send-mail-function 'async-smtpmail-send-it
+	  smtpmail-smtp-service 587
+	  smtpmail-debug-info t)
 
 ;; contexts
 
 (setq mu4e-contexts
-      (list
-       (make-mu4e-context
-        :name "personal"
-        :enter-func (lambda () (mu4e-message "switching to personal context"))
-        ;; leave-func not defined
-        :match-func (lambda (msg)
-                      (when msg
-                        (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
-                            (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
-        :vars '((user-mail-address . "ben@benswift.me")
-                (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
-                (smtpmail-smtp-server . "mail.messagingengine.com")))
-       (make-mu4e-context
-        :name "anu"
-        :enter-func (lambda () (mu4e-message "switching to ANU context"))
-        ;; leave-fun not defined
-        :match-func (lambda (msg)
-                      (when msg
-                        (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
-        :vars '((user-mail-address . "ben.swift@anu.edu.au")
-                (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
-                (smtpmail-smtp-server . "smtp.office365.com")))))
+	  (list
+	   (make-mu4e-context
+		:name "personal"
+		:enter-func (lambda () (mu4e-message "switching to personal context"))
+		;; leave-func not defined
+		:match-func (lambda (msg)
+					  (when msg
+						(or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
+							(mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
+		:vars '((user-mail-address . "ben@benswift.me")
+				(smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
+				(smtpmail-smtp-server . "mail.messagingengine.com")))
+	   (make-mu4e-context
+		:name "anu"
+		:enter-func (lambda () (mu4e-message "switching to ANU context"))
+		;; leave-fun not defined
+		:match-func (lambda (msg)
+					  (when msg
+						(mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
+		:vars '((user-mail-address . "ben.swift@anu.edu.au")
+				(smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
+				(smtpmail-smtp-server . "smtp.office365.com")))))
 
 (defun ben-send-anu-email (email-address subject body &optional async cc-string)
   (with-temp-buffer
-    (mu4e-context-switch nil "anu")
-    (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
-                    email-address
-                    (if cc-string (format "Cc: %s\n" cc-string) "")
-                    subject
-                    body))
-    (if async
-        (async-smtpmail-send-it)
-      (smtpmail-send-it))))
+	(mu4e-context-switch nil "anu")
+	(insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
+					email-address
+					(if cc-string (format "Cc: %s\n" cc-string) "")
+					subject
+					body))
+	(if async
+		(async-smtpmail-send-it)
+	  (smtpmail-send-it))))
 
 ;;;;;;;;;;;;;;;
 ;; Extempore ;;
@@ -398,45 +398,45 @@ requires `mogrify' CLI program"
 
 (defun extempore-create-template-file (base-path filename &optional header)
   (let ((full-path (format "%s/%s" base-path filename)))
-    (unless (file-exists-p full-path)
-      (progn
-        (find-file full-path)
-        (if header (insert header))
-        (save-buffer)
-        (kill-buffer)))))
+	(unless (file-exists-p full-path)
+	  (progn
+		(find-file full-path)
+		(if header (insert header))
+		(save-buffer)
+		(kill-buffer)))))
 
 (defun extempore-create-template (name)
   "Set up the directory structure and files for a new extempore session/gig."
   (interactive "sSession name: ")
   (let* ((xtm-dir (expand-file-name "~/Documents/research/extemporelang/xtm/"))
-         (base-path (concat xtm-dir "sessions/" name))
-         (setup-header
-          (format ";;; setup.xtm --- setup file for %s
+		 (base-path (concat xtm-dir "sessions/" name))
+		 (setup-header
+		  (format ";;; setup.xtm --- setup file for %s
 
 (sys:load \"%slib/benlib-scm.xtm\")
 
 dspmt" name xtm-dir)))
-    (if (file-exists-p base-path)
-        (error "Cannot create xtm session: directory already exists."))
-    (make-directory base-path)
-    (extempore-create-template-file
-     base-path "practise.xtm" "headerp")
-    (extempore-create-template-file
-     base-path "gig.xtm" "headerp")
-    (extempore-create-template-file
-     base-path "setup.xtm" setup-header)
-    (dired base-path)))
+	(if (file-exists-p base-path)
+		(error "Cannot create xtm session: directory already exists."))
+	(make-directory base-path)
+	(extempore-create-template-file
+	 base-path "practise.xtm" "headerp")
+	(extempore-create-template-file
+	 base-path "gig.xtm" "headerp")
+	(extempore-create-template-file
+	 base-path "setup.xtm" setup-header)
+	(dired base-path)))
 
 ;;;;;;;;;;;;;;
 ;; org-mode ;;
 ;;;;;;;;;;;;;;
 
 (setq org-directory (expand-file-name "~/Dropbox/org")
-      org-default-notes-file (concat org-directory "/inbox.org")
-      org-agenda-files (list org-directory)
-      org-refile-targets '((nil :maxlevel . 9) (org-agenda-files :maxlevel . 9))
-      org-outline-path-complete-in-steps nil         ; Refile in a single go
-      org-refile-use-outline-path t)
+	  org-default-notes-file (concat org-directory "/inbox.org")
+	  org-agenda-files (list org-directory)
+	  org-refile-targets '((nil :maxlevel . 9) (org-agenda-files :maxlevel . 9))
+	  org-outline-path-complete-in-steps nil         ; Refile in a single go
+	  org-refile-use-outline-path t)
 
 ;; org-ref & helm-bibtex
 
@@ -449,32 +449,32 @@ dspmt" name xtm-dir)))
 
 (defun slurp (f)
   (with-temp-buffer
-    (insert-file-contents f)
-    (buffer-substring-no-properties
-     (point-min)
-     (point-max))))
+	(insert-file-contents f)
+	(buffer-substring-no-properties
+	 (point-min)
+	 (point-max))))
 
 (require 'csv)
 
 (defun read-csv (filename headerp)
   (with-temp-buffer
-    (insert-file-contents filename)
-    (csv-parse-buffer headerp)))
+	(insert-file-contents filename)
+	(csv-parse-buffer headerp)))
 
 (defun devdocs-lookup (language name)
   (interactive "slanguage: \nsname: ")
   (shell-command
    (format "open devdocs://search/%s"
-           (url-hexify-string (concat language " " name)))))
+		   (url-hexify-string (concat language " " name)))))
 
 (defun ben-send-iMessage (to-number message-text)
   (do-applescript
    (format
-    "tell application \"Messages\"
-          send %s to buddy \"+61%s\" of service \"E:benswift@me.com\"
+	"tell application \"Messages\"
+		  send %s to buddy \"+61%s\" of service \"E:benswift@me.com\"
 end tell"
-    (prin1-to-string message-text)
-    to-number)))
+	(prin1-to-string message-text)
+	to-number)))
 
 (defun osx-screencapture (filename)
   (interactive "sfilename: ")
@@ -488,20 +488,20 @@ end tell"
 (defun ben-asciify-buffer-or-region (beg end)
   (interactive "r")
   (let ((asciify-alist '(("’" . "'")
-                         ("‘" . "'")
-                         ("“" . "\"")
-                         ("”" . "\"")
-                         ("—" . "---")
-                         ("…" . "..."))))
-    (unless (region-active-p)
-      (setq beg (point-min))
-      (setq end (point-max)))
-    (save-excursion
-      (-each asciify-alist
-        (lambda (nonascii-char-pair)
-          (goto-char beg)
-          (while (search-forward (car nonascii-char-pair) end :noerror)
-            (replace-match (cdr nonascii-char-pair) nil :literal)))))))
+						 ("‘" . "'")
+						 ("“" . "\"")
+						 ("”" . "\"")
+						 ("—" . "---")
+						 ("…" . "..."))))
+	(unless (region-active-p)
+	  (setq beg (point-min))
+	  (setq end (point-max)))
+	(save-excursion
+	  (-each asciify-alist
+		(lambda (nonascii-char-pair)
+		  (goto-char beg)
+		  (while (search-forward (car nonascii-char-pair) end :noerror)
+			(replace-match (cdr nonascii-char-pair) nil :literal)))))))
 
 (defun xah-title-case-region-or-line (@begin @end)
   "Title case text between nearest brackets, or current line, or text selection.
@@ -512,8 +512,8 @@ URL `http://ergoemacs.org/emacs/elisp_title_case_text.html'
 Version 2017-01-11"
   (interactive
    (if (use-region-p)
-       (list (region-beginning) (region-end))
-     (let (
+	   (list (region-beginning) (region-end))
+	 (let (
 		   $p1
 		   $p2
 		   ($skipChars "^\"<>(){}[]“”‘’‹›«»「」『』【】〖〗《》〈〉〔〕"))
@@ -567,9 +567,9 @@ Version 2017-01-11"
   "Takes a multi-line paragraph and makes it into a single line of text."
   (interactive (progn (barf-if-buffer-read-only) '(t)))
   (let ((fill-column (point-max))
-        ;; This would override `fill-column' if it's an integer.
-        (emacs-lisp-docstring-fill-column t))
-    (fill-paragraph nil region)))
+		;; This would override `fill-column' if it's an integer.
+		(emacs-lisp-docstring-fill-column t))
+	(fill-paragraph nil region)))
 
 (require 'sgml-mode)
 
