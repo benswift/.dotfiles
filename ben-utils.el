@@ -150,21 +150,25 @@ requires `mogrify' CLI program"
   (interactive "sfilename-or-glob: ")
   (call-process "imageoptim" nil nil nil "--jpegmini" filename-or-glob))
 
-(defun jekyll-move-download-and-mogrify (filename width)
+(defun jekyll-move-download-and-mogrify (filename desired-width)
   "move file by default into the appropriate subfolder of assets/"
   (interactive
-   (let ((image-filename (completing-read "filename: "
-										  (f-files (expand-file-name "~/Downloads")
-												   (lambda (fname)
-													 (--any (s-ends-with? it fname)
-															'(".jpg" ".jpeg" ".png"))))
-										  nil
-										  :require-match)))
+   (let* ((image-filename (completing-read "filename: "
+										   (f-files (expand-file-name "~/Downloads")
+													(lambda (fname)
+													  (--any (s-ends-with? it fname)
+															 '(".jpg" ".jpeg" ".png"))))
+										   nil
+										   :require-match))
+		  (default-width 1920)
+		  (original-width (image-width image-filename)))
 	 (list
 	  image-filename
-	  (read-number (format "width (current %spx): " (image-width image-filename)) 1920))))
-  (when (and (= (mogrify-width filename width) 0)
-			 (= (imageoptim-file filename) 0))
+	  (read-number (format "desired image width (current %spx): " original-width) default-width))))
+  (when (or (< (image-width filename) desired-width) ;; don't enlarge it, but...
+			(= (mogrify-width filename desired-width) 0)) ;; ...downsize if necessary
+	;; run imageoptim as well---assuming JPEGmini is playing nice with Emacs
+	;; (= (imageoptim-file filename) 0)
 	(let ((asset-root (f-join (projectile-project-root) "assets")))
 	  (unless (f-directory? asset-root)
 		(error "no assets/ folder in projectile root - are you sure you're in the right project?"))
