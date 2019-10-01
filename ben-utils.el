@@ -169,16 +169,18 @@ requires `mogrify' CLI program"
 			(= (mogrify-width filename desired-width) 0)) ;; ...downsize if necessary
 	;; run imageoptim as well---assuming JPEGmini is playing nice with Emacs
 	;; (= (imageoptim-file filename) 0)
-	(let ((asset-root (f-join (projectile-project-root) "assets")))
-	  (unless (f-directory? asset-root)
-		(error "no assets/ folder in projectile root - are you sure you're in the right project?"))
-	  (f-move filename
-			  (f-join asset-root
-					  (completing-read "assets/" (cons "." (--map (f-relative it asset-root)
-																  (f-directories asset-root
-																				 (lambda (fname) (not (s-contains? ".git" fname)))
-																				 :recursive))))
-					  (f-filename filename))))))
+	(let* ((asset-root (f-join (projectile-project-root) "assets"))
+		   (dest-filename (f-join asset-root
+								  (completing-read "assets/" (cons "." (--map (f-relative it asset-root)
+																			  (f-directories asset-root
+																							 (lambda (fname) (not (s-contains? ".git" fname)))
+																							 :recursive))))
+								  (f-filename filename))))
+	  (f-move filename dest-filename)
+	  ;; for convenience, copy the relevant "background image" Jekyll include
+	  (kill-new (format "{%% include slides/background-image.html image=\"%s\" %%}"
+						(f-relative dest-filename asset-root))))))
+
 
 (defun mogrify-image-file (filename max-width)
   (interactive
