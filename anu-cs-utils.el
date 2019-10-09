@@ -105,16 +105,21 @@
 (defun anu-cs-tutor-cc-string-for-student (uid)
   (anu-cs-tutor-cc-string-for-group (anu-cs-student-info uid "group")))
 
+(defun anu-cs-get-student-progress-summary (uid)
+  (let ((default-directory anu-cs-lucy-directory))
+	(shell-command-to-string (format "poetry run ./lucy student-progress-summary %s" uid))))
+
 (defun anu-cs-pretty-format-student (uid)
   (let ((group (anu-cs-student-info uid "group")))
 	(format
 	 "uid: %s
 firstname: %s
 full name: %s
-group: %s
+group:  %s
 course: %s
 degree: %s
-tutors: %s"
+tutors: %s
+%s"
 	 uid
 	 (anu-cs-student-firstname uid)
 	 (anu-cs-student-info uid "name")
@@ -123,7 +128,8 @@ tutors: %s"
 	 (anu-cs-student-info uid "degree")
 	 (->> (cdr (assoc group anu-cs-group-tutors))
 		  (--map (anu-cs-student-firstname it))
-		  (s-join " and ")))))
+		  (s-join " and "))
+	 (anu-cs-get-student-progress-summary uid))))
 
 ;; helpers for interactive use
 
