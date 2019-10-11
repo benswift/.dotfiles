@@ -110,26 +110,19 @@
 	(shell-command-to-string (format "poetry run ./lucy student-progress-summary %s" uid))))
 
 (defun anu-cs-pretty-format-student (uid)
-  (let ((group (anu-cs-student-info uid "group")))
-	(format
-	 "uid: %s
-firstname: %s
-full name: %s
-group:  %s
-course: %s
-degree: %s
-tutors: %s
-%s"
-	 uid
-	 (anu-cs-student-firstname uid)
-	 (anu-cs-student-info uid "name")
-	 group
-	 (anu-cs-student-info uid "course")
-	 (anu-cs-student-info uid "degree")
-	 (->> (cdr (assoc group anu-cs-group-tutors))
-		  (--map (anu-cs-student-firstname it))
-		  (s-join " and "))
-	 (anu-cs-get-student-progress-summary uid))))
+  (let* ((group (anu-cs-student-info uid "group"))
+		 (fields `(("uid: " . ,uid)
+				   ("firstname: " . ,(anu-cs-student-firstname uid))
+				   ("full name: " . ,(anu-cs-student-info uid "name"))
+				   ("group:  " . ,group)
+				   ("course: " . ,(anu-cs-student-info uid "course"))
+				   ("degree: " . ,(anu-cs-student-info uid "degree"))
+				   ("tutors: " . ,(->> (cdr (assoc group anu-cs-group-tutors))
+									   (--map (anu-cs-student-firstname it))
+									   (s-join " and ")))
+				   ("" . ,(s-trim (anu-cs-get-student-progress-summary uid))))))
+	(s-join "\n" (--map (concat (propertize (car it) 'face 'font-lock-string-face) (cdr it))
+						fields))))
 
 ;; helpers for interactive use
 
