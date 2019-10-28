@@ -181,23 +181,26 @@ requires `mogrify' CLI program"
 	  (kill-new (format "{%% include slides/background-image.html image=\"%s\" %%}"
 						(f-relative dest-filename asset-root))))))
 
+(defun mogrify-image-file (filename desired-width)
+  "note: this will never make the file wider
 
-(defun mogrify-image-file (filename max-width)
+if DESIRED-WIDTH is greater than the file width, it'll just do
+nothing"
   (interactive
    (list (read-file-name "file: ")
-		 (read-number "max-width: " 1920)))
-  (shell-command (format "mogrify -resize \"%d\" %s" max-width filename)))
+		 (read-number "desired width (px): " 1920)))
+  (if (> (image-width filename) desired-width)
+	  (shell-command (format "mogrify -resize \"%d\" %s" desired-width filename))
+	(message "%s is already narrower than %dpx, skipping..." filename desired-width)))
 
 ;; TODO it'd be nice if this worked on the currently selected files in a dired buffer
 (defun mogrify-image-files-recursively (dir max-width)
   (interactive
    (list (read-directory-name "directory: ")
 		 (read-number "max-width: " 1920)))
-  (-each
+  (--each
 	  (directory-files-recursively dir "\.\\(jpg\\|jpeg\\|png\\)$")
-	(lambda (fname)
-	  (when (> (image-width fname) max-width)
-		(shell-command (format "mogrify -resize \"%d\" %s" max-width fname))))))
+	(mogrify-image-file it max-width)))
 
 ;; helpful keybindings
 (spacemacs/declare-prefix "o" "user-prefix")
