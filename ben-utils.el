@@ -567,6 +567,55 @@ Version 2017-01-11"
 			   (replace-match (aref $x 1) "FIXEDCASE" "LITERAL")))
 		   $strPairs))))))
 
+(defun xah-upcase-sentence ()
+  "Upcase first letters of sentences of current text block or selection.
+
+Modified by me - I don't like the overlays, so I got rid of them.
+
+URL `http://ergoemacs.org/emacs/emacs_upcase_sentence.html'
+Version 2019-06-21"
+  (interactive)
+  (let ($p1 $p2)
+    (if (region-active-p)
+        (setq $p1 (region-beginning) $p2 (region-end))
+      (save-excursion
+        (if (re-search-backward "\n[ \t]*\n" nil "move")
+            (progn
+              (setq $p1 (point))
+              (re-search-forward "\n[ \t]*\n"))
+          (setq $p1 (point)))
+        (progn
+          (re-search-forward "\n[ \t]*\n" nil "move")
+          (setq $p2 (point)))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+		(downcase-region $p1 $p2)
+        (let ((case-fold-search nil))
+          (goto-char (point-min))
+          (while (re-search-forward "\\. \\{1,2\\}\\([a-z]\\)" nil "move") ; after period
+            (upcase-region (match-beginning 1) (match-end 1)))
+
+          ;;  new line after period
+          (goto-char (point-min))
+          (while (re-search-forward "\\. ?\n *\\([a-z]\\)" nil "move")
+            (upcase-region (match-beginning 1) (match-end 1)))
+
+          ;; after a blank line, after a bullet, or beginning of buffer
+          (goto-char (point-min))
+          (while (re-search-forward "\\(\\`\\|• \\|\n\n\\)\\([a-z]\\)" nil "move")
+            (upcase-region (match-beginning 2) (match-end 2)))
+
+          ;; for HTML. first letter after tag
+          (goto-char (point-min))
+          (while (re-search-forward "\\(<p>\n?\\|<li>\\|<td>\n?\\|<figcaption>\n?\\)\\([a-z]\\)" nil "move")
+            (upcase-region (match-beginning 2) (match-end 2)))
+
+          (goto-char (point-min)))))))
+
+;; this overrides an eyebrowse keybinding, but I don't use that
+(evil-global-set-key 'motion "gt" #'xah-upcase-sentence)
+
 ;;; Stefan Monnier <foo at acm.org>. It is the opposite of fill-paragraph
 (defun unfill-paragraph (&optional region)
   "Takes a multi-line paragraph and makes it into a single line of text."
