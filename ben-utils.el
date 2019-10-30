@@ -165,21 +165,28 @@ requires `mogrify' CLI program"
 	 (list
 	  image-filename
 	  (read-number (format "desired image width (current %spx): " original-width) default-width))))
-  (when (or (< (image-width filename) desired-width) ;; don't enlarge it, but...
-			(= (mogrify-width filename desired-width) 0)) ;; ...downsize if necessary
-	;; run imageoptim as well---assuming JPEGmini is playing nice with Emacs
-	;; (= (imageoptim-file filename) 0)
-	(let* ((asset-root (f-join (projectile-project-root) "assets"))
-		   (dest-filename (f-join asset-root
-								  (completing-read "assets/" (cons "." (--map (f-relative it asset-root)
-																			  (f-directories asset-root
-																							 (lambda (fname) (not (s-contains? ".git" fname)))
-																							 :recursive))))
-								  (f-filename filename))))
-	  (f-move filename dest-filename)
-	  ;; for convenience, copy the relevant "background image" Jekyll include
-	  (kill-new (format "{%% include slides/background-image.html image=\"%s\" %%}"
-						(f-relative dest-filename asset-root))))))
+
+  ;; downsize image if necessary
+  (if (> (image-width filename) desired-width)
+	  (unless (= (mogrify-width filename desired-width) 0)
+		(error "error mogrifying %s" filename)))
+
+  ;; run imageoptim-cli (including JPEGmini)
+  (unless (= (imageoptim-file filename) 0)
+	(error "error imageoptimising %s" filename))
+
+  ;; move the now processed image file into place
+  (let* ((asset-root (f-join (projectile-project-root) "assets"))
+		 (dest-filename (f-join asset-root
+								(completing-read "assets/" (cons "." (--map (f-relative it asset-root)
+																			(f-directories asset-root
+																						   (lambda (fname) (not (s-contains? ".git" fname)))
+																						   :recursive))))
+								(f-filename filename))))
+	(f-move filename dest-filename)
+	;; for convenience, copy the relevant "background image" Jekyll include
+	(kill-new (format "{%% include slides/background-image.html image=\"%s\" %%}"
+					  (f-relative dest-filename asset-root)))))
 
 (defun mogrify-image-file (filename desired-width)
   "note: this will never make the file wider
