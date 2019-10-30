@@ -50,10 +50,15 @@
 
 (defun anu-cs-get-uid-at-point ()
   (interactive)
-  (let ((tap (thing-at-point 'word :no-properties)))
-	(if (and tap (s-matches? anu-cs-uid-regex tap))
-		(downcase tap)
-	  nil)))
+  (save-excursion
+	;; skip over the preceeding "u" or "U"
+	(when (looking-at "[uU]") (forward-char))
+
+	;; now, if we're looking at a number, could it be a uid?
+	(let ((maybe-uid (format "u%s" (thing-at-point 'number :no-properties))))
+	  (if (s-matches? anu-cs-uid-regex maybe-uid)
+		  maybe-uid
+		nil))))
 
 (defun anu-cs-is-uid? (uid)
   (s-matches? anu-cs-uid-regex uid))
