@@ -44,7 +44,7 @@
 ;; (not included in dotfiles repo for obvious reasons)
 (load-file (expand-file-name "~/Documents/teaching/comp1720-2019/convenors/comp1720.el"))
 
-(defconst anu-cs-uid-regex "[uU][0-9]\\{7\\}")
+(defconst anu-cs-uid-regex "[uU]?[0-9]\\{7\\}")
 (defvar anu-cs-uid-input-history nil
   "variable for holding the history of interactive commands which require a UID")
 
