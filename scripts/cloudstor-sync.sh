@@ -8,6 +8,7 @@ declare -a FOLDERS=("Calibre Library" "Zotero" "business" "church" "misc" "perso
 # Read the array values with space
 for folder in "${FOLDERS[@]}"; do
 	duck -u ben.swift@anu.edu.au\
+		 --quiet\
 		 --assumeyes\
 		 --parallel 4\
 		 --existing compare\
