@@ -116,18 +116,22 @@
 
 (defun anu-cs-pretty-format-student (uid)
   (let* ((group (anu-cs-student-info uid "group"))
+		 (course (anu-cs-student-info uid "course"))
 		 (fields (list (cons "uid: " uid)
 					   (cons "firstname: " (anu-cs-student-firstname uid))
 					   (cons "full name: " (anu-cs-student-info uid "name"))
 					   (cons "group:  " group)
-					   (cons "course: " (anu-cs-student-info uid "course"))
+					   (cons "course: " course)
 					   (cons "degree: " (anu-cs-student-info uid "degree"))
 					   (cons "tutors: " (->> (cdr (assoc group anu-cs-group-tutors))
 											 (--map (anu-cs-student-firstname it))
-											 (s-join " and ")))
-					   (cons "" (s-trim (anu-cs-get-student-progress-summary uid))))))
-	(s-join "\n" (--map (concat (propertize (car it) 'face 'font-lock-string-face) (cdr it))
-						fields))))
+											 (s-join " and ")))))
+		 (info-string
+		  (s-join "\n" (--map (concat (propertize (car it) 'face 'font-lock-string-face) (cdr it))
+							  fields))))
+	(if (member course '("COMP1720" "COMP6720"))
+		(concat info-string "\n" (s-trim (anu-cs-get-student-progress-summary uid)))
+	  info-string)))
 
 ;; helpers for interactive use
 
