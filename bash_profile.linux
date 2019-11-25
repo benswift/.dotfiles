@@ -1,9 +1,0 @@
-# Exports
-
-export PATH="/home/ben/.rbenv/shims:~/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin"
-
-export EDITOR="emacsclient --alternate-editor=emacs --no-wait"
-
-# Local Variables:
-# mode: sh
-# End:
