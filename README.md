@@ -22,6 +22,6 @@ live.
 
 # Licence
 
-(c) 2012-2018 Ben Swift
+(c) 2012-2019 Ben Swift
 
 MIT Licence
