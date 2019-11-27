@@ -19,9 +19,6 @@ export PATH="$HOME/.poetry/bin:$PATH"
 
 eval "$(rbenv init -)"
 
-# node
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
-
 # 1Password CLI
 eval $(op signin my)
 
