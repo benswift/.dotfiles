@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: out-of-office
+# key: ooo
+# --
+** out-of-office auto-reply **
+
+Hi there
+
+I'm currently on holidays and won't be checking emails until I return on
+Jan 5.
+
+Cheers
+Ben
