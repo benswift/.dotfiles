@@ -206,7 +206,7 @@
 							(anu-cs-student-info uid "group")
 							uid)))
 
-(defvar anu-cs-default-submission-project "comp1720-2019-major-project"
+(defvar anu-cs-default-submission-project nil
   "this is the 'default' project that we'll jump to
 
 This works because you're usually not jumping between projects a
