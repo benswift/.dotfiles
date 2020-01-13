@@ -403,7 +403,7 @@ nothing"
   (setq extempore-program-args "--device 1 --frames 1024")
   (setq extempore-path "/home/ben/Code/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
- (t ;; probably running on roughy
+ (t ;; probably running on smithy
   (setq extempore-program-args nil)
   (setq extempore-path "~/Documents/research/extemporelang/extempore/")
   (setq user-extempore-lib-directory "~/Documents/research/extemporelang/xtm/")))
