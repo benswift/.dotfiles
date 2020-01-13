@@ -393,15 +393,8 @@ nothing"
 ;;;;;;;;;;;;;;;
 
 (cond
- ((string= (system-name) "Lonyx")
-  (setq extempore-path "/home/ben/Code/extempore/")
-  (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
- ((string= (system-name) "WINYX")
-  (setq extempore-program-args nil)
-  (setq extempore-path "c:/Users/ben/Code/extempore/"))
- ((string= (system-name) "debian-vm")
-  (setq extempore-program-args "--device 1 --frames 1024")
-  (setq extempore-path "/home/ben/Code/extempore/")
+ ((string= (system-name) "paranoid-android")
+  (setq extempore-path "/home/ben/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
  (t ;; probably running on smithy
   (setq extempore-program-args nil)
