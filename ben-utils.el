@@ -394,7 +394,8 @@ nothing"
 
 ;; stop the ' (quote) character being paired by smartparens
 (with-eval-after-load 'smartparens
-  (sp-local-pair 'extempore-mode "'" nil :actions nil))
+  (sp-local-pair 'extempore-mode "'" nil :actions nil)
+  (sp-local-pair 'extempore-mode "`" nil :actions nil))
 
 (cond
  ((string= (system-name) "paranoid-android")
