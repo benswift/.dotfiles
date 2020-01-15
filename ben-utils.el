@@ -437,6 +437,14 @@ dspmt" name xtm-dir)))
 	 base-path "setup.xtm" setup-header)
 	(dired base-path)))
 
+;; llvm-emacs utils
+
+(setq load-path
+	  (cons (expand-file-name "~/.dotfiles/llvm-emacs") load-path))
+
+(require 'llvm-mode)
+(require 'tablegen-mode)
+
 ;;;;;;;;;;;;;;
 ;; org-mode ;;
 ;;;;;;;;;;;;;;
