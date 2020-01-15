@@ -45,6 +45,11 @@
         (set-face-attribute 'extempore-blink-face nil :foreground "#272822" :background "#FD971F")
         (set-face-attribute 'extempore-sb-blink-face nil :foreground "#272822" :background "#39FF14")
 
+		;; stop the ' (quote) character being paired by smartparens
+		(with-eval-after-load 'smartparens
+		  (sp-local-pair 'extempore-mode "'" nil :actions nil)
+		  (sp-local-pair 'extempore-mode "`" nil :actions nil))
+
         ;; used in extempore-mode's print-line-debug snippet
         (defun extempore-yas-println-debug-expander (pl-str format-str)
           (if (not (string= pl-str ""))
