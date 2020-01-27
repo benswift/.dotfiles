@@ -42,7 +42,7 @@
 
 ;; this file includes the data specific to the course I'm currently teaching
 ;; (not included in dotfiles repo for obvious reasons)
-(load-file (expand-file-name "~/Documents/teaching/comp1720-2019/convenors/comp1720.el"))
+;; (load-file (expand-file-name "~/Documents/teaching/archive/comp1720/comp1720-2019/convenors/comp1720.el"))
 
 (defconst anu-cs-uid-regex "[uU]?[0-9]\\{7\\}")
 (defvar anu-cs-uid-input-history nil
@@ -267,8 +267,9 @@ lot, just between student submissions for the same project.")
 (spacemacs/set-leader-keys "og" 'anu-cs-visit-gitlab)
 (spacemacs/set-leader-keys "od" 'anu-cs-visit-discourse)
 
-;; now, run the lucy sync...
-(anu-cs-lucy-sync)
+;; assuming there's a lucy directory, run the lucy sync...
+(when anu-cs-lucy-directory
+  (anu-cs-lucy-sync))
 
 (provide 'anu-cs-utils)
 
