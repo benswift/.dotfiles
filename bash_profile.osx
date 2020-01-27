@@ -19,6 +19,10 @@ export PATH="$HOME/.poetry/bin:$PATH"
 
 eval "$(rbenv init -)"
 
+# Extempore
+
+EXT_MIDI_OUT_DEVICE_NAME="Maschine 2 Virtual Input"
+
 # 1Password CLI
 # eval $(op signin my)
 
