@@ -268,7 +268,7 @@ lot, just between student submissions for the same project.")
 (spacemacs/set-leader-keys "od" 'anu-cs-visit-discourse)
 
 ;; assuming there's a lucy directory, run the lucy sync...
-(when anu-cs-lucy-directory
+(when (boundp 'anu-cs-lucy-directory)
   (anu-cs-lucy-sync))
 
 (provide 'anu-cs-utils)
