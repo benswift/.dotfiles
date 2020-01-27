@@ -396,10 +396,12 @@ nothing"
  ((string= (system-name) "paranoid-android")
   (setq extempore-path "/home/ben/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
- (t ;; probably running on smithy
+ ((s-prefix? "smithy" (system-name))
   (setq extempore-program-args nil)
   (setq extempore-path "~/Documents/research/extemporelang/extempore/")
-  (setq user-extempore-lib-directory "~/Documents/research/extemporelang/xtm/")))
+  (setq user-extempore-lib-directory "~/Documents/research/extemporelang/xtm/"))
+ (t
+  (message "unrecognised machine (%s), skipping Extempore mode var setup" (system-name))))
 
 (defun extempore-create-template-file (base-path filename &optional header)
   (let ((full-path (format "%s/%s" base-path filename)))
