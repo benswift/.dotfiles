@@ -4,7 +4,7 @@
 # --
 Hi admin team,
 
-Can we give ${2:`(progn (message-add-header "Cc: studentadmin.cecs@anu.edu.au")(ben-find-to-firstname))`} a permission code for ${3:COMP2300}?
+Can we give ${2:`(progn (message-add-header "Cc: studentadmin.cecs@anu.edu.au")(ben-find-to-firstname))`} a permission code for ${3:COMP2710 Laptop Ensemble}?
 
 Cheers,
 Ben
