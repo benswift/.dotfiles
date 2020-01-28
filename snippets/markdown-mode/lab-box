@@ -1,4 +1,4 @@
 # key: box
 # name: lab-box
 # --
-{:.${0:`(yas-choose-value '("info" "think" "talk" "push" "extension" "error" "warn" "success"))`}-box}
+{:.${0:`(yas-choose-value '("info" "note" "think" "talk" "push" "extension" "error" "warn" "success"))`}-box}
