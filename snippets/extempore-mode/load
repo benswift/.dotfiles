@@ -2,4 +2,4 @@
 # name: load
 # key: load
 # --
-(sys:load "libs/$0.xtm")
+(sys:load "`(f-relative (yas-choose-value (directory-files-recursively extempore-path "\.xtm$")) extempore-path)`")
