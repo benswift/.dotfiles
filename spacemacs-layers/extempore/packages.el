@@ -102,7 +102,7 @@
                     :action
                     (lambda (x)
                       (with-ivy-window
-                        (let ((default-directory extempore-share-directory))
+                        (let ((default-directory extempore-path))
                           (async-shell-command (format "extempore --port=17199 --eval \"(impc:aot:compile-xtm-file \\\"%s\\\" #t #t)\"" x)))))
                     :require-match 'confirm-after-completion
                     :keymap counsel-find-file-map))
