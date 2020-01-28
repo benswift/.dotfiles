@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: triangle
-# key: trianglecall
-# --
-(triangle ${1:chan} ${2:amp} ${3:freq} ${4:n})

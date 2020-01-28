@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: flanger-create
-# key: flangercreate
-# --
-(flanger_mc_c ${1:nchan} ${2:delay} ${3:mod_phase} ${4:mod_range} ${5:mod_rate})

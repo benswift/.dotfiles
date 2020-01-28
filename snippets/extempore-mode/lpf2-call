@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: lpf2
-# key: lpf2call
-# --
-(lpf2 ${1:chan} ${2:})

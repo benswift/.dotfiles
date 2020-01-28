@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: filt-mc
-# key: filtmc
-# --
-(${1:filt} ($1_mc_c ${2:2}))

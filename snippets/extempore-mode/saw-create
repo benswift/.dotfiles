@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: saw-create
-# key: sawcreate
-# --
-(saw_mc_c ${1:phase})

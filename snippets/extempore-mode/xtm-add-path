@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: xtm-add-path
-# key: xap
-# --
-(xtm_add_${1:$$(yas-choose-value '("line" "poly" "tri" "quad" "rect" "round_rect" "ellipse" "arc"))} path $0)
-(xtm_draw_path_keep path)
-(xtm_clear_path path)

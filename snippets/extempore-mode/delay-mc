@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: delay-mc
-# key: delaymc
-# --
-(delay (delay_mc_c ${1:2} (convert (* SR ${2:seconds}))))

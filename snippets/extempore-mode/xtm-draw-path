@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: xtm-draw-path
-# key: xdp
-# --
-(xtm_draw_${1:$$(yas-choose-value '("line" "poly" "tri" "quad" "rect" "round_rect" "ellipse" "arc"))} $0)

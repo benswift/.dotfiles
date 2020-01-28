@@ -1,8 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: dsp-n
-# key: dspn
-# binding: direct-keybinding
-# --
-(bind-func dsp${1:1}:DSP
-  (lambda (in time chan dat)
-    $0))

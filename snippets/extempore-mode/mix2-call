@@ -1,5 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: mix2-call
-# key: mix2
-# --
-(mix2 ${1:in} ${2:chan} ${3:left} ${4:right})

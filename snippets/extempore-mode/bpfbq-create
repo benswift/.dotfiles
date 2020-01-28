@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: bpfbq-create
-# key: bpfbqcreate
-# --
-(bpfbq_mc_c ${1:nchan} ${2:})

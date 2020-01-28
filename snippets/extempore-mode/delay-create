@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: delay-create
-# key: delaycreate
-# --
-(delay_mc_c ${1:nchan} ${2:max_delay})

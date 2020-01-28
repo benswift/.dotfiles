@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: triangle-create
-# key: trianglecreate
-# --
-(triangle_mc_c ${1:phase})

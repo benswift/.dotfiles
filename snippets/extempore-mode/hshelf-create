@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: hshelf-create
-# key: hshelfcreate
-# --
-(hshelf_mc_c ${1:nchan})

@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: xtm-path-translate
-# key: xtmtrans
-# --
-(xtm_path_translate $0)

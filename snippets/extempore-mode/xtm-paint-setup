@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: xtm-paint-setup
-# key: xpaint
-# --
-(afill! ${1:fill}_color ${2:1. 1. 1. 1.})
-(xtm_paint_set_$1 $1 $1_color)

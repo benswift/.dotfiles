@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: tap_delay-create
-# key: tap_delaycreate
-# --
-(tap_delay_mc_c ${1:nchan} ${2:max_delay}${3:num_of_taps})

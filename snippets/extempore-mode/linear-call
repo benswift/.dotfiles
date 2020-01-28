@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: linear
-# key: linearcall
-# --
-(linear ${1:chan} ${2:inc})

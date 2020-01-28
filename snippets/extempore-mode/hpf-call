@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: hpf
-# key: hpfcall
-# --
-(hpf ${1:chan} ${2:in} ${3:cutoff} ${4:res})

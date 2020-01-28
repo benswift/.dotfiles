@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: xtm-path-rotate
-# key: xtmrot
-# --
-(xtm_path_rotate $0)

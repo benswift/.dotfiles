@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: dotimes-path
-# key: dtpath
-# --
-(dotimes (i n)
-  (xtm_paint_set_fill fill fill_color)
-  (xtm_paint_set_stroke stroke stroke_color 1.)
-  (xtm_draw_rect$0 0. 0. width height))

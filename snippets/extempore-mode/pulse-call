@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: pulse
-# key: pulsecall
-# --
-(pulse ${1:chan} ${2:amp} ${3:freq} ${4:width})

@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: bpfbq
-# key: bpfbqcall
-# --
-(bpfbq ${1:chan} ${2:})

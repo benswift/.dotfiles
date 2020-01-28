@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: square
-# key: squarecall
-# --
-(square ${1:chan} ${2:amp} ${3:freq} ${4:n})

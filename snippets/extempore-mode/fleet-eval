@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: fleet-eval
-# key: fe
-# binding: direct-keybinding
-# --
-(fleet-eval '$0)

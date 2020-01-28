@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: xtm-render-callback
-# key: rendercb
-# --
-(bind-func ${1:$$(yas-choose-value '("pre" "opaque" "transparent" "post" "data"))}:XTMRENDERCB
-  (lambda (frame shader m v p data)
-    $0
-    void))
