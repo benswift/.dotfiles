@@ -6,9 +6,9 @@
   (lambda (time delta-t$2)
     $0
     (let ((next-time (max (+ time (* *second* delta-t)) (now))))
-      (cb next-time
-          '$1
-          next-time
-          delta-t$2))))
+      (cbk next-time
+           '$1
+           next-time
+           delta-t$2))))
 
 ($1 (now) ${4:1})
