@@ -396,7 +396,7 @@ nothing"
  ((string= (system-name) "paranoid-android")
   (setq extempore-path "/home/ben/extempore/")
   (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
- ((s-prefix? "smithy" (system-name))
+ ((string= "smithy" (system-name))
   (setq extempore-program-args "--frames 8")
   (setq extempore-path "~/Documents/research/extemporelang/extempore/")
   (setq user-extempore-lib-directory "~/Documents/research/extemporelang/xtm/"))
