@@ -499,6 +499,11 @@ end tell"
   (interactive "sfilename: ")
   (shell-command (format "screencapture -m \"%s.png\"" filename)))
 
+(defun osx-open-terminal ()
+  "open a new Terminal.app in `default-directory' of current buffer"
+  (interactive)
+  (shell-command (format "open -a Terminal '%s'" (expand-file-name default-directory))))
+
 ;; this used to be called as part of the compose message hook
 (defun ben-asciify-buffer-or-region (beg end)
   (interactive "r")
