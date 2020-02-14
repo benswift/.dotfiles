@@ -31,7 +31,7 @@
         ","  'lisp-state-toggle-lisp-state
 
         "cc" 'switch-to-extempore
-        "cj" 'extempore-connect-or-disconnect
+        "cj" 'extempore-connect
 
         "ee" 'extempore-send-last-sexp
         "ef" 'extempore-send-definition
