@@ -172,8 +172,8 @@ requires `mogrify' CLI program"
 		(error "error mogrifying %s" filename)))
 
   ;; run imageoptim-cli (including JPEGmini)
-  (unless (= (imageoptim-file filename) 0)
-	(error "error imageoptimising %s" filename))
+  ;; (unless (= (imageoptim-file filename) 0)
+  ;; 	(error "error imageoptimising %s" filename))
 
   ;; move the now processed image file into place
   (let* ((asset-root (f-join (projectile-project-root) "assets"))
