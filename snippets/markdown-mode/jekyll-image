@@ -1,0 +1,4 @@
+# -*- mode: snippet -*-
+# key: img
+# --
+![${1:alt text}]({% link assets/`(yas-choose-value (jekyll-list-asset-filenames))` %})
