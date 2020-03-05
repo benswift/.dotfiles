@@ -2,6 +2,5 @@
 # name: define
 # key: df
 # --
-(define ${1:func-name}
-  (lambda ($2)
-    $0))
+(define (${1:func-name} ${2:args})
+  $0))

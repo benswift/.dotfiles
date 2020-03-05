@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
 # name: temporal-recursion-timed
-# key: tr
+# key: trt
 # --
 (define ${1:fun-name}
   (lambda (time delta-t$2)
