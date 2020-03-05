@@ -1,14 +1,14 @@
 # -*- mode: snippet -*-
 # name: temporal-recursion-timed
-# key: trt
+# key: tr
 # --
 (define ${1:fun-name}
   (lambda (time delta-t$2)
     $0
     (let ((next-time (max (+ time (* *second* delta-t)) (now))))
-      (cbk next-time
-           '$1
-           next-time
-           delta-t$2))))
+      (callback next-time
+                '$1
+                next-time
+                delta-t$2))))
 
 ($1 (now) ${4:1})
