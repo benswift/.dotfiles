@@ -1,6 +1,29 @@
 Host *
- AddKeysToAgent yes
- UseKeychain yes
+  AddKeysToAgent yes
+  UseKeychain yes
+
+# cpu1
+Host koves
+  User benswift
+  Hostname cpu1.cecs.anu.edu.au
+  IdentityFile ~/.ssh/id_ed25519
+
+Host dorito
+  User ben
+  Hostname cecs-048944.cecs.anu.edu.au
+  # IdentityFile ~/.ssh/id_ed25519
+  ProxyCommand ssh -q -A benswift@koves nc -q0 %h %p
+
+# varese
+Host lens-varese
+  User comp2710-lens
+  Hostname varese.anu.edu.au
+  IdentityFile ~/.ssh/comp2710-lens
+
+Host comp1720-varese
+  User comp1720
+  Hostname varese.anu.edu.au
+  IdentityFile ~/.ssh/comp1720-varese
 
 # Local Variables:
 # mode: conf
