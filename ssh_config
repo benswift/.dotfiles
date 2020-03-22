@@ -11,7 +11,7 @@ Host koves
 Host dorito
   User ben
   Hostname cecs-048944.cecs.anu.edu.au
-  # IdentityFile ~/.ssh/id_ed25519
+  IdentityFile ~/.ssh/dorito
   ProxyCommand ssh -q -A benswift@koves nc -q0 %h %p
 
 # varese
