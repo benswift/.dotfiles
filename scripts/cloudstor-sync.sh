@@ -10,6 +10,7 @@ for folder in "${FOLDERS[@]}"; do
 	duck -u ben.swift@anu.edu.au\
 		 --assumeyes\
 		 --quiet\
+		 --parallel 4\
 		 --existing compare\
 		 --upload davs://cloudstor.aarnet.edu.au/plus/remote.php/webdav/smithy/Documents/\
 		 "~/Documents/$folder"
