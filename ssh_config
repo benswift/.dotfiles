@@ -8,6 +8,11 @@ Host koves
   Hostname cpu1.cecs.anu.edu.au
   IdentityFile ~/.ssh/id_ed25519
 
+Host kinross
+  User benswift
+  Hostname cpu2.cecs.anu.edu.au
+  IdentityFile ~/.ssh/id_ed25519
+
 Host dorito
   User ben
   Hostname cecs-048944.cecs.anu.edu.au
