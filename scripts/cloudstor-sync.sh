@@ -9,7 +9,7 @@ declare -a FOLDERS=("Calibre Library" "Zotero" "business" "church" "misc" "perso
 for folder in "${FOLDERS[@]}"; do
 	duck -u ben.swift@anu.edu.au\
 		 --assumeyes\
-		 --quiet \
+		 --quiet\
 		 --existing compare\
 		 --upload davs://cloudstor.aarnet.edu.au/plus/remote.php/webdav/smithy/Documents/\
 		 "~/Documents/$folder"
