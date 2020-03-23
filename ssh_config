@@ -3,12 +3,12 @@ Host *
   UseKeychain yes
 
 # cpu1
-Host koves
+Host cpu1
   User benswift
   Hostname cpu1.cecs.anu.edu.au
   IdentityFile ~/.ssh/id_ed25519
 
-Host kinross
+Host cpu2
   User benswift
   Hostname cpu2.cecs.anu.edu.au
   IdentityFile ~/.ssh/id_ed25519
@@ -17,7 +17,7 @@ Host dorito
   User ben
   Hostname cecs-048944.cecs.anu.edu.au
   IdentityFile ~/.ssh/dorito
-  ProxyCommand ssh -q -A benswift@koves nc -q0 %h %p
+  ProxyCommand ssh -q -A benswift@cpu1 nc -q0 %h %p
 
 # varese
 Host lens-varese
