@@ -458,6 +458,23 @@ dspmt" name xtm-dir)))
 (setq org-ref-bibliography-notes (concat org-directory "/zotero-notes.org")
 	  bibtex-completion-bibliography (expand-file-name "~/Documents/Zotero/export.bib"))
 
+;;;;;;;;;;;;;
+;; devdocs ;;
+;;;;;;;;;;;;;
+
+(require 'devdocs)
+
+;; this will override `devdocs-do-search' from the official lib to instead use
+;; the "local" URL (only works on macOS I think)
+;; this is brittle---if devdocs.el ever changes the implementation of
+;; `devdocs-search' then this may well stop working
+
+(defun devdocs-do-search (pattern)
+  (shell-command
+   (format "open devdocs://search/%s" (url-hexify-string pattern))))
+
+(spacemacs/set-leader-keys "od" 'devdocs-search)
+
 ;;;;;;;;;;
 ;; misc ;;
 ;;;;;;;;;;
@@ -475,12 +492,6 @@ dspmt" name xtm-dir)))
   (with-temp-buffer
 	(insert-file-contents filename)
 	(csv-parse-buffer headerp)))
-
-(defun devdocs-lookup (language name)
-  (interactive "slanguage: \nsname: ")
-  (shell-command
-   (format "open devdocs://search/%s"
-		   (url-hexify-string (concat language " " name)))))
 
 (defun ben-send-iMessage (to-number message-text)
   (do-applescript
