@@ -263,9 +263,9 @@ lot, just between student submissions for the same project.")
 ;; keybindings
 (spacemacs/set-leader-keys "op" 'anu-cs-print-student)
 (spacemacs/set-leader-keys "of" 'anu-cs-visit-fais)
-(spacemacs/set-leader-keys "os" 'anu-cs-visit-submission)
-(spacemacs/set-leader-keys "og" 'anu-cs-visit-gitlab)
-(spacemacs/set-leader-keys "od" 'anu-cs-visit-discourse)
+;; (spacemacs/set-leader-keys "os" 'anu-cs-visit-submission)
+;; (spacemacs/set-leader-keys "og" 'anu-cs-visit-gitlab)
+;; (spacemacs/set-leader-keys "od" 'anu-cs-visit-discourse)
 
 ;; assuming there's a lucy directory, run the lucy sync...
 (when (boundp 'anu-cs-lucy-directory)
