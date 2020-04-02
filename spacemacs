@@ -90,11 +90,13 @@ This function should only modify configuration layer settings."
      latex
      ;; lua
      multiple-cursors
+	 octave
      ;; php
      ;; (parinfer :init (add-hook 'extempore-mode-hook #'parinfer-mode))
      prettier
      python
      ;; racket
+	 react
      restclient
      ruby
      rust
