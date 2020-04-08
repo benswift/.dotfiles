@@ -6,7 +6,7 @@
 ;; Package-Requires: (csv url-util mu4e-contrib smtpmail smtpmail-async gnus-dired)
 ;; Homepage: https://github.com/benswift/.dotfiles
 
-;; Copyright 2018 Ben Swift
+;; Copyright 2020 Ben Swift
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
