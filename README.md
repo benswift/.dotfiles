@@ -20,6 +20,17 @@ The best way to use this stuff is probably to symlink (or even just move/copy)
 the config files into the places where their respective programs expect them to
 live.
 
+## Windows
+
+If you're on Windows and can't remember the correct link command syntax, here's
+the magic invocations (assuming you're in a powershell).
+
+```
+cmd /c mklink %HOME%\.spacemacs %HOME%\.dotfiles\spacemacs
+cmd /c mklink %HOME%\.gitconfig %HOME%\.dotfiles\gitconfig
+cmd /c mklink %HOME%\.gitignore %HOME%\.dotfiles\gitignore
+```
+
 # Licence
 
 (c) 2012-2020 Ben Swift
