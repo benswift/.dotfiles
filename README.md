@@ -31,6 +31,9 @@ cmd /c mklink %HOME%\.gitconfig %HOME%\.dotfiles\gitconfig
 cmd /c mklink %HOME%\.gitignore %HOME%\.dotfiles\gitignore
 ```
 
+Also, make sure that your `GIT_SSH` environment variable points to the right
+place (e.g. `C:\Windows\System32\OpenSSH\ssh.exe`).
+
 # Licence
 
 (c) 2012-2020 Ben Swift
