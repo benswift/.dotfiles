@@ -1,11 +1,3 @@
-;;; ben-utils.el --- Ben's utility functions -*- lexical-binding: t -*-
-
-;; Author: Ben Swift
-;; Maintainer: Ben Swift
-;; Version: 1.0
-;; Package-Requires: (csv url-util mu4e-contrib smtpmail smtpmail-async gnus-dired)
-;; Homepage: https://github.com/benswift/.dotfiles
-
 ;;; ben-utils.el --- Ben's elisp utilities; the source of his powers
 
 ;; Copyright (c) 2017-2020 Ben Swift
