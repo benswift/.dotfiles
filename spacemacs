@@ -498,7 +498,10 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
 
   ;; so that the bottom of this file doesn't get polluted with custom stuff
   (setq custom-file (expand-file-name "~/.emacs.d/.cache/.custom-settings"))
-  (load custom-file))
+  (load custom-file)
+  ;; fixes "void-function org-time-add" error as per
+  ;; https://github.com/seagle0128/.emacs.d/issues/129#issuecomment-593094023
+  (org-reload))
 
 (defun dotspacemacs/user-load ()
   "Library to load while dumping.
