@@ -260,9 +260,14 @@ It should only modify the values of Spacemacs settings."
 
    ;; Default font, or prioritized list of fonts. `powerline-scale' allows to
    ;; quickly tweak the mode-line size to make separators look not too crappy.
-   dotspacemacs-default-font '(("Operator Mono" :size 18 :weight normal :width normal)
-							   ("Source Code Pro" :size 36 :weight normal :width normal)
-							   ("Ubuntu Mono" :size 36 :weight normal :width normal))
+   dotspacemacs-default-font (let ((font-size (case system-type
+												('darwin 18)
+												('windows-nt 36)
+												('gnu/linux 36)
+												(otherwise 18))))
+							   `(("Operator Mono" :size ,font-size :weight normal :width normal)
+								 ("Source Code Pro" :size ,font-size :weight normal :width normal)
+								 ("Ubuntu Mono" :size ,font-size :weight normal :width normal)))
 
    ;; The leader key (default "SPC")
    dotspacemacs-leader-key "SPC"
