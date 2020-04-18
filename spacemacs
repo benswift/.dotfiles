@@ -502,9 +502,6 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
         ispell-dictionary-alist
         '(("en_AU" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_AU") nil utf-8)))
 
-  ;; so that the bottom of this file doesn't get polluted with custom stuff
-  (setq custom-file (expand-file-name "~/.emacs.d/.cache/.custom-settings"))
-  (load custom-file)
   ;; fixes "void-function org-time-add" error as per
   ;; https://github.com/seagle0128/.emacs.d/issues/129#issuecomment-593094023
   (org-reload))
