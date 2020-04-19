@@ -30,6 +30,12 @@ Host comp1720-varese
   Hostname varese.anu.edu.au
   IdentityFile ~/.ssh/comp1720-varese
 
+# nci cloud
+Host hdws
+  User deploy
+  Hostname 130.56.246.102
+  IdentityFile ~/.ssh/nci-key-from-harrison
+
 # Local Variables:
 # mode: conf
 # End:
