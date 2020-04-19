@@ -307,9 +307,7 @@ nothing"
 	  shr-use-fonts nil)
 
 (-each
-	'((:name "Hballs" :query "from:Henry Gardner" :key ?h)
-	  (:name "to:benjamin.j.swift@gmail.com" :query "to gmail" :key ?g)
-	  (:name "list:extemporelang.googlegroups.com" :query "Extempore list" :key ?e))
+	'((:name "to:benjamin.j.swift@gmail.com" :query "to gmail" :key ?g))
   (lambda (b) (add-to-list 'mu4e-bookmarks b t)))
 
 (setq mu4e-user-mailing-lists
