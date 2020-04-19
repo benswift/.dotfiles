@@ -201,24 +201,20 @@ nothing"
 ;; mu4e ;;
 ;;;;;;;;;;
 
+;; to init, try something like
+;; mu init --my-address=ben@benswift.me --my-address=benswift@fastmail.com --my-address=ben.swift@anu.edu.au --my-address=benjamin.j.swift@gmail.com --my-address=ben.swift@simeonnetwork.org
+
 (require 'mu4e-contrib) ;; for mu4e-shr2text
 (require 'smtpmail)
 
 (setq user-full-name "Ben Swift")
-(setq mu4e-user-mail-address-list
-	  '("ben@benswift.me"
-		"benswift@fastmail.com"
-		"ben.swift@anu.edu.au"
-		"benjamin.j.swift@gmail.com"
-		"ben.swift@simeonnetwork.org"))
 
 ;; headers
 (setq mu4e-headers-include-related nil)
 
 ;; receive
 
-(setq mu4e-maildir (expand-file-name "~/Maildir")
-	  mu4e-sent-folder "/Sent Items"
+(setq mu4e-sent-folder "/Sent Items"
 	  mu4e-refile-folder "/Archive"
 	  mu4e-drafts-folder "/Drafts"
 	  mu4e-trash-folder "/Trash"
@@ -311,9 +307,9 @@ nothing"
 	  shr-use-fonts nil)
 
 (-each
-	'(("from:Henry Gardner" "Hballs" ?h)
-	  ("to:benjamin.j.swift@gmail.com" "to gmail" ?g)
-	  ("list:extemporelang.googlegroups.com" "Extempore list" ?e))
+	'((:name "Hballs" :query "from:Henry Gardner" :key ?h)
+	  (:name "to:benjamin.j.swift@gmail.com" :query "to gmail" :key ?g)
+	  (:name "list:extemporelang.googlegroups.com" :query "Extempore list" :key ?e))
   (lambda (b) (add-to-list 'mu4e-bookmarks b t)))
 
 (setq mu4e-user-mailing-lists
