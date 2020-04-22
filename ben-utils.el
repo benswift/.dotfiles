@@ -311,14 +311,6 @@ nothing"
 	'((:name "to:benjamin.j.swift@gmail.com" :query "to gmail" :key ?g))
   (lambda (b) (add-to-list 'mu4e-bookmarks b t)))
 
-(setq mu4e-user-mailing-lists
-	  '(("extemporelang.googlegroups.com" . "Extempore")
-		("livecode.group.lurk.org" . "TOPLAP")
-		("acma-l.list.waikato.ac.nz" . "ACMA")
-		("llvm-dev@lists.llvm.org" . "LLVM")
-		("mu-discuss@googlegroups.com" . "mu-discuss")
-		("nanomsg@freelists.org" . "nanomsg")))
-
 ;; send
 
 (require 'smtpmail-async)
