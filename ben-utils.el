@@ -516,15 +516,6 @@ dspmt" name xtm-dir)))
 	(insert-file-contents filename)
 	(csv-parse-buffer headerp)))
 
-(defun ben-send-iMessage (to-number message-text)
-  (do-applescript
-   (format
-	"tell application \"Messages\"
-		  send %s to buddy \"+61%s\" of service \"E:benswift@me.com\"
-end tell"
-	(prin1-to-string message-text)
-	to-number)))
-
 (defun osx-screencapture (filename)
   (interactive "sfilename: ")
   (shell-command (format "screencapture -i \"%s.png\"" filename)))
