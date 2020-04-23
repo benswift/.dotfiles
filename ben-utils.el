@@ -368,6 +368,11 @@ nothing"
 	(require 'mu4e-icalendar)
 	(mu4e-icalendar-setup))
 
+  ;; mimetype-specific handlers (this could be super-cool)
+
+  ;; ...but this one doesn't work
+  ;; (mailcap-add "text/calendar" "open -a /Applications/Calendar.app %s")
+
   ;; (when (require 'mu4e... ) ends here
   )
 
