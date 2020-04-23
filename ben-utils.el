@@ -358,6 +358,11 @@ nothing"
 		(async-smtpmail-send-it)
 	  (smtpmail-send-it))))
 
+;; iCal integration
+
+(require 'mu4e-icalendar)
+(mu4e-icalendar-setup)
+
 ;;;;;;;;;;;;;;;
 ;; Extempore ;;
 ;;;;;;;;;;;;;;;
