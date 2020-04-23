@@ -204,164 +204,168 @@ nothing"
 ;; to init, try something like
 ;; mu init --my-address=ben@benswift.me --my-address=benswift@fastmail.com --my-address=ben.swift@anu.edu.au --my-address=benjamin.j.swift@gmail.com --my-address=ben.swift@simeonnetwork.org
 
-(require 'mu4e-contrib) ;; for mu4e-shr2text
-(require 'smtpmail)
+(when (require 'mu4e nil :noerror)
+  (require 'mu4e-contrib) ;; for mu4e-shr2text
+  (require 'smtpmail)
 
-(setq user-full-name "Ben Swift")
+  (setq user-full-name "Ben Swift")
 
-;; headers
-(setq mu4e-headers-include-related nil)
+  ;; headers
+  (setq mu4e-headers-include-related nil)
 
-;; receive
+  ;; receive
 
-(setq mu4e-sent-folder "/Sent Items"
-	  mu4e-refile-folder "/Archive"
-	  mu4e-drafts-folder "/Drafts"
-	  mu4e-trash-folder "/Trash"
-	  mu4e-attachment-dir (expand-file-name "~/Downloads"))
+  (setq mu4e-sent-folder "/Sent Items"
+		mu4e-refile-folder "/Archive"
+		mu4e-drafts-folder "/Drafts"
+		mu4e-trash-folder "/Trash"
+		mu4e-attachment-dir (expand-file-name "~/Downloads"))
 
-(setq mu4e-get-mail-command "mbsync fastmail"
-	  mu4e-update-interval 300
-	  mu4e-headers-auto-update t
-	  mu4e-change-filenames-when-moving t
-	  mu4e-view-show-addresses t)
+  (setq mu4e-get-mail-command "mbsync fastmail"
+		mu4e-update-interval 300
+		mu4e-headers-auto-update t
+		mu4e-change-filenames-when-moving t
+		mu4e-view-show-addresses t)
 
-(defun mu4e-pretty-mbsync-process-filter (proc msg)
-  (ignore-errors
-	(with-current-buffer (process-buffer proc)
-	  (let ((inhibit-read-only t))
-		(delete-region (point-min) (point-max))
-		(insert (car (reverse (split-string msg "\r"))))
-		(when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)")
-		  (add-face-text-property
-		   (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
-		  (add-face-text-property
-		   (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
-		  (add-face-text-property
-		   (match-beginning 3) (match-end 3) 'font-lock-variable-name-face)
-		  (add-face-text-property
-		   (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
+  (defun mu4e-pretty-mbsync-process-filter (proc msg)
+	(ignore-errors
+	  (with-current-buffer (process-buffer proc)
+		(let ((inhibit-read-only t))
+		  (delete-region (point-min) (point-max))
+		  (insert (car (reverse (split-string msg "\r"))))
+		  (when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)")
+			(add-face-text-property
+			 (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
+			(add-face-text-property
+			 (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
+			(add-face-text-property
+			 (match-beginning 3) (match-end 3) 'font-lock-variable-name-face)
+			(add-face-text-property
+			 (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
 
-(advice-add
- 'mu4e~get-mail-process-filter
- :override #'mu4e-pretty-mbsync-process-filter)
+  (advice-add
+   'mu4e~get-mail-process-filter
+   :override #'mu4e-pretty-mbsync-process-filter)
 
-;; compose
+  ;; compose
 
-(setq mu4e-compose-dont-reply-to-self t
-	  mu4e-compose-signature-auto-include nil
-	  mu4e-compose-format-flowed t
-	  fill-flowed-encode-column fill-column
-	  message-citation-line-format "On %Y-%m-%d at %R %Z, %f wrote...")
+  (setq mu4e-compose-dont-reply-to-self t
+		mu4e-compose-signature-auto-include nil
+		mu4e-compose-format-flowed t
+		fill-flowed-encode-column fill-column
+		message-citation-line-format "On %Y-%m-%d at %R %Z, %f wrote...")
 
-(add-hook 'mu4e-compose-mode-hook #'spacemacs/toggle-yasnippet-on)
+  (add-hook 'mu4e-compose-mode-hook #'spacemacs/toggle-yasnippet-on)
 
-(defun ben-find-to-firstname ()
-  "search the current buffer for a To: field, and grab the first recipient's name from there"
-  (interactive)
-  (let ((str (buffer-substring-no-properties (point-min) (point-max))))
-	(if (string-match
-		 "^To: \"?\\([^ ,<\n]+\\)"
-		 str)
-		(match-string 1 str)
-	  nil)))
+  (defun ben-find-to-firstname ()
+	"search the current buffer for a To: field, and grab the first recipient's name from there"
+	(interactive)
+	(let ((str (buffer-substring-no-properties (point-min) (point-max))))
+	  (if (string-match
+		   "^To: \"?\\([^ ,<\n]+\\)"
+		   str)
+		  (match-string 1 str)
+		nil)))
 
-(require 'gnus-dired)
+  (require 'gnus-dired)
 
-;; make the `gnus-dired-mail-buffers' function also work on
-;; message-mode derived modes, such as mu4e-compose-mode
-(defun gnus-dired-mail-buffers ()
-  "Return a list of active message buffers."
-  (let (buffers)
-	(save-current-buffer
-	  (dolist (buffer (buffer-list t))
-		(set-buffer buffer)
-		(when (and (derived-mode-p 'message-mode)
-				   (null message-sent-message-via))
-		  (push (buffer-name buffer) buffers))))
-	(nreverse buffers)))
+  ;; make the `gnus-dired-mail-buffers' function also work on
+  ;; message-mode derived modes, such as mu4e-compose-mode
+  (defun gnus-dired-mail-buffers ()
+	"Return a list of active message buffers."
+	(let (buffers)
+	  (save-current-buffer
+		(dolist (buffer (buffer-list t))
+		  (set-buffer buffer)
+		  (when (and (derived-mode-p 'message-mode)
+					 (null message-sent-message-via))
+			(push (buffer-name buffer) buffers))))
+	  (nreverse buffers)))
 
-(setq gnus-dired-mail-mode 'mu4e-user-agent)
-(add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
+  (setq gnus-dired-mail-mode 'mu4e-user-agent)
+  (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 
-(setq mu4e-maildir-shortcuts
-	  '(("/INBOX" . ?i)
-		("/Sent Items" . ?s)
-		("/Archive" . ?a)
-		("/Drafts" . ?d)
-		("/Trash" . ?t)
-		("/Junk Mail" . ?j)))
+  (setq mu4e-maildir-shortcuts
+		'(("/INBOX" . ?i)
+		  ("/Sent Items" . ?s)
+		  ("/Archive" . ?a)
+		  ("/Drafts" . ?d)
+		  ("/Trash" . ?t)
+		  ("/Junk Mail" . ?j)))
 
-(setq mu4e-headers-date-format "%e %b %y"
-	  mu4e-headers-fields '((:human-date . 12)
-							(:flags . 6)
-							(:maildir . 10)
-							(:from . 22)
-							(:subject)))
+  (setq mu4e-headers-date-format "%e %b %y"
+		mu4e-headers-fields '((:human-date . 12)
+							  (:flags . 6)
+							  (:maildir . 10)
+							  (:from . 22)
+							  (:subject)))
 
-(setq mu4e-view-use-gnus t
-	  mu4e-view-show-images t
-	  mu4e-html2text-command #'mu4e-shr2text
-	  ;; make sure fg-bg contrast is high enough
-	  shr-color-visible-luminance-min 80
-	  ;; don't use variable pitch fonts
-	  shr-use-fonts nil)
+  (setq mu4e-view-use-gnus t
+		mu4e-view-show-images t
+		mu4e-html2text-command #'mu4e-shr2text
+		;; make sure fg-bg contrast is high enough
+		shr-color-visible-luminance-min 80
+		;; don't use variable pitch fonts
+		shr-use-fonts nil)
 
-(-each
-	'((:name "to:benjamin.j.swift@gmail.com" :query "to gmail" :key ?g))
-  (lambda (b) (add-to-list 'mu4e-bookmarks b t)))
+  (-each
+	  '((:name "to:benjamin.j.swift@gmail.com" :query "to gmail" :key ?g))
+	(lambda (b) (add-to-list 'mu4e-bookmarks b t)))
 
-;; send
+  ;; send
 
-(require 'smtpmail-async)
+  (require 'smtpmail-async)
 
-(setq send-mail-function 'async-smtpmail-send-it
-	  message-send-mail-function 'async-smtpmail-send-it
-	  smtpmail-smtp-service 587
-	  smtpmail-debug-info t)
+  (setq send-mail-function 'async-smtpmail-send-it
+		message-send-mail-function 'async-smtpmail-send-it
+		smtpmail-smtp-service 587
+		smtpmail-debug-info t)
 
-;; contexts
+  ;; contexts
 
-(setq mu4e-contexts
-	  (list
-	   (make-mu4e-context
-		:name "personal"
-		:enter-func (lambda () (mu4e-message "switching to personal context"))
-		;; leave-func not defined
-		:match-func (lambda (msg)
-					  (when msg
-						(or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
-							(mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
-		:vars '((user-mail-address . "ben@benswift.me")
-				(smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
-				(smtpmail-smtp-server . "mail.messagingengine.com")))
-	   (make-mu4e-context
-		:name "anu"
-		:enter-func (lambda () (mu4e-message "switching to ANU context"))
-		;; leave-fun not defined
-		:match-func (lambda (msg)
-					  (when msg
-						(mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
-		:vars '((user-mail-address . "ben.swift@anu.edu.au")
-				(smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
-				(smtpmail-smtp-server . "smtp.office365.com")))))
+  (setq mu4e-contexts
+		(list
+		 (make-mu4e-context
+		  :name "personal"
+		  :enter-func (lambda () (mu4e-message "switching to personal context"))
+		  ;; leave-func not defined
+		  :match-func (lambda (msg)
+						(when msg
+						  (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
+							  (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
+		  :vars '((user-mail-address . "ben@benswift.me")
+				  (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
+				  (smtpmail-smtp-server . "mail.messagingengine.com")))
+		 (make-mu4e-context
+		  :name "anu"
+		  :enter-func (lambda () (mu4e-message "switching to ANU context"))
+		  ;; leave-fun not defined
+		  :match-func (lambda (msg)
+						(when msg
+						  (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
+		  :vars '((user-mail-address . "ben.swift@anu.edu.au")
+				  (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
+				  (smtpmail-smtp-server . "smtp.office365.com")))))
 
-(defun ben-send-anu-email (email-address subject body &optional async cc-string)
-  (with-temp-buffer
-	(mu4e-context-switch nil "anu")
-	(insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
-					email-address
-					(if cc-string (format "Cc: %s\n" cc-string) "")
-					subject
-					body))
-	(if async
-		(async-smtpmail-send-it)
-	  (smtpmail-send-it))))
+  (defun ben-send-anu-email (email-address subject body &optional async cc-string)
+	(with-temp-buffer
+	  (mu4e-context-switch nil "anu")
+	  (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
+					  email-address
+					  (if cc-string (format "Cc: %s\n" cc-string) "")
+					  subject
+					  body))
+	  (if async
+		  (async-smtpmail-send-it)
+		(smtpmail-send-it))))
 
-;; iCal integration
+  ;; iCal integration
 
-(require 'mu4e-icalendar)
-(mu4e-icalendar-setup)
+  (require 'mu4e-icalendar)
+  (mu4e-icalendar-setup)
+
+  ;; (when (require 'mu4e... ) ends here
+  )
 
 ;;;;;;;;;;;;;;;
 ;; Extempore ;;

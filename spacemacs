@@ -60,7 +60,6 @@ This function should only modify configuration layer settings."
       :variables
       markdown-asymmetric-header t
       markdown-italic-underscore t)
-     (mu4e :variables mu4e-view-use-gnus nil)
      (org :disabled-for ess)
      ;; asciidoc
      (asm
@@ -134,7 +133,12 @@ This function should only modify configuration layer settings."
    ;; installs only the used packages but won't delete unused ones. `all'
    ;; installs *all* packages supported by Spacemacs and never uninstalls them.
    ;; (default is `used-only')
-   dotspacemacs-install-packages 'used-only))
+   dotspacemacs-install-packages 'used-only)
+
+  ;; OS-specific layer setup
+  (when (not (spacemacs/system-is-mswindows))
+	(append dotspacemacs-configuration-layers
+			'(mu4e :variables mu4e-view-use-gnus nil))))
 
 (defun dotspacemacs/init ()
   "Initialization:
