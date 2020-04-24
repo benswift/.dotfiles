@@ -1,9 +1,5 @@
 ## Ben's R profile
 
-## here are the packages I install (may have to redownload when R is upgraded)
-
-## install.packages(c("ggplot2", "randomForest", "coin"))
-
 ## config options
 
 options(prompt="R> ", digits=4, show.signif.stars=FALSE)
@@ -12,7 +8,11 @@ options(menu.graphics = FALSE)
 options(repos="https://cran.csiro.au")
 options(digits.secs=3)              # show sub-second time stamps
 options(max.print=1000)         # do not print more than 1000 lines
-options(device="quartz")
+
+## options(device="quartz") # depends on platform
+
+# TODO add options to get the tidyverse to be sensible... e.g. print full
+# tibbles
 
 # helpful functions
 
