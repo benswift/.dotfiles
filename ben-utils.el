@@ -361,8 +361,9 @@ nothing"
 
   ;; iCal integration
 
-  (require 'mu4e-icalendar)
-  (mu4e-icalendar-setup)
+  (when (spacemacs/system-is-mac)
+	(require 'mu4e-icalendar)
+	(mu4e-icalendar-setup))
 
   ;; (when (require 'mu4e... ) ends here
   )
