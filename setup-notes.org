@@ -1,101 +1,4 @@
 * Linux
-
-** Ubuntu 15.04
-  :PROPERTIES:
-  :header-args:sh:    :tangle ubuntu-setup.sh
-  :END:
-
-*** keybindings
-
-**** gnome-tweak-tool
-
-deprecated - use XModmap version
-
-sudo apt-get install gnome-tweak-tool
-
-- set caps lock to control
-- switch alt and win keys
-
-*** ssh keys
-
-these instructions are from GitHub
-
-# to set up a new key
-#+BEGIN_SRC sh
-ssh-keygen -t rsa -C "ben@benswift.me" && sudo apt-get install xclip && xclip -sel clip < ~/.ssh/id_rsa.pub
-#+END_SRC
-
-If you're just setting up a VM, then there's a `vmkey` key pair
-kicking around somewhere
-
-*** emacs
-
-#+BEGIN_SRC 
-sudo apt-get install emacs24
-#+END_SRC
-
-*** fonts
-
-Download fonts from (https://github.com/adobe-fonts/source-code-pro),
-copy them into =/usr/share/fonts/otf= and run =fc-cache -f -v=
-
-*** mu4e
-
-```
-sudo apt-get install mu4e libdb-dev
-```
-
-Need to compile mbsync from source, since my mbsyncrc requires v1.2,
-and the Ubuntu repo only has v1.1
-
-*** graphics
-
-launch the 'additional drivers' program/tool to select the latest
-driver
-
-#+BEGIN_SRC sh
-# to get the absolute latest (probably not necessary)
-sudo add-apt-repository ppa:xorg-edgers/ppa -y && sudo apt-get update && sudo apt-get install nvidia-current
-#+END_SRC
-
-** Fedora 20
-  :PROPERTIES:
-  :header-args:sh:    :tangle fedora-setup.sh
-  :END:
-
-*** Emacs
-
-#+BEGIN_SRC sh
-sudo yum install emacs
-#+END_SRC
-
-*** Linuxbrew
-
-need =wget= to do the 'one-line install', which isn't installed by
-default.
-
-#+BEGIN_SRC sh
-sudo yum install gcc-c++ && sudo yum install patch
-#+END_SRC
-
-(using gcc because clang doesn't get detected by configure)
-
-** Debian Wheezy
-
-*** emacs 24
-
-- add =deb http://http.debian.net/debian wheezy-backports main= to
-  =/etc/apt/sources.list=
-- =sudo apt-get -t wheezy-backports install emacs24=
-
-*** source code pro
-
-- download latest font files (FontsOnly) from
-  http://sourceforge.net/projects/sourcecodepro.adobe/files/
-- create =~/.fonts/= folder if it doesn't exist
-- copy the font files into =~/.fonts= 
-- =fc-cache -f -v= to re-build your fonts info cache files
-
 * Windows
   :PROPERTIES:
   :header-args:sh:    :tangle windows-setup.bat
@@ -107,8 +10,7 @@ sudo yum install gcc-c++ && sudo yum install patch
 - set =Home= environment variable to =%USERPROFILE%= (not sure if this
   is the best, but it seems to work. you can type 'environment' at the
   start menu to bring up the editing box)
-
-
+  
 ** chocolatey
 
 install from https://chocolatey.org/
@@ -121,14 +23,6 @@ have a bad time
 #+BEGIN_SRC sh
 choco install git -params '"/GitAndUnixToolsOnPath"'
 #+END_SRC
-
-*** other packages
-
-#+BEGIN_SRC sh
-choco install 7zip.commandline ag cmake.portable directx Emacs firefox nuget.commandline procmon dependencywalker python2
-#+END_SRC
-
-Don't get VS from here - need to specify custom install
 
 ** Visual Studio
 
@@ -143,28 +37,6 @@ Don't get VS from here - need to specify custom install
 Git (installed through Chocolatey as above) should install all the
 usual ssh utils
 
-# *** remote access
-
-# #+BEGIN_SRC sh
-# winrm quickstart
-# #+END_SRC
-
-# and follow the prompts.  Although this will only allow connections
-# from other Windows boxes
-
-** keyboard
-
-use autohotkey
-
-#+BEGIN_SRC sh
-choco install autohotkey
-#+END_SRC
-
-config file =AutoHotkey.ahk= should be placed (shortcut is ok) into
-the Startup folder (Google the location on your version of Windows)
-
-# remap CAPS to CTRL (obsolete - use autohotkey instead) http://www.howtogeek.com/howto/windows-vista/disable-caps-lock-key-in-windows-vista/
-
 ** fonts
 
 try the chocolatey package
@@ -175,15 +47,6 @@ choco install sourcecodepro
 
 if that doesn't work, install them manually from https://github.com/adobe-fonts/source-code-pro
 
-** fix GRUB
-
-if Windows has blown away the GRUB boot record, then boot into Ubuntu
-from a live CD and try
-
-#+BEGIN_SRC sh
-sudo add-apt-repository ppa:yannubuntu/boot-repair && sudo apt-get update
-sudo apt-get install -y boot-repair && boot-repair
-#+END_SRC
 * cross-platform
 ** calibre
 
@@ -193,4 +56,5 @@ to convert a folder of html into an ebook, first, zip up the files
 #+BEGIN_SRC sh
 /Applications/calibre.app/Contents/MacOS/ebook-convert file.zip .epub -vv --authors "Ben Swift" --language en --level1-toc '//*[@class="title"]' --disable-font-rescaling --page-breaks-before / --no-default-epub-cover
 #+END_SRC
+
 
