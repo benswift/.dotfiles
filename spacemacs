@@ -137,8 +137,7 @@ This function should only modify configuration layer settings."
 
   ;; OS-specific layer setup
   (when (not (spacemacs/system-is-mswindows))
-	(append dotspacemacs-configuration-layers
-			'(mu4e :variables mu4e-view-use-gnus nil))))
+	(add-to-list 'dotspacemacs-configuration-layers 'mu4e)))
 
 (defun dotspacemacs/init ()
   "Initialization:
