@@ -204,6 +204,9 @@ nothing"
 ;; to init, try something like
 ;; mu init --my-address=ben@benswift.me --my-address=benswift@fastmail.com --my-address=ben.swift@anu.edu.au --my-address=benjamin.j.swift@gmail.com --my-address=ben.swift@simeonnetwork.org
 
+(when (spacemacs/system-is-linux)
+  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e"))
+
 (when (require 'mu4e nil :noerror)
   (require 'mu4e-contrib) ;; for mu4e-shr2text
   (require 'smtpmail)
