@@ -303,7 +303,7 @@ nothing"
 							  (:from . 22)
 							  (:subject)))
 
-  (setq mu4e-view-use-gnus t
+  (setq mu4e-view-use-gnus nil
 		mu4e-view-show-images t
 		mu4e-html2text-command #'mu4e-shr2text
 		;; make sure fg-bg contrast is high enough
