@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: analogue-set-flanger
+# key: aflanger
+# --
+(set_flanger ${1:inst} ${2:mix} ${3:low-delay-ms} ${4:high-delay-ms} ${5:rate} ${6:feedback})

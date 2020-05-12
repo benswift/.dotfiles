@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: analogue-set-reverb
+# key: areverb
+# --
+(set_reverb ${1:inst} ${2:mix} ${3:size} ${4:predelay-ms} ${5:absorb})

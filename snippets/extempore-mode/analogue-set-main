@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: analogue-set-main
+# key: amain
+# --
+(set_main ${1:inst} ${2:gain} ${3:pan} ${4:portamento} LEGATO_${5:ON})

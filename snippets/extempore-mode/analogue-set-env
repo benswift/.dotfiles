@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: analogue-set-env
+# key: aenv
+# --
+(set_${1:amp}_env ${2:attack} ${3:decay} ${4:sutain} ${5:release})

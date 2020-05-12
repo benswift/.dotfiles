@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: analogue-set-delay
+# key: adelay
+# --
+(set_delay ${1:inst} ${2:mix} ${3:delay-l} ${4:delay-r} ${5:feedback} ${6:cutoff} ${7:Q})

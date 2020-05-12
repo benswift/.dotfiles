@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: analogue-set-osc
+# key: aosc
+# --
+(set_osc ${1:inst} ${2:number} ${3:gain} ${4:$$(yas-choose-value '("PARAM_SINE" "PARAM_SAW" "PARAM_PULSE" "PARAM_SQUARE" "PARAM_TRI"))} ${5:tuning} ${6:pw} ${7:phase})
