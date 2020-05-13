@@ -17,9 +17,7 @@ eval "$(pyenv virtualenv-init -)"
 # poetry
 
 export PATH="$HOME/.poetry/bin:$PATH"
-
-# if this isn't set, probably a good idea to set it
-# poetry config virtualenvs.in-project true
+export POETRY_VIRTUALENVS_PATH="$HOME/.pyenv/versions"
 
 # pipx
 
