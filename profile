@@ -11,8 +11,10 @@ export PATH="$HOME/.dotfiles/scripts":$PATH
 
 # pyenv
 
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+if [ -x "$(command -v pyenv)" ]; then
+	eval "$(pyenv init -)"
+	eval "$(pyenv virtualenv-init -)"
+fi
 
 # poetry
 
@@ -29,7 +31,9 @@ export PATH="$HOME/.local/bin":$PATH
 
 # set up rbenv
 
-eval "$(rbenv init -)"
+if [ -x "$(command -v rbenv)" ]; then
+	eval "$(rbenv init -)"
+fi
 
 #############
 # Extempore #
