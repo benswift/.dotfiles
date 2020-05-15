@@ -382,11 +382,11 @@ nothing"
 
 (cond
  ((string= (system-name) "paranoid-android")
-  (setq extempore-path "~/Documents/research/extemporelang/extempore/"))
+  (setq extempore-path (expand-file-name "~/Documents/research/extemporelang/extempore/")))
  ((string= "smithy" (system-name))
   (setq extempore-program-args "--frames 4096")
-  (setq extempore-path "~/Documents/research/extemporelang/extempore/")
-  (setq user-extempore-lib-directory "~/Documents/research/extemporelang/xtm/"))
+  (setq extempore-path (expand-file-name "~/Documents/research/extemporelang/extempore/"))
+  (setq user-extempore-lib-directory (expand-file-name "~/Documents/research/extemporelang/xtm/")))
  (t
   (message "unrecognised machine (%s), skipping Extempore mode var setup" (system-name))))
 
