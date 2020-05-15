@@ -382,8 +382,7 @@ nothing"
 
 (cond
  ((string= (system-name) "paranoid-android")
-  (setq extempore-path "/home/ben/extempore/")
-  (setq user-extempore-lib-directory "/home/ben/Code/xtm/lib/"))
+  (setq extempore-path "~/Documents/research/extemporelang/extempore/"))
  ((string= "smithy" (system-name))
   (setq extempore-program-args "--frames 4096")
   (setq extempore-path "~/Documents/research/extemporelang/extempore/")
