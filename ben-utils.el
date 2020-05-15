@@ -25,7 +25,8 @@
 (setq dired-listing-switches "-alh")
 
 ;; time
-(setq display-time-format "%H:%M")
+(setq display-time-format "%H:%M"
+	  display-time-default-load-average nil)
 (display-time-mode 1)
 
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
