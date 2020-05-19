@@ -706,6 +706,13 @@ Version 2019-06-21"
 	(sgml-pretty-print (point-min) (point-max))
 	(indent-region (point-min) (point-max))))
 
+(require 'htmlize)
+
+(defun ben-htmlize-region-save-screenshot (beg end)
+  (interactive "r")
+  (deactivate-mark) ;; so that the screenshot doesn't have the highlighting
+  (htmlize-region-save-screenshot beg end))
+
 (defun ben-symlink-dotfiles ()
   (interactive)
   (cl-flet ((linker (lambda (target linkname)
