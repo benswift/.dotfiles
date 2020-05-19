@@ -391,6 +391,29 @@ nothing"
  (t
   (message "unrecognised machine (%s), skipping Extempore mode var setup" (system-name))))
 
+;; handy for tapping out rhythms
+
+(defvar extempore-pattern-hydra-hit-value "1" "value for the 'hit'")
+(defvar extempore-pattern-hydra-rest-value "_" "value for the 'rest'")
+
+(spacemacs|define-transient-state extempore-pattern-hydra-tap-rhythm
+  :title "Tap out an extempore pattern using the keyboard"
+  :doc
+  "\n[_j_] hit [_f_] rest [_J_] set hit value [_F_] set rest value [_q_] quit"
+  :on-enter
+  (setq extempore-pattern-hydra-hits nil)
+  :on-exit
+  (insert (reverse (string-join extempore-pattern-hydra-hits " ")))
+  :bindings
+  ("j" (push extempore-pattern-hydra-hit-value extempore-pattern-hydra-hits))
+  ("f" (push extempore-pattern-hydra-rest-value extempore-pattern-hydra-hits))
+  ("J" (setq extempore-pattern-hydra-hit-value (read-string "hit value: ")))
+  ("F" (setq extempore-pattern-hydra-rest-value (read-string "rest value: ")))
+  ("q" nil :exit t))
+
+(spacemacs/set-leader-keys-for-major-mode 'extempore-mode
+  "rr" 'spacemacs/extempore-pattern-hydra-tap-rhythm-transient-state/body)
+
 (defun extempore-create-template-file (base-path filename &optional header)
   (let ((full-path (format "%s/%s" base-path filename)))
 	(unless (file-exists-p full-path)
