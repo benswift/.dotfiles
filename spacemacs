@@ -74,6 +74,7 @@ This function should only modify configuration layer settings."
      csv
      docker
      emacs-lisp
+	 emoji
      epub
      (ess :variables ess-smart-S-assign-key nil)
      (extempore :location local)
