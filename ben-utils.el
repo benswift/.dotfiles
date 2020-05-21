@@ -531,6 +531,13 @@ dspmt" name xtm-dir)))
 
 (spacemacs/set-leader-keys "od" 'devdocs-search)
 
+;;;;;;;;;;;;;;;
+;; spaceline ;;
+;;;;;;;;;;;;;;;
+
+;; this should be done somewhere else, I probably need to set up my own custom spaceline theme
+(spaceline-toggle-buffer-encoding-abbrev-off)
+
 ;;;;;;;;;;
 ;; misc ;;
 ;;;;;;;;;;
