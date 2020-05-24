@@ -52,7 +52,7 @@ export PATH="/Applications/MATLAB_R2020a.app/bin:$PATH"
 ######
 
 # otherwise things are super-small on hidpi
-export QT_SCALE_FACTOR=2
+# export QT_SCALE_FACTOR=2
 
 # Local Variables:
 # mode: sh
