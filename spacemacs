@@ -82,7 +82,7 @@ This function should only modify configuration layer settings."
 	 emoji
      epub
      (ess :variables ess-smart-S-assign-key nil)
-     (extempore :location local)
+     extempore
      ;; finance
      ;; fsharp
      ;; go
