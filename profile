@@ -5,6 +5,11 @@
 # add scripts from dotfiles repo
 export PATH="$HOME/.dotfiles/scripts":$PATH
 
+# for homebrew
+if [ -x "$(command -v brew)" ]; then
+	export PATH="/usr/local/sbin:$PATH"
+fi
+
 ##########
 # python #
 ##########
