@@ -44,6 +44,16 @@ This function should only modify configuration layer settings."
       auto-completion-tab-key-behavior 'cycle
       auto-completion-private-snippets-directory (expand-file-name "~/.dotfiles/snippets/"))
      emacs-lisp
+	 (erc
+	  :variables
+      erc-nick "benswift"
+      erc-prompt-for-password nil
+      erc-prompt-for-nickserv-password nil
+      erc-autojoin-channels-alist '(("freenode.net" "#extempore"))
+	  erc-server-alist '(("irc.freenode.net"
+						  :port "6697"
+						  :ssl t
+						  :nick "benswift")))
      git
      github
      (markdown
@@ -87,13 +97,6 @@ This function should only modify configuration layer settings."
      prettier
      python
      ;; racket
-	 (rcirc
-	  :variables
-	  rcirc-enable-authinfo-support t
-	  rcirc-enable-styles t
-	  rcirc-server-alist '(("irc.freenode.net"
-							:user-name "benswift"
-							:channels ("#extempore"))))
 	 react
      restclient
      ruby
