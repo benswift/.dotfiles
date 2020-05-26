@@ -52,7 +52,7 @@ This function should only modify configuration layer settings."
      (auto-completion
       :variables
       auto-completion-tab-key-behavior 'cycle
-      auto-completion-private-snippets-directory "~/.dotfiles/snippets/")
+      auto-completion-private-snippets-directory (expand-file-name "~/.dotfiles/snippets/"))
      emacs-lisp
      git
      github
