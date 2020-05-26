@@ -107,7 +107,7 @@ This function should only modify configuration layer settings."
      sql
      ;; swift
      typescript
-     ;; windows-scripts
+     windows-scripts
      yaml
      spell-checking
      syntax-checking
