@@ -39,16 +39,6 @@ This function should only modify configuration layer settings."
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     (erc
-      :variables
-      erc-nick "benswift"
-      erc-prompt-for-password nil
-      erc-prompt-for-nickserv-password nil
-      erc-autojoin-channels-alist '(("freenode.net" "#extempore"))
-      erc-notify-list '("digego")
-      :config
-      (unless (load "~/.dotfiles/secrets/ercpass" t)
-        (message "Couldn't find the secrets file, you need to pull it down from dropbox.")))
      (auto-completion
       :variables
       auto-completion-tab-key-behavior 'cycle
@@ -97,6 +87,14 @@ This function should only modify configuration layer settings."
      prettier
      python
      ;; racket
+	 (rcirc
+	  :variables
+	  rcirc-enable-authinfo-support t
+	  rcirc-enable-styles t
+	  rcirc-server-alist '(("irc.freenode.net"
+							:user-name "benswift"
+							:port "1337"
+							:channels ("#extempore"))))
 	 react
      restclient
      ruby
