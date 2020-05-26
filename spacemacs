@@ -93,7 +93,6 @@ This function should only modify configuration layer settings."
 	  rcirc-enable-styles t
 	  rcirc-server-alist '(("irc.freenode.net"
 							:user-name "benswift"
-							:port "1337"
 							:channels ("#extempore"))))
 	 react
      restclient
