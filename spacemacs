@@ -49,7 +49,6 @@ This function should only modify configuration layer settings."
       erc-nick "benswift"
       erc-prompt-for-password nil
       erc-prompt-for-nickserv-password nil
-      erc-autojoin-channels-alist '(("freenode.net" "#extempore"))
 	  erc-server-list '(("irc.freenode.net"
 						 :port "6697"
 						 :ssl t
@@ -58,6 +57,8 @@ This function should only modify configuration layer settings."
 						 :port "6697"
 						 :ssl t
 						 :nick "benjswift")))
+	 erc-autojoin-channels-alist '(("irc.freenode.net" "#extempore")
+								   ("irc.chat.twitch.tv" "#benjswift"))
      git
      github
      (markdown
