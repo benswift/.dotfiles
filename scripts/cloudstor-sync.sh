@@ -12,6 +12,6 @@ for folder in "${FOLDERS[@]}"; do
 		 --quiet\
 		 --parallel 4\
 		 --existing compare\
-		 --upload davs://cloudstor.aarnet.edu.au/plus/remote.php/webdav/smithy/Documents/\
+		 --upload davs://cloudstor.aarnet.edu.au/plus/remote.php/webdav/smithy-duck/Documents/\
 		 "~/Documents/$folder"
 done
