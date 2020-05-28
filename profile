@@ -16,6 +16,7 @@ fi
 
 # pyenv
 
+export PATH="$HOME/.pyenv/bin:$PATH"
 if [ -x "$(command -v pyenv)" ]; then
 	eval "$(pyenv init -)"
 	eval "$(pyenv virtualenv-init -)"
