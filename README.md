@@ -32,7 +32,8 @@ cmd /c mklink %HOME%\.gitignore %HOME%\.dotfiles\gitignore
 ```
 
 Also, make sure that your `GIT_SSH` environment variable points to the right
-place (e.g. `C:\Windows\System32\OpenSSH\ssh.exe`).
+place (e.g. `C:\Windows\System32\OpenSSH\ssh.exe`), and that `ssh-agent.exe` is
+running.
 
 # TODO
 
