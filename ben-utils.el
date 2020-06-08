@@ -396,17 +396,21 @@ nothing"
 (defvar extempore-pattern-hydra-hit-value "1" "value for the 'hit'")
 (defvar extempore-pattern-hydra-rest-value "_" "value for the 'rest'")
 
+;; NOTE: this doesn't work if there's not at least one more character on the
+;; line e.g. a close paren)
+(defun extempore-pattern-hydra-insert (value)
+  (if (looking-back "(" (- (point) 1))
+	  ;; we're in an empty list
+	  (insert value)
+	(insert (format " %s" value))))
+
 (spacemacs|define-transient-state extempore-pattern-hydra-tap-rhythm
   :title "Tap out an extempore pattern using the keyboard"
   :doc
   "\n[_j_] hit [_f_] rest [_J_] set hit value [_F_] set rest value [_q_] quit"
-  :on-enter
-  (setq extempore-pattern-hydra-hits nil)
-  :on-exit
-  (insert (reverse (string-join extempore-pattern-hydra-hits " ")))
   :bindings
-  ("j" (push extempore-pattern-hydra-hit-value extempore-pattern-hydra-hits))
-  ("f" (push extempore-pattern-hydra-rest-value extempore-pattern-hydra-hits))
+  ("j" (extempore-pattern-hydra-insert extempore-pattern-hydra-hit-value))
+  ("f" (extempore-pattern-hydra-insert extempore-pattern-hydra-rest-value))
   ("J" (setq-local extempore-pattern-hydra-hit-value (read-string "hit value: ")))
   ("F" (setq-local extempore-pattern-hydra-rest-value (read-string "rest value: ")))
   ("q" nil :exit t))
