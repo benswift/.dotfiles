@@ -407,8 +407,8 @@ nothing"
   :bindings
   ("j" (push extempore-pattern-hydra-hit-value extempore-pattern-hydra-hits))
   ("f" (push extempore-pattern-hydra-rest-value extempore-pattern-hydra-hits))
-  ("J" (setq extempore-pattern-hydra-hit-value (read-string "hit value: ")))
-  ("F" (setq extempore-pattern-hydra-rest-value (read-string "rest value: ")))
+  ("J" (setq-local extempore-pattern-hydra-hit-value (read-string "hit value: ")))
+  ("F" (setq-local extempore-pattern-hydra-rest-value (read-string "rest value: ")))
   ("q" nil :exit t))
 
 (spacemacs/set-leader-keys-for-major-mode 'extempore-mode
