@@ -516,11 +516,7 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
   (setq ispell-program-name (executable-find "hunspell")
         ispell-dictionary "en_AU"
         ispell-dictionary-alist
-        '(("en_AU" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_AU") nil utf-8)))
-
-  ;; fixes "void-function org-time-add" error as per
-  ;; https://github.com/seagle0128/.emacs.d/issues/129#issuecomment-593094023
-  (org-reload))
+        '(("en_AU" "[[:alpha:]]" "[^[:alpha:]]" "[']" nil ("-d" "en_AU") nil utf-8))))
 
 (defun dotspacemacs/user-load ()
   "Library to load while dumping.
