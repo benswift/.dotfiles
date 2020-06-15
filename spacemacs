@@ -512,9 +512,6 @@ configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
 
-  ;; don't use tall headings in org/md files
-  (setq spacemacs-theme-org-height nil)
-
   ;; hunspell stuff needs to be set in init
   (setq ispell-program-name (executable-find "hunspell")
         ispell-dictionary "en_AU"
