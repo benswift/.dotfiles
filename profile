@@ -27,6 +27,8 @@ fi
 export PATH="$HOME/.poetry/bin:$PATH"
 export POETRY_VIRTUALENVS_PATH="$HOME/.pyenv/versions"
 
+alias pr='poetry run'
+
 # pipx
 
 export PATH="$HOME/.local/bin":$PATH
@@ -40,6 +42,8 @@ export PATH="$HOME/.local/bin":$PATH
 if [ -x "$(command -v rbenv)" ]; then
 	eval "$(rbenv init -)"
 fi
+
+alias be='bundle exec'
 
 #############
 # Extempore #
