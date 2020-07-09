@@ -377,6 +377,9 @@ nothing"
   ;; (when (require 'mu4e... ) ends here
   )
 
+;; because they seemed to remove the old `SPC A m' keybinding
+(spacemacs/set-leader-keys "oe" 'mu4e)
+
 ;;;;;;;;;;;;;;;
 ;; Extempore ;;
 ;;;;;;;;;;;;;;;
