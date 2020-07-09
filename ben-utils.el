@@ -219,10 +219,10 @@ nothing"
 
   ;; receive
 
-  (setq mu4e-sent-folder "/Sent Items"
-		mu4e-refile-folder "/Archive"
-		mu4e-drafts-folder "/Drafts"
-		mu4e-trash-folder "/Trash"
+  (setq mu4e-sent-folder "/INBOX/Sent Items"
+		mu4e-refile-folder "/INBOX/Archive"
+		mu4e-drafts-folder "/INBOX/Drafts"
+		mu4e-trash-folder "/INBOX/Trash"
 		mu4e-attachment-dir (expand-file-name "~/Downloads"))
 
   (setq mu4e-get-mail-command "mbsync fastmail"

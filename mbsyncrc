@@ -23,7 +23,7 @@ SubFolders Verbatim
 Channel fastmail
 Master :fastmail-remote:
 Slave :fastmail-local:
-Patterns "INBOX" "*"
+Patterns "*"
 Create Slave
 Sync All
 Expunge Both
