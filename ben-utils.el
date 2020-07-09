@@ -205,6 +205,15 @@ nothing"
 ;; to init, try something like
 ;; mu init --my-address=ben@benswift.me --my-address=benswift@fastmail.com --my-address=ben.swift@anu.edu.au --my-address=benjamin.j.swift@gmail.com --my-address=ben.swift@simeonnetwork.org
 
+;; these should be set before calling mu4e, and they shouldn't break anything if
+;; we're on a machine where (require 'mu4e) fails
+(setq mu4e-get-mail-command "mbsync fastmail"
+      mu4e-sent-folder "/INBOX/Sent Items"
+      mu4e-refile-folder "/INBOX/Archive"
+      mu4e-drafts-folder "/INBOX/Drafts"
+      mu4e-trash-folder "/INBOX/Trash"
+      mu4e-attachment-dir (expand-file-name "~/Downloads"))
+
 (when (spacemacs/system-is-linux)
   (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e"))
 
@@ -219,14 +228,7 @@ nothing"
 
   ;; receive
 
-  (setq mu4e-sent-folder "/INBOX/Sent Items"
-		mu4e-refile-folder "/INBOX/Archive"
-		mu4e-drafts-folder "/INBOX/Drafts"
-		mu4e-trash-folder "/INBOX/Trash"
-		mu4e-attachment-dir (expand-file-name "~/Downloads"))
-
-  (setq mu4e-get-mail-command "mbsync fastmail"
-		mu4e-update-interval 300
+  (setq mu4e-update-interval 300
 		mu4e-headers-auto-update t
 		mu4e-change-filenames-when-moving t
 		mu4e-view-show-addresses t)
@@ -291,11 +293,11 @@ nothing"
 
   (setq mu4e-maildir-shortcuts
 		'(("/INBOX" . ?i)
-		  ("/Sent Items" . ?s)
-		  ("/Archive" . ?a)
-		  ("/Drafts" . ?d)
-		  ("/Trash" . ?t)
-		  ("/Junk Mail" . ?j)))
+		  ("/INBOX/Sent Items" . ?s)
+		  ("/INBOX/Archive" . ?a)
+		  ("/INBOX/Drafts" . ?d)
+		  ("/INBOX/Trash" . ?t)
+		  ("/INBOX/Junk Mail" . ?j)))
 
   (setq mu4e-headers-date-format "%e %b %y"
 		mu4e-headers-fields '((:human-date . 12)
