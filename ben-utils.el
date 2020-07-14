@@ -245,7 +245,7 @@ nothing"
 			(add-face-text-property
 			 (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
 			(add-face-text-property
-			 (match-beginning 3) (match-end 3) 'font-lock-variable-name-face)
+			 (match-beginning 3) (match-end 3) 'font-lock-builtin-face)
 			(add-face-text-property
 			 (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
 
