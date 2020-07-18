@@ -1,12 +1,27 @@
-# sync the working tree, but don't sync the git repos (since these are all
+### git ###
 hosted anyway)
 .git/
 
-# langugage-specific caches & whatnot
-.tox/
+### C/C++ ###
+
+# this is kindof a blunt instrument, but it's a *fairly* safe convention that
+# build folders don't contain stuff which should be backed up
+build/
+
+### Jekyll ###
+_site/
 .jekyll-cache/
-node_modules/
+.sass-cache/
 .asset-cache/
+
+### Python ###
+.tox/
+__pycache__/
+
+### js ###
+node_modules/
+
+### Pictures###
 
 # because iCloud sync handles this
 /Pictures/
