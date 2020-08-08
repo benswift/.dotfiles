@@ -537,7 +537,8 @@ before packages are loaded."
   (add-to-load-path (expand-file-name "~/.dotfiles/"))
   (require 'ben-utils)
   (require 'anu-cs-utils)
-  (load (expand-file-name "~/Documents/teaching/comp2710-lens-2020/convenors/scripts/comp2710-lens") :noerror))
+  (load (expand-file-name "~/Documents/teaching/comp2710-lens-2020/convenors/scripts/comp2710-lens") :noerror)
+  (yas-reload-all))
 
 (defun dotspacemacs/emacs-custom-settings ()
   "Emacs custom settings.
