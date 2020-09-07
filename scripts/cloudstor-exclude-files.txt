@@ -8,6 +8,9 @@ hosted anyway)
 # build folders don't contain stuff which should be backed up
 build/
 
+# need to special-case this one
+/research/extemporelang/extempore/llvm/
+
 ### Jekyll ###
 _site/
 .jekyll-cache/
