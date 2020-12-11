@@ -97,6 +97,7 @@ This function should only modify configuration layer settings."
      ;; lua
      multiple-cursors
 	 octave
+	 pdf
      ;; php
      ;; (parinfer :init (add-hook 'extempore-mode-hook #'parinfer-mode))
      prettier
