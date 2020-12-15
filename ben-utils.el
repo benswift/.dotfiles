@@ -550,6 +550,10 @@ dspmt" name xtm-dir)))
   (with-eval-after-load 'pdf-annot
     (add-hook 'pdf-annot-activate-handler-functions#'org-noter-pdftools-jump-to-note)))
 
+;; (with-eval-after-load 'pdf-view
+;;   (evil-define-key 'visual pdf-view-mode-map "<prior>" 'pdf-view-scroll-down-or-previous-page)
+;;   (evil-define-key 'visual pdf-view-mode-map "<next>" 'pdf-view-scroll-up-or-next-page))
+
 ;;;;;;;;;;;;;
 ;; devdocs ;;
 ;;;;;;;;;;;;;
