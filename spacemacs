@@ -71,7 +71,7 @@ This function should only modify configuration layer settings."
 	  org-default-notes-file (concat org-directory "/inbox.org")
       ;; org-roam
       org-enable-roam-support t
-	  org-roam-directory org-directory
+	  org-roam-directory (concat org-directory "/roam")
       org-roam-db-location (concat org-roam-directory "/db/org-roam.db"))
      ;; asciidoc
      (asm
