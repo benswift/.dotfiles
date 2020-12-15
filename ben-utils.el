@@ -541,7 +541,8 @@ dspmt" name xtm-dir)))
   :hook (org-load . org-pdftools-setup-link))
 
 (use-package org-noter
-  :after (:any org pdf-view))
+  :after (:any org pdf-view)
+  :custom (org-noter-always-create-frame nil))
 
 (use-package org-noter-pdftools
   :after org-noter
