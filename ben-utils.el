@@ -517,7 +517,7 @@ dspmt" name xtm-dir)))
   :custom
   (orb-preformat-keywords '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
   (orb-process-file-keyword t)
-  (orb-file-field-extensions '("pdf"))
+  (orb-file-field-extensions '("pdf" "epub" "html"))
 
   (orb-templates
    '(("r" "ref" plain (function org-roam-capture--get-point)
