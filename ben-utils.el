@@ -511,18 +511,37 @@ dspmt" name xtm-dir)))
 ;; org-mode ;;
 ;;;;;;;;;;;;;;
 
-;; includes org-roam-bibtex setup from
-;; https://philipperambert.com/Installing-Org-Roam-Bibtex-In-Spacemacs
-
 (use-package org-roam-bibtex
   :after org-roam
-  :hook (org-roam-mode . org-roam-bibtex-mode))
+  :hook (org-roam-mode . org-roam-bibtex-mode)
+  :custom
+  (orb-preformat-keywords '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
+  (orb-process-file-keyword t)
+  (orb-file-field-extensions '("pdf"))
 
-(use-package org-noter
-  :after (:any org pdf-view))
+  (orb-templates
+   '(("r" "ref" plain (function org-roam-capture--get-point)
+      ""
+      :file-name "${citekey}"
+      :head "#+TITLE: ${citekey}: ${title}\n#+ROAM_KEY: ${ref}
+
+- tags ::
+- keywords :: ${keywords}
+
+* ${title}
+  :PROPERTIES:
+  :Custom_ID: ${citekey}
+  :URL: ${url}
+  :AUTHOR: ${author-or-editor}
+  :NOTER_DOCUMENT: ${file}
+  :NOTER_PAGE:
+  :END:"))))
 
 (use-package org-pdftools
   :hook (org-load . org-pdftools-setup-link))
+
+(use-package org-noter
+  :after (:any org pdf-view))
 
 (use-package org-noter-pdftools
   :after org-noter
