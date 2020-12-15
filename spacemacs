@@ -69,9 +69,6 @@ This function should only modify configuration layer settings."
       :variables
       org-directory (expand-file-name "~/Documents/org")
 	  org-default-notes-file (concat org-directory "/inbox.org")
-      ;; org-ref
-      org-ref-default-bibliography (concat org-directory "/zotero.bib")
-      org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
       ;; org-roam
       org-enable-roam-support t
 	  org-roam-directory org-directory
@@ -81,7 +78,11 @@ This function should only modify configuration layer settings."
       :variables
       indent-tabs-mode t
       tab-width 4)
-     bibtex
+     (bibtex
+	  :variables
+      bibtex-completion-bibliography (expand-file-name "~/Documents/org/zotero.bib")
+      org-ref-default-bibliography (list bibtex-completion-bibliography)
+      org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex)
      c-c++
      clojure
      cmake
