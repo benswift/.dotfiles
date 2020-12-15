@@ -65,7 +65,17 @@ This function should only modify configuration layer settings."
       :variables
       markdown-asymmetric-header t
       markdown-italic-underscore t)
-     (org :variables org-enable-roam-support t)
+     (org
+      :variables
+      org-directory (expand-file-name "~/Documents/org")
+	  org-default-notes-file (concat org-directory "/inbox.org")
+      ;; org-ref
+      org-ref-default-bibliography (concat org-directory "/zotero.bib")
+      org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex
+      ;; org-roam
+      org-enable-roam-support t
+	  org-roam-directory org-directory
+      org-roam-db-location (concat org-roam-directory "/db/org-roam.db"))
      ;; asciidoc
      (asm
       :variables
@@ -128,10 +138,16 @@ This function should only modify configuration layer settings."
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages
    '(
+     ;; bits & pieces
 	 lice
 	 csv
 	 z3-mode
 	 imenu-anywhere
+     ;; towards academic productivity nirvana?
+     org-roam-bibtex
+     org-noter
+     org-noter-pdftools
+     ;; themes
 	 dracula-theme
 	 monokai-theme
 	 subatomic-theme

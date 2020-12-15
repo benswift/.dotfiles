@@ -511,17 +511,24 @@ dspmt" name xtm-dir)))
 ;; org-mode ;;
 ;;;;;;;;;;;;;;
 
-(setq org-directory (expand-file-name "~/Dropbox/org")
-	  org-default-notes-file (concat org-directory "/inbox.org")
-	  org-agenda-files (list org-directory)
-	  org-refile-targets '((nil :maxlevel . 9) (org-agenda-files :maxlevel . 9))
-	  org-outline-path-complete-in-steps nil         ; Refile in a single go
-	  org-refile-use-outline-path t)
+;; includes org-roam-bibtex setup from
+;; https://philipperambert.com/Installing-Org-Roam-Bibtex-In-Spacemacs
 
-;; org-ref & helm-bibtex
+(use-package org-roam-bibtex
+  :after org-roam
+  :hook (org-roam-mode . org-roam-bibtex-mode))
 
-(setq org-ref-bibliography-notes (concat org-directory "/zotero-notes.org")
-	  bibtex-completion-bibliography (expand-file-name "~/Documents/Zotero/export.bib"))
+(use-package org-noter
+  :after (:any org pdf-view))
+
+(use-package org-pdftools
+  :hook (org-load . org-pdftools-setup-link))
+
+(use-package org-noter-pdftools
+  :after org-noter
+  :config
+  (with-eval-after-load 'pdf-annot
+    (add-hook 'pdf-annot-activate-handler-functions#'org-noter-pdftools-jump-to-note)))
 
 ;;;;;;;;;;;;;
 ;; devdocs ;;
