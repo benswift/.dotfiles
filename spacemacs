@@ -65,7 +65,7 @@ This function should only modify configuration layer settings."
       :variables
       markdown-asymmetric-header t
       markdown-italic-underscore t)
-     org
+     (org :variables org-enable-roam-support t)
      ;; asciidoc
      (asm
       :variables
