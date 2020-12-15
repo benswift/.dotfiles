@@ -135,7 +135,6 @@ This function should only modify configuration layer settings."
 	 dracula-theme
 	 monokai-theme
 	 subatomic-theme
-	 arduino-mode
 	 )
 
    ;; A list of packages that cannot be updated.
