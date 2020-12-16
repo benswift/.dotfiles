@@ -523,7 +523,8 @@ dspmt" name xtm-dir)))
    '(("r" "ref" plain (function org-roam-capture--get-point)
       ""
       :file-name "${citekey}"
-      :head "#+TITLE: ${citekey}: ${title}\n#+ROAM_KEY: ${ref}
+      :head "#+TITLE: ${citekey}: ${title}
+#+ROAM_KEY: ${ref}
 
 - tags ::
 - keywords :: ${keywords}
