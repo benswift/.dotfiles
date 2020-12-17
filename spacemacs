@@ -81,8 +81,10 @@ This function should only modify configuration layer settings."
      (bibtex
 	  :variables
       bibtex-completion-bibliography (expand-file-name "~/Documents/org/zotero.bib")
+	  bibtex-completion-pdf-field "file"
+      ;; org-ref stuff (but used by bibtex layer)
       org-ref-default-bibliography (list bibtex-completion-bibliography)
-      org-ref-get-pdf-filename-function #'org-ref-get-pdf-filename-helm-bibtex)
+      org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex)
      c-c++
      clojure
      cmake
