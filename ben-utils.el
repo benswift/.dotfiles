@@ -516,7 +516,6 @@ dspmt" name xtm-dir)))
   :hook (org-roam-mode . org-roam-bibtex-mode)
   :custom
   (orb-preformat-keywords '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
-  (orb-process-file-keyword t)
   (orb-file-field-extensions '("pdf" "epub" "html"))
 
   (orb-templates
