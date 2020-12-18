@@ -26,7 +26,7 @@
 
 ;; time
 (setq display-time-format "%H:%M"
-	  display-time-default-load-average nil)
+      display-time-default-load-average nil)
 (display-time-mode 1)
 
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
@@ -48,10 +48,10 @@
 
 (defun jekyll-list-asset-filenames ()
   (->> (projectile-current-project-files)
-	   (--filter (s-starts-with? "assets/" it))
-	   ;; in case there's heaps of js guff that you *probably* don't want
-	   (--remove (s-starts-with? "assets/js/" it))
-	   (--map (s-chop-prefix "assets/" it))))
+       (--filter (s-starts-with? "assets/" it))
+       ;; in case there's heaps of js guff that you *probably* don't want
+       (--remove (s-starts-with? "assets/js/" it))
+       (--map (s-chop-prefix "assets/" it))))
 
 (defun kramdown-slugify (text)
   "slugify text (as kramdown would) based on the regexps in
@@ -59,53 +59,53 @@
 
 https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98908/lib/kramdown/converter/base.rb#L232"
   (->> text
-	   (s-downcase)
-	   (s-replace " " "-")
-	   (s-replace-regexp "[^a-z0-9-]" "")))
+       (s-downcase)
+       (s-replace " " "-")
+       (s-replace-regexp "[^a-z0-9-]" "")))
 
 (defun kramdown-list-slugified-headers ()
   (-map
    #'kramdown-slugify
    (progn
-	 (imenu--make-index-alist :noerror)
-	 imenu--index-alist)))
+     (imenu--make-index-alist :noerror)
+     imenu--index-alist)))
 
 (defun kramdown-list-anchors (filename)
   "return a list of the (explicit) ids from a kramdown md file"
   (let* ((md-text (slurp filename))
-		 (matches (s-match-strings-all "{#\\([^}]*\\)}" md-text)))
-	(--map (nth 1 it) matches)))
+         (matches (s-match-strings-all "{#\\([^}]*\\)}" md-text)))
+    (--map (nth 1 it) matches)))
 
 (defun yaml-list-top-level-keys (filename)
   "return a list of the top-level keys in a yaml file"
   (let* ((yaml-text (slurp filename))
-		 (matches (s-match-strings-all "^\\([a-zA-Z0-9_-]+\\):" yaml-text)))
-	(--map (nth 1 it) matches)))
+         (matches (s-match-strings-all "^\\([a-zA-Z0-9_-]+\\):" yaml-text)))
+    (--map (nth 1 it) matches)))
 
 (defun jekyll-link-with-anchor (filename)
   (interactive
    (list (completing-read "file: "
-						  (--filter (s-ends-with? ".md" it)
-									(projectile-current-project-files))
-						  nil
-						  :require-match)))
+                          (--filter (s-ends-with? ".md" it)
+                                    (projectile-current-project-files))
+                          nil
+                          :require-match)))
   (format "{%% link %s %%}#%s"
-		  filename
-		  (completing-read "anchor: "
-						   (kramdown-list-anchors (concat (projectile-project-root) filename))
-						   nil
-						   :require-match)))
+          filename
+          (completing-read "anchor: "
+                           (kramdown-list-anchors (concat (projectile-project-root) filename))
+                           nil
+                           :require-match)))
 
 (defun kramdown-id-for-current-line ()
   (interactive)
   (->> (buffer-substring-no-properties
-		(line-beginning-position)
-		(line-end-position))
-	   (replace-regexp-in-string "#+" "")
-	   (s-collapse-whitespace)
-	   (s-trim)
-	   (kramdown-slugify)
-	   (format "{#%s}")))
+        (line-beginning-position)
+        (line-end-position))
+       (replace-regexp-in-string "#+" "")
+       (s-collapse-whitespace)
+       (s-trim)
+       (kramdown-slugify)
+       (format "{#%s}")))
 
 (defun image-width (image-filename)
   "get image width (in pixels)
@@ -124,10 +124,10 @@ requires `identify' CLI program"
 
 requires `mogrify' CLI program"
   (let ((iw (image-width image-filename))
-		(command-string (format "mogrify -resize \"%d\" \"%s\"" width image-filename)))
-	(if (>= width iw)
-		(progn (message "image is already %dpx wide---so I'll just leave it as-is" iw) 0)
-	  (shell-command command-string))))
+        (command-string (format "mogrify -resize \"%d\" \"%s\"" width image-filename)))
+    (if (>= width iw)
+        (progn (message "image is already %dpx wide---so I'll just leave it as-is" iw) 0)
+      (shell-command command-string))))
 
 (defun imageoptim-file (filename-or-glob)
   "also apply some standard, useful optimisations"
@@ -138,39 +138,39 @@ requires `mogrify' CLI program"
   "move file by default into the appropriate subfolder of assets/"
   (interactive
    (let* ((image-filename (completing-read "filename: "
-										   (f-files (expand-file-name "~/Downloads")
-													(lambda (fname)
-													  (--any (s-ends-with? it fname)
-															 '(".jpg" ".jpeg" ".png"))))
-										   nil
-										   :require-match))
-		  (default-width 1920)
-		  (original-width (image-width image-filename)))
-	 (list
-	  image-filename
-	  (read-number (format "desired image width (current %spx): " original-width) default-width))))
+                                           (f-files (expand-file-name "~/Downloads")
+                                                    (lambda (fname)
+                                                      (--any (s-ends-with? it fname)
+                                                             '(".jpg" ".jpeg" ".png"))))
+                                           nil
+                                           :require-match))
+          (default-width 1920)
+          (original-width (image-width image-filename)))
+     (list
+      image-filename
+      (read-number (format "desired image width (current %spx): " original-width) default-width))))
 
   ;; downsize image if necessary
   (if (> (image-width filename) desired-width)
-	  (unless (= (mogrify-width filename desired-width) 0)
-		(error "error mogrifying %s" filename)))
+      (unless (= (mogrify-width filename desired-width) 0)
+        (error "error mogrifying %s" filename)))
 
   ;; run imageoptim-cli (including JPEGmini)
   ;; (unless (= (imageoptim-file filename) 0)
-  ;; 	(error "error imageoptimising %s" filename))
+  ;;    (error "error imageoptimising %s" filename))
 
   ;; move the now processed image file into place
   (let* ((asset-root (f-join (projectile-project-root) "assets"))
-		 (dest-filename (f-join asset-root
-								(completing-read "assets/" (cons "." (--map (f-relative it asset-root)
-																			(f-directories asset-root
-																						   (lambda (fname) (not (s-contains? ".git" fname)))
-																						   :recursive))))
-								(f-filename filename))))
-	(f-move filename dest-filename)
-	;; for convenience, copy the relevant "background image" Jekyll include
-	(kill-new (format "{%% include slides/background-image.html image=\"%s\" %%}"
-					  (f-relative dest-filename asset-root)))))
+         (dest-filename (f-join asset-root
+                                (completing-read "assets/" (cons "." (--map (f-relative it asset-root)
+                                                                            (f-directories asset-root
+                                                                                           (lambda (fname) (not (s-contains? ".git" fname)))
+                                                                                           :recursive))))
+                                (f-filename filename))))
+    (f-move filename dest-filename)
+    ;; for convenience, copy the relevant "background image" Jekyll include
+    (kill-new (format "{%% include slides/background-image.html image=\"%s\" %%}"
+                      (f-relative dest-filename asset-root)))))
 
 (defun mogrify-image-file (filename desired-width)
   "note: this will never make the file wider
@@ -179,19 +179,19 @@ if DESIRED-WIDTH is greater than the file width, it'll just do
 nothing"
   (interactive
    (list (read-file-name "file: ")
-		 (read-number "desired width (px): " 1920)))
+         (read-number "desired width (px): " 1920)))
   (if (> (image-width filename) desired-width)
-	  (shell-command (format "mogrify -resize \"%d\" %s" desired-width filename))
-	(message "%s is already narrower than %dpx, skipping..." filename desired-width)))
+      (shell-command (format "mogrify -resize \"%d\" %s" desired-width filename))
+    (message "%s is already narrower than %dpx, skipping..." filename desired-width)))
 
 ;; TODO it'd be nice if this worked on the currently selected files in a dired buffer
 (defun mogrify-image-files-recursively (dir max-width)
   (interactive
    (list (read-directory-name "directory: ")
-		 (read-number "max-width: " 1920)))
+         (read-number "max-width: " 1920)))
   (--each
-	  (directory-files-recursively dir "\.\\(jpg\\|jpeg\\|png\\)$")
-	(mogrify-image-file it max-width)))
+      (directory-files-recursively dir "\.\\(jpg\\|jpeg\\|png\\)$")
+    (mogrify-image-file it max-width)))
 
 ;; helpful keybindings
 (spacemacs/declare-prefix "o" "user-prefix")
@@ -229,25 +229,25 @@ nothing"
   ;; receive
 
   (setq mu4e-update-interval 300
-		mu4e-headers-auto-update t
-		mu4e-change-filenames-when-moving t
-		mu4e-view-show-addresses t)
+        mu4e-headers-auto-update t
+        mu4e-change-filenames-when-moving t
+        mu4e-view-show-addresses t)
 
   (defun mu4e-pretty-mbsync-process-filter (proc msg)
-	(ignore-errors
-	  (with-current-buffer (process-buffer proc)
-		(let ((inhibit-read-only t))
-		  (delete-region (point-min) (point-max))
-		  (insert (car (reverse (split-string msg "\r"))))
-		  (when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)")
-			(add-face-text-property
-			 (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
-			(add-face-text-property
-			 (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
-			(add-face-text-property
-			 (match-beginning 3) (match-end 3) 'font-lock-builtin-face)
-			(add-face-text-property
-			 (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
+    (ignore-errors
+      (with-current-buffer (process-buffer proc)
+        (let ((inhibit-read-only t))
+          (delete-region (point-min) (point-max))
+          (insert (car (reverse (split-string msg "\r"))))
+          (when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)")
+            (add-face-text-property
+             (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
+            (add-face-text-property
+             (match-beginning 2) (match-end 2) 'font-lock-function-name-face)
+            (add-face-text-property
+             (match-beginning 3) (match-end 3) 'font-lock-builtin-face)
+            (add-face-text-property
+             (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
 
   (advice-add
    'mu4e~get-mail-process-filter
@@ -256,120 +256,120 @@ nothing"
   ;; compose
 
   (setq mu4e-compose-dont-reply-to-self t
-		mu4e-compose-signature-auto-include nil
-		mu4e-compose-format-flowed t
-		fill-flowed-encode-column fill-column
-		message-citation-line-format "On %Y-%m-%d at %R %Z, %f wrote...")
+        mu4e-compose-signature-auto-include nil
+        mu4e-compose-format-flowed t
+        fill-flowed-encode-column fill-column
+        message-citation-line-format "On %Y-%m-%d at %R %Z, %f wrote...")
 
   (add-hook 'mu4e-compose-mode-hook #'spacemacs/toggle-yasnippet-on)
 
   (defun ben-find-to-firstname ()
-	"search the current buffer for a To: field, and grab the first recipient's name from there"
-	(interactive)
-	(let ((str (buffer-substring-no-properties (point-min) (point-max))))
-	  (if (string-match
-		   "^To: \"?\\([^ ,<\n]+\\)"
-		   str)
-		  (match-string 1 str)
-		nil)))
+    "search the current buffer for a To: field, and grab the first recipient's name from there"
+    (interactive)
+    (let ((str (buffer-substring-no-properties (point-min) (point-max))))
+      (if (string-match
+           "^To: \"?\\([^ ,<\n]+\\)"
+           str)
+          (match-string 1 str)
+        nil)))
 
   (require 'gnus-dired)
 
   ;; make the `gnus-dired-mail-buffers' function also work on
   ;; message-mode derived modes, such as mu4e-compose-mode
   (defun gnus-dired-mail-buffers ()
-	"Return a list of active message buffers."
-	(let (buffers)
-	  (save-current-buffer
-		(dolist (buffer (buffer-list t))
-		  (set-buffer buffer)
-		  (when (and (derived-mode-p 'message-mode)
-					 (null message-sent-message-via))
-			(push (buffer-name buffer) buffers))))
-	  (nreverse buffers)))
+    "Return a list of active message buffers."
+    (let (buffers)
+      (save-current-buffer
+        (dolist (buffer (buffer-list t))
+          (set-buffer buffer)
+          (when (and (derived-mode-p 'message-mode)
+                     (null message-sent-message-via))
+            (push (buffer-name buffer) buffers))))
+      (nreverse buffers)))
 
   (setq gnus-dired-mail-mode 'mu4e-user-agent)
   (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 
   (setq mu4e-maildir-shortcuts
-		'(("/INBOX" . ?i)
-		  ("/INBOX/Sent Items" . ?s)
-		  ("/INBOX/Archive" . ?a)
-		  ("/INBOX/Drafts" . ?d)
-		  ("/INBOX/Trash" . ?t)
-		  ("/INBOX/Junk Mail" . ?j)))
+        '(("/INBOX" . ?i)
+          ("/INBOX/Sent Items" . ?s)
+          ("/INBOX/Archive" . ?a)
+          ("/INBOX/Drafts" . ?d)
+          ("/INBOX/Trash" . ?t)
+          ("/INBOX/Junk Mail" . ?j)))
 
   (setq mu4e-headers-date-format "%e %b %y"
-		mu4e-headers-fields '((:human-date . 12)
-							  (:flags . 6)
-							  (:maildir . 10)
-							  (:from . 22)
-							  (:subject)))
+        mu4e-headers-fields '((:human-date . 12)
+                              (:flags . 6)
+                              (:maildir . 10)
+                              (:from . 22)
+                              (:subject)))
 
   (setq mu4e-view-use-gnus nil
-		mu4e-view-show-images t
-		mu4e-html2text-command #'mu4e-shr2text
-		;; make sure fg-bg contrast is high enough
-		shr-color-visible-luminance-min 80
-		;; don't use variable pitch fonts
-		shr-use-fonts nil)
+        mu4e-view-show-images t
+        mu4e-html2text-command #'mu4e-shr2text
+        ;; make sure fg-bg contrast is high enough
+        shr-color-visible-luminance-min 80
+        ;; don't use variable pitch fonts
+        shr-use-fonts nil)
 
   (-each
-	  '((:name "to:benjamin.j.swift@gmail.com" :query "to gmail" :key ?g))
-	(lambda (b) (add-to-list 'mu4e-bookmarks b t)))
+      '((:name "to:benjamin.j.swift@gmail.com" :query "to gmail" :key ?g))
+    (lambda (b) (add-to-list 'mu4e-bookmarks b t)))
 
   ;; send
 
   (require 'smtpmail-async)
 
   (setq send-mail-function 'async-smtpmail-send-it
-		message-send-mail-function 'async-smtpmail-send-it
-		smtpmail-smtp-service 587
-		smtpmail-debug-info t)
+        message-send-mail-function 'async-smtpmail-send-it
+        smtpmail-smtp-service 587
+        smtpmail-debug-info t)
 
   ;; contexts
 
   (setq mu4e-contexts
-		(list
-		 (make-mu4e-context
-		  :name "personal"
-		  :enter-func (lambda () (mu4e-message "switching to personal context"))
-		  ;; leave-func not defined
-		  :match-func (lambda (msg)
-						(when msg
-						  (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
-							  (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
-		  :vars '((user-mail-address . "ben@benswift.me")
-				  (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
-				  (smtpmail-smtp-server . "mail.messagingengine.com")))
-		 (make-mu4e-context
-		  :name "anu"
-		  :enter-func (lambda () (mu4e-message "switching to ANU context"))
-		  ;; leave-fun not defined
-		  :match-func (lambda (msg)
-						(when msg
-						  (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
-		  :vars '((user-mail-address . "ben.swift@anu.edu.au")
-				  (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
-				  (smtpmail-smtp-server . "smtp.office365.com")))))
+        (list
+         (make-mu4e-context
+          :name "personal"
+          :enter-func (lambda () (mu4e-message "switching to personal context"))
+          ;; leave-func not defined
+          :match-func (lambda (msg)
+                        (when msg
+                          (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
+                              (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
+          :vars '((user-mail-address . "ben@benswift.me")
+                  (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
+                  (smtpmail-smtp-server . "mail.messagingengine.com")))
+         (make-mu4e-context
+          :name "anu"
+          :enter-func (lambda () (mu4e-message "switching to ANU context"))
+          ;; leave-fun not defined
+          :match-func (lambda (msg)
+                        (when msg
+                          (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
+          :vars '((user-mail-address . "ben.swift@anu.edu.au")
+                  (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
+                  (smtpmail-smtp-server . "smtp.office365.com")))))
 
   (defun ben-send-anu-email (email-address subject body &optional async cc-string)
-	(with-temp-buffer
-	  (mu4e-context-switch nil "anu")
-	  (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
-					  email-address
-					  (if cc-string (format "Cc: %s\n" cc-string) "")
-					  subject
-					  body))
-	  (if async
-		  (async-smtpmail-send-it)
-		(smtpmail-send-it))))
+    (with-temp-buffer
+      (mu4e-context-switch nil "anu")
+      (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
+                      email-address
+                      (if cc-string (format "Cc: %s\n" cc-string) "")
+                      subject
+                      body))
+      (if async
+          (async-smtpmail-send-it)
+        (smtpmail-send-it))))
 
   ;; iCal integration
 
   (when (spacemacs/system-is-mac)
-	(require 'mu4e-icalendar)
-	(mu4e-icalendar-setup))
+    (require 'mu4e-icalendar)
+    (mu4e-icalendar-setup))
 
   ;; mimetype-specific handlers (this could be super-cool)
 
@@ -405,9 +405,9 @@ nothing"
 ;; line e.g. a close paren)
 (defun extempore-pattern-hydra-insert (value)
   (if (looking-back "(" (- (point) 1))
-	  ;; we're in an empty list
-	  (insert value)
-	(insert (format " %s" value))))
+      ;; we're in an empty list
+      (insert value)
+    (insert (format " %s" value))))
 
 (spacemacs|define-transient-state extempore-pattern-hydra-tap-rhythm
   :title "Tap out an extempore pattern using the keyboard"
@@ -425,39 +425,39 @@ nothing"
 
 (defun extempore-create-template-file (base-path filename &optional header)
   (let ((full-path (format "%s/%s" base-path filename)))
-	(unless (file-exists-p full-path)
-	  (progn
-		(find-file full-path)
-		(if header (insert header))
-		(save-buffer)
-		(kill-buffer)))))
+    (unless (file-exists-p full-path)
+      (progn
+        (find-file full-path)
+        (if header (insert header))
+        (save-buffer)
+        (kill-buffer)))))
 
 (defun extempore-create-template (name)
   "Set up the directory structure and files for a new extempore session/gig."
   (interactive "sSession name: ")
   (let* ((xtm-dir (expand-file-name "~/Documents/research/extemporelang/xtm/"))
-		 (base-path (concat xtm-dir "sessions/" name))
-		 (setup-header
-		  (format ";;; setup.xtm --- setup file for %s
+         (base-path (concat xtm-dir "sessions/" name))
+         (setup-header
+          (format ";;; setup.xtm --- setup file for %s
 
 (sys:load \"%slib/benlib-scm.xtm\")
 
 dspmt" name xtm-dir)))
-	(if (file-exists-p base-path)
-		(error "Cannot create xtm session: directory already exists."))
-	(make-directory base-path)
-	(extempore-create-template-file
-	 base-path "practise.xtm" "headerp")
-	(extempore-create-template-file
-	 base-path "gig.xtm" "headerp")
-	(extempore-create-template-file
-	 base-path "setup.xtm" setup-header)
-	(dired base-path)))
+    (if (file-exists-p base-path)
+        (error "Cannot create xtm session: directory already exists."))
+    (make-directory base-path)
+    (extempore-create-template-file
+     base-path "practise.xtm" "headerp")
+    (extempore-create-template-file
+     base-path "gig.xtm" "headerp")
+    (extempore-create-template-file
+     base-path "setup.xtm" setup-header)
+    (dired base-path)))
 
 ;; llvm-emacs utils
 
 (setq load-path
-	  (cons (expand-file-name "~/.dotfiles/llvm-emacs") load-path))
+      (cons (expand-file-name "~/.dotfiles/llvm-emacs") load-path))
 
 (require 'llvm-mode)
 (require 'tablegen-mode)
@@ -465,47 +465,47 @@ dspmt" name xtm-dir)))
 (defun extempore-show-ir-in-temp-buffer (beg end)
   (interactive "r")
   (save-excursion
-	(let ((ir-str (buffer-substring-no-properties beg end)))
-	  (with-current-buffer (get-buffer-create "*extempore LLVM IR*")
-		(if (not (equal major-mode 'llvm-mode))
-			(llvm-mode))
-		(delete-region (point-min) (point-max))
-		(insert (replace-regexp-in-string "\\\\n" "\n" ir-str))
-		(display-buffer "*extempore LLVM IR*" #'display-buffer-pop-up-window)))))
+    (let ((ir-str (buffer-substring-no-properties beg end)))
+      (with-current-buffer (get-buffer-create "*extempore LLVM IR*")
+        (if (not (equal major-mode 'llvm-mode))
+            (llvm-mode))
+        (delete-region (point-min) (point-max))
+        (insert (replace-regexp-in-string "\\\\n" "\n" ir-str))
+        (display-buffer "*extempore LLVM IR*" #'display-buffer-pop-up-window)))))
 
 ;; Ben's livecoding snippet helpers
 
 ;; used in extempore-mode's print-line-debug snippet
 (defun extempore-yas-println-debug-expander (pl-str format-str)
   (if (not (string= pl-str ""))
-	  (mapconcat (lambda (name) (format format-str name name))
-				 (cl-remove-if (lambda (x) (or (string-match "^'.*:$" x)
-											   (string-match "^\".*:\"$" x)))
-							   (split-string pl-str " "))
-				 " ")
-	pl-str))
+      (mapconcat (lambda (name) (format format-str name name))
+                 (cl-remove-if (lambda (x) (or (string-match "^'.*:$" x)
+                                               (string-match "^\".*:\"$" x)))
+                               (split-string pl-str " "))
+                 " ")
+    pl-str))
 
 (defvar extempore-yas-oscillator-list '("osc" "square" "triangle" "rect" "saw" "pulse" "fade" "delay" "delay_t" "comb" "flanger" "chorus" "tap_delay" "allpass" "reverb" "reverb2" "hold" "svf" "lpf" "lpf2" "bpf" "hpf" "notch" "peak" "lshelf" "hshelf" "skf" "lpfbq" "hpfbq" "bpfbq" "notchbq" "vcf" "hann" "hann_t" "linear"))
 
 (defun extempore-yas-get-sample-map-list ()
   (if (boundp 'user-extempore-lib-directory)
-	  (with-temp-buffer
-		(insert-file-contents (concat user-extempore-lib-directory "sampler-maps.xtm"))
-		(goto-char (point-min))
-		(cl-labels ((sm-parse-fn (sm-list)
-								 (if (re-search-forward "(define \\(*sm-[^ \n]*\\)" nil :no-error)
-									 (funcall #'sm-parse-fn (cons (match-string-no-properties 1) sm-list))
-								   sm-list)))
-		  (sm-parse-fn nil)))
-	'("")))
+      (with-temp-buffer
+        (insert-file-contents (concat user-extempore-lib-directory "sampler-maps.xtm"))
+        (goto-char (point-min))
+        (cl-labels ((sm-parse-fn (sm-list)
+                                 (if (re-search-forward "(define \\(*sm-[^ \n]*\\)" nil :no-error)
+                                     (funcall #'sm-parse-fn (cons (match-string-no-properties 1) sm-list))
+                                   sm-list)))
+          (sm-parse-fn nil)))
+    '("")))
 
 (defun extempore-yas-get-chord-sym (maj-min)
   ;; symbol lists from libs/core/pc_ivl.xtm
   (mapcar #'symbol-name
-		  (case maj-min
-			('^ 5 '(i i6 i64 i7 i- i-7 n n6 ii ii6 ii7 ii9 ii^ ii^7 iii iii6 iii7 iii^ iii^7 iv iv6 iv7 iv- iv-7 v v6 v7 v- v-7 vi vi6 vi7 vi^ vi^7 viio viio7 vii vii7))
-			('- '(i i6 i64 i7 i^ i^6 i^64 i^7 n n6 ii ii6 ii7 ii- ii-6 ii-7 ii^ ii^7 iii iii6 iii7 iii- iii-6 iii-7 iv iv6 iv7 iv^ iv^6 iv^7 v v^ v6 v7 v- v-6 v-6 v-7 vi vi6 vi7 vi- vi-6 vi-7 vii vii6 vii7 viio viio6 viio7))
-			(t nil))))
+          (case maj-min
+            ('^ 5 '(i i6 i64 i7 i- i-7 n n6 ii ii6 ii7 ii9 ii^ ii^7 iii iii6 iii7 iii^ iii^7 iv iv6 iv7 iv- iv-7 v v6 v7 v- v-7 vi vi6 vi7 vi^ vi^7 viio viio7 vii vii7))
+            ('- '(i i6 i64 i7 i^ i^6 i^64 i^7 n n6 ii ii6 ii7 ii- ii-6 ii-7 ii^ ii^7 iii iii6 iii7 iii- iii-6 iii-7 iv iv6 iv7 iv^ iv^6 iv^7 v v^ v6 v7 v- v-6 v-6 v-7 vi vi6 vi7 vi- vi-6 vi-7 vii vii6 vii7 viio viio6 viio7))
+            (t nil))))
 
 ;;;;;;;;;;;;;;
 ;; org-mode ;;
@@ -584,17 +584,17 @@ dspmt" name xtm-dir)))
 
 (defun slurp (f)
   (with-temp-buffer
-	(insert-file-contents f)
-	(buffer-substring-no-properties
-	 (point-min)
-	 (point-max))))
+    (insert-file-contents f)
+    (buffer-substring-no-properties
+     (point-min)
+     (point-max))))
 
 (require 'csv)
 
 (defun read-csv (filename headerp)
   (with-temp-buffer
-	(insert-file-contents filename)
-	(csv-parse-buffer headerp)))
+    (insert-file-contents filename)
+    (csv-parse-buffer headerp)))
 
 (defun osx-screencapture (filename)
   (interactive "sfilename: ")
@@ -608,20 +608,20 @@ dspmt" name xtm-dir)))
 (defun ben-asciify-buffer-or-region (beg end)
   (interactive "r")
   (let ((asciify-alist '(("’" . "'")
-						 ("‘" . "'")
-						 ("“" . "\"")
-						 ("”" . "\"")
-						 ("—" . "---")
-						 ("…" . "..."))))
-	(unless (region-active-p)
-	  (setq beg (point-min))
-	  (setq end (point-max)))
-	(save-excursion
-	  (-each asciify-alist
-		(lambda (nonascii-char-pair)
-		  (goto-char beg)
-		  (while (search-forward (car nonascii-char-pair) end :noerror)
-			(replace-match (cdr nonascii-char-pair) nil :literal)))))))
+                         ("‘" . "'")
+                         ("“" . "\"")
+                         ("”" . "\"")
+                         ("—" . "---")
+                         ("…" . "..."))))
+    (unless (region-active-p)
+      (setq beg (point-min))
+      (setq end (point-max)))
+    (save-excursion
+      (-each asciify-alist
+        (lambda (nonascii-char-pair)
+          (goto-char beg)
+          (while (search-forward (car nonascii-char-pair) end :noerror)
+            (replace-match (cdr nonascii-char-pair) nil :literal)))))))
 
 (defun xah-title-case-region-or-line (@begin @end)
   "Title case text between nearest brackets, or current line, or text selection.
@@ -632,55 +632,55 @@ URL `http://ergoemacs.org/emacs/elisp_title_case_text.html'
 Version 2017-01-11"
   (interactive
    (if (use-region-p)
-	   (list (region-beginning) (region-end))
-	 (let (
-		   $p1
-		   $p2
-		   ($skipChars "^\"<>(){}[]“”‘’‹›«»「」『』【】〖〗《》〈〉〔〕"))
-	   (progn
-		 (skip-chars-backward $skipChars (line-beginning-position))
-		 (setq $p1 (point))
-		 (skip-chars-forward $skipChars (line-end-position))
-		 (setq $p2 (point)))
-	   (list $p1 $p2))))
+       (list (region-beginning) (region-end))
+     (let (
+           $p1
+           $p2
+           ($skipChars "^\"<>(){}[]“”‘’‹›«»「」『』【】〖〗《》〈〉〔〕"))
+       (progn
+         (skip-chars-backward $skipChars (line-beginning-position))
+         (setq $p1 (point))
+         (skip-chars-forward $skipChars (line-end-position))
+         (setq $p2 (point)))
+       (list $p1 $p2))))
   (let* (
-		 ($strPairs [
-					 [" A " " a "]
-					 [" And " " and "]
-					 [" At " " at "]
-					 [" As " " as "]
-					 [" By " " by "]
-					 [" Be " " be "]
-					 [" Into " " into "]
-					 [" In " " in "]
-					 [" Is " " is "]
-					 [" It " " it "]
-					 [" For " " for "]
-					 [" Of " " of "]
-					 [" Or " " or "]
-					 [" On " " on "]
-					 [" Via " " via "]
-					 [" The " " the "]
-					 [" That " " that "]
-					 [" To " " to "]
-					 [" Vs " " vs "]
-					 [" With " " with "]
-					 [" From " " from "]
-					 ["'S " "'s "]
-					 ["'T " "'t "]
-					 ]))
-	(save-excursion
-	  (save-restriction
-		(narrow-to-region @begin @end)
-		(upcase-initials-region (point-min) (point-max))
-		(let ((case-fold-search nil))
-		  (mapc
-		   (lambda ($x)
-			 (goto-char (point-min))
-			 (while
-				 (search-forward (aref $x 0) nil t)
-			   (replace-match (aref $x 1) "FIXEDCASE" "LITERAL")))
-		   $strPairs))))))
+         ($strPairs [
+                     [" A " " a "]
+                     [" And " " and "]
+                     [" At " " at "]
+                     [" As " " as "]
+                     [" By " " by "]
+                     [" Be " " be "]
+                     [" Into " " into "]
+                     [" In " " in "]
+                     [" Is " " is "]
+                     [" It " " it "]
+                     [" For " " for "]
+                     [" Of " " of "]
+                     [" Or " " or "]
+                     [" On " " on "]
+                     [" Via " " via "]
+                     [" The " " the "]
+                     [" That " " that "]
+                     [" To " " to "]
+                     [" Vs " " vs "]
+                     [" With " " with "]
+                     [" From " " from "]
+                     ["'S " "'s "]
+                     ["'T " "'t "]
+                     ]))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region @begin @end)
+        (upcase-initials-region (point-min) (point-max))
+        (let ((case-fold-search nil))
+          (mapc
+           (lambda ($x)
+             (goto-char (point-min))
+             (while
+                 (search-forward (aref $x 0) nil t)
+               (replace-match (aref $x 1) "FIXEDCASE" "LITERAL")))
+           $strPairs))))))
 
 (defun xah-upcase-sentence ()
   "Upcase first letters of sentences of current text block or selection.
@@ -705,7 +705,7 @@ Version 2019-06-21"
     (save-excursion
       (save-restriction
         (narrow-to-region $p1 $p2)
-		(downcase-region $p1 $p2)
+        (downcase-region $p1 $p2)
         (let ((case-fold-search nil))
           (goto-char (point-min))
           (while (re-search-forward "\\. \\{1,2\\}\\([a-z]\\)" nil "move") ; after period
@@ -736,17 +736,17 @@ Version 2019-06-21"
   "Takes a multi-line paragraph and makes it into a single line of text."
   (interactive (progn (barf-if-buffer-read-only) '(t)))
   (let ((fill-column (point-max))
-		;; This would override `fill-column' if it's an integer.
-		(emacs-lisp-docstring-fill-column t))
-	(fill-paragraph nil region)))
+        ;; This would override `fill-column' if it's an integer.
+        (emacs-lisp-docstring-fill-column t))
+    (fill-paragraph nil region)))
 
 (require 'sgml-mode)
 
 (defun ben-reformat-xml ()
   (interactive)
   (save-excursion
-	(sgml-pretty-print (point-min) (point-max))
-	(indent-region (point-min) (point-max))))
+    (sgml-pretty-print (point-min) (point-max))
+    (indent-region (point-min) (point-max))))
 
 (require 'htmlize)
 
@@ -758,18 +758,18 @@ Version 2019-06-21"
 (defun ben-symlink-dotfiles ()
   (interactive)
   (cl-flet ((linker (lambda (target linkname)
-					  (make-symbolic-link (expand-file-name (format "~/.dotfiles/%s" target))
-										  (expand-file-name (format "~/%s" linkname))
-										  :ok-if-it-already-exists))))
-	(linker "profile" ".profile")
-	(linker "spacemacs" ".spacemacs")
-	(linker "gitconfig" ".gitconfig")
-	(linker "gitignore" ".gitignore")
-	(linker "mbsyncrc" ".mbsyncrc")
-	(linker "spacemacs-layers/extempore" ".emacs.d/private/extempore")
-	(linker "ssh_config" ".ssh/config")
-	(linker "scripts" "bin")
-	(linker "RProfile" ".RProfile")))
+                      (make-symbolic-link (expand-file-name (format "~/.dotfiles/%s" target))
+                                          (expand-file-name (format "~/%s" linkname))
+                                          :ok-if-it-already-exists))))
+    (linker "profile" ".profile")
+    (linker "spacemacs" ".spacemacs")
+    (linker "gitconfig" ".gitconfig")
+    (linker "gitignore" ".gitignore")
+    (linker "mbsyncrc" ".mbsyncrc")
+    (linker "spacemacs-layers/extempore" ".emacs.d/private/extempore")
+    (linker "ssh_config" ".ssh/config")
+    (linker "scripts" "bin")
+    (linker "RProfile" ".RProfile")))
 
 ;;;;;;;;;;;;
 ;; church ;;
@@ -778,27 +778,27 @@ Version 2019-06-21"
 (defun date-of-next-Sunday ()
   "return's next Sunday's date, as a string"
   (let ((next-sun (calendar-gregorian-from-absolute
-				   (+ (calendar-absolute-from-gregorian (calendar-current-date))
-					  (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
-	(format "%04d-%02d-%02d"
-			(nth 2 next-sun)
-			(nth 0 next-sun)
-			(nth 1 next-sun))))
+                   (+ (calendar-absolute-from-gregorian (calendar-current-date))
+                      (% (- 7 (string-to-number (format-time-string "%u"))) 7)))))
+    (format "%04d-%02d-%02d"
+            (nth 2 next-sun)
+            (nth 0 next-sun)
+            (nth 1 next-sun))))
 
 (defun compile-church-chord-chart-pdf (num-songs)
   (interactive "nNumber of songs: ")
   (let* ((church-music-dir "/Users/ben/Documents/Church/Music/")
-		 (chord-charts-dir (concat church-music-dir "chord-charts/"))
-		 (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
-		 (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
-							 (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
-		 (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
-		 (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
-	(let ((default-directory church-music-dir))
-	  (shell-command (format "pdfjam %s -o %s && open %s"
-							 (mapconcat #'identity charts " ")
-							 output-filename
-							 output-filename)))))
+         (chord-charts-dir (concat church-music-dir "chord-charts/"))
+         (lead-sheets-dir (concat church-music-dir "lead-sheets/"))
+         (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
+                             (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
+         (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
+         (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
+    (let ((default-directory church-music-dir))
+      (shell-command (format "pdfjam %s -o %s && open %s"
+                             (mapconcat #'identity charts " ")
+                             output-filename
+                             output-filename)))))
 
 (provide 'ben-utils)
 
