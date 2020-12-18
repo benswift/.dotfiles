@@ -28,3 +28,6 @@ node_modules/
 
 # because iCloud sync handles this
 /Pictures/
+
+# Zotero sync handles this
+/Zotero/
