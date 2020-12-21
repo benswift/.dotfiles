@@ -81,9 +81,10 @@ This function should only modify configuration layer settings."
          :unnarrowed t))
 	  org-roam-dailies-capture-templates
 	  '(("d" "default" entry
-		 #'org-roam-capture--get-point "%?"
+		 #'org-roam-capture--get-point "* %?"
 		 :file-name "daily/%<%Y-%m-%d>"
-		 :head "#+title: %<%Y-%m-%d (%A)>\n* do today [/]\n  - [ ]\n* maybe do today [/]\n* journal\n")))
+		 :head "#+title: %<%Y-%m-%d (%A)>\n* do today [/]\n  - [ ]\n* maybe do today [/]\n* journal\n"
+         :olp ("journal"))))
      ;; asciidoc
      (asm
       :variables
