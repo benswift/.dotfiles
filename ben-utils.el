@@ -546,6 +546,7 @@ dspmt" name xtm-dir)))
   :after (:any org pdf-view)
   :custom
   (org-noter-always-create-frame nil)
+  (org-noter-separate-notes-from-heading t)
   (org-noter-default-notes-file-names '("notes.org"))
   (org-noter-notes-search-path (concat org-directory "/roam"))
   (org-ref-bibliography-notes (concat org-noter-notes-search-path "/org-noter-notes.org")))
