@@ -73,6 +73,12 @@ This function should only modify configuration layer settings."
       org-enable-roam-support t
 	  org-roam-directory (concat org-directory "/roam")
       org-roam-db-location (concat org-roam-directory "/db/org-roam.db")
+      org-roam-capture-templates
+      '(("d" "default" plain
+         #'org-roam-capture--get-point "%?"
+         :file-name "%<%Y%m%d%H%M%S>-${slug}"
+         :head "#+title: ${title}#+roam_tags:\n"
+         :unnarrowed t))
 	  org-roam-dailies-capture-templates
 	  '(("d" "default" entry
 		 #'org-roam-capture--get-point "* %<%H:%M> %?"
