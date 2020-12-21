@@ -77,7 +77,7 @@ This function should only modify configuration layer settings."
 	  '(("d" "default" entry
 		 #'org-roam-capture--get-point "* %<%H:%M> %?"
 		 :file-name "daily/%<%Y-%m-%d>"
-		 :head "#+title: %<%Y-%m-%d (%A)>\n* do today [/]\n* maybe do today [/]\n* journal\n")))
+		 :head "#+title: %<%Y-%m-%d (%A)>\n* do today [/]\n  - [ ]\n* maybe do today [/]\n* journal\n")))
      ;; asciidoc
      (asm
       :variables
