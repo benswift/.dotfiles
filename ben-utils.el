@@ -516,6 +516,7 @@ dspmt" name xtm-dir)))
   :hook (org-roam-mode . org-roam-bibtex-mode)
   :config
   (spacemacs/set-leader-keys "od" 'org-roam-dailies-find-today)
+  (spacemacs/set-leader-keys "oa" 'org-roam-dailies-capture-today)
   :custom
   (orb-preformat-keywords '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
   (orb-file-field-extensions '("pdf" "epub" "html"))
