@@ -573,7 +573,8 @@ dspmt" name xtm-dir)))
   (shell-command
    (format "open devdocs://search/%s" (url-hexify-string pattern))))
 
-(spacemacs/set-leader-keys "od" 'devdocs-search)
+;; not really using this atm, so let's remove the precious "SPC o" keybinding
+;; (spacemacs/set-leader-keys "os" 'devdocs-search)
 
 ;;;;;;;;;;;;;;;
 ;; spaceline ;;
