@@ -72,7 +72,12 @@ This function should only modify configuration layer settings."
       ;; org-roam
       org-enable-roam-support t
 	  org-roam-directory (concat org-directory "/roam")
-      org-roam-db-location (concat org-roam-directory "/db/org-roam.db"))
+      org-roam-db-location (concat org-roam-directory "/db/org-roam.db")
+	  org-roam-dailies-capture-templates
+	  '(("d" "default" entry
+		 #'org-roam-capture--get-point "* %<%H:%M> %?"
+		 :file-name "daily/%<%Y-%m-%d>"
+		 :head "#+title: %<%Y-%m-%d (%A)>\n* do today [/]\n* maybe do today [/]\n* journal\n")))
      ;; asciidoc
      (asm
       :variables
