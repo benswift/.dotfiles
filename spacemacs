@@ -77,7 +77,7 @@ This function should only modify configuration layer settings."
       '(("d" "default" plain
          #'org-roam-capture--get-point "%?"
          :file-name "%<%Y%m%d%H%M%S>-${slug}"
-         :head "#+title: ${title}#+roam_tags:\n"
+         :head "#+title: ${title}\n#+roam_tags:\n"
          :unnarrowed t))
 	  org-roam-dailies-capture-templates
 	  '(("d" "default" entry
