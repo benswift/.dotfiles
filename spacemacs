@@ -96,10 +96,7 @@ This function should only modify configuration layer settings."
 		 :head "#+title: %<%Y-%m-%d (%A)>\n\n* do today [/]\n  - [ ]\n* maybe do today [/]\n* journal\n"
          :olp ("journal"))))
      ;; asciidoc
-     (asm
-      :variables
-      indent-tabs-mode t
-      tab-width 4)
+     asm
      (bibtex
 	  :variables
       bibtex-completion-bibliography (expand-file-name "~/Documents/org/zotero.bib")
@@ -576,7 +573,6 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
-  (setq-default indent-tabs-mode nil)
   (setq-default bidi-paragraph-direction 'left-to-right)
   (spacemacs/set-leader-keys "ji" 'ivy-imenu-anywhere)
   (add-to-load-path (expand-file-name "~/.dotfiles/"))

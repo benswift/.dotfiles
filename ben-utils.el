@@ -34,6 +34,10 @@
 ;; indentation
 (setq standard-indent 2)
 
+;; use spaces, not tabs
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+
 ;; warnings to suppress
 (add-to-list 'warning-suppress-types '(yasnippet backquote-change))
 
