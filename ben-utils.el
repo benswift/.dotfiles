@@ -565,6 +565,13 @@ dspmt" name xtm-dir)))
 ;;   (evil-define-key 'visual pdf-view-mode-map "<prior>" 'pdf-view-scroll-down-or-previous-page)
 ;;   (evil-define-key 'visual pdf-view-mode-map "<next>" 'pdf-view-scroll-up-or-next-page))
 
+(defun ben-sync-org-directory-to-github ()
+  (interactive)
+  (let ((default-directory org-directory))
+    (async-shell-command
+     (format "git add *.org roam/*.org roam/daily/*.org && git commit -m 'org directory auto-commit script @ %s'; git push origin master"
+             (format-time-string "%FT%T%z")))))
+
 ;;;;;;;;;;;;;
 ;; devdocs ;;
 ;;;;;;;;;;;;;
