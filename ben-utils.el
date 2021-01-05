@@ -318,10 +318,6 @@ nothing"
         ;; don't use variable pitch fonts
         shr-use-fonts nil)
 
-  (-each
-      '((:name "to:benjamin.j.swift@gmail.com" :query "to gmail" :key ?g))
-    (lambda (b) (add-to-list 'mu4e-bookmarks b t)))
-
   ;; send
 
   (require 'smtpmail-async)
