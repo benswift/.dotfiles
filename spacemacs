@@ -323,7 +323,7 @@ It should only modify the values of Spacemacs settings."
 											   ((string= system-type 'windows-nt) 36)
 											   ((string= system-type 'gnu/linux) 36)
 											   (t 18))))
-							   `(("Operator Mono" :size ,font-size :weight normal :width normal)
+							   `(("Operator Mono" :size ,font-size :weight semilight :width normal)
 								 ("Source Code Pro" :size ,font-size :weight normal :width normal)
 								 ("Ubuntu Mono" :size ,font-size :weight normal :width normal)))
 
