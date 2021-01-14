@@ -45,6 +45,12 @@ fi
 
 alias be='bundle exec'
 
+######
+# go #
+######
+
+export PATH=$PATH:$(go env GOPATH)/bin
+
 #############
 # Extempore #
 #############
