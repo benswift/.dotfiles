@@ -117,7 +117,7 @@ This function should only modify configuration layer settings."
      extempore
      finance
      ;; fsharp
-     ;; go
+     go
      ;; graphviz
      ;; haskell
      html
