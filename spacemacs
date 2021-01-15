@@ -115,7 +115,7 @@ This function should only modify configuration layer settings."
      epub
      (ess :variables ess-smart-S-assign-key nil)
      extempore
-     ;; finance
+     finance
      ;; fsharp
      ;; go
      ;; graphviz
