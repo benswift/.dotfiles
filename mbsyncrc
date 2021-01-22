@@ -29,6 +29,35 @@ Sync All
 Expunge Both
 SyncState *
 
+#################
+# ANU Office365 #
+#################
+
+IMAPAccount anu
+Host outlook.office365.com
+Port 993
+User u2548636@anu.edu.au
+PassCmd "cat ~/.mbsync-anu"
+SSLType IMAPS
+SSLVersions TLSv1.2
+
+IMAPStore anu-remote
+Account anu
+
+MaildirStore anu-local
+Path ~/Desktop/anu/
+Inbox ~/Desktop/anu/INBOX
+SubFolders Verbatim
+
+Channel anu
+Master :anu-remote:
+Slave :anu-local:
+Patterns "*"
+Create Slave
+Sync All
+Expunge Both
+SyncState *
+
 ## Local Variables:
 ## mode: conf-unix
 ## End:
