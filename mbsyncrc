@@ -16,8 +16,8 @@ IMAPStore fastmail-remote
 Account fastmail
 
 MaildirStore fastmail-local
-Path ~/Maildir/
-Inbox ~/Maildir/INBOX
+Path ~/Maildir/personal/
+Inbox ~/Maildir/personal/INBOX
 SubFolders Verbatim
 
 Channel fastmail
@@ -45,8 +45,8 @@ IMAPStore anu-remote
 Account anu
 
 MaildirStore anu-local
-Path ~/Desktop/anu/
-Inbox ~/Desktop/anu/INBOX
+Path ~/Maildir/anu/
+Inbox ~/Maildir/anu/INBOX
 SubFolders Verbatim
 
 Channel anu

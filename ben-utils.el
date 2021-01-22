@@ -212,10 +212,6 @@ nothing"
 ;; these should be set before calling mu4e, and they shouldn't break anything if
 ;; we're on a machine where (require 'mu4e) fails
 (setq mu4e-get-mail-command "mbsync fastmail"
-      mu4e-sent-folder "/INBOX/Sent Items"
-      mu4e-refile-folder "/INBOX/Archive"
-      mu4e-drafts-folder "/INBOX/Drafts"
-      mu4e-trash-folder "/INBOX/Trash"
       mu4e-attachment-dir (expand-file-name "~/Downloads"))
 
 (when (spacemacs/system-is-linux)
@@ -339,6 +335,10 @@ nothing"
                         (when msg
                           (mu4e-message-contact-field-matches msg :to "ben@benswift.me")))
           :vars '((user-mail-address . "ben@benswift.me")
+                  (mu4e-sent-folder . "/personal/INBOX/Sent Items")
+                  (mu4e-refile-folder . "/personal/INBOX/Archive")
+                  (mu4e-drafts-folder . "/personal/INBOX/Drafts")
+                  (mu4e-trash-folder . "/personal/INBOX/Trash")
                   (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
                   (smtpmail-smtp-server . "mail.messagingengine.com")))
          (make-mu4e-context
@@ -349,6 +349,10 @@ nothing"
                         (when msg
                           (mu4e-message-contact-field-matches msg :to "ben.swift@anu.edu.au")))
           :vars '((user-mail-address . "ben.swift@anu.edu.au")
+                  (mu4e-sent-folder . "/anu/Sent Items")
+                  (mu4e-refile-folder . "/anu/Archive")
+                  (mu4e-drafts-folder . "/anu/Drafts")
+                  (mu4e-trash-folder . "/anu/Deleted Items")
                   (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
                   (smtpmail-smtp-server . "smtp.office365.com")))))
 
