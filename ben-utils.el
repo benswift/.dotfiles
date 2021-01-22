@@ -776,14 +776,12 @@ Version 2019-06-21"
                       (make-symbolic-link (expand-file-name (format "~/.dotfiles/%s" target))
                                           (expand-file-name (format "~/%s" linkname))
                                           :ok-if-it-already-exists))))
-    (linker "profile" ".profile")
+    (linker "profile" ".zshenv")
     (linker "spacemacs" ".spacemacs")
     (linker "gitconfig" ".gitconfig")
     (linker "gitignore" ".gitignore")
     (linker "mbsyncrc" ".mbsyncrc")
-    (linker "spacemacs-layers/extempore" ".emacs.d/private/extempore")
     (linker "ssh_config" ".ssh/config")
-    (linker "scripts" "bin")
     (linker "RProfile" ".RProfile")))
 
 ;;;;;;;;;;;;
