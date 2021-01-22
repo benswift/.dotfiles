@@ -299,6 +299,10 @@ nothing"
           ("/INBOX/Trash" . ?t)
           ("/INBOX/Junk Mail" . ?j)))
 
+  (setq mu4e-bookmarks
+        '((:name "Unread" :query "flag:unread AND NOT flag:trashed" :key ?u)
+          (:name "Unified inbox" :query "maildir:/personal/INBOX or maildir:/anu/INBOX" :key ?i)))
+
   (setq mu4e-headers-date-format "%e %b %y"
         mu4e-headers-fields '((:human-date . 12)
                               (:flags . 6)
