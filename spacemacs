@@ -83,17 +83,7 @@ This function should only modify configuration layer settings."
 	  '(("d" "default" entry
 		 #'org-roam-capture--get-point "* %?"
 		 :file-name "daily/%<%Y-%m-%d>"
-		 :head "#+title: %<%Y-%m-%d (%A)>\n\n* do today [/]\n  - [ ]\n* maybe do today [/]\n* journal\n"
-         :olp ("journal"))
-        ("t" "task for today" checkitem
-		 #'org-roam-capture--get-point "- [ ] %?"
-		 :file-name "daily/%<%Y-%m-%d>"
-		 :head "#+title: %<%Y-%m-%d (%A)>\n\n* do today [/]\n  - [ ]\n* maybe do today [/]\n* journal\n"
-         :olp ("do today"))
-        ("w" "webpage note" entry
-		 #'org-roam-capture--get-point "* %c" ;; not working atm
-		 :file-name "daily/%<%Y-%m-%d>"
-		 :head "#+title: %<%Y-%m-%d (%A)>\n\n* do today [/]\n  - [ ]\n* maybe do today [/]\n* journal\n"
+		 :head "#+title: %<%Y-%m-%d (%A)>\n\n* tasks for today [/]\n  - [ ]\n* journal\n"
          :olp ("journal"))))
      ;; asciidoc
      asm
