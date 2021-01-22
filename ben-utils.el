@@ -337,8 +337,7 @@ nothing"
           ;; leave-func not defined
           :match-func (lambda (msg)
                         (when msg
-                          (or (mu4e-message-contact-field-matches msg :to "ben@benswift.me")
-                              (mu4e-message-contact-field-matches msg :to "extemporelang@googlegroups.com"))))
+                          (mu4e-message-contact-field-matches msg :to "ben@benswift.me")))
           :vars '((user-mail-address . "ben@benswift.me")
                   (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
                   (smtpmail-smtp-server . "mail.messagingengine.com")))
