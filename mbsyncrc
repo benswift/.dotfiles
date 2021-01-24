@@ -52,7 +52,7 @@ SubFolders Verbatim
 Channel anu
 Master :anu-remote:
 Slave :anu-local:
-Patterns "Archive" "Deleted" "Items" "Drafts" "INBOX" "Junk E-Mail" "Notes" "Sent Items"
+Patterns "Archive" "Deleted Items" "Drafts" "INBOX" "Junk E-Mail" "Notes" "Sent Items"
 Create Slave
 Sync All
 Expunge Both
