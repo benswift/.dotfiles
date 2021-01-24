@@ -301,7 +301,9 @@ nothing"
 
   (setq mu4e-bookmarks
         '((:name "Unread" :query "flag:unread AND NOT flag:trashed" :key ?u)
-          (:name "Unified inbox" :query "maildir:/personal/INBOX or maildir:/anu/INBOX" :key ?i)))
+          (:name "Inbox" :query "maildir:/personal/INBOX or maildir:/anu/INBOX" :key ?i)
+          (:name "Sent items" :query "maildir:'/personal/INBOX/Sent Items' or maildir:'/anu/Sent Items'" :key ?s)
+          (:name "Trash" :query "maildir:/personal/INBOX/Trash or maildir:'/anu/Deleted Items'" :key ?t)))
 
   (setq mu4e-headers-date-format "%e %b %y"
         mu4e-headers-fields '((:human-date . 12)
