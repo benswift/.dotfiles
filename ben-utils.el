@@ -292,12 +292,11 @@ nothing"
   (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 
   (setq mu4e-maildir-shortcuts
-        '(("/INBOX" . ?i)
-          ("/INBOX/Sent Items" . ?s)
-          ("/INBOX/Archive" . ?a)
-          ("/INBOX/Drafts" . ?d)
-          ("/INBOX/Trash" . ?t)
-          ("/INBOX/Junk Mail" . ?j)))
+        '(
+          ("/personal/INBOX/Archive" . ?a)
+          ("/personal/INBOX/Junk Mail" . ?j)
+          ("/anu/Archive" . ?s)
+          ("/anu/Junk E-Mail" . ?k)))
 
   (setq mu4e-bookmarks
         '((:name "Unread" :query "flag:unread AND NOT flag:trashed" :key ?u)
