@@ -301,6 +301,7 @@ nothing"
   (setq mu4e-bookmarks
         '((:name "Unread" :query "flag:unread AND NOT flag:trashed" :key ?u)
           (:name "Inbox" :query "maildir:/personal/INBOX or maildir:/anu/INBOX" :key ?i)
+          (:name "Archive" :query "maildir:/personal/INBOX/Archive or maildir:/anu/Archive" :key ?a)
           (:name "Drafts" :query "maildir:/personal/INBOX/Drafts or maildir:/anu/Drafts" :key ?d)
           (:name "Sent items" :query "\"maildir:/personal/INBOX/Sent Items\" or \"maildir:/anu/Sent Items\"" :key ?s)
           (:name "Trash" :query "maildir:/personal/INBOX/Trash or \"maildir:/anu/Deleted Items\"" :key ?t)))
