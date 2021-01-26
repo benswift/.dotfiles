@@ -340,7 +340,7 @@ nothing"
           ;; leave-func not defined
           :match-func (lambda (msg)
                         (when msg
-                          (mu4e-message-contact-field-matches msg '(:to :cc :bcc) "ben@benswift\\.me")))
+                          (s-starts-with? "/personal" (mu4e-message-field msg :maildir))))
           :vars '((user-mail-address . "ben@benswift.me")
                   (mu4e-sent-folder . "/personal/INBOX/Sent Items")
                   (mu4e-refile-folder . "/personal/INBOX/Archive")
@@ -353,7 +353,7 @@ nothing"
           :enter-func (lambda () (mu4e-message "switching to ANU context"))
           ;; leave-fun not defined
           :match-func (lambda (msg)
-                        (mu4e-message-contact-field-matches msg '(:to :cc :bcc) ".*@.*anu\\.edu\\.au"))
+                        (s-starts-with? "/anu" (mu4e-message-field msg :maildir)))
           :vars '((user-mail-address . "ben.swift@anu.edu.au")
                   (mu4e-sent-folder . "/anu/Sent Items")
                   (mu4e-refile-folder . "/anu/Archive")
