@@ -353,7 +353,8 @@ nothing"
           :enter-func (lambda () (mu4e-message "switching to ANU context"))
           ;; leave-fun not defined
           :match-func (lambda (msg)
-                        (s-starts-with? "/anu" (mu4e-message-field msg :maildir)))
+                        (when msg
+                          (s-starts-with? "/anu" (mu4e-message-field msg :maildir))))
           :vars '((user-mail-address . "ben.swift@anu.edu.au")
                   (mu4e-sent-folder . "/anu/Sent Items")
                   (mu4e-refile-folder . "/anu/Archive")
