@@ -15,5 +15,4 @@ $0
 Cheers,
 Ben
 "
-							      name)
-						  :async))))
+							      name)))))
