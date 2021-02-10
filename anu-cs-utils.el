@@ -129,7 +129,7 @@
 		 (info-string
 		  (s-join "\n" (--map (concat (propertize (car it) 'face 'font-lock-string-face) (cdr it))
 							  fields))))
-	(if (member course '("COMP1720" "COMP6720"))
+	(if (member course '())
 		(concat info-string "\n" (s-trim (anu-cs-get-student-progress-summary uid)))
 	  info-string)))
 
