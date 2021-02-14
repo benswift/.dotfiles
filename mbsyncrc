@@ -21,10 +21,10 @@ Inbox ~/Maildir/personal/INBOX
 SubFolders Verbatim
 
 Channel fastmail
-Master :fastmail-remote:
-Slave :fastmail-local:
+Far :fastmail-remote:
+Near :fastmail-local:
 Patterns "*"
-Create Slave
+Create Near
 Sync All
 Expunge Both
 SyncState *
@@ -50,10 +50,10 @@ Inbox ~/Maildir/anu/INBOX
 SubFolders Verbatim
 
 Channel anu
-Master :anu-remote:
-Slave :anu-local:
+Far :anu-remote:
+Near :anu-local:
 Patterns "Archive" "Deleted Items" "Drafts" "INBOX" "Junk E-Mail" "Notes" "Sent Items"
-Create Slave
+Create Near
 Sync All
 Expunge Both
 SyncState *
