@@ -239,7 +239,7 @@ nothing"
         (let ((inhibit-read-only t))
           (delete-region (point-min) (point-max))
           (insert (car (reverse (split-string msg "\r"))))
-          (when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(M:\\).*\\(S:\\)")
+          (when (re-search-backward "\\(C:\\).*\\(B:\\).*\\(F:\\).*\\(N:\\)")
             (add-face-text-property
              (match-beginning 1) (match-end 1) 'font-lock-keyword-face)
             (add-face-text-property
