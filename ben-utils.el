@@ -293,18 +293,18 @@ nothing"
 
   (setq mu4e-maildir-shortcuts
         '(
-          ("/personal/INBOX/Archive" . ?a)
-          ("/personal/INBOX/Junk Mail" . ?j)
+          ("/personal/Archive" . ?a)
+          ("/personal/Junk Mail" . ?j)
           ("/anu/Archive" . ?s)
           ("/anu/Junk E-Mail" . ?k)))
 
   (setq mu4e-bookmarks
         '((:name "Unread" :query "flag:unread AND NOT flag:trashed" :key ?u)
           (:name "Inbox" :query "date:20210101..now and maildir:/anu/INBOX or maildir:/personal/INBOX" :key ?i)
-          (:name "Archive" :query "maildir:/personal/INBOX/Archive or maildir:/anu/Archive" :key ?a)
-          (:name "Drafts" :query "maildir:/personal/INBOX/Drafts or maildir:/anu/Drafts" :key ?d)
-          (:name "Sent items" :query "\"maildir:/personal/INBOX/Sent Items\" or \"maildir:/anu/Sent Items\"" :key ?s)
-          (:name "Trash" :query "maildir:/personal/INBOX/Trash or \"maildir:/anu/Deleted Items\"" :key ?t)))
+          (:name "Archive" :query "maildir:/personal/Archive or maildir:/anu/Archive" :key ?a)
+          (:name "Drafts" :query "maildir:/personal/Drafts or maildir:/anu/Drafts" :key ?d)
+          (:name "Sent items" :query "\"maildir:/personal/Sent Items\" or \"maildir:/anu/Sent Items\"" :key ?s)
+          (:name "Trash" :query "maildir:/personal/Trash or \"maildir:/anu/Deleted Items\"" :key ?t)))
 
   (setq mu4e-headers-date-format "%e %b %y"
         mu4e-headers-fields '((:human-date . 12)
@@ -342,10 +342,10 @@ nothing"
                         (when msg
                           (s-starts-with? "/personal" (mu4e-message-field msg :maildir))))
           :vars '((user-mail-address . "ben@benswift.me")
-                  (mu4e-sent-folder . "/personal/INBOX/Sent Items")
-                  (mu4e-refile-folder . "/personal/INBOX/Archive")
-                  (mu4e-drafts-folder . "/personal/INBOX/Drafts")
-                  (mu4e-trash-folder . "/personal/INBOX/Trash")
+                  (mu4e-sent-folder . "/personal/Sent Items")
+                  (mu4e-refile-folder . "/personal/Archive")
+                  (mu4e-drafts-folder . "/personal/Drafts")
+                  (mu4e-trash-folder . "/personal/Trash")
                   (smtpmail-starttls-credentials '(("mail.messagingengine.com" 587 nil nil)))
                   (smtpmail-smtp-server . "mail.messagingengine.com")))
          (make-mu4e-context
