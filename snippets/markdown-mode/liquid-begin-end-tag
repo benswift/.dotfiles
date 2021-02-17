@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: liquid-begin-end-tag
+# key: tag
+# --
+{% ${1:tag} %}
+$0
+{% end$1 %}
