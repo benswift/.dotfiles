@@ -401,7 +401,7 @@ nothing"
  ((string= (system-name) "paranoid-android")
   (setq extempore-path (expand-file-name "~/Documents/research/extemporelang/extempore/")))
  ((string= "smithy" (system-name))
-  (setq extempore-program-args "--frames 4096")
+  ;; (setq extempore-program-args "--frames 128")
   (setq extempore-path (expand-file-name "~/Documents/research/extemporelang/extempore/"))
   (setq user-extempore-lib-directory (expand-file-name "~/Documents/research/extemporelang/xtm/")))
  (t
