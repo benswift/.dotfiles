@@ -374,7 +374,7 @@ nothing"
         (with-current-buffer email-buffer
           (delete-region (point-min) (point-max))
           (insert email-text)
-          (mu4e-compose-mode)
+          (message-mode)
           (mu4e-context-switch nil "anu")
           (if dry-run
               (pop-to-buffer email-buffer)
