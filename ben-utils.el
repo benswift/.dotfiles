@@ -364,17 +364,21 @@ nothing"
                   (smtpmail-starttls-credentials '(("smtp.office365.com" 587 nil nil)))
                   (smtpmail-smtp-server . "smtp.office365.com")))))
 
-  (defun ben-send-anu-email (email-address subject body &optional async cc-string)
-    (with-temp-buffer
-      (mu4e-context-switch nil "anu")
-      (insert (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
-                      email-address
-                      (if cc-string (format "Cc: %s\n" cc-string) "")
-                      subject
-                      body))
-      (if async
-          (async-smtpmail-send-it)
-        (smtpmail-send-it))))
+  (defun ben-send-anu-email (email-address subject body dry-run &optional cc-string)
+    (let ((email-text (format "From: Ben Swift <ben.swift@anu.edu.au>\nTo: %s\n%sSubject: %s\n--text follows this line--\n%s"
+                              email-address
+                              (if cc-string (format "Cc: %s\n" cc-string) "")
+                              subject
+                              body)))
+      (let ((email-buffer (get-buffer-create "*anu-email-text*")))
+        (with-current-buffer email-buffer
+          (delete-region (point-min) (point-max))
+          (insert email-text)
+          (mu4e-compose-mode)
+          (mu4e-context-switch nil "anu")
+          (if dry-run
+              (pop-to-buffer email-buffer)
+            (smtpmail-send-it))))))
 
   ;; iCal integration
 
