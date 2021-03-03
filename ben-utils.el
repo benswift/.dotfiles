@@ -582,6 +582,12 @@ dspmt" name xtm-dir)))
      (format "git add *.org roam/*.org roam/daily/*.org && git commit -m 'org directory auto-commit script @ %s'; git push origin master"
              (format-time-string "%FT%T%z")))))
 
+(defun ben-update-spacemacs ()
+  (interactive)
+  (let ((default-directory (expand-file-name "~/.emacs.d")))
+    (shell-command "git pull origin develop")
+    (configuration-layer/update-packages :no-confirmation)))
+
 ;;;;;;;;;;;;;
 ;; devdocs ;;
 ;;;;;;;;;;;;;
