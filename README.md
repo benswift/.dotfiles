@@ -34,6 +34,6 @@ running.
 
 # Licence
 
-(c) 2012-2020 Ben Swift
+(c) 2012-2021 Ben Swift
 
 MIT Licence

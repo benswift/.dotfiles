@@ -1,6 +1,6 @@
 ;;; ben-utils.el --- Ben's elisp utilities; the source of his powers
 
-;; Copyright (c) 2017-2020 Ben Swift
+;; Copyright (c) 2017-2021 Ben Swift
 ;;
 ;; Author: Ben Swift <ben@benswift.me>
 ;; URL: https://github.com/benswift/.dotfiles/blob/master/ben-utils.el
