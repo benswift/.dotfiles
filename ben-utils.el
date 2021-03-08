@@ -300,12 +300,12 @@ nothing"
 
   (setq mu4e-bookmarks
         '((:name "Unread" :query "flag:unread AND NOT flag:trashed" :key ?u)
-          (:name "Inbox" :query "date:20210101..now and maildir:/anu/INBOX or maildir:/personal/INBOX" :key ?i)
+          (:name "Inbox" :query "date:20210101..now AND maildir:/anu/INBOX OR maildir:/personal/INBOX" :key ?i)
           (:name "Today's messages" :query "date:today..now" :key ?t)
-          (:name "Archive" :query "maildir:/personal/Archive or maildir:/anu/Archive" :key ?a)
-          (:name "Drafts" :query "maildir:/personal/Drafts or maildir:/anu/Drafts" :key ?d)
-          (:name "Sent items" :query "\"maildir:/personal/Sent Items\" or \"maildir:/anu/Sent Items\"" :key ?s)
-          (:name "Trash" :query "maildir:/personal/Trash or \"maildir:/anu/Deleted Items\"" :key ?T)))
+          (:name "Archive" :query "maildir:/personal/Archive OR maildir:/anu/Archive" :key ?a)
+          (:name "Drafts" :query "maildir:/personal/Drafts OR maildir:/anu/Drafts" :key ?d)
+          (:name "Sent items" :query "\"maildir:/personal/Sent Items\" OR \"maildir:/anu/Sent Items\"" :key ?s)
+          (:name "Trash" :query "maildir:/personal/Trash OR \"maildir:/anu/Deleted Items\"" :key ?T)))
 
   (setq mu4e-headers-date-format "%e %b %y"
         mu4e-headers-fields '((:human-date . 12)
