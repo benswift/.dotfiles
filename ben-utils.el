@@ -529,8 +529,6 @@ dspmt" name xtm-dir)))
 (use-package org-roam-bibtex
   :after org-roam
   :hook (org-roam-mode . org-roam-bibtex-mode)
-  :config
-  (spacemacs/set-leader-keys "od" 'org-roam-dailies-find-today)
   :custom
   (orb-preformat-keywords '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
   (orb-file-field-extensions '("pdf" "epub" "html"))
@@ -574,6 +572,8 @@ dspmt" name xtm-dir)))
 ;; (with-eval-after-load 'pdf-view
 ;;   (evil-define-key 'visual pdf-view-mode-map "<prior>" 'pdf-view-scroll-down-or-previous-page)
 ;;   (evil-define-key 'visual pdf-view-mode-map "<next>" 'pdf-view-scroll-up-or-next-page))
+
+(spacemacs/set-leader-keys "od" 'org-roam-dailies-find-today)
 
 (defun ben-sync-org-directory-to-github ()
   (interactive)
