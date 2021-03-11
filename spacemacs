@@ -134,6 +134,7 @@ This function should only modify configuration layer settings."
      shell-scripts
      sql
      ;; swift
+     tern
      typescript
      windows-scripts
      yaml
