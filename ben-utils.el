@@ -41,14 +41,23 @@
 ;; warnings to suppress
 (add-to-list 'warning-suppress-types '(yasnippet backquote-change))
 
+;;;;;;;;;;;;;;;;
+;; projectile ;;
+;;;;;;;;;;;;;;;;
+
+(require 'projectile)
+
+(setq compilation-buffer-name-function
+      #'projectile-compilation-buffer-name
+      compilation-save-buffers-predicate
+      #'projectile-current-project-buffer-p)
+
 ;;;;;;;;;;;;
 ;; Jekyll ;;
 ;;;;;;;;;;;;
 
 ;; I do a *lot* of work with Jekyll static websites (including all my ANU course
 ;; websites) so these helpers save me heaps of time
-
-(require 'projectile)
 
 (defun jekyll-list-asset-filenames ()
   (->> (projectile-current-project-files)
@@ -200,7 +209,10 @@ nothing"
 ;; helpful keybindings
 (spacemacs/declare-prefix "o" "user-prefix")
 (spacemacs/set-leader-keys "om" 'jekyll-move-download-and-mogrify)
-(spacemacs/set-leader-keys "oc" '(lambda () (interactive) (switch-to-buffer "*compilation*")))
+(spacemacs/set-leader-keys "oc"
+  '(lambda ()
+     (interactive)
+     (switch-to-buffer (projectile-compilation-buffer-name "compilation"))))
 
 ;;;;;;;;;;
 ;; mu4e ;;
