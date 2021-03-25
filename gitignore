@@ -65,6 +65,7 @@ TAGS
 .projectile
 .yas-compiled-snippets.el
 scratch.el
+.pdf-view-restore
 
 # this is just a symlink, so that the snippets
 # work in the repl as well
