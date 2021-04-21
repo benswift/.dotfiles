@@ -161,10 +161,11 @@ requires `mogrify' CLI program"
           (original-width (image-width image-filename)))
      (list
       image-filename
-      (read-number (format "desired image width (current %spx): " original-width) default-width))))
+      (when current-prefix-arg
+        (read-number (format "desired image width (current %spx): " original-width) default-width)))))
 
   ;; downsize image if necessary
-  (if (> (image-width filename) desired-width)
+  (if (and current-prefix-arg (> (image-width filename) desired-width))
       (unless (= (mogrify-width filename desired-width) 0)
         (error "error mogrifying %s" filename)))
 
