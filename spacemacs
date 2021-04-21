@@ -111,7 +111,7 @@ This function should only modify configuration layer settings."
      ;; graphviz
      ;; haskell
      html
-	 (ivy :variables ivy-enable-advanced-buffer-information t)
+	 ivy
      ;; ipython-notebook
      ;; java ;; because eclim is balls
      (javascript :variables js-indent-level 2)
