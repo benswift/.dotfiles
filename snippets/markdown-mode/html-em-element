@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: html-em-element
-# key: em
-# --
-<em>$0</em>
