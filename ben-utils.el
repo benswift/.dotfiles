@@ -383,15 +383,14 @@ nothing"
                               (if cc-string (format "Cc: %s\n" cc-string) "")
                               subject
                               body)))
-      (let ((email-buffer (get-buffer-create "*anu-email-text*")))
-        (with-current-buffer email-buffer
-          (delete-region (point-min) (point-max))
-          (insert email-text)
-          (message-mode)
-          (mu4e-context-switch nil "anu")
-          (if dry-run
-              (pop-to-buffer email-buffer)
-            (smtpmail-send-it))))))
+      (with-current-buffer (find-file (f-join (temporary-file-directory) "anu-email-text"))
+        (delete-region (point-min) (point-max))
+        (insert email-text)
+        (message-mode)
+        (mu4e-context-switch nil "anu")
+        (if dry-run
+            (pop-to-buffer (current-buffer))
+          (smtpmail-send-it)))))
 
   ;; iCal integration
 
