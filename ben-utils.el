@@ -629,6 +629,13 @@ dspmt" name xtm-dir)))
 ;; misc ;;
 ;;;;;;;;;;
 
+;; from https://stackoverflow.com/a/49505968
+(defun shuffle (sequence)
+  (loop for i from (length sequence) downto 2
+        do (rotatef (elt sequence (random i))
+                    (elt sequence (1- i))))
+  sequence)
+
 (defun slurp (f)
   (with-temp-buffer
     (insert-file-contents f)
