@@ -567,7 +567,7 @@ Put your configuration code here, except for variables that should be set
 before packages are loaded."
   (setq-default bidi-paragraph-direction 'left-to-right)
   (spacemacs/set-leader-keys "ji" 'ivy-imenu-anywhere)
-  (add-to-load-path (expand-file-name "~/.dotfiles/"))
+  (spacemacs//add-to-load-path (expand-file-name "~/.dotfiles/"))
   (require 'ben-utils)
   (require 'ben-private)
   (require 'anu-cs-utils)
