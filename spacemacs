@@ -57,8 +57,8 @@ This function should only modify configuration layer settings."
 						 :port "6697"
 						 :ssl t
 						 :nick "benjswift"))
-	  erc-autojoin-channels-alist '(("irc.freenode.net" "#extempore")
-									("irc.chat.twitch.tv" "#benjswift")))
+	  erc-autojoin-channels-alist '(("irc.chat.twitch.tv" "#benjswift")
+									("irc.freenode.net" "#extempore")))
      git
      github
      (markdown
