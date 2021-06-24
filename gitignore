@@ -86,6 +86,7 @@ sublime-text-user-dir/Package Control.*
 
 .python-version
 .ruby-version
+.bundle/
 
 # open MS Office documents
 
