@@ -109,7 +109,7 @@ This function should only modify configuration layer settings."
      ;; fsharp
      go
      ;; graphviz
-     ;; haskell
+     haskell
      html
 	 ivy
      ;; ipython-notebook
@@ -135,6 +135,7 @@ This function should only modify configuration layer settings."
      sql
      ;; swift
      tern
+     tidalcycles
      typescript
      windows-scripts
      yaml
