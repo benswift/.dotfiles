@@ -566,6 +566,7 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+  (setq shell-file-name "/bin/zsh")
   (setq-default bidi-paragraph-direction 'left-to-right)
   (spacemacs/set-leader-keys "ji" 'ivy-imenu-anywhere)
   (spacemacs//add-to-load-path (expand-file-name "~/.dotfiles/"))
