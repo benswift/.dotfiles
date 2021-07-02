@@ -52,6 +52,12 @@ alias be='bundle exec'
 
 export PATH=$PATH:$(go env GOPATH)/bin
 
+###########
+# haskell #
+###########
+
+. $HOME/.ghcup/env
+
 #############
 # Extempore #
 #############
