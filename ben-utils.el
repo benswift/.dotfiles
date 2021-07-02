@@ -534,6 +534,12 @@ dspmt" name xtm-dir)))
             ('- '(i i6 i64 i7 i^ i^6 i^64 i^7 n n6 ii ii6 ii7 ii- ii-6 ii-7 ii^ ii^7 iii iii6 iii7 iii- iii-6 iii-7 iv iv6 iv7 iv^ iv^6 iv^7 v v^ v6 v7 v- v-6 v-6 v-7 vi vi6 vi7 vi- vi-6 vi-7 vii vii6 vii7 viio viio6 viio7))
             (t nil))))
 
+;;;;;;;;;;;;;;;;;
+;; tidalcycles ;;
+;;;;;;;;;;;;;;;;;
+
+(setq tidal-interpreter (expand-file-name "~/.ghcup/bin/ghci"))
+
 ;;;;;;;;;;;;;;
 ;; org-mode ;;
 ;;;;;;;;;;;;;;
