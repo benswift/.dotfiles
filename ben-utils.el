@@ -339,8 +339,8 @@ nothing"
 
   (require 'smtpmail-async)
 
-  (setq send-mail-function 'async-smtpmail-send-it
-        message-send-mail-function 'async-smtpmail-send-it
+  (setq send-mail-function 'smtpmail-send-it
+        message-send-mail-function 'smtpmail-send-it
         smtpmail-smtp-service 587
         smtpmail-debug-info t)
 
