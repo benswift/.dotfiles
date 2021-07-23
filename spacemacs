@@ -74,18 +74,14 @@ This function should only modify configuration layer settings."
       org-roam-v2-ack t
 	  org-roam-directory (concat org-directory "/roam")
       org-roam-db-location (concat org-roam-directory "/db/org-roam.db")
-      org-roam-capture-templates
-      '(("d" "default" plain
-         #'org-roam-capture--get-point "%?"
-         :file-name "%<%Y%m%d%H%M%S>-${slug}"
-         :head "#+title: ${title}\n#+roam_tags:\n"
-         :unnarrowed t))
-	  org-roam-dailies-capture-templates
-	  '(("d" "default" entry
-		 #'org-roam-capture--get-point "* %?"
-		 :file-name "daily/%<%Y-%m-%d>"
-		 :head "#+title: %<%Y-%m-%d (%A)>\n\n* tasks for today [/]\n  - [ ]\n* journal\n"
-         :olp ("journal"))))
+      org-roam-dailies-capture-templates
+	  '(("d" "default" entry "* %?"
+         :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d (%A)>
+
+* tasks for today [/]
+  - [ ]
+* journal
+"))))
      ;; asciidoc
      asm
      (bibtex
