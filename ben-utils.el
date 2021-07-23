@@ -572,7 +572,7 @@ dspmt" name xtm-dir)))
 ;;   (evil-define-key 'visual pdf-view-mode-map "<prior>" 'pdf-view-scroll-down-or-previous-page)
 ;;   (evil-define-key 'visual pdf-view-mode-map "<next>" 'pdf-view-scroll-up-or-next-page))
 
-(spacemacs/set-leader-keys "od" 'org-roam-dailies-find-today)
+(spacemacs/set-leader-keys "od" 'org-roam-dailies-goto-today)
 
 (defun ben-sync-org-directory-to-github ()
   (interactive)
