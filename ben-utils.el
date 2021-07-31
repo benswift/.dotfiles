@@ -305,8 +305,7 @@ nothing"
   (add-hook 'dired-mode-hook 'turn-on-gnus-dired-mode)
 
   (setq mu4e-maildir-shortcuts
-        '(
-          ("/personal/Archive" . ?a)
+        '(("/personal/Archive" . ?a)
           ("/personal/Junk Mail" . ?j)
           ("/anu/Archive" . ?s)
           ("/anu/Junk E-Mail" . ?k)))
