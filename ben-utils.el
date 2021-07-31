@@ -327,14 +327,6 @@ nothing"
                               (:from . 22)
                               (:subject)))
 
-  (setq mu4e-view-use-gnus nil
-        mu4e-view-show-images t
-        mu4e-html2text-command #'mu4e-shr2text
-        ;; make sure fg-bg contrast is high enough
-        shr-color-visible-luminance-min 80
-        ;; don't use variable pitch fonts
-        shr-use-fonts nil)
-
   ;; send
 
   (require 'smtpmail-async)
