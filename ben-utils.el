@@ -198,6 +198,20 @@ nothing"
       (shell-command (format "mogrify -resize \"%d\" %s" desired-width filename))
     (message "%s is already narrower than %dpx, skipping..." filename desired-width)))
 
+
+(defun save-screenshot-to-assets (filename)
+  (interactive "sfilename: ")
+  (let* ((width 1024)
+         (asset-root (f-join (projectile-project-root) "assets"))
+         (dest-path (f-join asset-root
+                            (completing-read "assets/" (cons "." (--map (f-relative it asset-root)
+                                                                        (f-directories asset-root
+                                                                                       (lambda (fname) (not (s-contains? ".git" fname)))
+                                                                                       :recursive)))))))
+    (shell-command (format "screencapture -t jpg -i \"%s.jpg\"" (f-join dest-path filename)))
+    (mogrify-image-file dest-path width)
+    (kill-new (format "![](%s)" (f-relative dest-path asset-root)))))
+
 ;; TODO it'd be nice if this worked on the currently selected files in a dired buffer
 (defun mogrify-image-files-recursively (dir max-width)
   (interactive
