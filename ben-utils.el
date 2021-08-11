@@ -206,11 +206,11 @@ nothing"
 (defun jekyll-save-screenshot (filename)
   (interactive "sfilename (sans extension): ")
   (let* ((width 1024)
-         (dest-path (f-join (jekyll-completing-read-asset-subdirectory)
-                            filename)))
+         (dest-path (f-join (jekyll-completing-read-asset-subdirectory) filename))
+         (project-relative-path (f-relative dest-path (f-join (projectile-project-root) "assets"))))
     (shell-command (format "screencapture -t jpg -i \"%s.jpg\"" dest-path))
     (mogrify-image-file dest-path width)
-    (kill-new (format "![](%s)" (f-relative dest-path (f-join (projectile-project-root) "assets"))))))
+    (kill-new (format "![%s](%s.jpg)" (s-replace "-" " " filename) project-relative-path))))
 
 ;; TODO it'd be nice if this worked on the currently selected files in a dired buffer
 (defun mogrify-image-files-recursively (dir max-width)
