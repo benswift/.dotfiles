@@ -147,6 +147,16 @@ requires `mogrify' CLI program"
   (interactive "sfilename-or-glob: ")
   (call-process "imageoptim" nil nil nil "--jpegmini" filename-or-glob))
 
+;; TODO defun probably should be interactive itself
+(defun jekyll-completing-read-asset-subdirectory ()
+  "return a list of (full paths to) subdirectories of the assets/ folder"
+  (let* ((asset-root (f-join (projectile-project-root) "assets"))
+         (candidates (cons "." (--map (f-relative it asset-root)
+                                     (f-directories asset-root
+                                                    (lambda (fname) (not (s-contains? ".git" fname)))
+                                                    :recursive)))))
+    (f-join asset-root (completing-read "assets/" candidates))))
+
 (defun jekyll-move-download-and-mogrify (filename desired-width)
   "move file by default into the appropriate subfolder of assets/"
   (interactive
@@ -174,17 +184,12 @@ requires `mogrify' CLI program"
   ;;    (error "error imageoptimising %s" filename))
 
   ;; move the now processed image file into place
-  (let* ((asset-root (f-join (projectile-project-root) "assets"))
-         (dest-filename (f-join asset-root
-                                (completing-read "assets/" (cons "." (--map (f-relative it asset-root)
-                                                                            (f-directories asset-root
-                                                                                           (lambda (fname) (not (s-contains? ".git" fname)))
-                                                                                           :recursive))))
-                                (f-filename filename))))
-    (f-move filename dest-filename)
+  (let* ((dest-path (f-join (jekyll-completing-read-asset-subdirectory)
+                            (f-filename filename))))
+    (f-move filename dest-path)
     ;; for convenience, copy the relevant "background image" Jekyll include
     (kill-new (format "{%% include slides/background-image.html image=\"%s\" %%}"
-                      (f-relative dest-filename asset-root)))))
+                      (f-relative dest-path (f-join (projectile-project-root) "assets"))))))
 
 (defun mogrify-image-file (filename desired-width)
   "note: this will never make the file wider
@@ -198,19 +203,14 @@ nothing"
       (shell-command (format "mogrify -resize \"%d\" %s" desired-width filename))
     (message "%s is already narrower than %dpx, skipping..." filename desired-width)))
 
-
-(defun save-screenshot-to-assets (filename)
-  (interactive "sfilename: ")
+(defun jekyll-save-screenshot (filename)
+  (interactive "sfilename (sans extension): ")
   (let* ((width 1024)
-         (asset-root (f-join (projectile-project-root) "assets"))
-         (dest-path (f-join asset-root
-                            (completing-read "assets/" (cons "." (--map (f-relative it asset-root)
-                                                                        (f-directories asset-root
-                                                                                       (lambda (fname) (not (s-contains? ".git" fname)))
-                                                                                       :recursive)))))))
-    (shell-command (format "screencapture -t jpg -i \"%s.jpg\"" (f-join dest-path filename)))
+         (dest-path (f-join (jekyll-completing-read-asset-subdirectory)
+                            filename)))
+    (shell-command (format "screencapture -t jpg -i \"%s.jpg\"" dest-path))
     (mogrify-image-file dest-path width)
-    (kill-new (format "![](%s)" (f-relative dest-path asset-root)))))
+    (kill-new (format "![](%s)" (f-relative dest-path (f-join (projectile-project-root) "assets"))))))
 
 ;; TODO it'd be nice if this worked on the currently selected files in a dired buffer
 (defun mogrify-image-files-recursively (dir max-width)
