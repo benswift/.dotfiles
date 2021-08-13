@@ -92,6 +92,9 @@
   (or (--first (string= uid (car it)) anu-cs-student-data)
 	  (error "Error: could not find student with uid %s" uid)))
 
+(defvar anu-cs-firstname-alist nil
+  "you should `add-to-list' any names in the relevant course elisp files")
+
 (defun anu-cs-student-firstname (uid)
   (or (cdr-safe (assoc uid anu-cs-firstname-alist))
 	  (car (s-split-words (anu-cs-student-info uid "name")))))
