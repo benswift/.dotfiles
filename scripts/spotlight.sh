@@ -1,4 +1,2 @@
-#!/usr/bin/env zsh
-
-# sudo mdutil -a -i off
-# sudo mdutil -a -i on
+# USAGE: sudo spotlight.sh [on|off]
+mdutil -a -i $1
