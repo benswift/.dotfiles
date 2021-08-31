@@ -276,10 +276,6 @@ nothing"
             (add-face-text-property
              (match-beginning 4) (match-end 4) 'font-lock-type-face))))))
 
-  (advice-add
-   'mu4e~get-mail-process-filter
-   :override #'mu4e-pretty-mbsync-process-filter)
-
   ;; compose
 
   (setq mu4e-compose-dont-reply-to-self t
