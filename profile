@@ -64,13 +64,6 @@ export PATH=$PATH:$(go env GOPATH)/bin
 
 export EXT_MIDI_OUT_DEVICE_NAME="Maschine 2 Virtual Input"
 
-######
-# QT #
-######
-
-# otherwise things are super-small on hidpi
-# export QT_SCALE_FACTOR=2
-
 # Local Variables:
 # mode: sh
 # End:
