@@ -50,7 +50,9 @@ alias be='bundle exec'
 # go #
 ######
 
-export PATH=$PATH:$(go env GOPATH)/bin
+if [ -x "$(command -v go)" ]; then
+    export PATH="$PATH:$(go env GOPATH)/bin"
+fi
 
 ###########
 # haskell #
