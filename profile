@@ -64,12 +64,6 @@ export PATH=$PATH:$(go env GOPATH)/bin
 
 export EXT_MIDI_OUT_DEVICE_NAME="Maschine 2 Virtual Input"
 
-##########
-# MATLAB #
-##########
-
-export PATH="/Applications/MATLAB_R2020a.app/bin:$PATH"
-
 ######
 # QT #
 ######
