@@ -19,7 +19,7 @@ export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
 
 if [ -x "$(command -v pyenv)" ]; then
     export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
+    export PATH="${PYENV_ROOT}/bin:$PATH"
     eval "$(pyenv init --path)"
 fi
 
@@ -32,7 +32,7 @@ alias pr='poetry run'
 
 # pipx
 
-export PATH="$HOME/.local/bin":$PATH
+export PATH="$HOME/.local/bin:$PATH"
 
 ########
 # ruby #
