@@ -803,7 +803,7 @@ Version 2019-06-21"
                       (make-symbolic-link (expand-file-name (format "~/.dotfiles/%s" target))
                                           (expand-file-name (format "~/%s" linkname))
                                           :ok-if-it-already-exists))))
-    (linker "profile" ".zshenv")
+    (linker "profile" ".zprofile") ;; assumes zsh
     (linker "spacemacs" ".spacemacs")
     (linker "gitconfig" ".gitconfig")
     (linker "gitignore" ".gitignore")
