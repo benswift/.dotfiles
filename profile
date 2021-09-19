@@ -3,7 +3,7 @@
 ########
 
 # add scripts from dotfiles repo
-export PATH="$HOME/.dotfiles/scripts":$PATH
+export PATH="$HOME/.dotfiles/scripts:$PATH"
 
 # for homebrew
 #
