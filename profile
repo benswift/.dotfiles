@@ -19,6 +19,14 @@ export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
 # python #
 ##########
 
+# for this python stuff to all to work nicely, you need
+# - pyenv
+# - pyenv-virtualenv
+# - poetry
+#
+# however, you don't need to configure the pyenv-virtualenv stuff---just let
+# poetry handle that
+
 # pyenv
 
 if [ -x "$(command -v pyenv)" ]; then
