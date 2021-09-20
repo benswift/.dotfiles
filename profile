@@ -2,6 +2,10 @@
 # PATH #
 ########
 
+# NOTE: if you're using zsh, this should probably be linked to ~/.zprofile
+# (rather than ~/.zshenv) because otherwise /etc/zprofile will be loaded and
+# break your carefully-curated path
+
 # add scripts from dotfiles repo
 export PATH="$HOME/.dotfiles/scripts:$PATH"
 
