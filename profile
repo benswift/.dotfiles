@@ -70,7 +70,7 @@ fi
 # haskell #
 ###########
 
-# . "$HOME/.ghcup/env"
+. "$HOME/.ghcup/env"
 
 #############
 # Extempore #
