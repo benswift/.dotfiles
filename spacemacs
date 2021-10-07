@@ -570,7 +570,6 @@ before packages are loaded."
   (require 'ben-utils)
   (require 'ben-private)
   (require 'anu-cs-utils)
-  (load (expand-file-name "~/Documents/teaching/comp2710-lens-2021/convenors/scripts/comp2710-lens.el"))
   (load (expand-file-name "~/Documents/teaching/extn1019/convenors/extn1019.el"))
   )
 
