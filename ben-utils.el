@@ -120,17 +120,27 @@ https://github.com/gettalong/kramdown/blob/e9714d87e842831504503c7ed67f280873d98
        (kramdown-slugify)
        (format "{#%s}")))
 
+(defun image-dimensions (image-filename)
+  "get image dimensions WxH (in pixels)
+
+requires `identify' CLI program"
+  (->> image-filename
+       (format "identify -format \"%%wx%%h\" \"%s\"")
+       shell-command-to-string
+       (s-split "x")
+       (-map #'string-to-number)))
+
 (defun image-width (image-filename)
   "get image width (in pixels)
 
 requires `identify' CLI program"
-  (string-to-number (shell-command-to-string (format "identify -format \"%%w\" \"%s\"" image-filename))))
+  (car (image-dimensions image-filename)))
 
 (defun image-height (image-filename)
   "get image height (in pixels)
 
 requires `identify' CLI program"
-  (string-to-number (shell-command-to-string (format "identify -format \"%%h\" \"%s\"" image-filename))))
+  (cadr (image-dimensions image-filename)))
 
 (defun mogrify-width (image-filename width)
   "resize image (in-place) to `width'
