@@ -152,6 +152,13 @@ requires `mogrify' CLI program"
         (progn (message "image is already %dpx wide---so I'll just leave it as-is" iw) 0)
       (shell-command command-string))))
 
+(defun image-file? (filename)
+  "filthy file-ext-based hack to tell if something's an image file
+
+if you're using this with squoosh-file you can probably just
+throw the file at squoosh and let it complain if it can't handle
+it"
+  (member (s-downcase (f-ext filename)) '("jpg" "jpeg" "png")))
 
 (defun squoosh-file (filename &optional width)
   "squoosh an image file into a mozJPG-encoded jpg (optionally, resize to `WIDTH')
