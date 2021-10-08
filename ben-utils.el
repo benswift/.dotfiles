@@ -152,6 +152,15 @@ requires `mogrify' CLI program"
         (progn (message "image is already %dpx wide---so I'll just leave it as-is" iw) 0)
       (shell-command command-string))))
 
+
+(defun squoosh-file (filename &optional width)
+  "squoosh an image file into a mozJPG-encoded jpg (optionally, resize to `WIDTH')
+
+requires the squoosh-cli from https://www.npmjs.com/package/@squoosh/cli"
+  (if width
+      (shell-command (format "squoosh-cli --resize '{\"enabled\":true,\"width\":%s}' --mozjpeg auto %s" width filename))
+    (shell-command (format "squoosh-cli --mozjpeg auto %s" filename))))
+
 (defun imageoptim-file (filename-or-glob)
   "also apply some standard, useful optimisations"
   (interactive "sfilename-or-glob: ")
