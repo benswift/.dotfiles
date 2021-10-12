@@ -568,8 +568,8 @@ before packages are loaded."
   (spacemacs/set-leader-keys "ji" 'ivy-imenu-anywhere)
   (spacemacs//add-to-load-path (expand-file-name "~/.dotfiles/"))
   (require 'ben-utils)
-  (require 'ben-private)
   (require 'anu-cs-utils)
+  (require 'ben-private)
   (load (expand-file-name "~/Documents/teaching/extn1019/convenors/extn1019.el"))
   )
 
