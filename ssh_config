@@ -37,6 +37,12 @@ Host hdws
   Hostname 130.56.246.102
   IdentityFile ~/.ssh/nci-key-from-harrison
 
+# Azure
+Host edex-experiments
+  User azureuser
+  Hostname 13.73.193.68
+  IdentityFile ~/.ssh/edex-experiments_key.pem
+
 # Local Variables:
 # mode: conf
 # End:
