@@ -3,10 +3,10 @@
 ############
 
 IMAPAccount fastmail
-# Host mail.messagingengine.com
-# Port 992
-Host imaps-proxy.messagingengine.com
-Port 80
+Host mail.messagingengine.com
+Port 992
+# Host imaps-proxy.messagingengine.com
+# Port 80
 User benswift@fastmail.com
 PassCmd "gpg -q --for-your-eyes-only --no-tty -d ~/.authinfo.gpg | awk '/machine mail.messagingengine.com login benswift@fastmail.com/ {print $NF}'"
 SSLType IMAPS
