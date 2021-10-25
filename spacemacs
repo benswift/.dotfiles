@@ -45,21 +45,21 @@ This function should only modify configuration layer settings."
       auto-completion-private-snippets-directory (expand-file-name "~/.dotfiles/snippets/"))
      emacs-lisp
      elixir
-	 (erc
-	  :variables
+     (erc
+      :variables
       erc-nick "benswift"
       erc-prompt-for-password nil
       erc-prompt-for-nickserv-password nil
-	  erc-server-list '(("irc.freenode.net"
-						 :port "6697"
-						 :ssl t
-						 :nick "benswift")
-						("irc.chat.twitch.tv"
-						 :port "6697"
-						 :ssl t
-						 :nick "benjswift"))
-	  erc-autojoin-channels-alist '(("irc.chat.twitch.tv" "#benjswift")
-									("irc.freenode.net" "#extempore")))
+      erc-server-list '(("irc.freenode.net"
+                         :port "6697"
+                         :ssl t
+                         :nick "benswift")
+                        ("irc.chat.twitch.tv"
+                         :port "6697"
+                         :ssl t
+                         :nick "benjswift"))
+      erc-autojoin-channels-alist '(("irc.chat.twitch.tv" "#benjswift")
+                                    ("irc.freenode.net" "#extempore")))
      git
      github
      (markdown
@@ -69,14 +69,14 @@ This function should only modify configuration layer settings."
      (org
       :variables
       org-directory (expand-file-name "~/Documents/org")
-	  org-default-notes-file (concat org-directory "/inbox.org")
+      org-default-notes-file (concat org-directory "/inbox.org")
       ;; org-roam
       org-enable-roam-support t
       org-roam-v2-ack t
-	  org-roam-directory (concat org-directory "/roam")
+      org-roam-directory (concat org-directory "/roam")
       org-roam-db-location (concat org-roam-directory "/db/org-roam.db")
       org-roam-dailies-capture-templates
-	  '(("d" "default" entry "* %?"
+      '(("d" "default" entry "* %?"
          :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d (%A)>
 
 * tasks for today [/]
@@ -86,9 +86,9 @@ This function should only modify configuration layer settings."
      ;; asciidoc
      asm
      (bibtex
-	  :variables
+      :variables
       bibtex-completion-bibliography (expand-file-name "~/Documents/org/zotero.bib")
-	  bibtex-completion-pdf-field "file"
+      bibtex-completion-pdf-field "file"
       ;; org-ref stuff (but used by bibtex layer)
       org-ref-default-bibliography (list bibtex-completion-bibliography)
       org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex)
@@ -99,7 +99,7 @@ This function should only modify configuration layer settings."
      csv
      docker
      emacs-lisp
-	 emoji
+     emoji
      epub
      (ess :variables ess-smart-S-assign-key nil)
      extempore
@@ -109,21 +109,21 @@ This function should only modify configuration layer settings."
      ;; graphviz
      haskell
      html
-	 ivy
+     ivy
      ;; ipython-notebook
      ;; java ;; because eclim is balls
      (javascript :variables js-indent-level 2)
      latex
      ;; lua
      multiple-cursors
-	 octave
-	 (pdf :variables pdf-view-use-scaling t)
+     octave
+     (pdf :variables pdf-view-use-scaling t)
      ;; php
      ;; (parinfer :init (add-hook 'extempore-mode-hook #'parinfer-mode))
      prettier
      python
      ;; racket
-	 react
+     react
      restclient
      ruby
      rust
@@ -151,19 +151,19 @@ This function should only modify configuration layer settings."
    dotspacemacs-additional-packages
    '(
      ;; bits & pieces
-	 lice
-	 csv
-	 z3-mode
-	 imenu-anywhere
+     lice
+     csv
+     z3-mode
+     imenu-anywhere
      ;; towards academic productivity nirvana?
      org-roam-bibtex
      org-noter
      org-noter-pdftools
      ;; themes
-	 dracula-theme
-	 monokai-theme
-	 subatomic-theme
-	 )
+     dracula-theme
+     monokai-theme
+     subatomic-theme
+     )
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -181,7 +181,7 @@ This function should only modify configuration layer settings."
 
   ;; OS-specific layer setup
   (when (not (spacemacs/system-is-mswindows))
-	(add-to-list 'dotspacemacs-configuration-layers 'mu4e)))
+    (add-to-list 'dotspacemacs-configuration-layers 'mu4e)))
 
 (defun dotspacemacs/init ()
   "Initialization:
@@ -310,13 +310,13 @@ It should only modify the values of Spacemacs settings."
    ;; Default font, or prioritized list of fonts. `powerline-scale' allows to
    ;; quickly tweak the mode-line size to make separators look not too crappy.
    dotspacemacs-default-font (let ((font-size (cond
-											   ((string= system-type 'darwin) 18)
-											   ((string= system-type 'windows-nt) 36)
-											   ((string= system-type 'gnu/linux) 36)
-											   (t 18))))
-							   `(("Operator Mono" :size ,font-size :weight semilight :width normal)
-								 ("Source Code Pro" :size ,font-size :weight normal :width normal)
-								 ("Ubuntu Mono" :size ,font-size :weight normal :width normal)))
+                                               ((string= system-type 'darwin) 18)
+                                               ((string= system-type 'windows-nt) 36)
+                                               ((string= system-type 'gnu/linux) 36)
+                                               (t 18))))
+                               `(("Operator Mono" :size ,font-size :weight semilight :width normal)
+                                 ("Source Code Pro" :size ,font-size :weight normal :width normal)
+                                 ("Ubuntu Mono" :size ,font-size :weight normal :width normal)))
 
    ;; The leader key (default "SPC")
    dotspacemacs-leader-key "SPC"
@@ -579,33 +579,33 @@ before packages are loaded."
 This is an auto-generated function, do not modify its content directly, use
 Emacs customize menu instead.
 This function is called at the very end of Spacemacs initialization."
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("2dff5f0b44a9e6c8644b2159414af72261e38686072e063aa66ee98a2faecf0e" "b7133876a11eb2ded01b4b144b45d9e7457f80dd5900c332241881ab261c50f4" "ba40a3b8b2f99249176d42f637e12897ae5d75373697bb36254a8130f635d284" "fa2b58bb98b62c3b8cf3b6f02f058ef7827a8e497125de0254f56e373abee088" default))
- '(evil-want-Y-yank-to-eol nil)
- '(package-selected-packages
-   '(valign org-roam emacsql-sqlite3 company-emoji evil-easymotion dired-quick-sort imenu-anywhere subatomic-theme monokai-theme dracula-theme treemacs-persp magit-section terminal-here org-ql peg ov org-super-agenda ts flycheck-elsa flycheck-ycmd company-ycmd ycmd request-deferred vterm treemacs-magit hybrid-mode z3-mode nodejs-repl toml-mode racer flycheck-rust cargo rust-mode rubocopfmt cpp-auto-include company-reftex devdocs org-cliplink symbol-overlay parseedn parseclj a blacken import-js grizzl flycheck-package package-lint evil-textobj-line realgud test-simple loc-changes load-relative company-plsense transient lv magithub ghub+ apiwrap github-search github-clone git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gist gh marshal logito pcache forge closql emacsql-sqlite emacsql diff-hl browse-at-remote treemacs-projectile treemacs-evil treemacs pfuture wgrep smex ivy-yasnippet ivy-xref ivy-rtags ivy-purpose ivy-hydra flyspell-correct-ivy counsel-css exec-path-from-shell extempore-mode auctex-latexmk yasnippet-snippets yapfify yaml-mode xterm-color x86-lookup ws-butler writeroom-mode visual-fill-column winum web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen toc-org tide typescript-mode tagedit symon string-inflection spaceline-all-the-icons spaceline powerline smeargle slim-mode shell-pop seeing-is-believing scss-mode sass-mode rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocop rspec-mode robe restclient-helm restart-emacs rbenv rake rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode prettier-js popwin pippel pipenv pip-requirements persp-mode password-generator paradox overseer orgit org-ref pdf-tools key-chord org-projectile org-category-capture org-present org-pomodoro org-mime org-download org-bullets org-brain open-junk-file ob-restclient ob-http neotree nasm-mode nameless multi-term mu4e-maildirs-extension mu4e-alert ht alert log4e gntp move-text mmm-mode minitest markdown-toc markdown-mode magit-svn magit-gitflow macrostep lorem-ipsum livid-mode skewer-mode live-py-mode link-hint lice json-navigator hierarchy js2-refactor multiple-cursors js2-mode js-doc insert-shebang indent-guide importmagic epc concurrent deferred impatient-mode simple-httpd hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-xref helm-themes helm-swoop helm-rtags helm-pydoc helm-purpose window-purpose imenu-list helm-projectile helm-org-rifle helm-mu helm-mode-manager helm-make helm-gitignore request helm-git-grep helm-flx helm-descbinds helm-ctest helm-css-scss helm-company helm-c-yasnippet helm-bibtex parsebib helm-ag haml-mode google-translate google-c-style golden-ratio gnuplot gitignore-templates gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md geiser fuzzy flyspell-correct-helm flyspell-correct flycheck-rtags flycheck-pos-tip pos-tip flycheck-bashate flycheck flx-ido flx fish-mode fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-tutor evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit git-commit ghub treepy graphql with-editor evil-lisp-state evil-lion evil-indent-plus evil-iedit-state iedit evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens smartparens paredit evil-args evil-anzu anzu ess-R-data-view ctable ess julia-mode eshell-z eshell-prompt-extras esh-help erc-yt erc-view-log erc-terminal-notifier erc-social-graph erc-image erc-hl-nicks emmet-mode elisp-slime-nav editorconfig dumb-jump doom-modeline eldoc-eval shrink-path all-the-icons memoize dockerfile-mode docker json-mode tablist magit-popup docker-tramp json-snatcher json-reformat disaster define-word cython-mode csv-mode csv counsel-projectile projectile counsel swiper ivy company-web web-completion-data company-tern dash-functional tern company-statistics company-shell company-rtags rtags company-restclient restclient know-your-http-well company-c-headers company-auctex company-anaconda company column-enforce-mode cmake-mode cmake-ide levenshtein clojure-snippets clean-aindent-mode clang-format cider-eval-sexp-fu eval-sexp-fu highlight cider sesman spinner queue pkg-info clojure-mode epl chruby centered-cursor-mode bundler inf-ruby biblio biblio-core auto-yasnippet yasnippet auto-highlight-symbol auto-dictionary auto-compile packed auctex anaconda-mode pythonic aggressive-indent ace-window ace-link ace-jump-helm-line helm avy helm-core ac-ispell auto-complete popup which-key use-package pcre2el org-plus-contrib hydra evil goto-chg undo-tree dotenv-mode diminish bind-map bind-key async evil-unimpaired f s dash font-lock+))
- '(safe-local-variable-values
-   '((extempore-program-args . "--frames 64 --device-name \"Telestream\"")
-     (extempore-program-args . "--frames 32 --device-name \"Telestream\"")
-     (extempore-program-args . "--frames 64 --device-name \"Studio 24\"")
-     (TeX-master . extended-abstract\.tex)
-     (major-mode . markdown-mode)
-     (TeX-master . proceedings\.tex)
-     (cider-ns-refresh-after-fn . "integrant.repl/resume")
-     (cider-ns-refresh-before-fn . "integrant.repl/suspend")
-     (TeX-command-extra-options . "-shell-escape")
-     (extempore-program-args . "--frames 64")
-     (javascript-backend . tern)
-     (javascript-backend . lsp))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-)
+  (custom-set-variables
+   ;; custom-set-variables was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(custom-safe-themes
+     '("2dff5f0b44a9e6c8644b2159414af72261e38686072e063aa66ee98a2faecf0e" "b7133876a11eb2ded01b4b144b45d9e7457f80dd5900c332241881ab261c50f4" "ba40a3b8b2f99249176d42f637e12897ae5d75373697bb36254a8130f635d284" "fa2b58bb98b62c3b8cf3b6f02f058ef7827a8e497125de0254f56e373abee088" default))
+   '(evil-want-Y-yank-to-eol nil)
+   '(package-selected-packages
+     '(ob-elixir helm-gtags ggtags flycheck-credo dap-mode lsp-treemacs bui counsel-gtags alchemist elixir-mode valign org-roam emacsql-sqlite3 company-emoji evil-easymotion dired-quick-sort imenu-anywhere subatomic-theme monokai-theme dracula-theme treemacs-persp magit-section terminal-here org-ql peg ov org-super-agenda ts flycheck-elsa flycheck-ycmd company-ycmd ycmd request-deferred vterm treemacs-magit hybrid-mode z3-mode nodejs-repl toml-mode racer flycheck-rust cargo rust-mode rubocopfmt cpp-auto-include company-reftex devdocs org-cliplink symbol-overlay parseedn parseclj a blacken import-js grizzl flycheck-package package-lint evil-textobj-line realgud test-simple loc-changes load-relative company-plsense transient lv magithub ghub+ apiwrap github-search github-clone git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gist gh marshal logito pcache forge closql emacsql-sqlite emacsql diff-hl browse-at-remote treemacs-projectile treemacs-evil treemacs pfuture wgrep smex ivy-yasnippet ivy-xref ivy-rtags ivy-purpose ivy-hydra flyspell-correct-ivy counsel-css exec-path-from-shell extempore-mode auctex-latexmk yasnippet-snippets yapfify yaml-mode xterm-color x86-lookup ws-butler writeroom-mode visual-fill-column winum web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen toc-org tide typescript-mode tagedit symon string-inflection spaceline-all-the-icons spaceline powerline smeargle slim-mode shell-pop seeing-is-believing scss-mode sass-mode rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocop rspec-mode robe restclient-helm restart-emacs rbenv rake rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode prettier-js popwin pippel pipenv pip-requirements persp-mode password-generator paradox overseer orgit org-ref pdf-tools key-chord org-projectile org-category-capture org-present org-pomodoro org-mime org-download org-bullets org-brain open-junk-file ob-restclient ob-http neotree nasm-mode nameless multi-term mu4e-maildirs-extension mu4e-alert ht alert log4e gntp move-text mmm-mode minitest markdown-toc markdown-mode magit-svn magit-gitflow macrostep lorem-ipsum livid-mode skewer-mode live-py-mode link-hint lice json-navigator hierarchy js2-refactor multiple-cursors js2-mode js-doc insert-shebang indent-guide importmagic epc concurrent deferred impatient-mode simple-httpd hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-xref helm-themes helm-swoop helm-rtags helm-pydoc helm-purpose window-purpose imenu-list helm-projectile helm-org-rifle helm-mu helm-mode-manager helm-make helm-gitignore request helm-git-grep helm-flx helm-descbinds helm-ctest helm-css-scss helm-company helm-c-yasnippet helm-bibtex parsebib helm-ag haml-mode google-translate google-c-style golden-ratio gnuplot gitignore-templates gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md geiser fuzzy flyspell-correct-helm flyspell-correct flycheck-rtags flycheck-pos-tip pos-tip flycheck-bashate flycheck flx-ido flx fish-mode fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-tutor evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit git-commit ghub treepy graphql with-editor evil-lisp-state evil-lion evil-indent-plus evil-iedit-state iedit evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens smartparens paredit evil-args evil-anzu anzu ess-R-data-view ctable ess julia-mode eshell-z eshell-prompt-extras esh-help erc-yt erc-view-log erc-terminal-notifier erc-social-graph erc-image erc-hl-nicks emmet-mode elisp-slime-nav editorconfig dumb-jump doom-modeline eldoc-eval shrink-path all-the-icons memoize dockerfile-mode docker json-mode tablist magit-popup docker-tramp json-snatcher json-reformat disaster define-word cython-mode csv-mode csv counsel-projectile projectile counsel swiper ivy company-web web-completion-data company-tern dash-functional tern company-statistics company-shell company-rtags rtags company-restclient restclient know-your-http-well company-c-headers company-auctex company-anaconda company column-enforce-mode cmake-mode cmake-ide levenshtein clojure-snippets clean-aindent-mode clang-format cider-eval-sexp-fu eval-sexp-fu highlight cider sesman spinner queue pkg-info clojure-mode epl chruby centered-cursor-mode bundler inf-ruby biblio biblio-core auto-yasnippet yasnippet auto-highlight-symbol auto-dictionary auto-compile packed auctex anaconda-mode pythonic aggressive-indent ace-window ace-link ace-jump-helm-line helm avy helm-core ac-ispell auto-complete popup which-key use-package pcre2el org-plus-contrib hydra evil goto-chg undo-tree dotenv-mode diminish bind-map bind-key async evil-unimpaired f s dash font-lock+))
+   '(safe-local-variable-values
+     '((extempore-program-args . "--frames 64 --device-name \"Telestream\"")
+       (extempore-program-args . "--frames 32 --device-name \"Telestream\"")
+       (extempore-program-args . "--frames 64 --device-name \"Studio 24\"")
+       (TeX-master . extended-abstract\.tex)
+       (major-mode . markdown-mode)
+       (TeX-master . proceedings\.tex)
+       (cider-ns-refresh-after-fn . "integrant.repl/resume")
+       (cider-ns-refresh-before-fn . "integrant.repl/suspend")
+       (TeX-command-extra-options . "-shell-escape")
+       (extempore-program-args . "--frames 64")
+       (javascript-backend . tern)
+       (javascript-backend . lsp))))
+  (custom-set-faces
+   ;; custom-set-faces was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   )
+  )
