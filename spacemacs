@@ -44,6 +44,7 @@ This function should only modify configuration layer settings."
       auto-completion-tab-key-behavior 'cycle
       auto-completion-private-snippets-directory (expand-file-name "~/.dotfiles/snippets/"))
      emacs-lisp
+     elixir
 	 (erc
 	  :variables
       erc-nick "benswift"
