@@ -264,7 +264,7 @@ nothing"
 
 ;; these should be set before calling mu4e, and they shouldn't break anything if
 ;; we're on a machine where (require 'mu4e) fails
-(setq mu4e-get-mail-command "mbsync --all"
+(setq mu4e-get-mail-command "mbsync fastmail"
       mu4e-attachment-dir (expand-file-name "~/Downloads"))
 
 (when (spacemacs/system-is-linux)
