@@ -255,6 +255,28 @@ nothing"
      (interactive)
      (switch-to-buffer (projectile-compilation-buffer-name "compilation"))))
 
+;; Jekyll ANU theme helpers
+
+(defvar anu-jekyll-theme-site-dirs
+  '(
+    "~/Documents/teaching/tools/cecs-jekyll/neo/cybernetics-website/"
+    "~/Documents/teaching/tools/cecs-jekyll/neo/computing-website/"
+    "~/Documents/teaching/tools/cecs-jekyll/neo/engineering-website/"
+    "~/Documents/research/ccc-studio/website/"
+    "~/Documents/teaching/extn1019/website/"
+    "~/Documents/teaching/comp2710-lens-2021/website/"
+    "~/Documents/teaching/tools/cecs-jekyll/docs/"
+    "~/Documents/teaching/cs-outreach-hub/website/"
+    "~/Documents/research/ccc-studio/website/"
+    ))
+
+(defun anu-jekyll-theme-update-all ()
+  (interactive)
+  (--each
+      anu-jekyll-theme-site-dirs
+    (let ((default-directory it))
+      (async-shell-command "git pull --rebase && bundle update && bundle exec jekyll build && git add \"Gemfile.lock\" && git commit -m \"bundle update\" && git push" (get-buffer-create (projectile-compilation-buffer-name "jekyll-update"))))))
+
 ;;;;;;;;;;
 ;; mu4e ;;
 ;;;;;;;;;;
