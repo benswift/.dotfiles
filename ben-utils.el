@@ -160,13 +160,19 @@ throw the file at squoosh and let it complain if it can't handle
 it"
   (member (s-downcase (f-ext filename)) '("jpg" "jpeg" "png")))
 
-(defun squoosh-file (filename &optional width)
-  "squoosh an image file into a mozJPG-encoded jpg (optionally, resize to `WIDTH')
+(defun squoosh-file (filename)
+  "squoosh an image file into a mozJPG-encoded jpg
 
 requires the squoosh-cli from https://www.npmjs.com/package/@squoosh/cli"
-  (if width
-      (shell-command (format "squoosh-cli --resize '{\"enabled\":true,\"width\":%s}' --mozjpeg auto %s" width filename))
-    (shell-command (format "squoosh-cli --mozjpeg auto %s" filename))))
+  (interactive "f")
+  (shell-command (format "squoosh-cli --mozjpeg auto %s" filename)))
+
+(defun squoosh-and-resize-file (filename width)
+  "squoosh an image file into a mozJPG-encoded jpg and resize to `WIDTH'
+
+requires the squoosh-cli from https://www.npmjs.com/package/@squoosh/cli"
+  (interactive "ffilename: \nnwidth: ")
+  (shell-command (format "squoosh-cli --resize '{\"enabled\":true,\"width\":%s}' --mozjpeg auto %s" width filename)))
 
 (defun imageoptim-file (filename-or-glob)
   "also apply some standard, useful optimisations"
