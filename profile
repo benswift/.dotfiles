@@ -13,7 +13,7 @@ export PATH="$HOME/.dotfiles/scripts:$PATH"
 #
 # this used to be wrapped in an "do only if brew command found" guard, but then
 # I changed to zsh and things broke, and I can't be arsed fixing it right now.
-export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
+eval "$(/opt/homebrew/bin/brew shellenv)"
 
 ##########
 # python #
