@@ -543,7 +543,6 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
 
   ;; required to avoid the "Warning (dired-quick-sort):
   ;; `insert-directory-program' does not point to GNU ls" error
-  (setq insert-directory-program (substitute-in-file-name "/usr/local/opt/coreutils/libexec/gnubin/ls"))
 
   ;; hunspell stuff needs to be set in init
   (setq ispell-program-name (executable-find "hunspell")
