@@ -705,6 +705,7 @@ dspmt" name xtm-dir)))
   (interactive "r")
   (let ((asciify-alist '(("’" . "'")
                          ("‘" . "'")
+                         (" " . " ") ;; sometimes necessary with copy-pasted stuff
                          ("“" . "\"")
                          ("”" . "\"")
                          ("—" . "---")
