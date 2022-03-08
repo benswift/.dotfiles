@@ -708,6 +708,7 @@ dspmt" name xtm-dir)))
                          (" " . " ") ;; sometimes necessary with copy-pasted stuff
                          ("“" . "\"")
                          ("”" . "\"")
+                         ("–" . "-")
                          ("—" . "---")
                          ("…" . "..."))))
     (unless (region-active-p)
