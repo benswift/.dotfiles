@@ -61,7 +61,6 @@ This function should only modify configuration layer settings."
       erc-autojoin-channels-alist '(("irc.chat.twitch.tv" "#benjswift")
                                     ("irc.freenode.net" "#extempore")))
      git
-     github
      (markdown
       :variables
       markdown-asymmetric-header t
