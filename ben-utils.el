@@ -584,7 +584,7 @@ dspmt" name xtm-dir)))
 (defun extempore-yas-get-chord-sym (maj-min)
   ;; symbol lists from libs/core/pc_ivl.xtm
   (mapcar #'symbol-name
-          (case maj-min
+          (cl-case maj-min
             ('^ 5 '(i i6 i64 i7 i- i-7 n n6 ii ii6 ii7 ii9 ii^ ii^7 iii iii6 iii7 iii^ iii^7 iv iv6 iv7 iv- iv-7 v v6 v7 v- v-7 vi vi6 vi7 vi^ vi^7 viio viio7 vii vii7))
             ('- '(i i6 i64 i7 i^ i^6 i^64 i^7 n n6 ii ii6 ii7 ii- ii-6 ii-7 ii^ ii^7 iii iii6 iii7 iii- iii-6 iii-7 iv iv6 iv7 iv^ iv^6 iv^7 v v^ v6 v7 v- v-6 v-6 v-7 vi vi6 vi7 vi- vi-6 vi-7 vii vii6 vii7 viio viio6 viio7))
             (t nil))))
@@ -673,8 +673,8 @@ dspmt" name xtm-dir)))
 
 ;; from https://stackoverflow.com/a/49505968
 (defun shuffle (sequence)
-  (loop for i from (length sequence) downto 2
-        do (rotatef (elt sequence (random i))
+  (cl-loop for i from (length sequence) downto 2
+        do (cl-rotatef (elt sequence (random i))
                     (elt sequence (1- i))))
   sequence)
 
@@ -889,7 +889,7 @@ Version 2019-06-21"
          (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
                              (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
          (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
-         (charts (loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
+         (charts (cl-loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
     (let ((default-directory church-music-dir))
       (shell-command (format "pdfjam %s -o %s && open %s"
                              (mapconcat #'identity charts " ")
