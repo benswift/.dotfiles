@@ -8,7 +8,7 @@ Port 992
 # Host imaps-proxy.messagingengine.com
 # Port 80
 User benswift@fastmail.com
-PassCmd "gpg -q --for-your-eyes-only --no-tty -d ~/.authinfo.gpg | awk '/machine mail.messagingengine.com login benswift@fastmail.com/ {print $NF}'"
+PassCmd "op item get Fastmail --format json | jq --raw-output '.fields[4].value'"
 SSLType IMAPS
 SSLVersions TLSv1.2
 
@@ -37,7 +37,7 @@ IMAPAccount anu
 Host outlook.office365.com
 Port 993
 User u2548636@anu.edu.au
-PassCmd "gpg -q --for-your-eyes-only --no-tty -d ~/.authinfo.gpg | awk '/machine smtp.office365.com login u2548636@anu.edu.au/ {print $NF}'"
+PassCmd "op item get 'ANU Identity' --fields pw"
 SSLType IMAPS
 SSLVersions TLSv1.2
 

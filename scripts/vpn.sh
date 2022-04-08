@@ -1,7 +1,6 @@
 #!/usr/bin/env zsh
 
-# pull ANU password out of encrypted authinfo file, pipe it to stdin
-gpg -q --for-your-eyes-only --no-tty -d ~/.authinfo.gpg | \
-    awk '/machine smtp.office365.com login u2548636@anu.edu.au/ {print $NF}' | \
+# pull ANU password out of 1Password, pipe it to stdin
+op item get "ANU Identity" --fields pw |\
     # start the VPN
     sudo openconnect --user=u2548636 --protocol=gp --passwd-on-stdin https://staff-access.anu.edu.au
