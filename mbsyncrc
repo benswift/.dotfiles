@@ -8,7 +8,7 @@ Port 992
 # Host imaps-proxy.messagingengine.com
 # Port 80
 User benswift@fastmail.com
-PassCmd "op item get Fastmail --format json | jq --raw-output '.fields[4].value'"
+PassCmd "op item get Fastmail --format json | jq --raw-output '.fields | map(select(.id == \"4fvbwzsyyzfnsla625zzjhihom\")) | map(select(.label == \"Emacs\"))[].value'"
 SSLType IMAPS
 SSLVersions TLSv1.2
 
