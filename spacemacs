@@ -568,7 +568,7 @@ before packages are loaded."
   (spacemacs//add-to-load-path (expand-file-name "~/.dotfiles/"))
   (require 'ben-utils)
   (require 'anu-cs-utils)
-  ;; (require 'ben-private)
+  (require 'ben-private)
   ;; (load (expand-file-name "~/Documents/teaching/extn1019/convenors/extn1019.el"))
   )
 
