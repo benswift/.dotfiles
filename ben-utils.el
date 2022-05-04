@@ -211,8 +211,7 @@ requires the squoosh-cli from https://www.npmjs.com/package/@squoosh/cli"
                             (f-filename filename))))
     (f-move filename dest-path)
     ;; for convenience, copy the relevant "background image" Jekyll include
-    (kill-new (format "{%% include slides/background-image.html image=\"%s\" %%}"
-                      (f-relative dest-path (f-join (projectile-project-root) "assets"))))))
+    (kill-new (f-relative dest-path (f-join (projectile-project-root) "assets")))))
 
 (defun mogrify-image-file (filename desired-width)
   "note: this will never make the file wider
