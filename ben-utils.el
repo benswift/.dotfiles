@@ -174,11 +174,6 @@ requires the squoosh-cli from https://www.npmjs.com/package/@squoosh/cli"
   (interactive "ffilename: \nnwidth: ")
   (shell-command (format "squoosh-cli --resize '{\"enabled\":true,\"width\":%s}' --mozjpeg auto %s" width filename)))
 
-(defun imageoptim-file (filename-or-glob)
-  "also apply some standard, useful optimisations"
-  (interactive "sfilename-or-glob: ")
-  (call-process "imageoptim" nil nil nil "--jpegmini" filename-or-glob))
-
 ;; TODO defun probably should be interactive itself
 (defun jekyll-completing-read-asset-subdirectory ()
   "return a list of (full paths to) subdirectories of the assets/ folder"
@@ -210,10 +205,6 @@ requires the squoosh-cli from https://www.npmjs.com/package/@squoosh/cli"
   (if (and current-prefix-arg (> (image-width filename) desired-width))
       (unless (= (mogrify-width filename desired-width) 0)
         (error "error mogrifying %s" filename)))
-
-  ;; run imageoptim-cli (including JPEGmini)
-  ;; (unless (= (imageoptim-file filename) 0)
-  ;;    (error "error imageoptimising %s" filename))
 
   ;; move the now processed image file into place
   (let* ((dest-path (f-join (jekyll-completing-read-asset-subdirectory)
