@@ -79,7 +79,7 @@ This function should only modify configuration layer settings."
          :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d (%A)>
 
 * tasks for today [/]
-  - [ ]
+- [ ]
 * journal
 "))))
      ;; asciidoc
