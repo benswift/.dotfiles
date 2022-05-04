@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# key: imgf
+# --
+<figure>
+  <img src="{% link `(yas-choose-value (jekyll-list-asset-filenames))` %}">
+  <figcaption>$0</figcaption>
+</figure>
