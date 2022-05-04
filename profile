@@ -70,7 +70,9 @@ fi
 # haskell #
 ###########
 
-## . "$HOME/.ghcup/env"
+if [ -f "$HOME/.ghcup/env" ]; then
+    . "$HOME/.ghcup/env"
+fi
 
 #############
 # Extempore #
