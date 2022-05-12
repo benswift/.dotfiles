@@ -459,6 +459,9 @@ nothing"
 ;;;;;;;;;;;;;;;
 
 (cond
+ ;; new MBP
+ ((s-starts-with? "mitch." (system-name) "mitch.local")
+  (setq extempore-path (expand-file-name "~/Desktop/extempore/")))
  ((string= (system-name) "paranoid-android")
   (setq extempore-path (expand-file-name "~/Documents/research/extemporelang/extempore/")))
  ((string= "smithy" (system-name))
