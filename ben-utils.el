@@ -696,6 +696,7 @@ dspmt" name xtm-dir)))
   (let ((asciify-alist '(("’" . "'")
                          ("‘" . "'")
                          (" " . " ") ;; sometimes necessary with copy-pasted stuff
+                         (" " . " ") ;; sometimes necessary with copy-pasted stuff
                          ("“" . "\"")
                          ("”" . "\"")
                          ("–" . "-")
