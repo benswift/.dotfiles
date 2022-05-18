@@ -102,7 +102,7 @@ This function should only modify configuration layer settings."
      epub
      (ess :variables ess-smart-S-assign-key nil)
      extempore
-     finance
+     ;; finance
      ;; fsharp
      go
      ;; graphviz
@@ -115,9 +115,9 @@ This function should only modify configuration layer settings."
      latex
      ;; lua
      multiple-cursors
-     octave
+     ;; octave
      (pdf :variables pdf-view-use-scaling t)
-     ;; php
+     php
      ;; (parinfer :init (add-hook 'extempore-mode-hook #'parinfer-mode))
      prettier
      python
