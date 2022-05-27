@@ -1,3 +1,5 @@
+.DS_Store
+
 ### git ###
 hosted anyway)
 .git/
