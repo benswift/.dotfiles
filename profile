@@ -15,6 +15,12 @@ export PATH="$HOME/.dotfiles/scripts:$PATH"
 # I changed to zsh and things broke, and I can't be arsed fixing it right now.
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
+########
+# asdf #
+########
+
+. $(brew --prefix asdf)/libexec/asdf.sh
+
 ##########
 # python #
 ##########
