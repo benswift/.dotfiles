@@ -21,57 +21,6 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 . $(brew --prefix asdf)/libexec/asdf.sh
 
-##########
-# python #
-##########
-
-# for this python stuff to all to work nicely, you need
-# - pyenv
-# - pyenv-virtualenv
-# - poetry
-#
-# however, you don't need to configure the pyenv-virtualenv stuff---just let
-# poetry handle that
-
-# pyenv
-
-if [ -x "$(command -v pyenv)" ]; then
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="${PYENV_ROOT}/bin:$PATH"
-    eval "$(pyenv init --path)"
-fi
-
-# poetry
-
-export PATH="$HOME/.poetry/bin:$PATH"
-export POETRY_VIRTUALENVS_PATH="$HOME/.pyenv/versions"
-
-alias pr='poetry run'
-
-# pipx
-
-export PATH="$HOME/.local/bin:$PATH"
-
-########
-# ruby #
-########
-
-# set up rbenv
-
-if [ -x "$(command -v rbenv)" ]; then
-	eval "$(rbenv init -)"
-fi
-
-alias be='bundle exec'
-
-######
-# go #
-######
-
-if [ -x "$(command -v go)" ]; then
-    export PATH="$PATH:$(go env GOPATH)/bin"
-fi
-
 ###########
 # haskell #
 ###########
