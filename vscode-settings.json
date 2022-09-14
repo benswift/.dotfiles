@@ -7,10 +7,5 @@
   "git.confirmSync": false,
   "explorer.confirmDelete": false,
   "extempore.sharedir": "/Users/ben/extempore",
-  "workbench.colorTheme": "Spacemacs - dark",
-  "files.associations": {
-    "*.S": "arm"
-  },
-  "[arm]": {},
   "liveServer.settings.donotShowInfoMsg": true
 }
