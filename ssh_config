@@ -4,6 +4,11 @@ Host *
   UseKeychain yes
 
 # cybersonic
+Host bulwark
+  User u2548636
+  Hostname bulwark.cecs.anu.edu.au
+  IdentityFile ~/.ssh/cybersonic
+
 Host cybersonic
   User u2548636
   Hostname cybersonic.gpu
