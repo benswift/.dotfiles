@@ -1,7 +1,6 @@
 .DS_Store
 
 ### git ###
-hosted anyway)
 .git/
 
 ### C/C++ ###
