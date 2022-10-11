@@ -7,6 +7,7 @@ Host mail.messagingengine.com
 Port 992
 # Host imaps-proxy.messagingengine.com
 # Port 80
+AuthMech LOGIN
 User benswift@fastmail.com
 PassCmd "op item get Fastmail --fields 'mbsync IMAP app password'"
 SSLType IMAPS
@@ -36,6 +37,7 @@ SyncState *
 IMAPAccount anu
 Host outlook.office365.com
 Port 993
+AuthMech LOGIN
 User u2548636@anu.edu.au
 PassCmd "op item get 'ANU Identity' --fields 'mbsync IMAP app password'"
 SSLType IMAPS
