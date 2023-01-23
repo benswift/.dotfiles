@@ -571,7 +571,7 @@ before packages are loaded."
   (require 'ben-private)
   (load (expand-file-name "~/Documents/teaching/extn1019/convenors/extn1019.el"))
   (add-to-list 'compilation-error-regexp-alist-alist
-               '(elixir "^\\(\\*\\* (CompileError) \\)? *\\([^ ]*+\\):\\([0-9]+\\):?.*" 2 3))
+               '(elixir "^\\(\\*\\* (\\w*Error) \\)? *\\([^ ]*+\\):\\([0-9]+\\):?.*" 2 3))
   (add-to-list 'compilation-error-regexp-alist 'elixir)
   )
 
