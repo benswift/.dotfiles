@@ -2,6 +2,8 @@
 
 EXCLUDE_FROM_FILE="/tmp/rclone-excludes.txt"
 CLONE_ROOT_DIR=~/Documents
+
+## visit it at https://anu365-my.sharepoint.com/personal/u2548636_anu_edu_au/PreservationHoldLibrary
 REMOTE=anu-onedrive
 
 ## find all git repo enclosing folders (including trailing slash), munge them
