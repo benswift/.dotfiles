@@ -1,3 +1,5 @@
+Include /Users/ben/.colima/ssh_config
+
 Host *
   IgnoreUnknown UseKeychain
   AddKeysToAgent yes
