@@ -245,6 +245,7 @@ nothing"
 
 ;; helpful keybindings
 (spacemacs/declare-prefix "o" "user-prefix")
+(spacemacs/set-leader-keys "os" 'dash-at-point)
 (spacemacs/set-leader-keys "om" 'jekyll-move-download-and-mogrify)
 (spacemacs/set-leader-keys "oc"
   '(lambda ()

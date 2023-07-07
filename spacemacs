@@ -152,6 +152,7 @@ This function should only modify configuration layer settings."
      ;; bits & pieces
      lice
      csv
+     dash-at-point
      z3-mode
      imenu-anywhere
      ;; towards academic productivity nirvana?
