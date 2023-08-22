@@ -26,14 +26,6 @@ export PATH="$HOME/.emacs.d/bin:$PATH"
 
 . ~/.asdf/plugins/java/set-java-home.zsh
 
-###########
-# haskell #
-###########
-
-if [ -f "$HOME/.ghcup/env" ]; then
-    . "$HOME/.ghcup/env"
-fi
-
 ########
 # ruby #
 ########
