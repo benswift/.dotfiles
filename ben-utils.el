@@ -489,7 +489,7 @@ dspmt" name xtm-dir)))
      (point-min)
      (point-max))))
 
-(require 'csv)
+;; (require 'csv)
 
 (defun read-csv (filename headerp)
   (with-temp-buffer
