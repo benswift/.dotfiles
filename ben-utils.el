@@ -464,16 +464,16 @@ dspmt" name xtm-dir)))
 
 (setq tidal-interpreter (expand-file-name "~/.ghcup/bin/ghci"))
 
+;;;;;;;;;;
+;; misc ;;
+;;;;;;;;;;
+
 (defun ben-sync-org-directory-to-github ()
   (interactive)
   (let ((default-directory org-directory))
     (async-shell-command
      (format "git add *.org roam/*.org roam/daily/*.org && git commit -m 'org directory auto-commit script @ %s' && git pull --rebase origin master && git push origin master"
              (format-time-string "%FT%T%z")))))
-
-;;;;;;;;;;
-;; misc ;;
-;;;;;;;;;;
 
 ;; from https://stackoverflow.com/a/49505968
 (defun shuffle (sequence)
@@ -489,7 +489,7 @@ dspmt" name xtm-dir)))
      (point-min)
      (point-max))))
 
-;; (require 'csv)
+(require 'csv)
 
 (defun read-csv (filename headerp)
   (with-temp-buffer
