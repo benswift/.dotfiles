@@ -14,43 +14,7 @@
 ;; Ben's helper functions. Probably not useful for anyone else, but if you wanna
 ;; pinch stuff then knock yourself out.
 
-;; commentary
-
 ;;; Code:
-
-(setq mac-option-modifier 'meta)
-(setq mac-command-modifier 'super)
-
-;; add human-readable filesize switch for dired
-(setq dired-listing-switches "-alh")
-
-;; time
-(setq display-time-format "%H:%M"
-      display-time-default-load-average nil)
-(display-time-mode 1)
-
-(add-hook 'text-mode-hook 'turn-on-auto-fill)
-
-;; indentation
-(setq standard-indent 2)
-
-;; use spaces, not tabs
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 4)
-
-;; warnings to suppress
-(add-to-list 'warning-suppress-types '(yasnippet backquote-change))
-
-;;;;;;;;;;;;;;;;
-;; projectile ;;
-;;;;;;;;;;;;;;;;
-
-(require 'projectile)
-
-(setq compilation-buffer-name-function
-      #'projectile-compilation-buffer-name
-      compilation-save-buffers-predicate
-      #'projectile-current-project-buffer-p)
 
 ;;;;;;;;;;;;
 ;; Jekyll ;;
@@ -58,6 +22,8 @@
 
 ;; I do a *lot* of work with Jekyll static websites (including all my ANU course
 ;; websites) so these helpers save me heaps of time
+
+(require 'projectile)
 
 (defun jekyll-list-asset-filenames ()
   (->> (projectile-current-project-files)
