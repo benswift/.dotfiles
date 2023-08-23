@@ -243,37 +243,6 @@ nothing"
       (directory-files-recursively dir "\.\\(jpg\\|jpeg\\|png\\)$")
     (mogrify-image-file it max-width)))
 
-;; helpful keybindings
-(spacemacs/declare-prefix "o" "user-prefix")
-(spacemacs/set-leader-keys "os" 'dash-at-point)
-(spacemacs/set-leader-keys "om" 'jekyll-move-download-and-mogrify)
-(spacemacs/set-leader-keys "oc"
-  '(lambda ()
-     (interactive)
-     (switch-to-buffer (projectile-compilation-buffer-name "compilation"))))
-
-;; Jekyll ANU theme helpers
-
-(defvar anu-jekyll-theme-site-dirs
-  '(
-    "~/Documents/teaching/tools/cecs-jekyll/neo/cybernetics-website/"
-    "~/Documents/teaching/tools/cecs-jekyll/neo/computing-website/"
-    "~/Documents/teaching/tools/cecs-jekyll/neo/engineering-website/"
-    "~/Documents/research/ccc-studio/website/"
-    "~/Documents/teaching/extn1019/website/"
-    "~/Documents/teaching/comp2710-lens-2021/website/"
-    "~/Documents/teaching/tools/cecs-jekyll/docs/"
-    "~/Documents/teaching/cs-outreach-hub/website/"
-    "~/Documents/research/ccc-studio/website/"
-    ))
-
-(defun anu-jekyll-theme-update-all ()
-  (interactive)
-  (--each
-      anu-jekyll-theme-site-dirs
-    (let ((default-directory it))
-      (async-shell-command "git pull --rebase && bundle update && bundle exec jekyll build && git add \"Gemfile.lock\" && git commit -m \"bundle update\" && git push" (get-buffer-create (projectile-compilation-buffer-name "jekyll-update"))))))
-
 ;;;;;;;;;;
 ;; mu4e ;;
 ;;;;;;;;;;
@@ -285,9 +254,6 @@ nothing"
 ;; we're on a machine where (require 'mu4e) fails
 (setq mu4e-get-mail-command "mbsync fastmail"
       mu4e-attachment-dir (expand-file-name "~/Downloads"))
-
-(when (spacemacs/system-is-linux)
-  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e"))
 
 (when (require 'mu4e nil :noerror)
   (require 'mu4e-contrib) ;; for mu4e-shr2text
@@ -328,8 +294,6 @@ nothing"
         mu4e-compose-format-flowed t
         fill-flowed-encode-column fill-column
         message-citation-line-format "On %Y-%m-%d at %R %Z, %f wrote...")
-
-  (add-hook 'mu4e-compose-mode-hook #'spacemacs/toggle-yasnippet-on)
 
   (defun ben-find-to-firstname ()
     "search the current buffer for a To: field, and grab the first recipient's name from there"
@@ -438,22 +402,8 @@ nothing"
             (pop-to-buffer (current-buffer))
           (smtpmail-send-it)))))
 
-  ;; iCal integration
-
-  (when (spacemacs/system-is-mac)
-    (require 'mu4e-icalendar)
-    (mu4e-icalendar-setup))
-
-  ;; mimetype-specific handlers (this could be super-cool)
-
-  ;; ...but this one doesn't work
-  ;; (mailcap-add "text/calendar" "open -a /Applications/Calendar.app %s")
-
   ;; (when (require 'mu4e... ) ends here
   )
-
-;; because they seemed to remove the old `SPC A m' keybinding
-(spacemacs/set-leader-keys "oe" 'mu4e)
 
 ;;;;;;;;;;;;;;;
 ;; Extempore ;;
@@ -476,28 +426,6 @@ nothing"
 
 (defvar extempore-pattern-hydra-hit-value "1" "value for the 'hit'")
 (defvar extempore-pattern-hydra-rest-value "_" "value for the 'rest'")
-
-;; NOTE: this doesn't work if there's not at least one more character on the
-;; line e.g. a close paren)
-(defun extempore-pattern-hydra-insert (value)
-  (if (looking-back "(" (- (point) 1))
-      ;; we're in an empty list
-      (insert value)
-    (insert (format " %s" value))))
-
-(spacemacs|define-transient-state extempore-pattern-hydra-tap-rhythm
-  :title "Tap out an extempore pattern using the keyboard"
-  :doc
-  "\n[_j_] hit [_f_] rest [_J_] set hit value [_F_] set rest value [_q_] quit"
-  :bindings
-  ("j" (extempore-pattern-hydra-insert extempore-pattern-hydra-hit-value))
-  ("f" (extempore-pattern-hydra-insert extempore-pattern-hydra-rest-value))
-  ("J" (setq-local extempore-pattern-hydra-hit-value (read-string "hit value: ")))
-  ("F" (setq-local extempore-pattern-hydra-rest-value (read-string "rest value: ")))
-  ("q" nil :exit t))
-
-(spacemacs/set-leader-keys-for-major-mode 'extempore-mode
-  "rr" 'spacemacs/extempore-pattern-hydra-tap-rhythm-transient-state/body)
 
 (defun extempore-create-template-file (base-path filename &optional header)
   (let ((full-path (format "%s/%s" base-path filename)))
@@ -621,45 +549,12 @@ dspmt" name xtm-dir)))
 ;;   (evil-define-key 'visual pdf-view-mode-map "<prior>" 'pdf-view-scroll-down-or-previous-page)
 ;;   (evil-define-key 'visual pdf-view-mode-map "<next>" 'pdf-view-scroll-up-or-next-page))
 
-(spacemacs/set-leader-keys "od" 'org-roam-dailies-goto-today)
-
 (defun ben-sync-org-directory-to-github ()
   (interactive)
   (let ((default-directory org-directory))
     (async-shell-command
      (format "git add *.org roam/*.org roam/daily/*.org && git commit -m 'org directory auto-commit script @ %s' && git pull --rebase origin master && git push origin master"
              (format-time-string "%FT%T%z")))))
-
-(defun ben-update-spacemacs ()
-  (interactive)
-  (let ((default-directory (expand-file-name "~/.emacs.d")))
-    (shell-command "git pull origin develop")
-    (configuration-layer/update-packages :no-confirmation)))
-
-;;;;;;;;;;;;;
-;; devdocs ;;
-;;;;;;;;;;;;;
-
-(require 'devdocs)
-
-;; this will override `devdocs-do-search' from the official lib to instead use
-;; the "local" URL (only works on macOS I think)
-;; this is brittle---if devdocs.el ever changes the implementation of
-;; `devdocs-search' then this may well stop working
-
-(defun devdocs-do-search (pattern)
-  (shell-command
-   (format "open devdocs://search/%s" (url-hexify-string pattern))))
-
-;; not really using this atm, so let's remove the precious "SPC o" keybinding
-;; (spacemacs/set-leader-keys "os" 'devdocs-search)
-
-;;;;;;;;;;;;;;;
-;; spaceline ;;
-;;;;;;;;;;;;;;;
-
-;; this should be done somewhere else, I probably need to set up my own custom spaceline theme
-(spaceline-toggle-buffer-encoding-abbrev-off)
 
 ;;;;;;;;;;
 ;; misc ;;
@@ -855,7 +750,9 @@ Version 2019-06-21"
                                           (expand-file-name (format "~/%s" linkname))
                                           :ok-if-it-already-exists))))
     (linker "profile" ".zprofile") ;; assumes zsh
-    (linker "spacemacs" ".spacemacs")
+    (linker "doom-init.el" ".doom.d/init.el")
+    (linker "doom-config.el" ".doom.d/config.el")
+    (linker "doom-packages.el" ".doom.d/packages.el")
     (linker "gitconfig" ".gitconfig")
     (linker "gitignore" ".gitignore")
     (linker "mbsyncrc" ".mbsyncrc")
