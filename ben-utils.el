@@ -517,38 +517,6 @@ dspmt" name xtm-dir)))
 
 (setq tidal-interpreter (expand-file-name "~/.ghcup/bin/ghci"))
 
-;;;;;;;;;;;;;;
-;; org-mode ;;
-;;;;;;;;;;;;;;
-
-(use-package org-roam-bibtex
-  :after org-roam
-  :hook (org-roam-mode . org-roam-bibtex-mode)
-  :custom
-  (orb-preformat-keywords '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
-  (orb-file-field-extensions '("pdf" "epub" "html")))
-
-(use-package org-pdftools
-  :hook (org-load . org-pdftools-setup-link))
-
-(use-package org-noter
-  :after (:any org pdf-view)
-  :custom
-  (org-noter-always-create-frame nil)
-  (org-noter-separate-notes-from-heading t)
-  (org-noter-default-notes-file-names '("notes.org"))
-  (org-noter-notes-search-path (list org-roam-directory)))
-
-(use-package org-noter-pdftools
-  :after org-noter
-  :config
-  (with-eval-after-load 'pdf-annot
-    (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
-
-;; (with-eval-after-load 'pdf-view
-;;   (evil-define-key 'visual pdf-view-mode-map "<prior>" 'pdf-view-scroll-down-or-previous-page)
-;;   (evil-define-key 'visual pdf-view-mode-map "<next>" 'pdf-view-scroll-up-or-next-page))
-
 (defun ben-sync-org-directory-to-github ()
   (interactive)
   (let ((default-directory org-directory))
