@@ -76,3 +76,11 @@
 ;; they are implemented.
 
 (toggle-frame-fullscreen)
+
+;; for Lexical LS
+
+(after! lsp-mode
+  (setq lsp-modeline-code-actions-segments '(count icon name)))
+
+(after! elixir-mode
+  (setq lsp-elixir-server-command '("~/LSP/lexical/_build/dev/package/lexical/bin/start_lexical.sh")))
