@@ -424,25 +424,6 @@ dspmt" name xtm-dir)))
      base-path "setup.xtm" setup-header)
     (dired base-path)))
 
-;; llvm-emacs utils
-
-(setq load-path
-      (cons (expand-file-name "~/.dotfiles/llvm-emacs") load-path))
-
-(require 'llvm-mode)
-(require 'tablegen-mode)
-
-(defun extempore-show-ir-in-temp-buffer (beg end)
-  (interactive "r")
-  (save-excursion
-    (let ((ir-str (buffer-substring-no-properties beg end)))
-      (with-current-buffer (get-buffer-create "*extempore LLVM IR*")
-        (if (not (equal major-mode 'llvm-mode))
-            (llvm-mode))
-        (delete-region (point-min) (point-max))
-        (insert (replace-regexp-in-string "\\\\n" "\n" ir-str))
-        (display-buffer "*extempore LLVM IR*" #'display-buffer-pop-up-window)))))
-
 ;; Ben's livecoding snippet helpers
 
 ;; used in extempore-mode's print-line-debug snippet
