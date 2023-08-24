@@ -71,11 +71,6 @@
 
 (add-to-list 'exec-path "~/LSP")
 
-(after! lsp-mode
-  (setq lsp-enable-suggest-server-download nil))
-(after! lsp-ui
-  (setq lsp-ui-doc-enable nil))     ; redundant with K
-
 (after! 'eglot
   (add-to-list 'eglot-server-programs
                `(elixir-mode . ("elixir/nextls" "--stdio=true"))))
