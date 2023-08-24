@@ -1,7 +1,10 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
-;; Place your private configuration here! Remember, you do not need to run 'doom
-;; sync' after modifying this file!
+;; some things adapted from
+;; https://github.com/hlissner/.doom.d/blob/master/config.el
+;;
+;; note: there's some nice magit & org config stuff in there as well - worth
+;; having a look at when I've got my head around Doom a bit better
 
 (setq user-full-name "Ben Swift"
       user-mail-address "ben@benswift.me")
@@ -64,25 +67,18 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-;; for Lexical LS
-
-(after! lsp-mode
-  (setq lsp-modeline-code-actions-segments '(count icon name)))
-
 ;; Language Servers
 
 (add-to-list 'exec-path "~/LSP")
 
+(after! lsp-mode
+  (setq lsp-enable-suggest-server-download nil))
+(after! lsp-ui
+  (setq lsp-ui-doc-enable nil))     ; redundant with K
+
 (after! 'eglot
   (add-to-list 'eglot-server-programs
                `(elixir-mode . ("elixir/nextls" "--stdio=true"))))
-
-;; from here, adapted from
-;; https://github.com/hlissner/.doom.d/blob/master/config.el
-;;
-;; note: there's some nice magit & org config stuff in there as well - worth
-;; having a look at when I've got my head around Doom a bit better
-
 
 ;; When I bring up Doom's scratch buffer with SPC x, it's often to play with
 ;; elisp or note something down (that isn't worth an entry in my notes). I can
@@ -105,25 +101,8 @@
 
       :leader "TAB" #'previous-buffer)
 
-;;; Modules
-
 (after! company
   (setq company-idle-delay 1.0))
-
-;;; :editor evil
-;; Focus new window after splitting
-(setq evil-split-window-below t
-      evil-vsplit-window-right t)
-
-;; Implicit /g flag on evil ex substitution, because I use the default behavior
-;; less often.
-(setq evil-ex-substitute-global t)
-
-;;; :tools lsp
-(after! lsp-mode
-  (setq lsp-enable-suggest-server-download nil))
-(after! lsp-ui
-  (setq lsp-ui-doc-enable nil))     ; redundant with K
 
 (after! org
   (setq org-startup-folded 'show2levels))
