@@ -73,7 +73,8 @@
 
 (after! 'eglot
   (add-to-list 'eglot-server-programs
-               `(elixir-mode . ("elixir/nextls" "--stdio=true"))))
+               '((elixir-mode elixir-ts-mode heex-ts-mode)
+                 "elixir/nextls" "--stdio=true")))
 
 ;; When I bring up Doom's scratch buffer with SPC x, it's often to play with
 ;; elisp or note something down (that isn't worth an entry in my notes). I can
