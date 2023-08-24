@@ -71,7 +71,7 @@
 
 (add-to-list 'exec-path "~/LSP")
 
-(after! 'eglot
+(after! eglot
   (add-to-list 'eglot-server-programs
                '((elixir-mode elixir-ts-mode heex-ts-mode)
                  "elixir/nextls" "--stdio=true")))
