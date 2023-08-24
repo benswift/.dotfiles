@@ -3,11 +3,8 @@
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
 
-
-;; Some functionality uses this to identify you, e.g. GPG configuration, email
-;; clients, file templates and snippets. It is optional.
-;; (setq user-full-name "John Doe"
-;;       user-mail-address "john@doe.com")
+(setq user-full-name "Ben Swift"
+      user-mail-address "ben@benswift.me")
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
@@ -23,19 +20,9 @@
 ;;
 (setq doom-font (font-spec :family "Operator Mono" :size 16 :weight 'semi-light)
       doom-variable-pitch-font (font-spec :family "Fira Sans" :size 16))
-;;
-;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
-;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
-;; refresh your font settings. If Emacs still can't find your font, it likely
-;; wasn't installed correctly. Font issues are rarely Doom issues!
 
-;; There are two ways to load a theme. Both assume the theme is installed and
-;; available. You can either set `doom-theme' or manually load a theme with the
-;; `load-theme' function. This is the default:
 (setq doom-theme 'doom-vibrant)
 
-;; This determines the style of line numbers in effect. If set to `nil', line
-;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type nil)
 
 ;; If you use `org' and don't want your org files in the default location below,
@@ -84,3 +71,62 @@
 
 (after! elixir-mode
   (setq lsp-elixir-server-command '("~/LSP/lexical/_build/dev/package/lexical/bin/start_lexical.sh")))
+
+;; from here, adapted from
+;; https://github.com/hlissner/.doom.d/blob/master/config.el
+;;
+;; note: there's some nice magit & org config stuff in there as well - worth
+;; having a look at when I've got my head around Doom a bit better
+
+
+;; When I bring up Doom's scratch buffer with SPC x, it's often to play with
+;; elisp or note something down (that isn't worth an entry in my notes). I can
+;; do both in `lisp-interaction-mode'.
+(setq doom-scratch-initial-major-mode 'lisp-interaction-mode)
+
+;;
+;;; Keybinds
+
+(map! (:after evil-org
+       :map evil-org-mode-map
+       :n "gk" (cmd! (if (org-on-heading-p)
+                         (org-backward-element)
+                       (evil-previous-visual-line)))
+       :n "gj" (cmd! (if (org-on-heading-p)
+                         (org-forward-element)
+                       (evil-next-visual-line))))
+
+      :o "o" #'evil-inner-symbol
+
+      :leader
+      "TAB" #'previous-buffer
+      (:prefix "n"
+       "b" #'org-roam-buffer-toggle
+       "d" #'org-roam-dailies-goto-today
+       "D" #'org-roam-dailies-goto-date
+       "i" #'org-roam-node-insert
+       "r" #'org-roam-node-find
+       "R" #'org-roam-capture))
+
+;;; Modules
+
+(after! company
+  (setq company-idle-delay 1.0))
+
+;;; :editor evil
+;; Focus new window after splitting
+(setq evil-split-window-below t
+      evil-vsplit-window-right t)
+
+;; Implicit /g flag on evil ex substitution, because I use the default behavior
+;; less often.
+(setq evil-ex-substitute-global t)
+
+;;; :tools lsp
+(after! lsp-mode
+  (setq lsp-enable-suggest-server-download nil))
+(after! lsp-ui
+  (setq lsp-ui-doc-enable nil))     ; redundant with K
+
+(after! org
+  (setq org-startup-folded 'show2levels))
