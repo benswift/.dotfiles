@@ -29,6 +29,8 @@
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/Documents/org/")
 
+;; start fullscreen
+(toggle-frame-fullscreen)
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
@@ -62,15 +64,18 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-(toggle-frame-fullscreen)
-
 ;; for Lexical LS
 
 (after! lsp-mode
   (setq lsp-modeline-code-actions-segments '(count icon name)))
 
-(after! elixir-mode
-  (setq lsp-elixir-server-command '("~/LSP/lexical/_build/dev/package/lexical/bin/start_lexical.sh")))
+;; Language Servers
+
+(add-to-list 'exec-path "~/LSP")
+
+(after! 'eglot
+  (add-to-list 'eglot-server-programs
+               `(elixir-mode . ("elixir/nextls" "--stdio=true"))))
 
 ;; from here, adapted from
 ;; https://github.com/hlissner/.doom.d/blob/master/config.el
@@ -98,15 +103,7 @@
 
       :o "o" #'evil-inner-symbol
 
-      :leader
-      "TAB" #'previous-buffer
-      (:prefix "n"
-       "b" #'org-roam-buffer-toggle
-       "d" #'org-roam-dailies-goto-today
-       "D" #'org-roam-dailies-goto-date
-       "i" #'org-roam-node-insert
-       "r" #'org-roam-node-find
-       "R" #'org-roam-capture))
+      :leader "TAB" #'previous-buffer)
 
 ;;; Modules
 
