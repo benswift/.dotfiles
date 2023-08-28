@@ -72,6 +72,7 @@
 (after! eglot
   (add-to-list 'eglot-server-programs
                '((elixir-mode elixir-ts-mode heex-ts-mode)
+                 ;; if NextLS isn't starting, try `epmd -daemon'
                  "/Users/ben/LSP/elixir/nextls" "--stdio=true")))
 
 ;; When I bring up Doom's scratch buffer with SPC x, it's often to play with
