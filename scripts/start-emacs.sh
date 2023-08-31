@@ -1,5 +1,4 @@
 #!/bin/bash
 
-# for some reason (homebrew-related) it's hard to start emacs. this helps.
-
-open /Applications/Emacs.app
+# from https://github.com/railwaycat/homebrew-emacsmacport/blob/master/docs/emacs-start-helpers.md
+exec $(brew --prefix)/opt/emacs-mac/Emacs.app/Contents/MacOS/Emacs.sh "$@"
