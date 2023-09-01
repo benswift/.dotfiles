@@ -97,7 +97,7 @@
 
       :o "o" #'evil-inner-symbol
 
-      :leader "TAB" #'previous-buffer)
+      :leader "x" #'evil-switch-to-windows-last-buffer)
 
 (after! company
   (setq company-idle-delay 1.0))
