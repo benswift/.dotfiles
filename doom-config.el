@@ -75,11 +75,6 @@
                  ;; if NextLS isn't starting, try `epmd -daemon'
                  "/Users/ben/LSP/elixir/nextls" "--stdio=true")))
 
-;; When I bring up Doom's scratch buffer with SPC x, it's often to play with
-;; elisp or note something down (that isn't worth an entry in my notes). I can
-;; do both in `lisp-interaction-mode'.
-(setq doom-scratch-initial-major-mode 'lisp-interaction-mode)
-
 ;; just like Spacemacs
 (setq doom-localleader-key ",")
 
@@ -98,9 +93,3 @@
       :o "o" #'evil-inner-symbol
 
       :leader "x" #'evil-switch-to-windows-last-buffer)
-
-(after! company
-  (setq company-idle-delay 1.0))
-
-(after! org
-  (setq org-startup-folded 'show2levels))
