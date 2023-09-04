@@ -75,6 +75,10 @@
                  ;; if NextLS isn't starting, try `epmd -daemon'
                  "/Users/ben/LSP/elixir/nextls" "--stdio=true")))
 
+(after! evil-snipe
+  (setq evil-snipe-scope 'buffer
+        evil-snipe-repeat-scope 'buffer))
+
 ;; just like Spacemacs
 (setq doom-localleader-key ",")
 
