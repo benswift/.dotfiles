@@ -97,3 +97,24 @@
       :o "o" #'evil-inner-symbol
 
       :leader "x" #'evil-switch-to-windows-last-buffer)
+
+;;; org-mode
+
+(after! evil-org
+  (setq org-roam-dailies-capture-templates
+        '(("d" "default" entry "* %?"
+           :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d (%A)>
+
+* tasks for today [/]
+- [ ]
+* journal
+")))))
+
+;;; ben-utils
+
+(defun ben-sync-org-directory-to-github ()
+  (interactive)
+  (let ((default-directory org-directory))
+    (async-shell-command
+     (format "git add *.org roam/*.org roam/daily/*.org && git commit -m 'org directory auto-commit script @ %s' && git pull --rebase origin master && git push origin master"
+             (format-time-string "%FT%T%z")))))
