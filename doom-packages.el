@@ -50,3 +50,4 @@
 ;(unpin! t)
 
 (package! csv)
+(package! inf-elixir)
