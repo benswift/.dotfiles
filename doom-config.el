@@ -87,12 +87,10 @@
 
 ;;; elixir
 
-(after! elixir (require 'inf-elixir))
-
-;; not sure why these aren't getting called if they're inside the above `after!
-;; elixir' block... will investigate later
-(defalias '+elixir/open-repl #'inf-elixir-project)
-(set-repl-handler! 'elixir-mode #'+elixir/open-repl)
+(after! elixir
+  (require 'inf-elixir)
+  (defalias '+elixir/open-repl #'inf-elixir-project)
+  (set-repl-handler! 'elixir-mode #'+elixir/open-repl))
 
 ;; just like Spacemacs
 (setq doom-localleader-key ",")
