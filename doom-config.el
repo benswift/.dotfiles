@@ -67,25 +67,16 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-;;;;;;;;;;;;;;;;;;;;;;
-;; Language Servers ;;
-;;;;;;;;;;;;;;;;;;;;;;
-
-;; NextLS
-;;
-;; to download latest NextLS, `curl -L -o nextls "https://github.com/elixir-tools/next-ls/releases/download/$VERSION/next_ls_darwin_arm64"'
-;; if NextLS isn't starting, epmd might not be running; `epmd -daemon' to start
-
-(after! eglot
-  (add-to-list 'eglot-server-programs
-               '((elixir-mode elixir-ts-mode heex-ts-mode)
-                 "/Users/ben/LSP/elixir/nextls" "--stdio=true")))
-
 (after! evil-snipe
   (setq evil-snipe-scope 'buffer
         evil-snipe-repeat-scope 'buffer))
 
 ;;; elixir
+
+(after! eglot
+  (add-to-list 'eglot-server-programs
+               '((elixir-ts-mode heex-ts-mode elixir-mode)
+                 "nextls" "--stdio=true")))
 
 (after! elixir
   (require 'inf-elixir)
