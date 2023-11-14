@@ -18,6 +18,10 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # for Doom Emacs
 export PATH="$HOME/.emacs.d/bin:$PATH"
 
+# direnv
+
+eval "$(direnv hook zsh)"
+
 ########
 # asdf #
 ########
