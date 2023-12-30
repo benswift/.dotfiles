@@ -696,7 +696,7 @@ Version 2019-06-21"
          (candidates (append (mapcar (lambda (f) (concat "chord-charts/" f)) (directory-files (concat church-music-dir "chord-charts/") nil "\\.pdf"))
                              (mapcar (lambda (f) (concat "lead-sheets/" f)) (directory-files (concat church-music-dir "lead-sheets/") nil "\\.pdf"))))
          (output-filename (format "/tmp/%s.pdf" (date-of-next-Sunday)))
-         (charts (cl-loop repeat num-songs collect (ivy-completing-read "chart: " candidates nil :require-match))))
+         (charts (cl-loop repeat num-songs collect (completing-read "chart: " candidates nil :require-match))))
     (let ((default-directory church-music-dir))
       (shell-command (format "pdfjam %s -o %s && open %s"
                              (mapconcat #'identity charts " ")
