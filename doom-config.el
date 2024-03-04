@@ -67,6 +67,12 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+;; even with the :editor format module activated, we need to require the aphelia
+;; package otherwise the first invocation of +format/region will error out with
+;; "Symbol's function definition is void: apheleia--get-formatters".
+(require 'apheleia)
+
+;; I like my snipe to stay in the buffer
 (after! evil-snipe
   (setq evil-snipe-scope 'buffer
         evil-snipe-repeat-scope 'buffer))
