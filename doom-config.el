@@ -95,9 +95,9 @@
 ;; Keybinds
 (defun open-main-todo-file ()
   (interactive)
-  (find-file "~/Documents/todo.md"))
+  (find-file "~/Documents/md-scratch/todo.md"))
 
-(map! :leader :desc "open main todo.md file" :n "b t" #'open-main-todo-file)
+(map! :leader :desc "open main todo.md file" :n "b o" #'open-main-todo-file)
 
 (map! (:after evil-org
        :map evil-org-mode-map
