@@ -86,8 +86,12 @@
 ;; just like Spacemacs
 (setq doom-localleader-key ",")
 
-;;
-;;; Keybinds
+;; Keybinds
+(defun open-main-todo-file ()
+  (interactive)
+  (find-file "~/Documents/todo.md"))
+
+(map! :leader :desc "open main todo.md file" :n "b t" #'open-main-todo-file)
 
 (map! (:after evil-org
        :map evil-org-mode-map
