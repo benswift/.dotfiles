@@ -127,11 +127,4 @@
 * journal
 ")))))
 
-;;; ben-utils
-
-(defun ben-sync-org-directory-to-github ()
-  (interactive)
-  (let ((default-directory org-directory))
-    (async-shell-command
-     (format "git add *.org roam/*.org roam/daily/*.org && git commit -m 'org directory auto-commit script @ %s' && git pull --rebase origin master && git push origin master"
-             (format-time-string "%FT%T%z")))))
+(load! "ben-utils.el" "~/.dotfiles")

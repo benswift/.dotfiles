@@ -23,6 +23,8 @@
 ;; I do a *lot* of work with Jekyll static websites (including all my ANU course
 ;; websites) so these helpers save me heaps of time
 
+(require 's)
+(require 'dash)
 (require 'projectile)
 
 (defun jekyll-list-asset-filenames ()
@@ -506,6 +508,7 @@ dspmt" name xtm-dir)))
 
 ;; this used to be called as part of the compose message hook
 (defun ben-asciify-buffer-or-region (beg end)
+  "Convert selected non-ascii chars in region to their ascii equivalents"
   (interactive "r")
   (let ((asciify-alist '(("’" . "'")
                          ("‘" . "'")
