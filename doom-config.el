@@ -100,7 +100,7 @@
 (map! :leader :desc "open main todo.md file" :n "b o" #'open-main-todo-file)
 
 ;; don't use autocomplete in markdown mode - it just slows things down
-(after! markdown-mode (company-mode -1))
+(add-hook! 'markdown-mode-hook (company-mode -1))
 
 (map! (:after evil-org
        :map evil-org-mode-map
