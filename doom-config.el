@@ -127,4 +127,21 @@
 * journal
 ")))))
 
+;;;;;;;;;;;;;;;
+;; Extempore ;;
+;;;;;;;;;;;;;;;
+
+(use-package! extempore-mode
+  :mode ("\\.xtm$" . extempore-mode)
+  :config
+  (setq extempore-program-args "--frames 64")
+  (setq extempore-path (expand-file-name "~/Desktop/extempore/"))
+  (setq user-extempore-lib-directory (expand-file-name "~/Documents/research/extemporelang/xtm/")))
+
+(map! (:after extempore-mode
+       :map extempore-mode-map
+       :localleader "cc" #'switch-to-extempore
+       :localleader "cj" #'extempore-connect
+       :localleader "," #'extempore-send-dwim))
+
 (load! "ben-utils.el" "~/.dotfiles")

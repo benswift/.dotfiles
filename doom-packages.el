@@ -51,3 +51,5 @@
 
 (package! csv)
 (package! inf-elixir)
+
+(package! extempore-mode)
