@@ -154,6 +154,8 @@
        :leader "kb" #'sp-forward-barf-sexp
        :leader "kB" #'sp-backward-barf-sexp
        :leader "kr" #'sp-raise-sexp
+       :leader "kc" #'sp-clone-sexp
+       :leader "kC" #'sp-convolute-sexp
        ))
 
 (load! "ben-utils.el" "~/.dotfiles")
