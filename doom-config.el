@@ -144,6 +144,16 @@
        :map extempore-mode-map
        :localleader "cc" #'switch-to-extempore
        :localleader "cj" #'extempore-connect
-       :localleader "," #'extempore-send-dwim))
+       :localleader "," #'extempore-send-dwim
+       :localleader "ef" #'extempore-send-dwim
+       ;; these here to mimic the old Spacemacs lisp state (which I miss)
+       :leader "kw" #'sp-wrap-round
+       :leader "kW" #'sp-unwrap-sexp
+       :leader "ks" #'sp-forward-slurp-sexp
+       :leader "kS" #'sp-backward-slurp-sexp
+       :leader "kb" #'sp-forward-barf-sexp
+       :leader "kB" #'sp-backward-barf-sexp
+       :leader "kr" #'sp-raise-sexp
+       ))
 
 (load! "ben-utils.el" "~/.dotfiles")
