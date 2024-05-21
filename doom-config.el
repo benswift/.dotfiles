@@ -134,7 +134,7 @@
 (use-package! extempore-mode
   :mode ("\\.xtm$" . extempore-mode)
   :config
-  (setq extempore-program-args "--frames 64")
+  (setq extempore-program-args "--frames 32")
   (setq extempore-path (expand-file-name "~/Desktop/extempore/"))
   (setq user-extempore-lib-directory (expand-file-name "~/Documents/research/extemporelang/xtm/"))
   (set-face-attribute 'extempore-blink-face nil :foreground "#272822" :background "#FD971F")
