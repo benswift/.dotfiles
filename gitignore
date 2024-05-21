@@ -67,6 +67,7 @@ TAGS
 scratch.el
 .pdf-view-restore
 .orgids
+flycheck_*
 
 # this is just a symlink, so that the snippets
 # work in the repl as well
