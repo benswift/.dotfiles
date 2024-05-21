@@ -158,6 +158,9 @@
        :leader "kr" #'sp-raise-sexp
        :leader "kc" #'sp-clone-sexp
        :leader "kC" #'sp-convolute-sexp
+       :leader "kt" #'sp-transpose-sexp
+       :leader "kk" #'sp-backward-up-sexp
+       :leader "kd" #'sp-delete-sexp
        ))
 
 (load! "ben-utils.el" "~/.dotfiles")
