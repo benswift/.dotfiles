@@ -138,7 +138,9 @@
   (setq extempore-path (expand-file-name "~/Desktop/extempore/"))
   (setq user-extempore-lib-directory (expand-file-name "~/Documents/research/extemporelang/xtm/"))
   (set-face-attribute 'extempore-blink-face nil :foreground "#272822" :background "#FD971F")
-  (set-face-attribute 'extempore-sb-blink-face nil :foreground "#272822" :background "#39FF14"))
+  (set-face-attribute 'extempore-sb-blink-face nil :foreground "#272822" :background "#39FF14")
+  (sp-local-pair 'extempore-mode "'" nil :actions nil)
+  )
 
 (map! (:after extempore-mode
        :map extempore-mode-map
