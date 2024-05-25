@@ -140,6 +140,7 @@
   (set-face-attribute 'extempore-blink-face nil :foreground "#272822" :background "#FD971F")
   (set-face-attribute 'extempore-sb-blink-face nil :foreground "#272822" :background "#39FF14")
   (sp-local-pair 'extempore-mode "'" nil :actions nil)
+  (sp-local-pair 'extempore-mode "`" nil :actions nil)
   )
 
 (map! (:after extempore-mode
