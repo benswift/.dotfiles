@@ -143,6 +143,8 @@
   (sp-local-pair 'extempore-mode "`" nil :actions nil)
   )
 
+(add-hook! 'extempore-mode-hook (highlight-numbers-mode -1))
+
 (map! (:after extempore-mode
        :map extempore-mode-map
        :localleader "cc" #'switch-to-extempore
