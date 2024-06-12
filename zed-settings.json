@@ -10,25 +10,5 @@
   "vim_mode": true,
   "ui_font_size": 16,
   "buffer_font_size": 16,
-  "buffer_font_family": "Operator Mono",
-
-  // how you enable Next LS
-  "elixir": {
-    "lsp": "next_ls"
-  },
-  "lsp": {
-    // how you configure Next LS, notice the kebab casing
-    "next-ls": {
-      "initialization_options": {
-        "extensions": {
-          // example configuring the extensions
-          "credo": { "enable": false }
-        },
-        "experimental": {
-          // example configuring the experimental options
-          "completions": { "enable": true }
-        }
-      }
-    }
-  }
+  "buffer_font_family": "Operator Mono"
 }
