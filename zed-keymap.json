@@ -3,8 +3,7 @@
     "context": "Editor && (vim_mode == normal || vim_mode == visual) && !VimWaiting && !menu",
     "bindings": {
       "space f s": "workspace::Save",
-      "space f S": "workspace::SaveAll",
-      "space /": "pane::DeploySearch"
+      "space f S": "workspace::SaveAll"
     }
   }
 ]
