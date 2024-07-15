@@ -4,6 +4,7 @@
     "bindings": {
       "space f s": "workspace::Save",
       "space f S": "workspace::SaveAll",
+      "space p p": "projects::OpenRecent",
       "alt-j": "editor::SelectLargerSyntaxNode",
       "alt-k": "editor::SelectSmallerSyntaxNode"
     }
