@@ -42,7 +42,7 @@ export RUBY_YJIT_ENABLE=true
 # zed #
 #######
 
-export EDITOR=zed --wait
+export EDITOR="zed --wait"
 
 #############
 # Extempore #
