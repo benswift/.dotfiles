@@ -36,7 +36,7 @@ eval "$(direnv hook zsh)"
 
 # if it breaks too many things I'll disable it, but I'm a believer so far...
 # https://benswift.me/blog/2023/02/02/jekyll-build-speedups-for-ruby-3-2/
-RUBY_YJIT_ENABLE=true
+export RUBY_YJIT_ENABLE=true
 
 #############
 # Extempore #
