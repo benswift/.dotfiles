@@ -38,6 +38,12 @@ eval "$(direnv hook zsh)"
 # https://benswift.me/blog/2023/02/02/jekyll-build-speedups-for-ruby-3-2/
 export RUBY_YJIT_ENABLE=true
 
+#######
+# zed #
+#######
+
+export EDITOR=zed --wait
+
 #############
 # Extempore #
 #############
