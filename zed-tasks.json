@@ -1,0 +1,18 @@
+[
+  {
+    "label": "Prettify file in-place",
+    "command": "prettier",
+    "args": ["--prose-wrap", "always", "--write", "$ZED_FILE"],
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always"
+  },
+  {
+    "label": "gitu",
+    "command": "gitu",
+    "args": [],
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always"
+  }
+]
