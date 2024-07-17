@@ -38,6 +38,14 @@ eval "$(direnv hook zsh)"
 # https://benswift.me/blog/2023/02/02/jekyll-build-speedups-for-ruby-3-2/
 export RUBY_YJIT_ENABLE=true
 
+##########
+# python #
+##########
+
+# assumes that rye has been installed via asdf
+
+source "$HOME/.rye/env"
+
 #######
 # zed #
 #######
