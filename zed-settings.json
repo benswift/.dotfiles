@@ -11,9 +11,4 @@
   "ui_font_size": 16,
   "buffer_font_size": 16,
   "buffer_font_family": "Operator Mono"
-  // "languages": {
-  //   "Elixir": {
-  //     "language_servers": ["next-ls", "!elixir-ls"]
-  //   }
-  // }
 }
