@@ -10,11 +10,5 @@
       "alt-k": "editor::SelectSmallerSyntaxNode",
       "ctrl-j": "editor::AddSelectionBelow"
     }
-  },
-  {
-    "context": "Workspace",
-    "bindings": {
-      "space g g": ["task::Spawn", { "gitu": "run gitu in current project" }]
-    }
   }
 ]
