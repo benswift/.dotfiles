@@ -50,7 +50,7 @@ source "$HOME/.rye/env"
 # zed #
 #######
 
-export EDITOR="zed --wait"
+export EDITOR="zed-preview --wait"
 
 #############
 # Extempore #
