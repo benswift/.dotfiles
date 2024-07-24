@@ -7,6 +7,19 @@
 // custom settings, run the `open default settings` command
 // from the command palette or from `Zed` application menu.
 {
+  "assistant": {
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20240620"
+    },
+    "version": "2",
+    "default_open_ai_model": null,
+    "provider": {
+      "name": "openai",
+      "default_model": "gpt-4o-mini",
+      "available_models": []
+    }
+  },
   "vim_mode": true,
   "ui_font_size": 16,
   "buffer_font_size": 16,
