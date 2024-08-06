@@ -20,6 +20,11 @@
       "available_models": []
     }
   },
+  "languages": {
+    "Python": {
+      "language_servers": ["ruff"]
+    }
+  },
   "vim_mode": true,
   "ui_font_size": 16,
   "buffer_font_size": 16,
