@@ -1,10 +1,14 @@
 [
   {
+    "bindings": {
+      "alt-p": "projects::OpenRecent"
+    }
+  },
+  {
     "context": "Editor && (vim_mode == normal || vim_mode == visual) && !VimWaiting && !menu",
     "bindings": {
       "space f s": "workspace::Save",
       "space f S": "workspace::SaveAll",
-      "space p p": "projects::OpenRecent",
       "space o -": "project_panel::ToggleFocus",
       "alt-j": "editor::SelectLargerSyntaxNode",
       "alt-k": "editor::SelectSmallerSyntaxNode",
