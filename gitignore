@@ -14,9 +14,9 @@ Thumbs.db
 
 cmake-build/
 
-# ignore secrets dir
+# secrets
 
-secrets/
+.envrc
 
 # compressed files
 
