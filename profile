@@ -15,6 +15,9 @@ export PATH="$HOME/.dotfiles/scripts:$PATH"
 # I changed to zsh and things broke, and I can't be arsed fixing it right now.
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
+# use colima for all docker things
+export DOCKER_HOST="unix:///Users/$USER/.colima/docker.sock"
+
 # for Doom Emacs
 export PATH="$HOME/.emacs.d/bin:$PATH"
 
