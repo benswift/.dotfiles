@@ -18,9 +18,6 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # use colima for all docker things
 export DOCKER_HOST="unix:///Users/$USER/.colima/docker.sock"
 
-# for Doom Emacs
-export PATH="$HOME/.emacs.d/bin:$PATH"
-
 # direnv
 
 eval "$(direnv hook zsh)"
