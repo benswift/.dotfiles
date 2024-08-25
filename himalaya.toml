@@ -1,0 +1,24 @@
+display-name = "Ben Swift"
+signature = """
+Cheers,
+Ben
+"""
+
+[fastmail]
+backend = "imap"
+email = "ben@benswift.me"
+default = true
+imap-host = "imap.fastmail.com"
+imap-port = 993
+imap-ssl = true
+imap-login = "benswift@fastmail.com"
+imap-auth = "passwd"
+sender = "smtp"
+smtp-host = "smtp.fastmail.com"
+smtp-port = 465
+smtp-ssl = true
+smtp-login = "benswift@fastmail.com"
+smtp-auth = "passwd"
+
+[fastmail.pgp]
+backend = "none"
