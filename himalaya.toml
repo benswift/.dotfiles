@@ -1,24 +1,52 @@
-display-name = "Ben Swift"
-signature = """
-Cheers,
-Ben
-"""
+## TODO this config doesn't work yet, need to wait for v1.0.0
 
-[fastmail]
+display-name = "Ben Swift"
+signature = "Cheers,\nBen"
+downloads-dir = "~/Downloads/himalaya"
+
+[accounts.fastmail]
 backend = "imap"
 email = "ben@benswift.me"
 default = true
 imap-host = "imap.fastmail.com"
-imap-port = 993
-imap-ssl = true
-imap-login = "benswift@fastmail.com"
-imap-auth = "passwd"
+# imap-host = "imap-proxy.fastmail.com" # then any port is fine
+imap.port = 993
+imap.ssl = true
+imap.login = "benswift@fastmail.com"
+imap.auth = "passwd"
 sender = "smtp"
-smtp-host = "smtp.fastmail.com"
-smtp-port = 465
-smtp-ssl = true
-smtp-login = "benswift@fastmail.com"
-smtp-auth = "passwd"
+smtp.host = "smtp.fastmail.com"
+# imap-host = "smtp-proxy.fastmail.com" # then any port is fine
+smtp.port = 465
+smtp.ssl = true
+smtp.login = "benswift@fastmail.com"
+smtp.auth = "passwd"
 
-[fastmail.pgp]
-backend = "none"
+[accounts.anu]
+backend = "imap"
+email = "ben.swift@anu.edu.au"
+imap.host = "outlook.office365.com"
+imap.port = 993
+imap.ssl = true
+imap.login = "u2548636@anu.edu.au"
+# Thunderbirds are go
+imap.oauth2.client-id = "08162f7c-0fd2-4200-a84a-f25a4db0b584"
+imap.oauth2.auth-url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+imap.oauth2.token-url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+imap.oauth2.pkce = true
+imap.oauth2.scopes = [
+    "offline_access",
+    "https://outlook.office.com/IMAP.AccessAsUser.All",
+]
+
+sender = "smtp"
+smtp.host = "smtp.mail.outlook.com"
+smtp.port = 587
+smtp.ssl = true
+smtp.login = "u2548636@anu.edu.au"
+# Thunderbirds are go
+smtp.oauth2.client-id = "08162f7c-0fd2-4200-a84a-f25a4db0b584"
+smtp.oauth2.auth-url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+smtp.oauth2.token-url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+smtp.oauth2.pkce = true
+smtp.oauth2.scope = "https://outlook.office.com/SMTP.Send"
