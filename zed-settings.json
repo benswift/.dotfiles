@@ -10,6 +10,20 @@
           }
         }
       ]
+    },
+    "Markdown": {
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "prettier",
+          "arguments": [
+            "--prose-wrap",
+            "always",
+            "--stdin-filepath",
+            "{buffer_path}"
+          ]
+        }
+      }
     }
   },
   "assistant": {
