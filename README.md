@@ -1,6 +1,7 @@
 # Ben's dotfiles
 
-My dotfiles. These days, [Zed](https://zed.dev) is the bright star around which most of the rest of it revolves.
+My dotfiles. These days, [Zed](https://zed.dev) is the bright star around which
+most of the rest of it revolves.
 
 Where I've taken anything from the web I've tried to give credit appropriate to
 the licence. If I've missed giving you a shout out, then let me know and I'll
@@ -20,8 +21,8 @@ ln -s ~/.dotfiles/zed-tasks.json ~/.config/zed/tasks.json
 
 ### Windows
 
-Make sure that your `GIT_SSH` environment variable points to the right
-place (e.g. `C:\Windows\System32\OpenSSH\ssh.exe`), and that `ssh-agent.exe` is
+Make sure that your `GIT_SSH` environment variable points to the right place
+(e.g. `C:\Windows\System32\OpenSSH\ssh.exe`), and that `ssh-agent.exe` is
 running.
 
 # Licence
