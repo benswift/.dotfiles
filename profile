@@ -15,9 +15,6 @@ export PATH="$HOME/.dotfiles/scripts:$PATH"
 # I changed to zsh and things broke, and I can't be arsed fixing it right now.
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-# use colima for all docker things
-export DOCKER_HOST="unix:///Users/$USER/.colima/docker.sock"
-
 # direnv
 
 eval "$(direnv hook zsh)"
@@ -51,6 +48,14 @@ source "$HOME/.rye/env"
 #######
 
 export EDITOR="zed-preview --wait"
+
+############
+# Orbstack #
+############
+
+# Added by OrbStack: command-line tools and integration
+# Comment this line if you don't want it to be added again.
+source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
 #############
 # Extempore #
