@@ -15,18 +15,6 @@ export PATH="$HOME/.dotfiles/scripts:$PATH"
 # I changed to zsh and things broke, and I can't be arsed fixing it right now.
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-# direnv
-
-eval "$(direnv hook zsh)"
-
-########
-# asdf #
-########
-
-. $(brew --prefix asdf)/libexec/asdf.sh
-
-. ~/.asdf/plugins/java/set-java-home.zsh
-
 ########
 # ruby #
 ########
@@ -57,12 +45,14 @@ export EDITOR="zed-preview --wait"
 # Comment this line if you don't want it to be added again.
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
+########
+# mise #
+########
+
+eval "$(mise activate zsh --shims)"
+
 #############
 # Extempore #
 #############
 
 export EXT_MIDI_OUT_DEVICE_NAME="Maschine 2 Virtual Input"
-
-# Local Variables:
-# mode: sh
-# End:
