@@ -5,8 +5,11 @@
       "format_on_save": "on",
       "formatter": [
         {
-          "language_server": {
-            "name": "ruff"
+          "code_actions": {
+            // Fix all auto-fixable lint violations
+            "source.fixAll.ruff": true,
+            // Organize imports
+            "source.organizeImports.ruff": true
           }
         }
       ]
