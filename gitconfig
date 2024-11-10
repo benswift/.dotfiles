@@ -57,11 +57,3 @@
 	includeStatusHeader = true
 	includePullRequestsSection = true
 	includeIssuesSection = true
-
-# https://github.com/vigente/gerardus/wiki/Integrate-git-diffs-with-word-docx-files
-# also requires repo .gitattributes to have `*.docx diff=pandoc`
-[diff "pandoc"]
-	textconv=pandoc --to=markdown
-	prompt = false
-[alias]
-	wdiff = diff --word-diff=color --unified=1
