@@ -1,47 +1,4 @@
-# add scripts from dotfiles repo
 export PATH="$HOME/.dotfiles/scripts:$PATH"
-
-# for homebrew
-#
-# this used to be wrapped in an "do only if brew command found" guard, but then
-# I changed to zsh and things broke, and I can't be arsed fixing it right now.
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-########
-# mise #
-########
-
-eval "$(mise activate zsh)"
-# eval "$(mise activate zsh --shims)"
-
-########
-# ruby #
-########
-
-# if it breaks too many things I'll disable it, but I'm a believer so far...
-# https://benswift.me/blog/2023/02/02/jekyll-build-speedups-for-ruby-3-2/
 export RUBY_YJIT_ENABLE=true
-
-##########
-# python #
-##########
-
-# assumes that rye has been installed via asdf
-
-source "$HOME/.rye/env"
-
-########
-# pnpm #
-########
-
-# export PNPM_HOME="$HOME/Library/pnpm"
-# case ":$PATH:" in
-#   *":$PNPM_HOME:"*) ;;
-#   *) export PATH="$PNPM_HOME:$PATH" ;;
-# esac
-
-#############
-# Extempore #
-#############
-
+export EDITOR="zed-preview --wait"
 export EXT_MIDI_OUT_DEVICE_NAME="Maschine 2 Virtual Input"
