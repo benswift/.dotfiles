@@ -1,4 +1,5 @@
 {
+  "theme": "Tokyo Night Storm",
   "languages": {
     "Python": {
       "language_servers": ["ruff"],
