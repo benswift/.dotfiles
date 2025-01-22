@@ -57,7 +57,3 @@
 	includeStatusHeader = true
 	includePullRequestsSection = true
 	includeIssuesSection = true
-
-# use difftastic by default
-[diff]
-    external = difft
