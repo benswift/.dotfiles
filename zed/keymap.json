@@ -18,7 +18,7 @@
   {
     "context": "Workspace",
     "bindings": {
-      "ctrl-g": [
+      "alt-g": [
         "task::Spawn",
         { "task_name": "gitu", "reveal_target": "center" }
       ]
