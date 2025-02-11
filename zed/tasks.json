@@ -9,10 +9,6 @@
   },
   {
     "label": "gitu",
-    "command": "gitu",
-    "args": [],
-    "use_new_terminal": false,
-    "allow_concurrent_runs": false,
-    "reveal": "always"
+    "command": "gitu"
   }
 ]

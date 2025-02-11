@@ -14,5 +14,14 @@
       "alt-k": "editor::SelectSmallerSyntaxNode",
       "ctrl-j": "editor::AddSelectionBelow"
     }
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "ctrl-g": [
+        "task::Spawn",
+        { "task_name": "gitu", "reveal_target": "center" }
+      ]
+    }
   }
 ]
