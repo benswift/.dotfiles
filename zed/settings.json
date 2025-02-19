@@ -33,8 +33,8 @@
   "assistant": {
     "show_hints": false,
     "default_model": {
-      "provider": "zed.dev",
-      "model": "claude-3-5-sonnet-latest"
+      "provider": "copilot_chat",
+      "model": "claude-3-5-sonnet"
     },
     "version": "2",
     "default_open_ai_model": null,
