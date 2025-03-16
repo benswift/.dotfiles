@@ -34,7 +34,7 @@
     "show_hints": false,
     "default_model": {
       "provider": "copilot_chat",
-      "model": "claude-3-5-sonnet"
+      "model": "claude-3-7-sonnet"
     },
     "version": "2",
     "default_open_ai_model": null,
