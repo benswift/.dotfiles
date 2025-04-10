@@ -1,18 +1,25 @@
 {
-  "diagnostics": {
-    "include_warnings": true
-  },
   "ssh_connections": [
     {
-      "host": "weddle",
-      "username": "ben",
+      "host": "cybersonic",
       "projects": [
         {
           "paths": ["~/Code/trajectory-tracer"]
         }
       ]
+    },
+    {
+      "host": "weddle",
+      "projects": [
+        {
+          "paths": ["~/Code/panic_tda"]
+        }
+      ]
     }
   ],
+  "diagnostics": {
+    "include_warnings": true
+  },
   "theme": "Tokyo Night Storm",
   "languages": {
     "Python": {
