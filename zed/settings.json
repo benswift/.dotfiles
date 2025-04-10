@@ -62,7 +62,8 @@
     }
   },
   "vim_mode": true,
-  "ui_font_size": 16,
+  "ui_font_size": 18,
+  "buffer_font_size": 15,
   "buffer_font_family": "Operator Mono",
   "file_scan_inclusions": [".mise.local.toml"]
 }
