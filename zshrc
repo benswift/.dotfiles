@@ -12,5 +12,3 @@ eval "$(mise activate zsh)"
 
 # this needs to be set after mise activate zsh
 export PS1="%F{green}%m%f:%F{blue}%1d%f$ "
-
-# source "$HOME/.rye/env"
