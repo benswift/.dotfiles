@@ -11,4 +11,4 @@ fi
 eval "$(mise activate zsh)"
 
 # this needs to be set after mise activate zsh
-export PS1="%F{green}%m%f:%F{blue}%1d%f$ "
+export PS1='%F{magenta}[%D{%H:%M}]%f %F{cyan}%m%f:%F{green}%1~%f %F{%(?.green.red)}%(!.#.$)%f '
