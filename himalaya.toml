@@ -1,52 +1,117 @@
-## TODO this config doesn't work yet, need to wait for v1.0.0
-
 display-name = "Ben Swift"
 signature = "Cheers,\nBen"
-downloads-dir = "~/Downloads/himalaya"
+downloads-dir = "~/Downloads"
 
 [accounts.fastmail]
-backend = "imap"
-email = "ben@benswift.me"
 default = true
-imap-host = "imap.fastmail.com"
-# imap-host = "imap-proxy.fastmail.com" # then any port is fine
-imap.port = 993
-imap.ssl = true
-imap.login = "benswift@fastmail.com"
-imap.auth = "passwd"
-sender = "smtp"
-smtp.host = "smtp.fastmail.com"
-# imap-host = "smtp-proxy.fastmail.com" # then any port is fine
-smtp.port = 465
-smtp.ssl = true
-smtp.login = "benswift@fastmail.com"
-smtp.auth = "passwd"
+email = "ben@benswift.me"
+backend.type = "imap"
+backend.host = "imap.fastmail.com"
+backend.port = 993
+backend.login = "benswift@fastmail.com"
+backend.encryption.type = "tls"
+backend.auth.type = "password"
+backend.auth.raw = ""
+message.send.backend.type = "smtp"
+message.send.backend.host = "smtp.fastmail.com"
+message.send.backend.port = 465
+message.send.backend.login = "benswift@fastmail.com"
+message.send.backend.encryption.type = "tls"
+message.send.backend.auth.type = "password"
+message.send.backend.auth.raw = ""
 
 [accounts.anu]
-backend = "imap"
 email = "ben.swift@anu.edu.au"
-imap.host = "outlook.office365.com"
-imap.port = 993
-imap.ssl = true
-imap.login = "u2548636@anu.edu.au"
-# Thunderbirds are go
-imap.oauth2.client-id = "08162f7c-0fd2-4200-a84a-f25a4db0b584"
-imap.oauth2.auth-url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
-imap.oauth2.token-url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
-imap.oauth2.pkce = true
-imap.oauth2.scopes = [
+backend.type = "imap"
+backend.host = "outlook.office365.com"
+backend.port = 993
+backend.login = "u2548636@anu.edu.au"
+backend.encryption.type = "tls"
+
+backend.auth.type = "oauth2"
+backend.auth.client-id = "08162f7c-0fd2-4200-a84a-f25a4db0b584"
+backend.auth.method = "xoauth2"
+backend.auth.auth-url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+backend.auth.token-url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+backend.auth.pkce = true
+backend.auth.scopes = [
     "offline_access",
     "https://outlook.office.com/IMAP.AccessAsUser.All",
 ]
 
-sender = "smtp"
-smtp.host = "smtp.mail.outlook.com"
-smtp.port = 587
-smtp.ssl = true
-smtp.login = "u2548636@anu.edu.au"
-# Thunderbirds are go
-smtp.oauth2.client-id = "08162f7c-0fd2-4200-a84a-f25a4db0b584"
-smtp.oauth2.auth-url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
-smtp.oauth2.token-url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
-smtp.oauth2.pkce = true
-smtp.oauth2.scope = "https://outlook.office.com/SMTP.Send"
+#
+# Client identifier issued to the client during the registration
+# process described in RFC6749.
+# See <https://datatracker.ietf.org/doc/html/rfc6749#section-2.2>.
+#
+#backend.auth.client-id = "client-id"
+#
+# Client password issued to the client during the registration process
+# described in RFC6749.
+#
+# Defaults to keyring "<account-name>-imap-client-secret".
+# See <https://datatracker.ietf.org/doc/html/rfc6749#section-2.2>.
+#
+#backend.auth.client-secret.raw = "<raw-client-secret>"
+#backend.auth.client-secret.keyring = "example-imap-client-secret"
+#backend.auth.client-secret.cmd = "pass show example-imap-client-secret"
+#
+# Method for presenting an OAuth 2.0 bearer token to a service for
+# authentication.
+#
+#backend.auth.method = "oauthbearer"
+#backend.auth.method = "xoauth2"
+#
+# URL of the authorization server's authorization endpoint.
+#
+#backend.auth.auth-url = "https://accounts.google.com/o/oauth2/v2/auth"
+#
+# URL of the authorization server's token endpoint.
+#
+#backend.auth.token-url = "https://www.googleapis.com/oauth2/v3/token"
+#
+# Access token returned by the token endpoint and used to access
+# protected resources. It is recommended to use the keyring variant,
+# as it will refresh automatically.
+#
+# Defaults to keyring "<account-name>-imap-access-token".
+#
+#backend.auth.access-token.raw = "<raw-access-token>"
+#backend.auth.access-token.keyring = "example-imap-access-token"
+#backend.auth.access-token.cmd = "pass show example-imap-access-token"
+#
+# Refresh token used to obtain a new access token (if supported by the
+# authorization server). It is recommended to use the keyring variant,
+# as it will refresh automatically.
+#
+# Defaults to keyring "<account-name>-imap-refresh-token".
+#
+#backend.auth.refresh-token.raw = "<raw-refresh-token>"
+#backend.auth.refresh-token.keyring = "example-imap-refresh-token"
+#backend.auth.refresh-token.cmd = "pass show example-imap-refresh-token"
+#
+# Enable the protection, as defined in RFC7636.
+#
+# See <https://datatracker.ietf.org/doc/html/rfc7636>.
+#
+#backend.auth.pkce = true
+#
+# Access token scope(s), as defined by the authorization server.
+#
+#backend.auth.scope = "unique scope"
+#backend.auth.scopes = ["multiple", "scopes"]
+#
+# URL scheme of the redirect server.
+# Defaults to http.
+#
+#backend.auth.redirect-scheme = "http"
+#
+# Host name of the redirect server.
+# Defaults to localhost.
+#
+#backend.auth.redirect-host = "localhost"
+#
+# Port of the redirect server.
+# Defaults to the first available one.
+#
+#backend.auth.redirect-port = 9999
