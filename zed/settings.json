@@ -73,7 +73,7 @@
           "list_directory": false,
           "move_path": false,
           "now": true,
-          "path_search": true,
+          "find_path": true,
           "read_file": true,
           "grep": true,
           "rename": true,
