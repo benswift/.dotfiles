@@ -12,7 +12,16 @@
       "space o -": "project_panel::ToggleFocus",
       "alt-j": "editor::SelectLargerSyntaxNode",
       "alt-k": "editor::SelectSmallerSyntaxNode",
-      "ctrl-j": "editor::AddSelectionBelow"
+      "ctrl-j": "editor::AddSelectionBelow",
+      "s": "vim::PushSneak",
+      "shift-s": "vim::PushSneakBackward"
+    }
+  },
+  {
+    "context": "vim_operator == a || vim_operator == i || vim_operator == cs",
+    "bindings": {
+      "q": "vim::MiniQuotes",
+      "b": "vim::MiniBrackets"
     }
   },
   {
