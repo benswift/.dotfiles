@@ -54,7 +54,11 @@
       }
     }
   },
-  "assistant": {
+  "agent": {
+    "inline_assistant_model": {
+      "provider": "copilot_chat",
+      "model": "claude-3.7-sonnet-thought"
+    },
     "profiles": {
       "write": {
         "name": "Write",
@@ -86,19 +90,12 @@
       }
     },
     "always_allow_tool_actions": true,
-    "default_profile": "write",
-    "show_hints": false,
+    "default_profile": "ask",
     "default_model": {
-      "provider": "copilot_chat",
-      "model": "claude-3.7-sonnet-thought"
+      "provider": "google",
+      "model": "gemini-2.5-pro-preview-03-25"
     },
-    "version": "2",
-    "default_open_ai_model": null,
-    "provider": {
-      "name": "openai",
-      "default_model": "gpt-4o-mini",
-      "available_models": []
-    }
+    "version": "2"
   },
   "vim_mode": true,
   "ui_font_size": 18,
