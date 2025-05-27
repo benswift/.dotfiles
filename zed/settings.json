@@ -56,8 +56,8 @@
   },
   "agent": {
     "inline_assistant_model": {
-      "provider": "copilot_chat",
-      "model": "claude-3.7-sonnet-thought"
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-thinking-latest"
     },
     "profiles": {
       "write": {
@@ -90,7 +90,7 @@
       }
     },
     "always_allow_tool_actions": true,
-    "default_profile": "ask",
+    "default_profile": "write",
     "default_model": {
       "provider": "google",
       "model": "gemini-2.5-pro-preview-03-25"
