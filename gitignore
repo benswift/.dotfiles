@@ -43,7 +43,7 @@ cmake-build/
 *.out
 *.toc
 auto/
-*.synctex.gz
+*.synctex.gz*
 _region_.tex
 *.nav
 *.snm
