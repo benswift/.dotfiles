@@ -85,7 +85,6 @@ sublime-text-user-dir/Package Control.*
 # js
 
 .tern-port
-/bin/comp2300-lucy-sync.sh
 
 .python-version
 .ruby-version
