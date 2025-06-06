@@ -2,6 +2,7 @@
 
 # MCP Proxy Development Script
 # This script starts mcp-proxy instances for ash_ai and tidewave MCP servers
+# and the Phoenix development server with REPL
 
 set -e
 
@@ -130,8 +131,9 @@ echo "  Ash AI Proxy: /tmp/mcp_ash_ai.log"
 echo "  Tidewave Proxy: /tmp/mcp_tidewave.log"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all services and clean up${NC}"
+echo ""
 
-# Keep the script running until interrupted
-while true; do
-    sleep 1
-done
+# Start Phoenix development server with REPL
+echo -e "${BLUE}🔥 Starting Phoenix development server with REPL...${NC}"
+echo "=================================================="
+iex -S mix phx.server
