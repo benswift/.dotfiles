@@ -1,4 +1,22 @@
 {
+  "context_servers": {
+    "ash_ai": {
+      "command": {
+        "path": "mcp-proxy",
+        "args": ["http://localhost:4000/ash_ai/mcp"],
+        "env": {}
+      },
+      "settings": {}
+    },
+    "tidewave": {
+      "command": {
+        "path": "mcp-proxy",
+        "args": ["http://localhost:4000/tidewave/mcp"],
+        "env": {}
+      },
+      "settings": {}
+    }
+  },
   "ssh_connections": [
     {
       "host": "cybersonic",
