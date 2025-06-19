@@ -1,6 +1,7 @@
 {
   "context_servers": {
     "ash_ai": {
+      "source": "custom",
       "command": {
         "path": "mcp-proxy",
         "args": ["http://localhost:4000/ash_ai/mcp"],
@@ -9,6 +10,7 @@
       "settings": {}
     },
     "tidewave": {
+      "source": "custom",
       "command": {
         "path": "mcp-proxy",
         "args": ["http://localhost:4000/tidewave/mcp"],
@@ -74,8 +76,8 @@
   },
   "agent": {
     "inline_assistant_model": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-thinking-latest"
+      "provider": "copilot_chat",
+      "model": "claude-sonnet-4"
     },
     "profiles": {
       "write": {
@@ -110,8 +112,8 @@
     "always_allow_tool_actions": true,
     "default_profile": "write",
     "default_model": {
-      "provider": "google",
-      "model": "gemini-2.5-pro-preview-03-25"
+      "provider": "copilot_chat",
+      "model": "claude-sonnet-4"
     },
     "version": "2"
   },
