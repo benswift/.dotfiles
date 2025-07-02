@@ -1,0 +1,7 @@
+{
+  "includeCoAuthoredBy": false,
+  "cleanupPeriodDays": 365,
+  "env": {
+    "DISABLE_TELEMETRY": "1"
+  }
+}
