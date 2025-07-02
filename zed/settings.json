@@ -1,6 +1,7 @@
 {
   "context_servers": {
     "ash_ai": {
+      "enabled": false,
       "source": "custom",
       "command": {
         "path": "mcp-proxy",
