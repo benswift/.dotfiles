@@ -29,5 +29,14 @@
     "bindings": {
       "alt-g": "git_panel::ToggleFocus"
     }
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "alt-c": [
+        "task::Spawn",
+        { "task_name": "claude", "reveal_target": "center" }
+      ]
+    }
   }
 ]
