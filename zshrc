@@ -12,3 +12,5 @@ eval "$(mise activate zsh)"
 
 # this needs to be set after mise activate zsh
 export PS1='%F{magenta}[%D{%H:%M}]%f %F{cyan}%m%f:%F{green}%1~%f %F{%(?.green.red)}%(!.#.$)%f '
+
+alias claude="/Users/ben/.claude/local/claude"
