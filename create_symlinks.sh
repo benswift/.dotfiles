@@ -16,11 +16,6 @@ zed_files=(
     "tasks.json"
 )
 
-# Claude config files to link
-claude_files=(
-    "settings.json"
-)
-
 # Get the absolute path of the .dotfiles directory
 DOTFILES_DIR="$HOME/.dotfiles"
 
@@ -47,15 +42,15 @@ for file in "${zed_files[@]}"; do
     echo "Created symlink: $target -> $source_path"
 done
 
-# Create .claude directory if it doesn't exist
-mkdir -p "$HOME/.claude"
+# Create symlink for entire claude directory
+target="$HOME/.claude"
+source_path="$DOTFILES_DIR/claude"
 
-# Create symlinks for claude config files
-for file in "${claude_files[@]}"; do
-    target="$HOME/.claude/${file}"
-    source_path="$DOTFILES_DIR/claude/${file}"
+# Remove existing .claude directory/file if it exists
+if [ -e "$target" ]; then
+    rm -rf "$target"
+fi
 
-    # Create symlink (overwriting if exists)
-    ln -sf "$source_path" "$target"
-    echo "Created symlink: $target -> $source_path"
-done
+# Create symlink to claude directory
+ln -sf "$source_path" "$target"
+echo "Created symlink: $target -> $source_path"
