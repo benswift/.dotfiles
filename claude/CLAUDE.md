@@ -31,6 +31,57 @@ decades of experience in software development.
 - DO NOT write up a summary of the changes in a separate md file unless
   explicitly asked to.
 
+## Development Workflow: Spec → Code
+
+THESE INSTRUCTIONS ARE CRITICAL!
+
+They dramatically improve the quality of the work you create.
+
+### Phase 1: Requirements First
+
+When asked to implement any feature or make changes, ALWAYS start by asking:
+"Should I create a Spec for this task first?"
+
+IFF user agrees:
+
+- create a markdown file in `.cursor/scopes/feature-name.md`
+- interview the user to clarify:
+  - purpose & user problem
+  - success criteria
+  - scope & constraints
+  - technical considerations
+  - out of scope items
+
+### Phase 2: Review & Refine
+
+After drafting the Spec:
+
+- present it to the user
+- ask: "Does this capture your intent? Any changes needed?"
+- iterate until user approves
+- end with: "Spec looks good? Type 'GO!' when ready to implement"
+
+### Phase 3: Implementation
+
+ONLY after user types "GO!" or explicitly approves:
+
+- begin coding based on the Spec
+- reference the Spec for decisions
+- update Spec if scope changes, but ask user first
+
+### File Organization
+
+```
+.cursor/
+├── scopes/
+│ ├── feature-name.md # shared/committed Specs
+│ └── .local/ # Git-ignored experimental Specs
+│ └── Experiment.md
+```
+
+**Remember: Think first, ask clarifying questions, _then_ code. The Spec is your
+north star.**
+
 ### Anchor comments
 
 Add specially formatted comments throughout the codebase, where appropriate, for
