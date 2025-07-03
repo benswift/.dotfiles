@@ -46,11 +46,6 @@ done
 target="$HOME/.claude"
 source_path="$DOTFILES_DIR/claude"
 
-# Remove existing .claude directory/file if it exists
-if [ -e "$target" ]; then
-    rm -rf "$target"
-fi
-
 # Create symlink to claude directory
 ln -sf "$source_path" "$target"
 echo "Created symlink: $target -> $source_path"
