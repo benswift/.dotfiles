@@ -2,7 +2,12 @@
   {
     "bindings": {
       "cmd-l": "project_panel::ToggleFocus",
-      "alt-p": "projects::OpenRecent"
+      "alt-p": "projects::OpenRecent",
+      "alt-g": "git_panel::ToggleFocus",
+      "alt-c": [
+        "task::Spawn",
+        { "task_name": "claude", "reveal_target": "center" }
+      ]
     }
   },
   {
@@ -22,21 +27,6 @@
     "bindings": {
       "q": "vim::MiniQuotes",
       "b": "vim::MiniBrackets"
-    }
-  },
-  {
-    "context": "Workspace",
-    "bindings": {
-      "alt-g": "git_panel::ToggleFocus"
-    }
-  },
-  {
-    "context": "Workspace",
-    "bindings": {
-      "alt-c": [
-        "task::Spawn",
-        { "task_name": "claude", "reveal_target": "center" }
-      ]
     }
   }
 ]
