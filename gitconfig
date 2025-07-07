@@ -57,3 +57,5 @@
 	includeStatusHeader = true
 	includePullRequestsSection = true
 	includeIssuesSection = true
+[url "git@github.com:"]
+	insteadOf = https://github.com/
