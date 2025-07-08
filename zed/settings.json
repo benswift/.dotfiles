@@ -25,6 +25,9 @@
       "host": "weddle",
       "projects": [
         {
+          "paths": ["/home/ben/.dotfiles"]
+        },
+        {
           "paths": ["~/Code/panic_tda"]
         }
       ]
