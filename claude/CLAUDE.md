@@ -83,6 +83,8 @@ north star.**
   directly)
 - use sed/awk for surgical edits in the codebase (although ensure that any globs
   are as narrow as possible to avoid changing unintended files)
+- to view/edit files in GitHub repositories, you have access to the `gh`
+  command-line tool
 
 ## Getting help
 
