@@ -91,8 +91,10 @@ north star.**
 - if there's a `backlog/config.yml` file in the project, use `backlog` for task
   tracking
 - create tasks as markdown files in `backlog/tasks/` using the CLI tool (a
-  complete example is
-  `backlog task create "Task Name" -d "Description" -s "To Do" -l auth --priority high --ac "Must work" --notes "Initial setup done" --dep task-1 -p 14`,
+  complete example is:
+  ```
+  backlog task create "Task Name" -d "Description" -s "To Do" -l auth --priority high --ac "Must work" --notes "Initial setup done" --dep task-1 -p 14
+  ```
   although tasks can be created with as little as just a name)
 - update the md file e.g. `task-12 - Fix typo.md`) with notes relating to the
   task (either WIP or once complete) and change status (e.g. from
