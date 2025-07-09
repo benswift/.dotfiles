@@ -108,8 +108,8 @@
     "always_allow_tool_actions": true,
     "default_profile": "write",
     "default_model": {
-      "provider": "copilot_chat",
-      "model": "claude-sonnet-4"
+      "provider": "zed.dev",
+      "model": "claude-3-7-sonnet-thinking"
     }
   },
   "close_on_file_delete": true,
