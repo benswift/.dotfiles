@@ -1,3 +1,7 @@
-local/
-todos/
-projects/
+# Ignore everything
+*
+
+# except these
+!*.md
+!settings.json
+!.gitignore
