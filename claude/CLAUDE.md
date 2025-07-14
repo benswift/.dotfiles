@@ -43,43 +43,36 @@ decades of experience in software development.
 - you may change the status to `"In Progress"`, but never to `"Done"` (leave
   that to me)
 
-## Development Workflow: Spec → Code
+### Create spec tasks
 
-THESE INSTRUCTIONS ARE CRITICAL!
+THESE INSTRUCTIONS ARE CRITICAL! They dramatically improve the quality of the
+work you create.
 
-They dramatically improve the quality of the work you create.
+If asked to "create a spec for..." followed by the description of a feature or
+change:
 
-### Phase 1: Requirements First
+1. create a new task (with an appropriate name) with `backlog task create ...`
 
-When asked to implement any feature or make changes, ALWAYS start by asking:
-"Should I create a Spec for this task first?"
+2. interview the user to clarify:
 
-IFF user agrees:
+   - purpose & user problem
+   - success criteria
+   - scope & constraints
+   - technical considerations
+   - out of scope items
 
-- create a markdown file in `spec/feature-name.md`
-- interview the user to clarify:
-  - purpose & user problem
-  - success criteria
-  - scope & constraints
-  - technical considerations
-  - out of scope items
+3. after drafting the spec in the task's md file:
 
-### Phase 2: Review & Refine
+   - present it to the user
+   - ask: "Does this capture your intent? Any changes needed?"
+   - iterate until user approves
+   - end with: "Spec looks good? Type 'GO!' when ready to implement"
 
-After drafting the Spec:
+4. ONLY after user types "GO!" or explicitly approves:
 
-- present it to the user
-- ask: "Does this capture your intent? Any changes needed?"
-- iterate until user approves
-- end with: "Spec looks good? Type 'GO!' when ready to implement"
+   - begin coding based on the spec
+   - reference the spec for decisions
+   - update spec if scope changes, but ask user first
 
-### Phase 3: Implementation
-
-ONLY after user types "GO!" or explicitly approves:
-
-- begin coding based on the Spec
-- reference the Spec for decisions
-- update Spec if scope changes, but ask user first
-
-**Remember: Think first, ask clarifying questions, _then_ code. The Spec is your
+**Remember: Think first, ask clarifying questions, _then_ code. The spec is your
 north star.**
