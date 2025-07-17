@@ -15,6 +15,14 @@
     "allow_concurrent_runs": false
   },
   {
+    "label": "claude (debugger)",
+    "command": "gdb",
+    "args": ["-ex", "run", "-ex", "bt", "-ex", "quit", "--args", "claude", "--dangerously-skip-permissions"],
+    "reveal": "always",
+    "use_new_terminal": true,
+    "allow_concurrent_runs": false
+  },
+  {
     "label": "gitu",
     "command": "gitu"
   }
