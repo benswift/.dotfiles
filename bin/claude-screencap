@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Capture a screenshot in interactive selection mode and save as screencap.jpg
+screencapture -i -t jpg screencap.jpg
