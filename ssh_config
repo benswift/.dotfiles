@@ -12,6 +12,12 @@ Host *
 Match user panic
   IdentityFile ~/.ssh/panic_rpi_ssh
 
+# dietpi on panic-* hosts
+Host panic-*
+  User dietpi
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
 # cybersonic
 Host bulwark
   User u2548636
