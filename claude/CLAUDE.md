@@ -42,6 +42,7 @@ decades of experience in software development.
   and add notes as you work
 - you may change the status to `"In Progress"`, but do not change to `"Done"`
   without an explicit request from me
+- for a full list of the capabilities of `backlog`, run `backlog --help`
 
 ### Create spec tasks
 
