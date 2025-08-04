@@ -14,3 +14,8 @@ eval "$(mise activate zsh)"
 export PS1='%F{magenta}[%D{%H:%M}]%f %F{cyan}%m%f:%F{green}%1~%f %F{%(?.green.red)}%(!.#.$)%f '
 
 alias claude="~/.claude/local/claude"
+
+# Tailscale alias (macOS)
+if [ -f "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]; then
+  alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+fi
