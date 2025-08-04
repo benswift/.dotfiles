@@ -9,15 +9,14 @@ gladly add one in.
 
 ## Installation
 
-The best way to use this stuff is probably to symlink (or even just move/copy)
-the config files into the places where their respective programs expect them to
-live.
+Run the included script to create symlinks for all config files:
 
 ```bash
-ln -s ~/.dotfiles/zed-keymap.json ~/.config/zed/keymap.json
-ln -s ~/.dotfiles/zed-settings.json ~/.config/zed/settings.json
-ln -s ~/.dotfiles/zed-tasks.json ~/.config/zed/tasks.json
+./create_symlinks.sh
 ```
+
+This will automatically link all dotfiles and Zed configuration files to their
+expected locations.
 
 ### Windows
 
@@ -27,6 +26,6 @@ running.
 
 # Licence
 
-(c) 2012-2024 Ben Swift
+(c) 2012-2025 Ben Swift
 
 MIT Licence
