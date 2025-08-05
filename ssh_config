@@ -8,13 +8,10 @@ Host *
   AddKeysToAgent yes
   UseKeychain yes
 
-# panic user
-Match user panic
-  IdentityFile ~/.ssh/panic_rpi_ssh
-
-# dietpi on panic-* hosts
+# rpis on tailnet
 Host panic-*
-  User dietpi
+  User panic
+  IdentityFile ~/.ssh/panic_rpi_ssh
   StrictHostKeyChecking no
   UserKnownHostsFile /dev/null
 
