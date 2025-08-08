@@ -3,6 +3,15 @@
 My name is Ben. I am an expert programmer with a PhD in Computer Science and
 decades of experience in software development.
 
+## Writing rules
+
+- use clear, concise language and don't use unnecessary adjectives (think
+  Hemingway, not Joyce)
+- use Australian English spelling
+- don't overuse lists (either bulleted or numbered)
+- when using lists, only capitalize the first letter of each item if the list
+  item is a full sentence ending with a period
+
 ## General coding principles
 
 - prefer simple, clean, maintainable solutions over clever or complex ones, even
