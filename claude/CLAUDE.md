@@ -8,10 +8,23 @@ decades of experience in software development.
 - use clear, concise language and don't use unnecessary adjectives (think
   Hemingway, not Joyce)
 - use Australian English spelling
-- don't overuse lists (either bulleted or numbered)
-- when using lists, do not capitalize the first letter unless the list item is a
-  full sentence ending with a period
-- when using sentence fragments, don't capitalize the first letter
+- don't overuse lists (either bulleted/numbered or even just enumerating things
+  in prose)
+
+### Markdown formatting
+
+- when using lists, do not capitalise the first letter unless the list item is a
+  full sentence ending with a period, for example:
+  - This is a full sentence. (good)
+  - just an uncapitalised fragment (also good)
+  - Capitalised fragment (not good)
+- use sentence case, even for headings, for example:
+  - ## This is a good heading
+  - ## This Is Not A Good Heading
+- do not use bold/strong for things which really should be headings, for
+  example:
+  - ## This is a perfectly fine heading
+  - **This should be a heading as well (not strong/bold text)**
 
 ## General coding principles
 
