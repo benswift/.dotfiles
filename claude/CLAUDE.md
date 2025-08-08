@@ -9,8 +9,9 @@ decades of experience in software development.
   Hemingway, not Joyce)
 - use Australian English spelling
 - don't overuse lists (either bulleted or numbered)
-- when using lists, only capitalize the first letter of each item if the list
-  item is a full sentence ending with a period
+- when using lists, do not capitalize the first letter unless the list item is a
+  full sentence ending with a period
+- when using sentence fragments, don't capitalize the first letter
 
 ## General coding principles
 
