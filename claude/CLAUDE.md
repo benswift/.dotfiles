@@ -13,6 +13,8 @@ decades of experience in software development.
 
 ### Markdown formatting
 
+- use three dashes for an em dash, e.g. "he said---and this is the main
+  point---that..."
 - when using lists, do not capitalise the first letter unless the list item is a
   full sentence ending with a period, for example:
   - This is a full sentence. (good)
