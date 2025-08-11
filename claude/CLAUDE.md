@@ -10,6 +10,7 @@ decades of experience in software development.
 - use Australian English spelling
 - don't overuse lists (either bulleted/numbered or even just enumerating things
   in prose)
+- do not ever use exclamation marks
 
 ### Markdown formatting
 
