@@ -94,3 +94,8 @@ sublime-text-user-dir/Package Control.*
 # open MS Office documents
 
 ~*
+
+# elixir
+
+.elixir_ls/     # ElixirLS build artifacts
+.elixirls/      # ElixirLS user settings
