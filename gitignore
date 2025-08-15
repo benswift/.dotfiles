@@ -74,14 +74,6 @@ flycheck_*
 # work in the repl as well
 snippets/extempore-repl-mode
 
-# Sublime Text
-
-sublime-text-user-dir/SublimeREPLHistory
-sublime-text-user-dir/Default (Linux).sublime-keymap
-sublime-text-user-dir/Default (OSX).sublime-keymap
-sublime-text-user-dir/Default (Windows).sublime-keymap
-sublime-text-user-dir/Package Control.*
-
 # tooling
 
 .python-version
