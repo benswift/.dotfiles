@@ -87,5 +87,7 @@ snippets/extempore-repl-mode
 
 # elixir
 
-.elixir_ls/     # ElixirLS build artifacts
-.elixirls/      # ElixirLS user settings
+## ElixirLS build artifacts
+.elixir_ls/
+## ElixirLS user settings
+.elixirls/
