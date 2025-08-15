@@ -82,9 +82,7 @@ sublime-text-user-dir/Default (OSX).sublime-keymap
 sublime-text-user-dir/Default (Windows).sublime-keymap
 sublime-text-user-dir/Package Control.*
 
-# js
-
-.tern-port
+# tooling
 
 .python-version
 .ruby-version
