@@ -10,6 +10,8 @@ setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 
 alias zp="zed-preview"
+alias screencap='screencapture -i -t jpg screencap.jpg'
+alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
 
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
