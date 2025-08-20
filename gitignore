@@ -91,3 +91,5 @@ snippets/extempore-repl-mode
 .elixir_ls/
 ## ElixirLS user settings
 .elixirls/
+
+.playwright-mcp/
