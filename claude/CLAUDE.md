@@ -60,8 +60,8 @@ years experience in software development.
 
 ### Task management
 
-- use `backlog` for task management (which stores task info as md files in
-  `backlog/tasks/`)
+- use `backlog` for task management, including when you're instructed to e.g.
+  "create/write up a task for..."
 - create and view tasks using the `backlog` cli tool (e.g.
   `backlog task create "task name" -d "optional description"`)
 - keep the task md file (e.g. `backlog/tasks/task-7 - fix typo.md`) up to date
