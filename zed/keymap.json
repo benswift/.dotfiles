@@ -2,6 +2,7 @@
   {
     "bindings": {
       "cmd-l": "project_panel::ToggleFocus",
+      "cmd-shift-y": "workspace::CopyRelativePath",
       "alt-p": "projects::OpenRecent",
       "alt-g": "git_panel::ToggleFocus",
       "alt-c": [
