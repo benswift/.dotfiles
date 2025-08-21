@@ -66,8 +66,6 @@ years experience in software development.
   `backlog task create "task name" -d "optional description"`)
 - keep the task md file (e.g. `backlog/tasks/task-7 - fix typo.md`) up to date
   and add notes as you work
-- you may change the status to `"In Progress"`, but do not change to `"Done"`
-  without an explicit request from me
 - for a full list of the capabilities of `backlog`, run `backlog --help`
 - if asked to "create a spec task for..." followed by the description of a
   feature or change, interview the user to clarify:
