@@ -16,7 +16,7 @@ Host panic-*
 
 # cybersonic
 Host bulwark
-  User u2548636
+  UseR u2548636
   Hostname bulwark.cecs.anu.edu.au
   IdentityFile ~/.ssh/cybersonic
 
@@ -65,7 +65,3 @@ Host edex-experiments
   User azureuser
   Hostname 13.73.193.68
   IdentityFile ~/.ssh/edex-experiments_key.pem
-
-# Local Variables:
-# mode: conf
-# End:
