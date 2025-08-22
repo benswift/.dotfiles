@@ -19,7 +19,3 @@ options(max.print=1000)         # do not print more than 1000 lines
 print.size.in.mb <- function(obj) {
   print(object.size(obj), units="Mb")
 }
-
-# Local Variables:
-# mode: R
-# End:
