@@ -18,12 +18,6 @@ Run the included script to create symlinks for all config files:
 This will automatically link all dotfiles and Zed configuration files to their
 expected locations.
 
-### Windows
-
-Make sure that your `GIT_SSH` environment variable points to the right place
-(e.g. `C:\Windows\System32\OpenSSH\ssh.exe`), and that `ssh-agent.exe` is
-running.
-
 # License
 
 (c) 2012-2025 Ben Swift
