@@ -1,10 +1,10 @@
 [database]
-path=/Users/ben/.mail
+path=/Users/ben/Maildir
 
 [user]
 name=Ben Swift
-primary_email=ben@fastmail.com
-other_email=ben.swift@anu.edu.au
+primary_email=ben@benswift.me
+other_email=benswift@fastmail.com;ben.swift@anu.edu.au
 
 [new]
 tags=unread;inbox;new
