@@ -5,6 +5,8 @@ files=(
     "RProfile"
     "gitconfig"
     "gitignore"
+    "mbsyncrc"
+    "notmuch-config"
     "zshenv"
     "zshrc"
 )

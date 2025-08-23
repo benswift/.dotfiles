@@ -1,0 +1,21 @@
+[database]
+path=/Users/ben/.mail
+
+[user]
+name=Ben Swift
+primary_email=ben@fastmail.com
+other_email=ben.swift@anu.edu.au
+
+[new]
+tags=unread;inbox;new
+ignore=.mbsyncstate;.uidvalidity
+
+[search]
+exclude_tags=deleted;spam;trash
+
+[maildir]
+synchronize_flags=true
+
+[index]
+header.List-Id=true
+decrypt=false
