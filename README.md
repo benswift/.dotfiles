@@ -34,10 +34,12 @@ To sync Office365 email with mbsync using OAuth2 authentication:
    - Use `mutt_oauth2.py` script (from mutt source) to obtain and refresh tokens
    - Configure with Thunderbird's client ID: `9e5f94bc-e8a4-4e73-b8be-63364c29d753`
    - Use devicecode flow for initial authentication
+   - Store tokens securely in macOS Keychain (not plain text files)
 
 4. **Configure mbsync** (`.mbsyncrc`):
    - Set `AuthMech XOAUTH2`
-   - Use `PassCmd` to invoke mutt_oauth2.py for token retrieval
+   - Use `PassCmd` with mutt_oauth2.py and macOS `security` command for Keychain integration
+   - Example: `--decryption-pipe 'security find-generic-password ... -w'`
 
 See `mbsync-build/` and `mutt_oauth2.py` in this repo for working examples.
 
