@@ -29,7 +29,7 @@ backend.login = "u2548636@anu.edu.au"
 backend.encryption.type = "tls"
 
 backend.auth.type = "oauth2"
-backend.auth.client-id = "08162f7c-0fd2-4200-a84a-f25a4db0b584"
+backend.auth.client-id = "9e5f94bc-e8a4-4e73-b8be-63364c29d753"
 backend.auth.method = "xoauth2"
 backend.auth.auth-url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
 backend.auth.token-url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
