@@ -3,14 +3,15 @@
 ############
 
 IMAPAccount fastmail
-Host mail.messagingengine.com
-Port 992
-# Host imaps-proxy.messagingengine.com
+Host imap.fastmail.com
+Port 993
+# Host imaps-proxy.fastmail.com
 # Port 80
 AuthMech LOGIN
 User benswift@fastmail.com
 PassCmd "security find-generic-password -a benswift@fastmail.com -s mbsync-fastmail -w"
 TLSType IMAPS
+PipelineDepth 50
 
 IMAPStore fastmail-remote
 Account fastmail
@@ -23,7 +24,7 @@ SubFolders Verbatim
 Channel fastmail
 Far :fastmail-remote:
 Near :fastmail-local:
-Patterns "*"
+Patterns * !"Calendar" !"Contacts"
 Create Near
 Sync All
 Expunge Both
