@@ -1,0 +1,6 @@
+INBOX=tag:inbox AND path:personal/**
+Sent=path:personal/Sent/**
+Archive=path:personal/Archive/**
+Drafts=path:personal/Drafts/**
+Trash=path:personal/Trash/**
+All=path:personal/**

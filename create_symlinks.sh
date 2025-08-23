@@ -51,3 +51,14 @@ source_path="$DOTFILES_DIR/claude"
 # Create symlink to claude directory
 ln -sf "$source_path" "$target"
 echo "Created symlink: $target -> $source_path"
+
+# Create Library/Preferences directory if it doesn't exist (though it should always exist on macOS)
+mkdir -p "$HOME/Library/Preferences"
+
+# Create symlink for entire aerc directory (macOS location)
+target="$HOME/Library/Preferences/aerc"
+source_path="$DOTFILES_DIR/aerc"
+
+# Create symlink to aerc directory
+ln -sf "$source_path" "$target"
+echo "Created symlink: $target -> $source_path"
