@@ -1,0 +1,64 @@
+############
+# Fastmail #
+############
+
+IMAPAccount fastmail
+Host mail.messagingengine.com
+Port 992
+# Host imaps-proxy.messagingengine.com
+# Port 80
+AuthMech LOGIN
+User benswift@fastmail.com
+PassCmd "security find-generic-password -a benswift@fastmail.com -s mbsync-fastmail -w"
+TLSType IMAPS
+
+IMAPStore fastmail-remote
+Account fastmail
+
+MaildirStore fastmail-local
+Path ~/Maildir/personal/
+Inbox ~/Maildir/personal/INBOX
+SubFolders Verbatim
+
+Channel fastmail
+Far :fastmail-remote:
+Near :fastmail-local:
+Patterns "*"
+Create Near
+Sync All
+Expunge Both
+SyncState *
+
+#################
+# ANU Office365 #
+#################
+
+IMAPAccount anu
+Host outlook.office365.com
+Port 993
+AuthMech XOAUTH2
+User u2548636@anu.edu.au
+PassCmd "~/.dotfiles/mutt_oauth2.py --encryption-pipe 'cat' --decryption-pipe 'cat' ~/.dotfiles/anu_oauth2_token"
+TLSType IMAPS
+PipelineDepth 50
+
+IMAPStore anu-remote
+Account anu
+
+MaildirStore anu-local
+Path ~/Maildir/anu/
+Inbox ~/Maildir/anu/INBOX
+SubFolders Verbatim
+
+Channel anu
+Far :anu-remote:
+Near :anu-local:
+Patterns * !"Conversation History" !"Calendar" !"Contacts" !"Tasks" !"Journal"
+Create Near
+Sync All
+Expunge Both
+SyncState *
+
+## Local Variables:
+## mode: conf-unix
+## End:
