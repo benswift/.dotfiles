@@ -39,7 +39,7 @@ Host outlook.office365.com
 Port 993
 AuthMech XOAUTH2
 User u2548636@anu.edu.au
-PassCmd "~/.dotfiles/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe 'security add-generic-password -U -a u2548636@anu.edu.au -s mutt_oauth2_anu -w -' ~/.dotfiles/anu_oauth2_keychain_stub"
+PassCmd "~/.dotfiles/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '~/.dotfiles/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' ~/.dotfiles/anu_oauth2_keychain_stub"
 TLSType IMAPS
 PipelineDepth 50
 
