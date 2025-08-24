@@ -25,3 +25,5 @@ Examine the folders, source code and built artefacts to determine:
 - what changes are required to the mbsync formula upstream the XOAUTH2 plugin to
   homebrew?
 
+Note that the homebrew contribution guide is here:
+https://docs.brew.sh/How-To-Open-a-Homebrew-Pull-Request
