@@ -24,3 +24,4 @@ Examine the folders, source code and built artefacts to determine:
 - could the cyrus-sasl-xoauth2 plugin be upstreamed to homebrew?
 - what changes are required to the mbsync formula upstream the XOAUTH2 plugin to
   homebrew?
+
