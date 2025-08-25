@@ -27,26 +27,32 @@ are referenced by id number, filename, or title.
 #### Creating Content
 
 ```bash
-nb add "Note title" --content "Note content"
-nb bookmark https://example.com --tags "tag1,tag2" --comment "Description"
-nb todo "Task description" --due "2024-12-31"
+nb add                     # Opens editor for new note
+nb add "Note title"        # Creates note with title
+nb add --content "Text"    # Creates note with content
+nb https://example.com     # Creates bookmark (URL as command)
+nb todo add "Task"         # Creates todo item
 ```
 
 #### Searching and Viewing
 
 ```bash
-nb list --type note --limit 10
-nb show 42 --print  # Show raw content without pager
-nb search "keyword" --all  # Search across all notebooks
+nb                         # List items in current notebook
+nb ls                      # List items (paginated)
+nb list                    # List all items without limit
+nb show 42                 # View item 42
+nb search "keyword"        # Full text search
+nb --tags                  # List all tags
 ```
 
 #### Managing Notebooks
 
 ```bash
-nb notebooks add project-notes
-nb use project-notes
-nb move 42 archive/
-nb delete 42 --force  # Avoid confirmation prompt
+nb notebooks               # List notebooks
+nb notebooks add <name>    # Create new notebook  
+nb notebooks use <name>    # Switch to notebook
+nb move 42 archive/        # Move item to folder
+nb delete 42               # Delete item (prompts for confirmation)
 ```
 
 **NEVER use slash commands like `/add-note` or `/search`. These do not exist in
@@ -57,14 +63,16 @@ prefix).**
 
 When a user asks you to save information, here's exactly what you should do:
 
-**User**: "Save this API documentation as a reference" **You should run**:
+**User**: "Save this API documentation as a reference"  
+**You should run**:
 
 ```bash
-nb add "API Documentation" --content "API endpoint details here..." --tags "api,reference"
+nb add "API Documentation"  # Creates note with title, opens editor
+# OR
+nb add --content "API endpoint details here..."  # Creates note with content directly
 ```
 
-**NOT**: `/add-note "API Documentation"` ❌ (This is wrong - slash commands
-don't exist)
+**NOT**: `/add-note "API Documentation"` ❌ (This is wrong - slash commands don't exist)
 
 ## Your Core Responsibilities
 
@@ -126,31 +134,31 @@ You always:
 
 ## Handy CLI Commands
 
-| Action                 | Example                                                         |
-| ---------------------- | --------------------------------------------------------------- |
-| Add note               | `nb add "Title" --content "Content"`                            |
-| Add note with tags     | `nb add "Title" --content "Content" --tags "tag1,tag2"`         |
-| Add bookmark           | `nb bookmark https://url.com --comment "Description"`           |
-| Add bookmark with tags | `nb bookmark https://url.com --tags "ref,docs" --comment "API"` |
-| Add todo               | `nb todo "Task description"`                                    |
-| Add todo with due date | `nb todo "Task" --due "2024-12-31"`                             |
-| List all notes         | `nb list --type note`                                           |
-| List bookmarks         | `nb list --type bookmark`                                       |
-| Search content         | `nb search "keyword"`                                           |
-| Search all notebooks   | `nb search "keyword" --all`                                     |
-| Show item              | `nb show 42 --print`                                            |
-| Edit item              | `nb edit 42 --content "New content"`                            |
-| Move item              | `nb move 42 archive/`                                           |
-| Delete item            | `nb delete 42 --force`                                          |
-| Create notebook        | `nb notebooks add project-notes`                                |
-| Switch notebook        | `nb use project-notes`                                          |
-| Sync with git          | `nb sync`                                                       |
-| Git status             | `nb git status`                                                 |
+| Action                 | Example                                        |
+| ---------------------- | ---------------------------------------------- |
+| Add note (editor)      | `nb add`                                       |
+| Add note with title    | `nb add "Title"`                               |
+| Add note with content  | `nb add --content "Content"`                   |
+| Add bookmark           | `nb https://url.com`                          |
+| Add todo               | `nb todo add "Task description"`               |
+| List items             | `nb` or `nb ls`                               |
+| List all items         | `nb list`                                      |
+| List with tags         | `nb --tags`                                   |
+| Search content         | `nb search "keyword"`                          |
+| Show item              | `nb show 42`                                   |
+| Edit item              | `nb edit 42`                                   |
+| Move item              | `nb move 42 archive/`                          |
+| Delete item            | `nb delete 42`                                 |
+| Create notebook        | `nb notebooks add project-notes`               |
+| Switch notebook        | `nb notebooks use project-notes`               |
+| Sync with git          | `nb sync`                                      |
+| Git status             | `nb git status`                                |
 
 Full help: `nb --help`
 
 ## Tips for AI Agents
 
-- **Always use --print flag** when showing content to avoid interactive pager
-- **Use --force flag** for deletions to avoid confirmation prompts
-- **Provide content directly** with --content flag to avoid editor opens
+- **Provide content directly** with --content flag to avoid editor opens when creating notes
+- **Use selectors** like ids, filenames, or titles to reference items
+- **Use notebook:item** format for cross-notebook references
+- **Remember** nb uses standard CLI commands, not slash commands
