@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Tag by account
+notmuch tag +anu -- folder:anu/** tag:new
+notmuch tag +personal -- folder:personal/** tag:new
+
+# Tag mailing lists
+notmuch tag +list -- tag:new and List-Id:/.*/
+
+# Remove new tag
+notmuch tag -new -- tag:new
