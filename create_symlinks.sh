@@ -27,7 +27,7 @@ for file in "${files[@]}"; do
     source_path="$DOTFILES_DIR/$file"
 
     # Create symlink (overwriting if exists)
-    ln -sf "$source_path" "$target"
+    ln -sfn "$source_path" "$target"
     echo "Created symlink: $target -> $source_path"
 done
 
@@ -40,17 +40,43 @@ for file in "${zed_files[@]}"; do
     source_path="$DOTFILES_DIR/zed/${file}"
 
     # Create symlink (overwriting if exists)
-    ln -sf "$source_path" "$target"
+    ln -sfn "$source_path" "$target"
     echo "Created symlink: $target -> $source_path"
 done
 
-# Create symlink for entire claude directory
-target="$HOME/.claude"
-source_path="$DOTFILES_DIR/claude"
+# Create ~/.claude directory if it doesn't exist
+mkdir -p "$HOME/.claude"
+mkdir -p "$HOME/.claude/agents"
 
-# Create symlink to claude directory
-ln -sf "$source_path" "$target"
-echo "Created symlink: $target -> $source_path"
+# Symlink individual Claude config files
+claude_config_files=(
+    "CLAUDE.md"
+    "settings.json"
+    "elixir-ash.md"
+    "js.md"
+    "python.md"
+    "package-lock.json"
+)
+
+for file in "${claude_config_files[@]}"; do
+    if [ -f "$DOTFILES_DIR/claude/$file" ]; then
+        target="$HOME/.claude/$file"
+        source_path="$DOTFILES_DIR/claude/$file"
+        ln -sfn "$source_path" "$target"
+        echo "Created symlink: $target -> $source_path"
+    fi
+done
+
+# Symlink agent files
+if [ -d "$DOTFILES_DIR/claude/agents" ]; then
+    for agent in "$DOTFILES_DIR/claude/agents"/*; do
+        if [ -f "$agent" ]; then
+            target="$HOME/.claude/agents/$(basename "$agent")"
+            ln -sfn "$agent" "$target"
+            echo "Created symlink: $target -> $agent"
+        fi
+    done
+fi
 
 # Create Library/Preferences directory if it doesn't exist (though it should always exist on macOS)
 mkdir -p "$HOME/Library/Preferences"
@@ -59,17 +85,17 @@ mkdir -p "$HOME/Library/Preferences"
 target="$HOME/Library/Preferences/aerc"
 source_path="$DOTFILES_DIR/aerc"
 
-# Create symlink to aerc directory
-ln -sf "$source_path" "$target"
+# Create symlink to aerc directory (using -n to avoid recursive symlinks)
+ln -sfn "$source_path" "$target"
 echo "Created symlink: $target -> $source_path"
 
-# Create .config/notmuch directory if it doesn't exist
-mkdir -p "$HOME/.config/notmuch"
+# Create .config directory if it doesn't exist
+mkdir -p "$HOME/.config"
 
-# Create symlink for notmuch hooks directory
-target="$HOME/.config/notmuch/default"
-source_path="$DOTFILES_DIR/notmuch/default"
+# Create symlink for entire notmuch directory
+target="$HOME/.config/notmuch"
+source_path="$DOTFILES_DIR/notmuch"
 
-# Create symlink to notmuch default directory
-ln -sf "$source_path" "$target"
+# Create symlink to notmuch directory (using -n to avoid recursive symlinks)
+ln -sfn "$source_path" "$target"
 echo "Created symlink: $target -> $source_path"
