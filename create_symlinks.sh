@@ -46,7 +46,6 @@ done
 
 # Create ~/.claude directory if it doesn't exist
 mkdir -p "$HOME/.claude"
-mkdir -p "$HOME/.claude/agents"
 
 # Symlink individual Claude config files
 claude_config_files=(
@@ -63,15 +62,12 @@ for file in "${claude_config_files[@]}"; do
     fi
 done
 
-# Symlink agent files
+# Symlink entire agents directory
 if [ -d "$DOTFILES_DIR/claude/agents" ]; then
-    for agent in "$DOTFILES_DIR/claude/agents"/*; do
-        if [ -f "$agent" ]; then
-            target="$HOME/.claude/agents/$(basename "$agent")"
-            ln -sfn "$agent" "$target"
-            echo "Created symlink: $target -> $agent"
-        fi
-    done
+    target="$HOME/.claude/agents"
+    source_path="$DOTFILES_DIR/claude/agents"
+    ln -sfn "$source_path" "$target"
+    echo "Created symlink: $target -> $source_path"
 fi
 
 # Create Library/Preferences directory if it doesn't exist (though it should always exist on macOS)
