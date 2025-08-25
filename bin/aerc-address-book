@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+
+# aerc address book integration script
+# Uses notmuch to harvest addresses from your email history
+
+QUERY="$1"
+CACHE_FILE="$HOME/.cache/aerc-addresses"
+CACHE_AGE=3600  # Rebuild cache if older than 1 hour
+
+# Create cache directory if needed
+mkdir -p "$(dirname "$CACHE_FILE")"
+
+# Function to build the address cache
+build_cache() {
+    if command -v notmuch >/dev/null 2>&1; then
+        notmuch address --deduplicate=address --output=recipients --output=sender "*" 2>/dev/null | \
+        while IFS= read -r line; do
+            # Parse different email formats
+            if [[ "$line" =~ \<([^>]+)\> ]]; then
+                # Format: "Name" <email> or Name <email>
+                email="${BASH_REMATCH[1]}"
+                # Extract name (everything before the <)
+                name="${line%%<*}"
+                # Clean up name - remove quotes and whitespace
+                name="${name#\"}"
+                name="${name%\"}"
+                name="${name#\'}"
+                name="${name%\'}"
+                name="${name## }"
+                name="${name%% }"
+                
+                # Output with name if we have one and it's not the email
+                if [[ -n "$name" && "$name" != "$email" ]]; then
+                    printf "%s\t%s\n" "$email" "$name"
+                else
+                    printf "%s\t\n" "$email"
+                fi
+            else
+                # Plain email address - clean it up
+                email="$line"
+                email="${email#\"}"
+                email="${email%\"}"
+                email="${email#\'}"
+                email="${email%\'}"
+                email="${email## }"
+                email="${email%% }"
+                
+                # Only output valid email addresses
+                if [[ "$email" =~ ^[^@]+@[^@]+\.[^@]+$ ]]; then
+                    printf "%s\t\n" "$email"
+                fi
+            fi
+        done > "$CACHE_FILE.tmp" && mv "$CACHE_FILE.tmp" "$CACHE_FILE"
+    fi
+}
+
+# Check if cache needs rebuilding
+if [[ ! -f "$CACHE_FILE" ]] || [[ $(find "$CACHE_FILE" -mmin +60 2>/dev/null | wc -l) -gt 0 ]]; then
+    build_cache &
+fi
+
+# Search the cache if it exists, otherwise search directly
+if [[ -f "$CACHE_FILE" ]]; then
+    grep -i "$QUERY" "$CACHE_FILE" 2>/dev/null | head -50
+else
+    # Fallback to direct search while cache is building
+    if command -v notmuch >/dev/null 2>&1; then
+        notmuch address --output=recipients --output=sender "from:$QUERY OR to:$QUERY" 2>/dev/null | \
+        head -50 | \
+        while IFS= read -r line; do
+            if [[ "$line" =~ \<([^>]+)\> ]]; then
+                email="${BASH_REMATCH[1]}"
+                name="${line%%<*}"
+                name="${name#\"}"
+                name="${name%\"}"
+                name="${name## }"
+                name="${name%% }"
+                if [[ -n "$name" && "$name" != "$email" ]]; then
+                    printf "%s\t%s\n" "$email" "$name"
+                else
+                    printf "%s\t\n" "$email"
+                fi
+            else
+                email="${line#\"}"
+                email="${email%\"}"
+                email="${email## }"
+                email="${email%% }"
+                if [[ "$email" =~ ^[^@]+@[^@]+\.[^@]+$ ]]; then
+                    printf "%s\t\n" "$email"
+                fi
+            fi
+        done
+    fi
+fi
