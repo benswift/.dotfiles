@@ -1,7 +1,9 @@
 # Ignore everything
 *
 
-# except these
+# except these config files
 !*.md
 !settings.json
 !.gitignore
+!agents/
+!agents/*.md

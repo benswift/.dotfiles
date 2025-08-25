@@ -55,7 +55,6 @@ claude_config_files=(
     "elixir-ash.md"
     "js.md"
     "python.md"
-    "package-lock.json"
 )
 
 for file in "${claude_config_files[@]}"; do
