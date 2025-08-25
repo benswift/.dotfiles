@@ -17,13 +17,13 @@ create_symlink() {
     local source_path="$1"
     local target="$2"
     local parent_dir
-    
+
     # Check if source exists
     if [[ ! -e "$source_path" ]]; then
         echo -e "${RED}✗ Source not found: $source_path${NC}"
         return 1
     fi
-    
+
     # Create parent directory if needed
     parent_dir="$(dirname "$target")"
     if [[ ! -d "$parent_dir" ]]; then
@@ -33,14 +33,14 @@ create_symlink() {
             mkdir -p "$parent_dir"
         fi
     fi
-    
+
     # Check if target exists and is not a symlink
     if [[ -e "$target" && ! -L "$target" ]]; then
         echo -e "${RED}✗ Target exists and is not a symlink: $target${NC}"
         echo "  Consider backing up and removing it first"
         return 1
     fi
-    
+
     # Create the symlink
     if [[ "$DRY_RUN" == "true" ]]; then
         echo -e "${YELLOW}[DRY RUN] Would link: $target -> $source_path${NC}"
@@ -58,7 +58,7 @@ link_files() {
     local suffix="${4:-}"
     shift 4
     local files=("$@")
-    
+
     for file in "${files[@]}"; do
         local source_path="$source_dir/$file"
         local target="$target_dir/${prefix}${file}${suffix}"
@@ -70,23 +70,23 @@ link_files() {
 link_directory() {
     local source_path="$1"
     local target="$2"
-    
+
     if [[ ! -d "$source_path" ]]; then
         echo -e "${RED}✗ Source directory not found: $source_path${NC}"
         return 1
     fi
-    
+
     create_symlink "$source_path" "$target"
 }
 
 main() {
     echo "Setting up dotfiles symlinks..."
     echo "Dotfiles directory: $DOTFILES_DIR"
-    
+
     if [[ "$DRY_RUN" == "true" ]]; then
         echo -e "${YELLOW}Running in DRY RUN mode - no changes will be made${NC}"
     fi
-    
+
     # Dotfiles in home directory (with . prefix)
     local home_files=(
         "RProfile"
@@ -97,39 +97,35 @@ main() {
         "zshenv"
         "zshrc"
     )
-    
-    echo -e "\n${GREEN}Linking home directory dotfiles...${NC}"
+
+    echo -e "\nLinking home directory dotfiles..."
     link_files "$DOTFILES_DIR" "$HOME" "." "" "${home_files[@]}"
-    
+
     # Zed config files
     local zed_files=(
         "keymap.json"
         "settings.json"
         "tasks.json"
     )
-    
-    echo -e "\n${GREEN}Linking Zed config files...${NC}"
+
+    echo -e "\nLinking Zed config files..."
     link_files "$DOTFILES_DIR/zed" "$HOME/.config/zed" "" "" "${zed_files[@]}"
-    
+
     # Claude config files
     local claude_files=(
         "CLAUDE.md"
         "settings.json"
     )
-    
-    echo -e "\n${GREEN}Linking Claude config files...${NC}"
-    for file in "${claude_files[@]}"; do
-        if [[ -f "$DOTFILES_DIR/claude/$file" ]]; then
-            create_symlink "$DOTFILES_DIR/claude/$file" "$HOME/.claude/$file"
-        fi
-    done
-    
+
+    echo -e "\nLinking Claude config files..."
+    link_files "$DOTFILES_DIR/claude" "$HOME/.claude" "" "" "${claude_files[@]}"
+
     # Directory symlinks
-    echo -e "\n${GREEN}Linking directories...${NC}"
+    echo -e "\nLinking directories..."
     link_directory "$DOTFILES_DIR/claude/agents" "$HOME/.claude/agents"
     link_directory "$DOTFILES_DIR/aerc" "$HOME/Library/Preferences/aerc"
     link_directory "$DOTFILES_DIR/notmuch" "$HOME/.config/notmuch"
-    
+
     echo -e "\n${GREEN}Done!${NC}"
 }
 
