@@ -8,6 +8,10 @@
       "alt-c": [
         "task::Spawn",
         { "task_name": "claude", "reveal_target": "center" }
+      ],
+      "alt-m": [
+        "task::Spawn",
+        { "task_name": "aerc", "reveal_target": "center" }
       ]
     }
   },
