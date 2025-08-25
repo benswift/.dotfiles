@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+#
+# Mail sync script for aerc + mbsync + notmuch
+# Syncs all email accounts and updates notmuch index
+
+set -euo pipefail
+
+# Colours for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Function to print status messages
+print_status() {
+    echo -e "${GREEN}[$(date '+%H:%M:%S')]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[$(date '+%H:%M:%S')] ERROR:${NC} $1" >&2
+}
+
+print_warning() {
+    echo -e "${YELLOW}[$(date '+%H:%M:%S')] WARNING:${NC} $1"
+}
+
+# Check if mbsync is installed
+if ! command -v mbsync &> /dev/null; then
+    print_error "mbsync is not installed"
+    exit 1
+fi
+
+# Check if notmuch is installed
+if ! command -v notmuch &> /dev/null; then
+    print_error "notmuch is not installed"
+    exit 1
+fi
+
+# Track if any sync had errors
+sync_errors=0
+
+# Sync Personal account
+print_status "Syncing Personal account..."
+if mbsync personal 2>&1 | while IFS= read -r line; do
+    echo "  $line"
+done; then
+    print_status "Personal account synced successfully"
+else
+    print_warning "Personal account sync had issues"
+    sync_errors=$((sync_errors + 1))
+fi
+
+# Sync ANU account
+print_status "Syncing ANU account..."
+if mbsync anu 2>&1 | while IFS= read -r line; do
+    echo "  $line"
+done; then
+    print_status "ANU account synced successfully"
+else
+    print_warning "ANU account sync had issues"
+    sync_errors=$((sync_errors + 1))
+fi
+
+# Update notmuch database
+print_status "Updating notmuch index..."
+if notmuch new 2>&1 | while IFS= read -r line; do
+    echo "  $line"
+done; then
+    print_status "Notmuch index updated"
+else
+    print_error "Failed to update notmuch index"
+    exit 1
+fi
+
+# Run notmuch tagging if you have any custom tag rules
+# Uncomment and modify as needed:
+# print_status "Applying notmuch tags..."
+# notmuch tag +inbox -- tag:new AND folder:personal/INBOX
+# notmuch tag +inbox -- tag:new AND folder:anu/INBOX
+# notmuch tag -new -- tag:new
+
+# Summary
+echo ""
+if [ $sync_errors -eq 0 ]; then
+    print_status "Mail sync completed successfully!"
+else
+    print_warning "Mail sync completed with $sync_errors account(s) having issues"
+fi
+
+# Optional: Show new message count
+new_count=$(notmuch count tag:new)
+if [ "$new_count" -gt 0 ]; then
+    print_status "You have $new_count new message(s)"
+fi

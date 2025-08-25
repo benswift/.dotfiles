@@ -1,4 +1,6 @@
 INBOX=tag:inbox AND path:anu/**
+Unread=tag:unread AND path:anu/**
+Today=date:today.. AND path:anu/**
 Sent=path:anu/Sent/**
 Archive=path:anu/Archive/**
 Drafts=path:anu/Drafts/**

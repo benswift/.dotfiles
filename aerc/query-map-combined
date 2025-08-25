@@ -1,0 +1,10 @@
+INBOX=tag:inbox
+Unread=tag:unread
+Today=date:today..
+Personal=path:personal/**
+ANU=path:anu/**
+Sent=path:**/Sent/**
+Archive=path:**/Archive/**
+Drafts=path:**/Drafts/**
+Trash=path:**/Trash/**
+All=*

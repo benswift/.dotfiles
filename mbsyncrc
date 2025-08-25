@@ -1,8 +1,8 @@
 ############
-# Fastmail #
+# Personal #
 ############
 
-IMAPAccount fastmail
+IMAPAccount personal
 Host imap.fastmail.com
 Port 993
 # Host imaps-proxy.fastmail.com
@@ -13,17 +13,17 @@ PassCmd "security find-generic-password -a benswift@fastmail.com -s mbsync-fastm
 TLSType IMAPS
 PipelineDepth 50
 
-IMAPStore fastmail-remote
-Account fastmail
+IMAPStore personal-remote
+Account personal
 
-MaildirStore fastmail-local
+MaildirStore personal-local
 Path ~/Maildir/personal/
 Inbox ~/Maildir/personal/INBOX
 SubFolders Verbatim
 
-Channel fastmail
-Far :fastmail-remote:
-Near :fastmail-local:
+Channel personal
+Far :personal-remote:
+Near :personal-local:
 Patterns * !"Calendar" !"Contacts"
 Create Near
 Sync All
@@ -39,7 +39,7 @@ Host outlook.office365.com
 Port 993
 AuthMech XOAUTH2
 User u2548636@anu.edu.au
-PassCmd "~/.dotfiles/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '~/.dotfiles/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' ~/.dotfiles/anu_oauth2_keychain_stub"
+PassCmd "/Users/ben/.dotfiles/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/anu_oauth2_keychain_stub"
 TLSType IMAPS
 PipelineDepth 50
 
