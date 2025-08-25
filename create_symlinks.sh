@@ -1,93 +1,163 @@
 #!/bin/bash
 
-# Files to link in home directory
-files=(
-    "RProfile"
-    "gitconfig"
-    "gitignore"
-    "mbsyncrc"
-    "notmuch-config"
-    "zshenv"
-    "zshrc"
-)
+set -euo pipefail
 
-# Zed config files to link
-zed_files=(
-    "keymap.json"
-    "settings.json"
-    "tasks.json"
-)
+# Configuration
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+DRY_RUN="${DRY_RUN:-false}"
 
-# Get the absolute path of the .dotfiles directory
-DOTFILES_DIR="$HOME/.dotfiles"
+# Colour output for better readability
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No colour
 
-# Create symlinks in home directory
-for file in "${files[@]}"; do
-    target="$HOME/.${file}"
-    source_path="$DOTFILES_DIR/$file"
-
-    # Create symlink (overwriting if exists)
-    ln -sfn "$source_path" "$target"
-    echo "Created symlink: $target -> $source_path"
-done
-
-# Create .config/zed directory if it doesn't exist
-mkdir -p "$HOME/.config/zed"
-
-# Create symlinks for zed config files
-for file in "${zed_files[@]}"; do
-    target="$HOME/.config/zed/${file}"
-    source_path="$DOTFILES_DIR/zed/${file}"
-
-    # Create symlink (overwriting if exists)
-    ln -sfn "$source_path" "$target"
-    echo "Created symlink: $target -> $source_path"
-done
-
-# Create ~/.claude directory if it doesn't exist
-mkdir -p "$HOME/.claude"
-
-# Symlink individual Claude config files
-claude_config_files=(
-    "CLAUDE.md"
-    "settings.json"
-)
-
-for file in "${claude_config_files[@]}"; do
-    if [ -f "$DOTFILES_DIR/claude/$file" ]; then
-        target="$HOME/.claude/$file"
-        source_path="$DOTFILES_DIR/claude/$file"
-        ln -sfn "$source_path" "$target"
-        echo "Created symlink: $target -> $source_path"
+# Helper function to create symlinks with error handling
+create_symlink() {
+    local source_path="$1"
+    local target="$2"
+    local parent_dir
+    
+    # Check if source exists
+    if [[ ! -e "$source_path" ]]; then
+        echo -e "${RED}✗ Source not found: $source_path${NC}"
+        return 1
     fi
+    
+    # Create parent directory if needed
+    parent_dir="$(dirname "$target")"
+    if [[ ! -d "$parent_dir" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+            echo -e "${YELLOW}[DRY RUN] Would create directory: $parent_dir${NC}"
+        else
+            mkdir -p "$parent_dir"
+        fi
+    fi
+    
+    # Check if target exists and is not a symlink
+    if [[ -e "$target" && ! -L "$target" ]]; then
+        echo -e "${RED}✗ Target exists and is not a symlink: $target${NC}"
+        echo "  Consider backing up and removing it first"
+        return 1
+    fi
+    
+    # Create the symlink
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo -e "${YELLOW}[DRY RUN] Would link: $target -> $source_path${NC}"
+    else
+        ln -sfn "$source_path" "$target"
+        echo -e "${GREEN}✓ Linked: $target -> $source_path${NC}"
+    fi
+}
+
+# Process a list of files with a common pattern
+link_files() {
+    local source_dir="$1"
+    local target_dir="$2"
+    local prefix="${3:-}"
+    local suffix="${4:-}"
+    shift 4
+    local files=("$@")
+    
+    for file in "${files[@]}"; do
+        local source_path="$source_dir/$file"
+        local target="$target_dir/${prefix}${file}${suffix}"
+        create_symlink "$source_path" "$target"
+    done
+}
+
+# Process directory symlinks
+link_directory() {
+    local source_path="$1"
+    local target="$2"
+    
+    if [[ ! -d "$source_path" ]]; then
+        echo -e "${RED}✗ Source directory not found: $source_path${NC}"
+        return 1
+    fi
+    
+    create_symlink "$source_path" "$target"
+}
+
+main() {
+    echo "Setting up dotfiles symlinks..."
+    echo "Dotfiles directory: $DOTFILES_DIR"
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo -e "${YELLOW}Running in DRY RUN mode - no changes will be made${NC}"
+    fi
+    
+    # Dotfiles in home directory (with . prefix)
+    local home_files=(
+        "RProfile"
+        "gitconfig"
+        "gitignore"
+        "mbsyncrc"
+        "notmuch-config"
+        "zshenv"
+        "zshrc"
+    )
+    
+    echo -e "\n${GREEN}Linking home directory dotfiles...${NC}"
+    link_files "$DOTFILES_DIR" "$HOME" "." "" "${home_files[@]}"
+    
+    # Zed config files
+    local zed_files=(
+        "keymap.json"
+        "settings.json"
+        "tasks.json"
+    )
+    
+    echo -e "\n${GREEN}Linking Zed config files...${NC}"
+    link_files "$DOTFILES_DIR/zed" "$HOME/.config/zed" "" "" "${zed_files[@]}"
+    
+    # Claude config files
+    local claude_files=(
+        "CLAUDE.md"
+        "settings.json"
+    )
+    
+    echo -e "\n${GREEN}Linking Claude config files...${NC}"
+    for file in "${claude_files[@]}"; do
+        if [[ -f "$DOTFILES_DIR/claude/$file" ]]; then
+            create_symlink "$DOTFILES_DIR/claude/$file" "$HOME/.claude/$file"
+        fi
+    done
+    
+    # Directory symlinks
+    echo -e "\n${GREEN}Linking directories...${NC}"
+    link_directory "$DOTFILES_DIR/claude/agents" "$HOME/.claude/agents"
+    link_directory "$DOTFILES_DIR/aerc" "$HOME/Library/Preferences/aerc"
+    link_directory "$DOTFILES_DIR/notmuch" "$HOME/.config/notmuch"
+    
+    echo -e "\n${GREEN}Done!${NC}"
+}
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry-run|-n)
+            DRY_RUN=true
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  -n, --dry-run    Show what would be done without making changes"
+            echo "  -h, --help       Show this help message"
+            echo ""
+            echo "Environment variables:"
+            echo "  DOTFILES_DIR     Set the dotfiles directory (default: ~/.dotfiles)"
+            echo "  DRY_RUN          Set to 'true' for dry run mode"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
 done
 
-# Symlink entire agents directory
-if [ -d "$DOTFILES_DIR/claude/agents" ]; then
-    target="$HOME/.claude/agents"
-    source_path="$DOTFILES_DIR/claude/agents"
-    ln -sfn "$source_path" "$target"
-    echo "Created symlink: $target -> $source_path"
-fi
-
-# Create Library/Preferences directory if it doesn't exist (though it should always exist on macOS)
-mkdir -p "$HOME/Library/Preferences"
-
-# Create symlink for entire aerc directory (macOS location)
-target="$HOME/Library/Preferences/aerc"
-source_path="$DOTFILES_DIR/aerc"
-
-# Create symlink to aerc directory (using -n to avoid recursive symlinks)
-ln -sfn "$source_path" "$target"
-echo "Created symlink: $target -> $source_path"
-
-# Create .config directory if it doesn't exist
-mkdir -p "$HOME/.config"
-
-# Create symlink for entire notmuch directory
-target="$HOME/.config/notmuch"
-source_path="$DOTFILES_DIR/notmuch"
-
-# Create symlink to notmuch directory (using -n to avoid recursive symlinks)
-ln -sfn "$source_path" "$target"
-echo "Created symlink: $target -> $source_path"
+main
