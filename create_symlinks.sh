@@ -52,9 +52,6 @@ mkdir -p "$HOME/.claude/agents"
 claude_config_files=(
     "CLAUDE.md"
     "settings.json"
-    "elixir-ash.md"
-    "js.md"
-    "python.md"
 )
 
 for file in "${claude_config_files[@]}"; do
