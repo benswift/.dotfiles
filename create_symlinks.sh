@@ -62,3 +62,14 @@ source_path="$DOTFILES_DIR/aerc"
 # Create symlink to aerc directory
 ln -sf "$source_path" "$target"
 echo "Created symlink: $target -> $source_path"
+
+# Create .config/notmuch directory if it doesn't exist
+mkdir -p "$HOME/.config/notmuch"
+
+# Create symlink for notmuch hooks directory
+target="$HOME/.config/notmuch/default"
+source_path="$DOTFILES_DIR/notmuch/default"
+
+# Create symlink to notmuch default directory
+ln -sf "$source_path" "$target"
+echo "Created symlink: $target -> $source_path"
