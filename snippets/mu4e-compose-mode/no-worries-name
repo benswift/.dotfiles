@@ -1,8 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: no-worries-name
-# key: nw
-# binding: direct-keybinding
-# --
-No worries ${1:`(ben-find-to-firstname)`}.$0
-
-Ben
