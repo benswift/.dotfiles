@@ -83,14 +83,43 @@ Path ~/Maildir/phdconvenor/
 Inbox ~/Maildir/phdconvenor/INBOX
 SubFolders Verbatim
 
-Channel phdconvenor
-Far :phdconvenor-remote:
-Near :phdconvenor-local:
-Patterns * !"Conversation History" !"Calendar" !"Contacts" !"Tasks" !"Journal" !"Clutter" !"Notes" !"Outbox"
+Channel phdconvenor-inbox
+Far :phdconvenor-remote:INBOX
+Near :phdconvenor-local:INBOX
 Create Near
 Sync All
 Expunge Both
 SyncState *
+
+Channel phdconvenor-sent
+Far :phdconvenor-remote:"Sent Items"
+Near :phdconvenor-local:Sent
+Create Near
+Sync All
+Expunge Both
+SyncState *
+
+Channel phdconvenor-drafts
+Far :phdconvenor-remote:Drafts
+Near :phdconvenor-local:Drafts
+Create Near
+Sync All
+Expunge Both
+SyncState *
+
+Channel phdconvenor-archive
+Far :phdconvenor-remote:Archive
+Near :phdconvenor-local:Archive
+Create Near
+Sync All
+Expunge Both
+SyncState *
+
+Group phdconvenor
+Channel phdconvenor-inbox
+Channel phdconvenor-sent
+Channel phdconvenor-drafts
+Channel phdconvenor-archive
 
 ## Local Variables:
 ## mode: conf-unix

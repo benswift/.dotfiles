@@ -4,7 +4,7 @@ set folder = ~/Maildir/phdconvenor/
 set spoolfile = +INBOX
 set postponed = +Drafts
 set record = +Sent
-set trash = +Deleted\ Items
+set trash = +Archive
 
 # Sending mail via msmtp
 set sendmail = "/usr/local/bin/msmtp -a phdconvenor"
