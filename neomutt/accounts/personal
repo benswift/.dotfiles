@@ -1,0 +1,23 @@
+# Personal (Fastmail) account settings
+set from = "benswift@fastmail.com"
+set folder = ~/Maildir/personal/
+set spoolfile = +INBOX
+set postponed = +Drafts
+set record = +Sent
+set trash = +Trash
+
+# Sending mail via msmtp
+set sendmail = "/usr/local/bin/msmtp -a personal"
+set use_from = yes
+set envelope_from = yes
+
+# Personal account specific settings
+set signature = ""
+
+# Reply settings
+set fast_reply = yes
+set include = yes
+set forward_format = "Fwd: %s"
+set forward_quote = yes
+
+# Account-specific keybindings already defined in main config

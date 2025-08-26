@@ -93,6 +93,7 @@ main() {
         "gitconfig"
         "gitignore"
         "mbsyncrc"
+        "msmtprc"
         "notmuch-config"
         "zshenv"
         "zshrc"
@@ -125,6 +126,7 @@ main() {
     link_directory "$DOTFILES_DIR/claude/agents" "$HOME/.claude/agents"
     link_directory "$DOTFILES_DIR/aerc" "$HOME/Library/Preferences/aerc"
     link_directory "$DOTFILES_DIR/notmuch" "$HOME/.config/notmuch"
+    link_directory "$DOTFILES_DIR/neomutt" "$HOME/.config/neomutt"
 
     echo -e "\n${GREEN}Done!${NC}"
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Mail sync script for aerc + mbsync + notmuch
-# Syncs all email accounts and updates notmuch index
+# Mail sync script for neomutt + mbsync + mu
+# Syncs all email accounts and updates mu index
 #
 set -euo pipefail
 
@@ -11,8 +11,8 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Track if we need to update notmuch on exit
-needs_notmuch_update=false
+# Track if we need to update mu on exit
+needs_mu_update=false
 
 # Function to print status messages
 print_status() {
@@ -30,11 +30,11 @@ print_warning() {
 # Cleanup function to run on exit
 cleanup() {
     local exit_code=$?
-    if [ "$needs_notmuch_update" = true ]; then
+    if [ "$needs_mu_update" = true ]; then
         echo ""
-        print_warning "Script interrupted - updating notmuch database to maintain consistency..."
-        notmuch new --quiet
-        print_status "Notmuch database updated"
+        print_warning "Script interrupted - updating mu database to maintain consistency..."
+        mu index --quiet
+        print_status "mu database updated"
     fi
     exit $exit_code
 }
@@ -43,7 +43,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # Check dependencies
-for cmd in mbsync notmuch; do
+for cmd in mbsync mu; do
     if ! command -v "$cmd" &> /dev/null; then
         print_error "$cmd is not installed"
         exit 1
@@ -53,37 +53,15 @@ done
 # Track if any sync had errors
 sync_errors=0
 
-# Reconcile archive tags with physical locations
-reconcile_archives() {
-    local account="$1"
-    local count=0
-    
-    while IFS= read -r file; do
-        if [[ "$file" == *"/${account}/INBOX/"* ]]; then
-            dest="${file/\/INBOX\//\/Archive\/}"
-            mkdir -p "$(dirname "$dest")"
-            mv "$file" "$dest" 2>/dev/null && ((count++)) || true
-        fi
-    done < <(notmuch search --output=files "tag:archive AND path:${account}/INBOX/**")
-    
-    if [ $count -gt 0 ]; then
-        print_status "Moved $count ${account} message(s) to Archive"
-        needs_notmuch_update=true
-    fi
-    return $count
-}
-
-print_status "Reconciling archive tags with maildir folders..."
-personal_moved=0
-anu_moved=0
-reconcile_archives "personal" || personal_moved=$?
-reconcile_archives "anu" || anu_moved=$?
-
-# Update notmuch if files were moved
-if [ "$needs_notmuch_update" = true ]; then
-    print_status "Updating notmuch database..."
-    notmuch new --quiet
-    needs_notmuch_update=false
+# Initialize mu if needed
+if [ ! -d ~/.cache/mu ]; then
+    print_status "Initializing mu database..."
+    mu init --maildir=~/Maildir \
+        --my-address=u2548636@anu.edu.au \
+        --my-address=ben.swift@anu.edu.au \
+        --my-address=benswift@fastmail.com \
+        --my-address=ben@benswift.me
+    needs_mu_update=true
 fi
 
 # Sync accounts
@@ -91,23 +69,23 @@ for account in personal anu; do
     print_status "Syncing ${account^} account..."
     if output=$(mbsync "$account" 2>&1); then
         print_status "${account^} account synced successfully"
-        needs_notmuch_update=true
+        needs_mu_update=true
     else
         print_warning "${account^} account sync had issues"
         sync_errors=$((sync_errors + 1))
-        needs_notmuch_update=true
+        needs_mu_update=true
         # Only show output if there was an error
         echo "$output" | sed 's/^/  /'
     fi
 done
 
-# Update notmuch database
-if [ "$needs_notmuch_update" = true ]; then
-    print_status "Updating notmuch index..."
-    if notmuch new 2>&1 | grep -v "^No new mail\.$"; then
-        print_status "Notmuch index updated"
+# Update mu database
+if [ "$needs_mu_update" = true ]; then
+    print_status "Updating mu index..."
+    if mu index --quiet 2>&1; then
+        print_status "mu index updated"
     fi
-    needs_notmuch_update=false
+    needs_mu_update=false
 fi
 
 # Summary
@@ -118,12 +96,12 @@ else
     print_warning "Mail sync completed with $sync_errors account(s) having issues"
 fi
 
-# Show new message count (excluding spam and deleted)
-new_count=$(notmuch count 'tag:new AND NOT tag:spam AND NOT tag:deleted')
-unread_count=$(notmuch count 'tag:unread AND NOT tag:spam AND NOT tag:deleted')
+# Show new message count
+unread_count=$(mu find flag:unread 2>/dev/null | wc -l | tr -d ' ')
+today_count=$(mu find date:today 2>/dev/null | wc -l | tr -d ' ')
 
-if [ "$new_count" -gt 0 ]; then
-    print_status "You have $new_count new message(s)"
+if [ "$today_count" -gt 0 ]; then
+    print_status "You have $today_count message(s) from today"
 fi
 if [ "$unread_count" -gt 0 ]; then
     print_status "Total unread: $unread_count message(s)"

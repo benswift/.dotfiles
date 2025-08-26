@@ -1,0 +1,142 @@
+# Core settings
+set realname = "Ben Swift"
+set mbox_type = Maildir
+set folder = ~/Maildir/
+set header_cache = ~/.cache/neomutt/headers
+set message_cachedir = ~/.cache/neomutt/messages
+
+# Editor
+set editor = "nvim +/^$ ++1"
+set edit_headers = yes
+
+# Behaviour
+set wait_key = no
+set quit = ask-yes
+set delete = yes
+set move = no
+set mark_old = no
+set beep_new = yes
+set pipe_decode = yes
+set thorough_search = yes
+set sleep_time = 0
+set mail_check = 60
+
+# Display
+set sort = threads
+set sort_aux = reverse-last-date-received
+set pager_index_lines = 10
+set pager_context = 3
+set pager_stop = yes
+set menu_scroll = yes
+set smart_wrap = yes
+set tilde = yes
+set markers = no
+set date_format = "%d/%m/%y %H:%M"
+set index_format = "[%Z] %D %-20.20F %s"
+
+# Sidebar
+set sidebar_visible = yes
+set sidebar_width = 30
+set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?%S"
+set sidebar_short_path = yes
+set sidebar_delim_chars = "/"
+set sidebar_folder_indent = yes
+set sidebar_indent_string = "  "
+set sidebar_new_mail_only = no
+set sidebar_sort_method = "unsorted"
+
+# Key bindings for sidebar
+bind index,pager K sidebar-prev
+bind index,pager J sidebar-next
+bind index,pager L sidebar-open
+bind index,pager H sidebar-toggle-visible
+
+# Account switching
+source ~/.config/neomutt/accounts/personal
+folder-hook personal/* source ~/.config/neomutt/accounts/personal
+folder-hook anu/* source ~/.config/neomutt/accounts/anu
+
+# Mailboxes
+mailboxes +personal/INBOX \
+          +personal/Archive \
+          +personal/Drafts \
+          +personal/Sent \
+          +personal/Trash \
+          +anu/INBOX \
+          +anu/Archive \
+          +anu/Drafts \
+          +anu/Sent \
+          +anu/Deleted\ Items
+
+# Search bindings (vim-style)
+macro index / "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results " "mu find"
+macro index ? "<search-reverse>" "search backwards"
+macro index n "<search-next>" "next search result"
+macro index N "<search-opposite>" "previous search result"
+macro index ,r "<change-folder-readonly>~/.mu/results<enter>" "mu results"
+macro index,pager ,u "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results flag:unread<enter><change-folder-readonly>~/.mu/results<enter>" "show unread"
+
+# Unread management
+macro index ,m "<tag-pattern>~U<enter><tag-prefix><clear-flag>N<untag-pattern>~T<enter>" "mark all as read"
+macro index U "<toggle-new>" "toggle unread status"
+
+# Sync bindings
+macro index ,s "<shell-escape>mailsync<enter>" "sync all mail"
+macro index ,S "<shell-escape>mbsync -a<enter>" "sync mail (no index)"
+
+# Account switching macros
+macro index,pager ,p '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/personal<enter><change-folder>!<enter>'
+macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/anu<enter><change-folder>!<enter>'
+
+# Threading
+set collapse_unread = no
+set uncollapse_jump = yes
+bind index za collapse-thread
+bind index zA collapse-all
+
+# Vim-style navigation
+bind pager g top-line
+bind pager G bottom-line
+bind index g first-entry
+bind index G last-entry
+bind index,pager \Cd half-down
+bind index,pager \Cu half-up
+
+# Quick folder navigation
+macro index gi '<change-folder>=INBOX<enter>' "go to inbox"
+macro index ga '<change-folder>=Archive<enter>' "go to archive"
+macro index gs '<change-folder>=Sent<enter>' "go to sent"
+macro index gd '<change-folder>=Drafts<enter>' "go to drafts"
+
+# Archive workflow
+macro index,pager a "<save-message>=Archive<enter>" "archive message"
+macro index,pager A "<tag-thread><tag-prefix><save-message>=Archive<enter>" "archive thread"
+macro index,pager e "<save-message>=Archive<enter><sync-mailbox>" "archive and sync"
+macro pager d "<exit><save-message>=Archive<enter>" "archive from pager"
+
+# Attachments
+set attach_format = "[%D %t] %2n [%-7.7m/%10.10M] %.40d %> [%s] "
+alternative_order text/plain text/html
+auto_view text/html
+set implicit_autoview = yes
+
+# GPG/encryption (optional)
+set crypt_use_gpgme = no
+set crypt_autosign = no
+set crypt_opportunistic_encrypt = no
+
+# Colours (basic)
+color normal default default
+color hdrdefault cyan default
+color signature cyan default
+color attachment yellow default
+color quoted green default
+color quoted1 cyan default
+color quoted2 yellow default
+color quoted3 red default
+color indicator black yellow
+color error red default
+color status white blue
+color tree yellow default
+color tilde blue default
+color markers red default
