@@ -55,6 +55,7 @@ bind index,pager H sidebar-toggle-visible
 source ~/.config/neomutt/accounts/personal
 folder-hook personal/* source ~/.config/neomutt/accounts/personal
 folder-hook anu/* source ~/.config/neomutt/accounts/anu
+folder-hook phdconvenor/* source ~/.config/neomutt/accounts/phdconvenor
 
 # Mailboxes
 mailboxes +personal/INBOX \
@@ -66,7 +67,12 @@ mailboxes +personal/INBOX \
           +anu/Archive \
           +anu/Drafts \
           +anu/Sent \
-          +anu/Deleted\ Items
+          +anu/Deleted\ Items \
+          +phdconvenor/INBOX \
+          +phdconvenor/Archive \
+          +phdconvenor/Drafts \
+          +phdconvenor/Sent \
+          +phdconvenor/Deleted\ Items
 
 # Search bindings (vim-style)
 macro index / "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results " "mu find"
@@ -87,6 +93,7 @@ macro index ,S "<shell-escape>mbsync -a<enter>" "sync mail (no index)"
 # Account switching macros
 macro index,pager ,p '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/personal<enter><change-folder>!<enter>'
 macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/anu<enter><change-folder>!<enter>'
+macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
 
 # Threading
 set collapse_unread = no

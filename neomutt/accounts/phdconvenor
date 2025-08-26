@@ -1,0 +1,23 @@
+# PhD Convenor (delegated mailbox) account settings
+set from = "phdconvenor.cybernetics@anu.edu.au"
+set folder = ~/Maildir/phdconvenor/
+set spoolfile = +INBOX
+set postponed = +Drafts
+set record = +Sent
+set trash = +Deleted\ Items
+
+# Sending mail via msmtp
+set sendmail = "/usr/local/bin/msmtp -a phdconvenor"
+set use_from = yes
+set envelope_from = yes
+
+# PhD Convenor account specific settings
+set signature = ""
+
+# Reply settings
+set fast_reply = yes
+set include = yes
+set forward_format = "Fwd: %s"
+set forward_quote = yes
+
+# Account-specific keybindings already defined in main config
