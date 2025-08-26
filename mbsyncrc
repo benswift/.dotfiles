@@ -54,7 +54,7 @@ SubFolders Verbatim
 Channel anu
 Far :anu-remote:
 Near :anu-local:
-Patterns * !"Conversation History" !"Calendar" !"Contacts" !"Tasks" !"Journal"
+Patterns * !"Conversation History" !"Calendar" !"Contacts" !"Tasks" !"Journal" !"Clutter" !"Notes" !"Outbox"
 Create Near
 Sync All
 Expunge Both
