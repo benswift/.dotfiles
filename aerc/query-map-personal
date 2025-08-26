@@ -1,4 +1,4 @@
-INBOX=tag:inbox AND path:personal/**
+INBOX=path:personal/INBOX/**
 Unread=tag:unread AND path:personal/** AND NOT tag:spam
 Today=date:today.. AND path:personal/**
 Sent=path:personal/Sent/**
