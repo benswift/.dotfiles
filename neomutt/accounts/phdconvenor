@@ -3,8 +3,8 @@ set from = "phdconvenor.cybernetics@anu.edu.au"
 set folder = ~/Maildir/phdconvenor/
 set spoolfile = +INBOX
 set postponed = +Drafts
-set record = +Sent
-set trash = +Archive
+set record = +"Sent Items"
+set trash = +"Deleted Items"
 
 # Sending mail via msmtp
 set sendmail = "/usr/local/bin/msmtp -a phdconvenor"

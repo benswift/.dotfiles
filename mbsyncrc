@@ -83,6 +83,7 @@ Path ~/Maildir/phdconvenor/
 Inbox ~/Maildir/phdconvenor/INBOX
 SubFolders Verbatim
 
+# Channels for each folder (pattern matching doesn't work with this delegated mailbox)
 Channel phdconvenor-inbox
 Far :phdconvenor-remote:INBOX
 Near :phdconvenor-local:INBOX
@@ -93,7 +94,7 @@ SyncState *
 
 Channel phdconvenor-sent
 Far :phdconvenor-remote:"Sent Items"
-Near :phdconvenor-local:Sent
+Near :phdconvenor-local:"Sent Items"
 Create Near
 Sync All
 Expunge Both
@@ -115,11 +116,20 @@ Sync All
 Expunge Both
 SyncState *
 
+Channel phdconvenor-deleted
+Far :phdconvenor-remote:"Deleted Items"
+Near :phdconvenor-local:"Deleted Items"
+Create Near
+Sync All
+Expunge Both
+SyncState *
+
 Group phdconvenor
 Channel phdconvenor-inbox
 Channel phdconvenor-sent
 Channel phdconvenor-drafts
 Channel phdconvenor-archive
+Channel phdconvenor-deleted
 
 ## Local Variables:
 ## mode: conf-unix

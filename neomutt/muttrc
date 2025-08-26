@@ -71,7 +71,8 @@ mailboxes +personal/INBOX \
           +phdconvenor/INBOX \
           +phdconvenor/Archive \
           +phdconvenor/Drafts \
-          +phdconvenor/Sent
+          +"phdconvenor/Sent Items" \
+          +"phdconvenor/Deleted Items"
 
 # Search bindings (vim-style)
 macro index / "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results " "mu find"
