@@ -1,5 +1,5 @@
 INBOX=tag:inbox
-Unread=tag:unread
+Unread=tag:unread AND NOT tag:spam
 Today=date:today..
 Personal=path:personal/**
 ANU=path:anu/**

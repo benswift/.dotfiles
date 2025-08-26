@@ -1,5 +1,5 @@
 INBOX=tag:inbox AND path:personal/**
-Unread=tag:unread AND path:personal/**
+Unread=tag:unread AND path:personal/** AND NOT tag:spam
 Today=date:today.. AND path:personal/**
 Sent=path:personal/Sent/**
 Archive=path:personal/Archive/**
