@@ -2,7 +2,7 @@
 #
 # Mail sync script for aerc + mbsync + notmuch
 # Syncs all email accounts and updates notmuch index
-
+#
 set -euo pipefail
 
 # Colours for output
@@ -24,69 +24,66 @@ print_warning() {
     echo -e "${YELLOW}[$(date '+%H:%M:%S')] WARNING:${NC} $1"
 }
 
-# Check if mbsync is installed
-if ! command -v mbsync &> /dev/null; then
-    print_error "mbsync is not installed"
-    exit 1
-fi
-
-# Check if notmuch is installed
-if ! command -v notmuch &> /dev/null; then
-    print_error "notmuch is not installed"
-    exit 1
-fi
+# Check dependencies
+for cmd in mbsync notmuch; do
+    if ! command -v "$cmd" &> /dev/null; then
+        print_error "$cmd is not installed"
+        exit 1
+    fi
+done
 
 # Track if any sync had errors
 sync_errors=0
 
-# Reconcile archive tags with physical locations first
-if ! command -v reconcile-archive &> /dev/null; then
-    print_error "reconcile-archive script not found in PATH"
-    exit 1
+# Reconcile archive tags with physical locations
+reconcile_archives() {
+    local account="$1"
+    local count=0
+    
+    while IFS= read -r file; do
+        if [[ "$file" == *"/${account}/INBOX/"* ]]; then
+            dest="${file/\/INBOX\//\/Archive\/}"
+            mkdir -p "$(dirname "$dest")"
+            mv "$file" "$dest" 2>/dev/null && ((count++)) || true
+        fi
+    done < <(notmuch search --output=files "tag:archive AND path:${account}/INBOX/**")
+    
+    if [ $count -gt 0 ]; then
+        print_status "Moved $count ${account} message(s) to Archive"
+    fi
+    return $count
+}
+
+print_status "Reconciling archive tags with maildir folders..."
+personal_moved=0
+anu_moved=0
+reconcile_archives "personal" || personal_moved=$?
+reconcile_archives "anu" || anu_moved=$?
+
+# Update notmuch if files were moved
+if [ $personal_moved -gt 0 ] || [ $anu_moved -gt 0 ]; then
+    print_status "Updating notmuch database..."
+    notmuch new --quiet
 fi
 
-print_status "Reconciling archive folders..."
-reconcile-archive
-
-# Sync Personal account
-print_status "Syncing Personal account..."
-if mbsync personal 2>&1 | while IFS= read -r line; do
-    echo "  $line"
-done; then
-    print_status "Personal account synced successfully"
-else
-    print_warning "Personal account sync had issues"
-    sync_errors=$((sync_errors + 1))
-fi
-
-# Sync ANU account
-print_status "Syncing ANU account..."
-if mbsync anu 2>&1 | while IFS= read -r line; do
-    echo "  $line"
-done; then
-    print_status "ANU account synced successfully"
-else
-    print_warning "ANU account sync had issues"
-    sync_errors=$((sync_errors + 1))
-fi
+# Sync accounts
+for account in personal anu; do
+    print_status "Syncing ${account^} account..."
+    if output=$(mbsync "$account" 2>&1); then
+        print_status "${account^} account synced successfully"
+    else
+        print_warning "${account^} account sync had issues"
+        sync_errors=$((sync_errors + 1))
+        # Only show output if there was an error
+        echo "$output" | sed 's/^/  /'
+    fi
+done
 
 # Update notmuch database
 print_status "Updating notmuch index..."
-if notmuch new 2>&1 | while IFS= read -r line; do
-    echo "  $line"
-done; then
+if notmuch new 2>&1 | grep -v "^No new mail\.$"; then
     print_status "Notmuch index updated"
-else
-    print_error "Failed to update notmuch index"
-    exit 1
 fi
-
-# Run notmuch tagging if you have any custom tag rules
-# Uncomment and modify as needed:
-# print_status "Applying notmuch tags..."
-# notmuch tag +inbox -- tag:new AND folder:personal/INBOX
-# notmuch tag +inbox -- tag:new AND folder:anu/INBOX
-# notmuch tag -new -- tag:new
 
 # Summary
 echo ""
@@ -96,8 +93,13 @@ else
     print_warning "Mail sync completed with $sync_errors account(s) having issues"
 fi
 
-# Optional: Show new message count
-new_count=$(notmuch count tag:new)
+# Show new message count (excluding spam and deleted)
+new_count=$(notmuch count 'tag:new AND NOT tag:spam AND NOT tag:deleted')
+unread_count=$(notmuch count 'tag:unread AND NOT tag:spam AND NOT tag:deleted')
+
 if [ "$new_count" -gt 0 ]; then
     print_status "You have $new_count new message(s)"
+fi
+if [ "$unread_count" -gt 0 ]; then
+    print_status "Total unread: $unread_count message(s)"
 fi
