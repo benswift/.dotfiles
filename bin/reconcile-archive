@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+# Reconcile notmuch archive tags with physical maildir locations
+# Moves messages tagged with 'archive' to Archive folders
+# Should run before mbsync to ensure IMAP compatibility
+
+set -euo pipefail
+
+# Function to print status messages
+print_status() {
+    echo "[$(date '+%H:%M:%S')] $1"
+}
+
+print_status "Reconciling archive tags with maildir folders..."
+
+# Process personal account
+personal_count=0
+while IFS= read -r file; do
+    if [[ "$file" == *"/personal/INBOX/"* ]]; then
+        dest="${file/\/INBOX\//\/Archive\/}"
+        dest_dir=$(dirname "$dest")
+        mkdir -p "$dest_dir"
+        mv "$file" "$dest" 2>/dev/null && ((personal_count++)) || true
+    fi
+done < <(notmuch search --output=files 'tag:archive AND path:personal/INBOX/**')
+
+if [ $personal_count -gt 0 ]; then
+    print_status "Moved $personal_count personal message(s) to Archive"
+fi
+
+# Process ANU account  
+anu_count=0
+while IFS= read -r file; do
+    if [[ "$file" == *"/anu/INBOX/"* ]]; then
+        dest="${file/\/INBOX\//\/Archive\/}"
+        dest_dir=$(dirname "$dest")
+        mkdir -p "$dest_dir"
+        mv "$file" "$dest" 2>/dev/null && ((anu_count++)) || true
+    fi
+done < <(notmuch search --output=files 'tag:archive AND path:anu/INBOX/**')
+
+if [ $anu_count -gt 0 ]; then
+    print_status "Moved $anu_count ANU message(s) to Archive"
+fi
+
+# Update notmuch database to reflect moves
+if [ $personal_count -gt 0 ] || [ $anu_count -gt 0 ]; then
+    print_status "Updating notmuch database..."
+    notmuch new --quiet
+fi
+
+print_status "Archive reconciliation complete"

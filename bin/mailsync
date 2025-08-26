@@ -39,6 +39,15 @@ fi
 # Track if any sync had errors
 sync_errors=0
 
+# Reconcile archive tags with physical locations first
+if ! command -v reconcile-archive &> /dev/null; then
+    print_error "reconcile-archive script not found in PATH"
+    exit 1
+fi
+
+print_status "Reconciling archive folders..."
+reconcile-archive
+
 # Sync Personal account
 print_status "Syncing Personal account..."
 if mbsync personal 2>&1 | while IFS= read -r line; do
