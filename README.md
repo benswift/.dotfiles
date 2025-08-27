@@ -55,6 +55,29 @@ To sync Office365 email with mbsync using OAuth2 authentication:
 
 See `reauth-anu-oauth.sh`, `keychain-store.sh`, and `mutt_oauth2.py` in this repo for working examples.
 
+## Troubleshooting
+
+### mbsync "unexpected tag" error or hanging
+
+If `mbsync` fails with an "unexpected tag" error or hangs, this usually indicates corrupted `.mbsyncstate` files. To fix:
+
+```bash
+# Remove all state files
+rm -f ~/Maildir/anu/*/.mbsyncstate*
+rm -f ~/Maildir/anu/*/.uidvalidity
+
+# Check for large journal or lock files (especially in Archive folder)
+ls -lah ~/Maildir/anu/*/.mbsyncstate*
+
+# Test individual folders to identify problematic ones
+for folder in INBOX Archive "Deleted Items" Drafts "Junk E-Mail" "Sent Items"; do
+  echo "Testing $folder..."
+  timeout 5 mbsync "anu:$folder"
+done
+```
+
+This removes the state files and forces mbsync to rebuild them on the next sync. Note that this may cause mbsync to re-download message headers but won't duplicate emails. Large folders (like Archive with 40k+ messages) may take longer to sync initially after clearing state.
+
 # License
 
 (c) 2012-2025 Ben Swift
