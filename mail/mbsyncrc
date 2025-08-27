@@ -60,7 +60,6 @@ Create Near
 Sync All
 Expunge Both
 SyncState *
-MaxMessages 1000
 
 ###################################
 # PhD Convenor (delegated mailbox) #
