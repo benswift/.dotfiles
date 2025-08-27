@@ -10,7 +10,7 @@ setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 
 alias zp="zed-preview"
-alias todo="nb todo"
+alias todo="nb todo undone"
 alias screencap='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
 
