@@ -1,6 +1,7 @@
 # Email configuration
 
-This directory contains all email-related configuration files for mbsync (IMAP sync), msmtp (SMTP), and neomutt (email client).
+This directory contains all email-related configuration files for mbsync (IMAP
+sync), msmtp (SMTP), and neomutt (email client).
 
 ## Files
 
@@ -16,27 +17,37 @@ This directory contains all email-related configuration files for mbsync (IMAP s
 
 To sync Office365 email with mbsync using OAuth2 authentication:
 
-1. **Build mbsync with SASL support** (if not already available via package manager):
+1. **Build mbsync with SASL support** (if not already available via package
+   manager):
+
    - Source available at: https://github.com/isync-devel/isync
    - Configure with `--with-sasl` pointing to your SASL installation
 
 2. **Install cyrus-sasl-xoauth2 plugin**:
+
    - Clone from: https://github.com/moriyoshi/cyrus-sasl-xoauth2
-   - Build and install to your SASL plugin directory (e.g., `/opt/homebrew/Cellar/cyrus-sasl/*/lib/sasl2/`)
+   - Build and install to your SASL plugin directory (e.g.,
+     `/opt/homebrew/Cellar/cyrus-sasl/*/lib/sasl2/`)
 
 3. **OAuth2 token management**:
+
    - Use `mutt_oauth2.py` script (from mutt source) to obtain and refresh tokens
-   - Configure with Thunderbird's client ID: `9e5f94bc-e8a4-4e73-b8be-63364c29d753`
-   - Use devicecode flow for initial authentication (localhostauthcode doesn't work with Thunderbird)
+   - Configure with Thunderbird's client ID:
+     `9e5f94bc-e8a4-4e73-b8be-63364c29d753`
+   - Use devicecode flow for initial authentication (localhostauthcode doesn't
+     work with Thunderbird)
    - Store tokens securely in macOS Keychain using `keychain-store.sh` wrapper
    - Run `./reauth-anu-oauth.sh` from the mail directory to re-authenticate
 
 4. **Configure mbsync** (`mbsyncrc`):
+
    - Set `AuthMech XOAUTH2`
    - Use `PassCmd` with full paths to scripts
-   - Example: `PassCmd "/Users/ben/.dotfiles/mail/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/mail/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/mail/anu_oauth2_keychain_stub"`
+   - Example:
+     `PassCmd "/Users/ben/.dotfiles/mail/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/mail/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/mail/anu_oauth2_keychain_stub"`
 
 5. **Configure aerc** for Office365 SMTP:
+
    - Use `smtp+xoauth2://` protocol (not `smtps+oauthbearer://`)
    - Use actual username (e.g., `u2548636@anu.edu.au`) not display name
    - Server: `smtp.office365.com:587`
@@ -47,15 +58,20 @@ To sync Office365 email with mbsync using OAuth2 authentication:
    - Use same OAuth token from keychain
    - See `msmtprc` for configuration
 
-See `reauth-anu-oauth.sh`, `keychain-store.sh`, and `mutt_oauth2.py` in this directory for working examples.
+See `reauth-anu-oauth.sh`, `keychain-store.sh`, and `mutt_oauth2.py` in this
+directory for working examples.
 
 ## Troubleshooting
 
 ### mbsync "unexpected tag" error or hanging
 
-If `mbsync` fails with an "unexpected tag" error or hangs, this usually indicates corrupted `.mbsyncstate` files. To fix:
+If `mbsync` fails with an "unexpected tag" error or hangs, this usually
+indicates corrupted `.mbsyncstate` files. To fix:
 
 ```bash
+# try this first, it's probably this one that's the issue
+rm -f ~/Maildir/anu/Archive/.mbsyncstate.*
+
 # Remove all state files
 rm -f ~/Maildir/anu/*/.mbsyncstate*
 rm -f ~/Maildir/anu/*/.uidvalidity
@@ -70,4 +86,7 @@ for folder in INBOX Archive "Deleted Items" Drafts "Junk E-Mail" "Sent Items"; d
 done
 ```
 
-This removes the state files and forces mbsync to rebuild them on the next sync. Note that this may cause mbsync to re-download message headers but won't duplicate emails. Large folders (like Archive with 40k+ messages) may take longer to sync initially after clearing state.
+This removes the state files and forces mbsync to rebuild them on the next sync.
+Note that this may cause mbsync to re-download message headers but won't
+duplicate emails. Large folders (like Archive with 40k+ messages) may take
+longer to sync initially after clearing state.
