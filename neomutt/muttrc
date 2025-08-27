@@ -4,9 +4,11 @@ set mbox_type = Maildir
 set folder = ~/Maildir/
 set header_cache = ~/.cache/neomutt/headers
 set message_cachedir = ~/.cache/neomutt/messages
+set confirmappend = no
+set delete_untag = yes
 
 # Editor
-set editor = "nvim +/^$ ++1"
+set editor = "zed --wait"
 set edit_headers = yes
 
 # Behaviour
@@ -110,6 +112,8 @@ bind index gg first-entry
 bind index G last-entry
 bind index,pager \Cd half-down
 bind index,pager \Cu half-up
+bind pager \Cj next-line
+bind pager \Ck previous-line
 
 # Quick folder navigation
 macro index gi '<change-folder>=INBOX<enter>' "go to inbox"
