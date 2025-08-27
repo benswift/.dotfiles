@@ -1,0 +1,34 @@
+# mailcap file for neomutt
+
+# HTML emails - convert to plain text with pandoc
+text/html; pandoc -f html -t plain | less; copiousoutput; nametemplate=%s.html
+
+# Plain text - just view with less (neomutt handles colorization internally)
+text/plain; less; needsterminal
+
+# Calendar invites
+text/calendar; open %s
+application/ics; open %s
+
+# Message delivery status
+message/delivery-status; cat; copiousoutput
+
+# Embedded RFC822 messages
+message/rfc822; open %s
+
+# Images - use system viewer
+image/*; open %s
+
+# PDFs - open with system viewer
+application/pdf; open %s
+
+# Office documents
+application/msword; open %s
+application/vnd.openxmlformats-officedocument.wordprocessingml.document; open %s
+application/vnd.ms-excel; open %s
+application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; open %s
+application/vnd.ms-powerpoint; open %s
+application/vnd.openxmlformats-officedocument.presentationml.presentation; open %s
+
+# Generic binary attachments - save or open with system handler
+application/octet-stream; open %s

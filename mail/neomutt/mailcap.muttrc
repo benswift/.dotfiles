@@ -1,0 +1,16 @@
+# Mailcap configuration for neomutt
+# This file should be sourced from your main neomutt config
+
+# Set the mailcap path to the neomutt config directory
+set mailcap_path = ~/.config/neomutt/mailcap
+
+# Automatically view HTML emails
+auto_view text/html
+auto_view text/calendar
+auto_view application/ics
+
+# Prefer plain text over HTML
+alternative_order text/plain text/enriched text/html
+
+# Use mailcap entries for viewing attachments
+set implicit_autoview = yes
