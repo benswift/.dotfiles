@@ -39,7 +39,7 @@ Host outlook.office365.com
 Port 993
 AuthMech XOAUTH2
 User u2548636@anu.edu.au
-PassCmd "/Users/ben/.dotfiles/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/anu_oauth2_keychain_stub"
+PassCmd "/Users/ben/.dotfiles/mail/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/mail/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/mail/anu_oauth2_keychain_stub"
 TLSType IMAPS
 PipelineDepth 1
 Timeout 120
@@ -71,7 +71,7 @@ Host outlook.office365.com
 Port 993
 AuthMech XOAUTH2
 User phdconvenor.cybernetics@anu.edu.au
-PassCmd "/Users/ben/.dotfiles/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/anu_oauth2_keychain_stub"
+PassCmd "/Users/ben/.dotfiles/mail/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/mail/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/mail/anu_oauth2_keychain_stub"
 TLSType IMAPS
 PipelineDepth 1
 Timeout 120

@@ -15,10 +15,11 @@ My Claude Code editor config is in @claude/
 
 ## Email
 
-The email config lives between
+The email config lives in @mail/ and includes:
 
-- @neomutt/
-- @msmtprc
-- @mbsyncrc
+- @mail/neomutt/ - neomutt email client config
+- @mail/msmtprc - SMTP configuration
+- @mail/mbsyncrc - IMAP sync configuration
+- OAuth scripts and authentication helpers
 
-(this config is complicated because email is complicated)
+See @mail/README.md for detailed setup instructions.

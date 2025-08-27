@@ -92,8 +92,6 @@ main() {
         "RProfile"
         "gitconfig"
         "gitignore"
-        "mbsyncrc"
-        "msmtprc"
         "notmuch-config"
         "zshenv"
         "zshrc"
@@ -101,6 +99,11 @@ main() {
 
     echo -e "\nLinking home directory dotfiles..."
     link_files "$DOTFILES_DIR" "$HOME" "." "" "${home_files[@]}"
+    
+    # Mail config files
+    echo -e "\nLinking mail config files..."
+    create_symlink "$DOTFILES_DIR/mail/mbsyncrc" "$HOME/.mbsyncrc"
+    create_symlink "$DOTFILES_DIR/mail/msmtprc" "$HOME/.msmtprc"
 
     # Zed config files
     local zed_files=(
@@ -126,7 +129,7 @@ main() {
     link_directory "$DOTFILES_DIR/claude/agents" "$HOME/.claude/agents"
     link_directory "$DOTFILES_DIR/aerc" "$HOME/Library/Preferences/aerc"
     link_directory "$DOTFILES_DIR/notmuch" "$HOME/.config/notmuch"
-    link_directory "$DOTFILES_DIR/neomutt" "$HOME/.config/neomutt"
+    link_directory "$DOTFILES_DIR/mail/neomutt" "$HOME/.config/neomutt"
 
     echo -e "\n${GREEN}Done!${NC}"
 }
