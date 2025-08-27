@@ -94,12 +94,8 @@ _anu-pdf() {
     _exit_1 printf "Error: Could not find a suitable command to open the PDF.\\n"
   fi
   
-  # Give the PDF viewer time to open before cleaning up
-  sleep 2
-  
-  # Clean up temporary files
-  rm -rf "${_temp_dir}"
-  
+  # Keep the PDF in the temp directory instead of deleting it
+  printf "PDF saved to: %s\\n" "${_temp_pdf}"
   printf "Done.\\n"
 }
 
