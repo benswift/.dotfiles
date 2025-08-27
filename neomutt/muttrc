@@ -58,21 +58,21 @@ folder-hook anu/* source ~/.config/neomutt/accounts/anu
 folder-hook phdconvenor/* source ~/.config/neomutt/accounts/phdconvenor
 
 # Mailboxes
-mailboxes +personal/INBOX \
-          +personal/Archive \
-          +personal/Drafts \
-          +personal/Sent \
-          +personal/Trash \
-          +anu/INBOX \
-          +anu/Archive \
-          +anu/Drafts \
-          +anu/Sent \
-          +anu/Deleted\ Items \
-          +phdconvenor/INBOX \
-          +phdconvenor/Archive \
-          +phdconvenor/Drafts \
-          +"phdconvenor/Sent Items" \
-          +"phdconvenor/Deleted Items"
+mailboxes ~/Maildir/personal/INBOX \
+          ~/Maildir/personal/Archive \
+          ~/Maildir/personal/Drafts \
+          ~/Maildir/personal/"Sent Items" \
+          ~/Maildir/personal/Trash \
+          ~/Maildir/anu/INBOX \
+          ~/Maildir/anu/Archive \
+          ~/Maildir/anu/Drafts \
+          ~/Maildir/anu/"Sent Items" \
+          ~/Maildir/anu/"Deleted Items" \
+          ~/Maildir/phdconvenor/INBOX \
+          ~/Maildir/phdconvenor/Archive \
+          ~/Maildir/phdconvenor/Drafts \
+          ~/Maildir/phdconvenor/"Sent Items" \
+          ~/Maildir/phdconvenor/"Deleted Items"
 
 # Search bindings (vim-style)
 macro index / "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results " "mu find"
@@ -102,9 +102,11 @@ bind index za collapse-thread
 bind index zA collapse-all
 
 # Vim-style navigation
-bind pager g top-line
-bind pager G bottom-line
-bind index g first-entry
+bind pager g noop
+bind pager gg top
+bind pager G bottom
+bind index g noop
+bind index gg first-entry
 bind index G last-entry
 bind index,pager \Cd half-down
 bind index,pager \Cu half-up
