@@ -57,10 +57,10 @@ sync_errors=0
 if [ ! -d ~/.cache/mu ]; then
     print_status "Initializing mu database..."
     mu init --maildir=~/Maildir \
-        --my-address=u2548636@anu.edu.au \
-        --my-address=ben.swift@anu.edu.au \
-        --my-address=benswift@fastmail.com \
-        --my-address=ben@benswift.me
+        --personal-address=u2548636@anu.edu.au \
+        --personal-address=ben.swift@anu.edu.au \
+        --personal-address=benswift@fastmail.com \
+        --personal-address=ben@benswift.me
     needs_mu_update=true
 fi
 
