@@ -3,7 +3,7 @@ set from = "benswift@fastmail.com"
 set folder = ~/Maildir/personal/
 set spoolfile = +INBOX
 set postponed = +Drafts
-set record = +Sent
+set record = +"Sent Items"
 set trash = +Trash
 
 # Sending mail via msmtp

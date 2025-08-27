@@ -3,7 +3,7 @@ set from = "u2548636@anu.edu.au"
 set folder = ~/Maildir/anu/
 set spoolfile = +INBOX
 set postponed = +Drafts
-set record = +Sent
+set record = +"Sent Items"
 set trash = +Deleted\ Items
 
 # Sending mail via msmtp
