@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+###############################################################################
+# ios-import.nb-plugin
+#
+# Import txt files from iCloud nb-inbox directory into nb
+#
+# Add this file to your `nb` notebook or to the plugins directory to enable
+# the `nb ios-import` subcommand.
+#
+# Installation:
+#   nb plugins install /path/to/ios-import.nb-plugin
+# -or-
+#   cp ios-import.nb-plugin ~/.nb/.plugins/
+###############################################################################
+
+_subcommands add "ios-import"
+
+_ios-import() {
+  local _inbox_dir="/Users/ben/Library/Mobile Documents/com~apple~CloudDocs/nb-inbox"
+  local _notes_dir="${_inbox_dir}/notes"
+  local _bookmarks_dir="${_inbox_dir}/bookmarks"
+  local _imported_count=0
+  local _notebook="${1:-}"
+  
+  # Use current notebook if none specified
+  if [[ -z "${_notebook}" ]]; then
+    _notebook="$(_notebooks current)"
+  fi
+  
+  # Check if inbox directories exist
+  if [[ ! -d "${_inbox_dir}" ]]; then
+    printf "Error: Cannot access inbox directory: %s\\n" "${_inbox_dir}"
+    printf "\\nThis may be a permissions issue. To fix:\\n"
+    printf "1. Open System Settings > Privacy & Security > Full Disk Access\\n"
+    printf "2. Add your terminal application (Terminal.app, iTerm2, etc.)\\n"
+    printf "3. Restart your terminal and try again\\n"
+    _exit_1 printf "\\nAlternatively, check if the path exists or if iCloud Drive is synced.\\n"
+  fi
+  
+  printf "Importing txt files from iCloud nb-inbox into notebook: %s\\n" "${_notebook}"
+  
+  # Process notes directory
+  if [[ -d "${_notes_dir}" ]]; then
+    printf "\\nProcessing notes...\\n"
+    # Use find to handle spaces in filenames properly
+    while IFS= read -r -d '' _file; do
+        local _basename
+        _basename="$(basename "${_file}")"
+        
+        # Check if file is empty
+        if [[ ! -s "${_file}" ]]; then
+          printf "  Warning: Empty file deleted: %s\\n" "${_basename}"
+          rm "${_file}"
+          continue
+        fi
+        
+        printf "  Importing: %s\\n" "${_basename}"
+        
+        # Import the file
+        if nb import "${_file}" "${_notebook}:"; then
+          # Remove the original file after successful import
+          rm "${_file}"
+          ((_imported_count++))
+        else
+          printf "    Warning: Failed to import %s\\n" "${_basename}"
+        fi
+    done < <(find "${_notes_dir}" -name "*.txt" -type f -print0)
+  fi
+  
+  # Process bookmarks directory
+  if [[ -d "${_bookmarks_dir}" ]]; then
+    printf "\\nProcessing bookmarks...\\n"
+    # Use find to handle spaces in filenames properly
+    while IFS= read -r -d '' _file; do
+        local _basename
+        _basename="$(basename "${_file}")"
+        
+        # Check if file is empty
+        if [[ ! -s "${_file}" ]]; then
+          printf "  Warning: Empty file deleted: %s\\n" "${_basename}"
+          rm "${_file}"
+          continue
+        fi
+        
+        printf "  Importing: %s\\n" "${_basename}"
+        
+        # Import the file
+        if nb import "${_file}" "${_notebook}:"; then
+          # Remove the original file after successful import
+          rm "${_file}"
+          ((_imported_count++))
+        else
+          printf "    Warning: Failed to import %s\\n" "${_basename}"
+        fi
+    done < <(find "${_bookmarks_dir}" -name "*.txt" -type f -print0)
+  fi
+  
+  if [[ ${_imported_count} -eq 0 ]]; then
+    printf "\\nNo txt files found to import.\\n"
+  else
+    printf "\\nSuccessfully imported %d file(s).\\n" ${_imported_count}
+  fi
+}
+
+_subcommands describe "ios-import" <<HEREDOC
+Usage:
+  nb ios-import [<notebook>]
+
+Description:
+  Import all txt files from the iCloud nb-inbox directory into nb.
+  
+  Files are imported from:
+    - /Users/ben/Library/Mobile Documents/com~apple~CloudDocs/nb-inbox/notes/*.txt
+    - /Users/ben/Library/Mobile Documents/com~apple~CloudDocs/nb-inbox/bookmarks/*.txt
+  
+  After successful import, the original files are removed from the inbox.
+  
+  If no notebook is specified, imports into the current notebook.
+
+Examples:
+  nb ios-import
+  nb ios-import personal
+  nb ios-import work:
+
+HEREDOC
