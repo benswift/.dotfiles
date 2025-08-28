@@ -3,13 +3,28 @@ set realname = "Ben Swift"
 set mbox_type = Maildir
 set folder = ~/Maildir/
 set header_cache = ~/.cache/neomutt/headers
+set header_cache_backend = "lmdb"
 set message_cachedir = ~/.cache/neomutt/messages
 set confirmappend = no
+set confirmcreate = yes
 set delete_untag = yes
+set tmpdir = ~/.cache/neomutt/temp
+set save_history = 100
+set history = 1000
+set change_folder_next = yes
+set mark_macro_prefix = "'"
+set reverse_alias = yes
+set simple_search = "~f %s | ~t %s | ~c %s | ~s %s"
 
 # Editor
 set editor = "zed-preview --wait --add"
 set edit_headers = yes
+
+# Compose
+set compose_format = "-- NeoMutt: Compose [Approx. msg size: %l | Atts: %a]%>-"
+set attribution = "On %{%a, %d %b %Y at %I:%M %p %Z}, %n wrote:"
+set quote_regex = "^([ \t]*[|>:}#])+"
+set reply_regex = "^((re|aw|sv|ang):[ \t]*)+"
 
 # Behaviour
 set wait_key = no
@@ -22,19 +37,35 @@ set pipe_decode = yes
 set thorough_search = yes
 set sleep_time = 0
 set mail_check = 60
+set read_inc = 100
+set write_inc = 100
+set net_inc = 5
+
+# Address lookup
+set query_command = "( mu cfind --format=mutt-ab '%s' 2>/dev/null )"
+set query_format = "%3c %t %-25.25n %-25.25a %?e?(%e)?"
 
 # Display
 set sort = threads
 set sort_aux = reverse-last-date-received
+set sort_re = yes
+set strict_threads = no
+set hide_thread_subject = yes
+set narrow_tree = yes
 set pager_index_lines = 10
 set pager_context = 3
 set pager_stop = yes
+set pager_read_delay = 0
+set pager_format = "-%Z- %C/%m: %.20n   %s %* -- (%P)"
 set menu_scroll = yes
 set smart_wrap = yes
 set tilde = yes
 set markers = no
 set date_format = "%d/%m/%y %H:%M"
-set index_format = "[%Z] %D %-20.20F %s"
+set index_format = "%4C %Z %?X?A& ? %{%b %d} %-15.15L %?M?(#%03M)&(%4l)? %s"
+set mail_check_stats = yes
+set mail_check_stats_interval = 60
+set display_filter = "sed 's/\x1b\[[0-9;]*[mGKHF]//g'"
 
 # Sidebar
 set sidebar_visible = yes
@@ -135,6 +166,11 @@ set attach_format = "[%D %t] %2n [%-7.7m/%10.10M] %.40d %> [%s] "
 alternative_order text/plain text/html
 auto_view text/html
 set implicit_autoview = yes
+set abort_noattach = ask-yes
+set abort_noattach_regex = "\\<(attach(|ed|ments?)|^attached|^attachment|(see|check) (attachments?|attached))\\>"
+set forward_attachments = yes
+set mime_forward = ask-no
+set attach_save_dir = "~/Downloads"
 
 # GPG/encryption (optional)
 set crypt_use_gpgme = no
@@ -156,3 +192,35 @@ color status white blue
 color tree yellow default
 color tilde blue default
 color markers red default
+
+# === Additional Quality-of-Life Settings ===
+
+# URL handling
+macro index,pager \cb "<pipe-message> urlscan<enter>" "call urlscan to extract URLs"
+macro attach,compose \cb "<pipe-entry> urlscan<enter>" "call urlscan to extract URLs"
+
+# Message tagging shortcuts
+bind index <space> tag-entry
+bind index <Esc><space> tag-thread
+bind index <Esc>t tag-pattern
+macro index \Ca "<tag-pattern>~A<enter>" "tag all messages"
+macro index \Cn "<untag-pattern>~T<enter>" "untag all messages"
+
+# Better deletion workflow
+macro index,pager dd "<delete-message><sync-mailbox>" "move to trash"
+macro index,pager dat "<delete-thread><sync-mailbox>" "delete thread"
+
+# Quick limit (filter) shortcuts
+macro index L "<limit>all<enter>" "remove limit"
+macro index \Cl "<limit>all<enter>" "remove limit"
+macro index ,u "<limit>~U<enter>" "limit to unread"
+macro index ,t "<limit>~d <1w<enter>" "limit to this week"
+macro index ,y "<limit>~d <1d<enter>" "limit to today"
+macro index ,f "<limit>~F<enter>" "limit to flagged"
+
+# Additional folder navigation
+macro index,pager gt "<change-folder>=" "go to folder root"
+macro index,pager Mi "<change-folder>=INBOX<enter>" "go to inbox"
+macro index,pager Ms "<change-folder>=Sent<enter>" "go to sent"
+macro index,pager Md "<change-folder>=Drafts<enter>" "go to drafts"
+macro index,pager Ma "<change-folder>=Archive<enter>" "go to archive"
