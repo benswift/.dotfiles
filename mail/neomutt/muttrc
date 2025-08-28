@@ -8,7 +8,7 @@ set confirmappend = no
 set delete_untag = yes
 
 # Editor
-set editor = "zed-preview --wait"
+set editor = "zed-preview --wait --add"
 set edit_headers = yes
 
 # Behaviour
