@@ -1,4 +1,14 @@
 # PhD Convenor (delegated mailbox) account settings
+
+# Clear previous account settings
+unmailboxes *
+unset signature
+set reverse_name = yes
+
+# Email addresses for this account
+alternates ^phdconvenor\\.cybernetics@anu\\.edu\\.au$
+
+# Folder settings
 set from = "phdconvenor.cybernetics@anu.edu.au"
 set folder = ~/Maildir/phdconvenor/
 set spoolfile = +INBOX
@@ -11,8 +21,9 @@ set sendmail = "/usr/local/bin/msmtp -a phdconvenor"
 set use_from = yes
 set envelope_from = yes
 
-# PhD Convenor account specific settings
+# PhD Convenor specific settings
 set signature = ""
+set status_format = "PhD Convenor: %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 
 # Reply settings
 set fast_reply = yes

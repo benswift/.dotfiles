@@ -1,4 +1,14 @@
 # ANU (Office 365) account settings
+
+# Clear previous account settings
+unmailboxes *
+unset signature
+set reverse_name = yes
+
+# Email addresses for this account
+alternates ^u2548636@anu\\.edu\\.au$ ^ben\\.swift@anu\\.edu\\.au$
+
+# Folder settings
 set from = "u2548636@anu.edu.au"
 set folder = ~/Maildir/anu/
 set spoolfile = +INBOX
@@ -13,6 +23,7 @@ set envelope_from = yes
 
 # ANU account specific settings
 set signature = ""
+set status_format = "ANU: %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 
 # Reply settings
 set fast_reply = yes
