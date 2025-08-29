@@ -52,14 +52,29 @@ Path ~/Maildir/anu/
 Inbox ~/Maildir/anu/INBOX
 SubFolders Verbatim
 
-Channel anu
+# Archive folder - download only to prevent re-upload conflicts
+Channel anu-archive
+Far :anu-remote:Archive
+Near :anu-local:Archive
+Create Near
+Sync Pull
+Expunge Near
+SyncState *
+
+# All other folders - bidirectional sync
+Channel anu-others
 Far :anu-remote:
 Near :anu-local:
-Patterns * !"Conversation History" !"Calendar" !"Contacts" !"Tasks" !"Journal" !"Clutter" !"Notes" !"Outbox"
+Patterns * !Archive !"Conversation History" !"Calendar" !"Contacts" !"Tasks" !"Journal" !"Clutter" !"Notes" !"Outbox"
 Create Near
 Sync All
 Expunge Both
 SyncState *
+
+# Group to sync all ANU channels together
+Group anu
+Channel anu-archive
+Channel anu-others
 
 ###################################
 # PhD Convenor (delegated mailbox) #
