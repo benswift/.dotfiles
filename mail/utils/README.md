@@ -1,28 +1,97 @@
-# Mail utilities
+# ANU Archive Maildir Deduplication Tools
 
-This folder contains scripts used for debugging and fixing email synchronisation issues, particularly the ANU Archive duplication problem.
+This directory contains scripts to fix the ANU Archive maildir duplication issue caused by previous failed deduplication attempts.
+
+## Problem
+
+The Archive folder has ~92,197 files but only ~30,279 unique messages. Previous attempts to deduplicate by deleting files directly caused mbsync to try re-downloading them from the server. The sync state is corrupted with a 39MB journal file.
+
+## Solution
+
+These scripts implement the proper T-flag deletion approach:
+1. Mark duplicate files with the T (Trash) flag
+2. Let mbsync sync these flags to the server (deleting on server)
+3. Remove T-flagged files locally after successful sync
 
 ## Scripts
 
-### fix_anu_archive_duplicates.sh
-Main script to orchestrate the deduplication process.
-**Fixed**: No longer clears mbsync state files, uses correct script paths.
-
-### sync_with_retry.sh  
-Retry wrapper for mbsync with proper throttling support.
-**Fixed**: Now extracts and respects Office365 throttling backoff times, handles OAuth expiry.
-
 ### deduplicate_maildir.py
-Python script to identify and mark duplicates with T flags.
-**Fixed**: Now properly renames files to add T flag instead of moving/deleting them.
+Main Python script that:
+- Analyzes maildir for duplicates (by Message-ID)
+- Creates a deduplication plan
+- Marks files with T flag in batches
+- Handles Office365 throttling with batch processing
+- Maintains state for resumable operations
+- Checks sync state health before proceeding
 
-## Lessons learned
+**Key features:**
+- `--dry-run`: Analyze and create plan without changes
+- `--execute --batch`: Process in safe batches
+- `--check-health`: Verify sync state before starting
+- `--restore`: Restore from backup if needed
 
-### Critical rules for maildir deduplication:
+### fix_anu_archive_duplicates.sh
+Complete workflow script that:
+- Checks sync state health
+- Runs dry-run analysis
+- Offers batch or all-at-once processing
+- Creates backups
+- Verifies results
+- Initiates server sync
 
-1. **NEVER delete files directly** - Always mark with T (Trash) flag first, then sync
-2. **NEVER clear .mbsyncstate files** - This causes mbsync to lose track and re-download everything
-3. **Always use T flags** - mbsync needs these to know what to delete on server:
+### sync_with_retry.sh
+Robust mbsync wrapper that:
+- Handles Office365 throttling with exponential backoff
+- Detects and handles OAuth token expiry
+- Provides detailed progress reporting
+- Retries up to 20 times with intelligent backoff
+- Detects sync state corruption
+
+### process_batch.sh
+Simple batch processor that:
+- Processes one batch of files at a time
+- Shows progress between batches
+- Allows easy stop/resume
+
+## Usage
+
+### Quick Start (Recommended)
+
+```bash
+# Run the main fix script
+cd ~/.dotfiles/mail/utils
+./fix_anu_archive_duplicates.sh
+
+# Choose option 1 (batch mode) when prompted
+```
+
+### Manual Step-by-Step
+
+```bash
+# 1. Check sync state health
+python3 deduplicate_maildir.py --check-health
+
+# If unhealthy, fix the journal:
+mv ~/Maildir/anu/Archive/.mbsyncstate.journal ~/backup/
+mbsync --pull anu:Archive
+
+# 2. Analyze and create plan
+python3 deduplicate_maildir.py --dry-run
+
+# 3. Process in batches (safer)
+./process_batch.sh 1000  # Process 1000 files
+# Repeat until all batches done
+
+# 4. Sync with server
+./sync_with_retry.sh
+
+# 5. Clean up T-flagged files locally
+find ~/Maildir/anu/Archive/cur -name '*:2,*T*' -delete
+```
+
+## Critical Rules for Maildir Deduplication
+
+1. **NEVER delete files directly** - Always mark with T flag first:
    ```bash
    # Correct: Mark with T flag
    mv "file:2,S" "file:2,ST"
@@ -31,23 +100,39 @@ Python script to identify and mark duplicates with T flags.
    rm "file:2,S"
    ```
 
-4. **Batch operations for Office365** - Process in chunks of 500-1000 to avoid throttling
-5. **Handle OAuth expiry** - Refresh tokens before long operations
-6. **Respect throttling** - Use exponential backoff, not fixed delays
+2. **NEVER clear .mbsyncstate files** - This causes re-duplication
 
-### Office365 specific issues:
+3. **Batch operations for Office365** - Process 500-1000 files at a time
+
+4. **Handle OAuth expiry** - Tokens expire during long operations
+
+5. **Respect throttling** - Use exponential backoff
+
+## Office365 Specific Issues
 
 - Aggressive throttling after ~1000 operations
 - OAuth tokens expire during long syncs
 - PipelineDepth must be 1 (no pipelining)
-- Suggests backoff times in error messages - respect them!
+- Provides backoff times in error messages
 
-### Current state (as of 2025-08-29):
+## Recovery
 
-- 92,197 files in Archive folder
-- Only ~30,279 unique messages
-- 60,000+ duplicates still present
-- mbsync sync state corrupted - wants to re-download deleted files
-- Need proper T-flag based deduplication approach
+If something goes wrong:
 
-See task-010 in backlog for the complete fix plan.
+```bash
+# Restore from backup
+python3 deduplicate_maildir.py --restore
+
+# Or manually
+rm -rf ~/Maildir/anu/Archive
+mv ~/maildir_backup_* ~/Maildir/anu/Archive
+```
+
+## Expected Results
+
+- Before: ~92,197 files (with ~60,000 duplicates)
+- After: ~30,279 unique messages
+- Server: Duplicates deleted via T-flag sync
+- Local: Clean maildir with no duplicates
+
+See task-010 in backlog for the complete implementation plan.

@@ -2,6 +2,7 @@
 """
 Comprehensive maildir deduplication script for ANU Archive folder.
 Safely removes duplicate emails while preserving all unique messages.
+Handles Office365 throttling with batched operations.
 """
 
 import os
@@ -14,6 +15,8 @@ import shutil
 import argparse
 import logging
 import json
+import time
+import subprocess
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
@@ -22,12 +25,18 @@ from typing import Dict, List, Tuple, Optional
 # Configuration
 MAILDIR_PATH = Path.home() / "Maildir" / "anu" / "Archive"
 BACKUP_DIR = Path.home() / f"maildir_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-QUARANTINE_DIR = Path.home() / f"maildir_quarantine_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 LOG_FILE = Path.home() / f"deduplicate_maildir_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 PLAN_FILE = Path.home() / "deduplication_plan.json"
+BATCH_STATE_FILE = Path.home() / "deduplication_batch_state.json"
 
-# Expected unique message count (from analysis)
-EXPECTED_UNIQUE_COUNT = 30279
+# Expected counts based on current broken state
+CURRENT_FILE_COUNT = 92197  # Current broken state
+EXPECTED_UNIQUE_COUNT = 30279  # Target after deduplication
+EXPECTED_DUPLICATES = 60000  # Approximate duplicates to remove
+
+# Batch processing configuration
+DEFAULT_BATCH_SIZE = 1000  # Process 1000 files per batch
+MAX_BATCH_SIZE = 5000  # Maximum batch size to avoid overwhelming
 
 # Setup logging
 def setup_logging(verbose: bool = False):
@@ -238,19 +247,49 @@ class MaildirDeduplicator:
         
         self.logger.info(f"Backup created successfully: {len(backup_files)} files")
     
-    def mark_files_with_trash_flag(self, files_to_delete: List[Path]):
-        """Mark files with T (Trash) flag for mbsync to delete on server."""
-        self.logger.info(f"Marking {len(files_to_delete)} files with T flag for deletion")
+    def check_sync_state_health(self) -> bool:
+        """Check if mbsync state files are healthy."""
+        journal_file = self.maildir_path / ".mbsyncstate.journal"
+        if journal_file.exists():
+            size_mb = journal_file.stat().st_size / (1024 * 1024)
+            if size_mb > 1:  # If journal is > 1MB, likely corrupted
+                self.logger.error(f"Large journal file detected: {size_mb:.1f}MB - indicates corrupted sync state")
+                self.logger.error("This must be fixed before proceeding. Consider:")
+                self.logger.error("1. Backing up and removing the journal file")
+                self.logger.error("2. Running mbsync with --pull to reset from server state")
+                return False
+        return True
+    
+    def mark_files_with_trash_flag(self, files_to_delete: List[Path], batch_size: Optional[int] = None, 
+                                   start_idx: int = 0, save_progress: bool = True):
+        """Mark files with T (Trash) flag for mbsync to delete on server.
+        
+        Args:
+            files_to_delete: List of files to mark for deletion
+            batch_size: Process only this many files (for batching)
+            start_idx: Start processing from this index
+            save_progress: Save progress to state file
+        """
+        if batch_size:
+            end_idx = min(start_idx + batch_size, len(files_to_delete))
+            batch_files = files_to_delete[start_idx:end_idx]
+            self.logger.info(f"Processing batch: files {start_idx+1} to {end_idx} of {len(files_to_delete)} total")
+        else:
+            batch_files = files_to_delete
+            end_idx = len(files_to_delete)
+        
+        self.logger.info(f"Marking {len(batch_files)} files with T flag for deletion")
         
         marked_count = 0
         already_marked = 0
+        errors = 0
         
-        for file_path in files_to_delete:
+        for file_path in batch_files:
             if file_path.exists():
                 filename = file_path.name
                 
                 # Check if already has T flag
-                if ',T' in filename or filename.endswith('T'):
+                if 'T' in filename.split(':2,')[-1] if ':2,' in filename else False:
                     already_marked += 1
                     self.logger.debug(f"Already marked: {filename}")
                     continue
@@ -274,22 +313,76 @@ class MaildirDeduplicator:
                 
                 if self.dry_run:
                     self.logger.debug(f"[DRY RUN] Would rename: {filename} -> {new_filename}")
+                    marked_count += 1
                 else:
-                    file_path.rename(new_path)
-                    self.logger.debug(f"Renamed: {filename} -> {new_filename}")
-                marked_count += 1
+                    try:
+                        file_path.rename(new_path)
+                        self.logger.debug(f"Renamed: {filename} -> {new_filename}")
+                        marked_count += 1
+                    except Exception as e:
+                        self.logger.error(f"Failed to rename {filename}: {e}")
+                        errors += 1
+            else:
+                self.logger.warning(f"File no longer exists: {file_path}")
+        
+        # Save progress if requested
+        if save_progress and not self.dry_run:
+            self.save_batch_progress(end_idx, len(files_to_delete), marked_count, errors)
         
         self.logger.info(f"{'[DRY RUN] Would mark' if self.dry_run else 'Marked'} {marked_count} files with T flag")
         if already_marked > 0:
             self.logger.info(f"Skipped {already_marked} files already marked with T flag")
+        if errors > 0:
+            self.logger.warning(f"Encountered {errors} errors during marking")
+        
+        return marked_count, already_marked, errors
+    
+    def save_batch_progress(self, processed_idx: int, total_files: int, marked: int, errors: int):
+        """Save batch processing progress."""
+        state = {
+            'timestamp': datetime.now().isoformat(),
+            'processed_index': processed_idx,
+            'total_files': total_files,
+            'marked_count': marked,
+            'error_count': errors,
+            'remaining': total_files - processed_idx
+        }
+        
+        # Load existing state if it exists
+        if BATCH_STATE_FILE.exists():
+            with open(BATCH_STATE_FILE, 'r') as f:
+                existing = json.load(f)
+                state['total_marked'] = existing.get('total_marked', 0) + marked
+                state['total_errors'] = existing.get('total_errors', 0) + errors
+        else:
+            state['total_marked'] = marked
+            state['total_errors'] = errors
+        
+        with open(BATCH_STATE_FILE, 'w') as f:
+            json.dump(state, f, indent=2)
+        
+        self.logger.info(f"Progress saved: {processed_idx}/{total_files} files processed")
+    
+    def load_batch_progress(self) -> Optional[Dict]:
+        """Load batch processing progress."""
+        if BATCH_STATE_FILE.exists():
+            with open(BATCH_STATE_FILE, 'r') as f:
+                return json.load(f)
+        return None
     
     def verify_deduplication(self) -> bool:
         """Verify that deduplication was successful."""
         all_files = list(self.cur_path.glob("*"))
         total_count = len(all_files)
         
-        # Count T-flagged files
-        t_flagged = [f for f in all_files if ',T' in f.name or f.name.endswith('T')]
+        # Count T-flagged files (check if T is in the flags part after :2,)
+        t_flagged = []
+        for f in all_files:
+            if ':2,' in f.name:
+                flags = f.name.split(':2,')[-1]
+                if 'T' in flags:
+                    t_flagged.append(f)
+        
         t_flagged_count = len(t_flagged)
         
         # Count non-T-flagged files (these will remain)
@@ -299,12 +392,33 @@ class MaildirDeduplicator:
         self.logger.info(f"  - {t_flagged_count} marked with T flag for deletion")
         self.logger.info(f"  - {remaining_count} will remain after sync")
         
-        if remaining_count == EXPECTED_UNIQUE_COUNT:
-            self.logger.info(f"SUCCESS: Remaining count matches expected ({EXPECTED_UNIQUE_COUNT})")
+        # Allow some tolerance (±100 files) due to potential new messages
+        if abs(remaining_count - EXPECTED_UNIQUE_COUNT) <= 100:
+            self.logger.info(f"SUCCESS: Remaining count {remaining_count} is close to expected ({EXPECTED_UNIQUE_COUNT})")
             return True
         else:
             self.logger.warning(f"File count mismatch: {remaining_count} != {EXPECTED_UNIQUE_COUNT}")
             return False
+    
+    def check_oauth_token(self) -> bool:
+        """Check if OAuth token is still valid."""
+        try:
+            # Try a quick mbsync list operation to test auth
+            result = subprocess.run(
+                ['mbsync', '--list', 'anu:Archive'],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            
+            if 'AccessTokenExpired' in result.stderr or 'OAuth' in result.stderr:
+                self.logger.warning("OAuth token expired or invalid")
+                return False
+            
+            return result.returncode == 0
+        except Exception as e:
+            self.logger.warning(f"Could not check OAuth token: {e}")
+            return True  # Assume it's OK and let later operations fail if needed
     
     def restore_from_backup(self):
         """Restore from backup if something goes wrong."""
@@ -325,7 +439,7 @@ class MaildirDeduplicator:
         return True
 
 def main():
-    parser = argparse.ArgumentParser(description='Deduplicate ANU Archive maildir')
+    parser = argparse.ArgumentParser(description='Deduplicate ANU Archive maildir with batching support')
     parser.add_argument('--dry-run', action='store_true', default=False,
                         help='Perform dry run without making changes')
     parser.add_argument('--execute', action='store_true',
@@ -338,6 +452,16 @@ def main():
                         help='Enable verbose logging')
     parser.add_argument('--no-backup', action='store_true',
                         help='Skip backup creation (not recommended)')
+    parser.add_argument('--batch', action='store_true',
+                        help='Process files in batches')
+    parser.add_argument('--batch-size', type=int, default=DEFAULT_BATCH_SIZE,
+                        help=f'Number of files per batch (default: {DEFAULT_BATCH_SIZE})')
+    parser.add_argument('--batch-number', type=int, default=0,
+                        help='Batch number to process (0-based)')
+    parser.add_argument('--resume', action='store_true',
+                        help='Resume from last batch position')
+    parser.add_argument('--check-health', action='store_true',
+                        help='Check sync state health before proceeding')
     
     args = parser.parse_args()
     
@@ -357,11 +481,27 @@ def main():
         success = dedup.verify_deduplication()
         sys.exit(0 if success else 1)
     
+    if args.check_health:
+        logger.info("=== HEALTH CHECK ===")
+        dedup = MaildirDeduplicator(MAILDIR_PATH, dry_run=True)
+        if dedup.check_sync_state_health():
+            logger.info("Sync state appears healthy")
+            sys.exit(0)
+        else:
+            logger.error("Sync state issues detected - fix before proceeding")
+            sys.exit(1)
+    
     if args.execute:
         logger.info("=== EXECUTE MODE ===")
         
         # Load existing plan
         dedup = MaildirDeduplicator(MAILDIR_PATH, dry_run=False)
+        
+        # Check sync state health first
+        if not dedup.check_sync_state_health():
+            logger.error("Sync state is corrupted. Fix this before proceeding.")
+            sys.exit(1)
+        
         plan = dedup.load_plan()
         
         if not plan:
@@ -370,26 +510,66 @@ def main():
         
         logger.info(f"Loaded plan: {plan['expected_remaining']} files will remain")
         
+        # Check OAuth token
+        if not dedup.check_oauth_token():
+            logger.error("OAuth token expired. Please re-authenticate:")
+            logger.error("  cd ~/.dotfiles/mail && ./reauth-anu-oauth.sh")
+            sys.exit(1)
+        
         # Create backup unless explicitly skipped
-        if not args.no_backup:
+        if not args.no_backup and not args.batch:
             try:
                 dedup.create_backup()
             except Exception as e:
                 logger.error(f"Backup failed: {e}")
                 sys.exit(1)
         
-        # Mark files with T flag for deletion
         files_to_delete = [Path(f) for f in plan['files_to_delete']]
-        dedup.mark_files_with_trash_flag(files_to_delete)
         
-        # Verify
-        if dedup.verify_deduplication():
-            logger.info("Deduplication completed successfully!")
-            logger.info(f"Quarantined files are in: {QUARANTINE_DIR}")
-            logger.info("Run 'mbsync anu:Archive' to sync changes with server")
+        if args.batch:
+            # Batch processing mode
+            logger.info(f"=== BATCH MODE: size={args.batch_size} ===")
+            
+            if args.resume:
+                # Resume from saved state
+                progress = dedup.load_batch_progress()
+                if progress:
+                    start_idx = progress['processed_index']
+                    logger.info(f"Resuming from index {start_idx}")
+                else:
+                    start_idx = 0
+            else:
+                start_idx = args.batch_number * args.batch_size
+            
+            if start_idx >= len(files_to_delete):
+                logger.info("All files already processed!")
+                sys.exit(0)
+            
+            # Process one batch
+            marked, already, errors = dedup.mark_files_with_trash_flag(
+                files_to_delete, 
+                batch_size=args.batch_size,
+                start_idx=start_idx
+            )
+            
+            remaining = len(files_to_delete) - min(start_idx + args.batch_size, len(files_to_delete))
+            logger.info(f"Batch complete. {remaining} files remaining to process")
+            
+            if remaining > 0:
+                logger.info(f"Run again with --batch --resume to continue")
+            else:
+                logger.info("All batches complete! Run 'mbsync anu:Archive' to sync")
         else:
-            logger.warning("Verification failed - files remain in quarantine")
-            logger.warning("You may need to restore from backup")
+            # Process all at once (not recommended for large numbers)
+            dedup.mark_files_with_trash_flag(files_to_delete)
+            
+            # Verify
+            if dedup.verify_deduplication():
+                logger.info("Deduplication completed successfully!")
+                logger.info("Run 'mbsync anu:Archive' to sync changes with server")
+            else:
+                logger.warning("Verification shows unexpected file count")
+                logger.warning("Review before syncing")
         
     else:
         # Default to dry-run
@@ -415,10 +595,13 @@ def main():
         logger.info(f"  Expected count: {EXPECTED_UNIQUE_COUNT}")
         logger.info("=" * 50)
         
-        if stats['total_files'] - len(files_to_delete) == EXPECTED_UNIQUE_COUNT:
-            logger.info("Plan looks good! Run with --execute to proceed")
+        if abs((stats['total_files'] - len(files_to_delete)) - EXPECTED_UNIQUE_COUNT) <= 100:
+            logger.info("Plan looks good! Next steps:")
+            logger.info("1. Run with --execute --batch to process in batches")
+            logger.info("2. Or run with --execute to process all at once (may hit throttling)")
         else:
-            logger.warning("File count mismatch - review the plan carefully")
+            logger.warning(f"File count mismatch - expected ~{EXPECTED_UNIQUE_COUNT}, will have {stats['total_files'] - len(files_to_delete)}")
+            logger.warning("Review the plan carefully before proceeding")
 
 if __name__ == "__main__":
     main()
