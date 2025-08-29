@@ -14,20 +14,21 @@ Complete cleanup and resync of Archive folder to fix duplication and sync
 corruption issues following the partial sync failure from task-010. Use the
 "nuclear option" to empty server Archive and re-upload clean messages.
 
-## Current State (as of 2025-08-29 20:30)
+## Current State (as of 2025-08-29 23:40)
 
 **Local maildir:**
 
-- Total files: 124,718
-- Unique messages: 30,281
-- Duplicates: 94,437
+- Total files: 91,120 (restored from backup)
+- Unique messages: ~30,281 (needs re-analysis)
+- Duplicates: ~60,839 (estimated)
 - Message date range: January 2021 - October 2024
+- Previous deduplication plan may need updating
 
 **Server (Office365):**
 
-- Archive folder: 71,283 messages
-- Timestamps corrupted (show as recent but content is old)
-- Partial deletion occurred but sync corrupted
+- Archive folder: 0 messages (emptied manually via Outlook)
+- Archive-OLD folder contains the corrupted backup
+- Ready for clean re-upload
 
 **Problems:**
 
@@ -62,25 +63,26 @@ This will:
 - Keep only 30,281 unique messages in `~/Maildir/anu/Archive/`
 - Remove corrupted mbsync state files
 
-### 2. Test Date Preservation
+### 2. Fix File Timestamps ⚠️ CRITICAL
 
-**IMPORTANT**: Test that dates are preserved during upload before proceeding:
+**DISCOVERED ISSUE**: mbsync uses the file's filesystem timestamp (not the email's Date header) as the IMAP INTERNALDATE when uploading. Without fixing timestamps first, all emails will show today's date in Outlook.
+
+After deduplication, fix timestamps on all remaining messages:
 
 ```bash
 cd ~/.dotfiles/mail/utils
-./test_date_preservation.sh
+python3 fix_maildir_timestamps.py ~/Maildir/anu/Archive/cur
 ```
 
-This will upload a single test email to verify IMAP INTERNALDATE is preserved correctly.
-If dates show as recent instead of original, STOP and investigate before proceeding.
+This will update each file's timestamp to match its Date header, ensuring correct dates after upload.
 
-### 3. Server Preparation
+### 3. Server Preparation ✓ COMPLETE
 
 In Outlook (Web or Mac):
 
-1. Rename "Archive" folder to "Archive-OLD"
-2. Create new empty "Archive" folder
-3. Note: This preserves the old messages as backup
+1. ✓ Renamed "Archive" folder to "Archive-OLD" 
+2. ✓ Created new empty "Archive" folder
+3. ✓ Verified mbsync sees 0 messages in Archive
 
 ### 4. Execute Nuclear Cleanup
 
@@ -116,8 +118,9 @@ All scripts are in `~/.dotfiles/mail/utils/`:
 
 - `deduplicate_maildir.py` - Analyzes and creates deduplication plan
 - `extract_unique_messages.py` - Extracts unique messages based on dedup plan
+- `fix_maildir_timestamps.py` - Fixes file timestamps to match Date headers (CRITICAL for date preservation)
 - `nuclear_archive_cleanup.sh` - Orchestrates the complete nuclear cleanup
-- `test_date_preservation.sh` - Tests IMAP date preservation before full cleanup
+- Test scripts (can be removed): `test_date_preservation*.sh`
 
 ## Success Criteria
 
@@ -141,3 +144,5 @@ If anything goes wrong:
 - Office365 corruption can cause re-downloads
 - Nuclear option is cleaner than fighting sync corruption
 - Always backup before major operations
+- **CRITICAL**: mbsync uses filesystem timestamps (not Date headers) for IMAP INTERNALDATE
+- Must fix file timestamps before uploading to preserve email dates in Outlook/Office365
