@@ -41,6 +41,15 @@
   },
   "theme": "Tokyo Night Storm",
   "languages": {
+    "Elixir": {
+      "language_servers": [
+        "expert",
+        "!elixir-ls",
+        "!next-ls",
+        "!lexical",
+        "..."
+      ]
+    },
     "Python": {
       "language_servers": ["ruff"],
       "format_on_save": "on",
