@@ -1,6 +1,7 @@
 # mbsync with SASL/OAuth2 support
 
-This directory contains mbsync (isync) version 1.5.1 built from source with SASL support for OAuth2 authentication.
+This directory contains mbsync (isync) version 1.5.1 built from source with SASL
+support for OAuth2 authentication.
 
 ## Build details
 
@@ -13,6 +14,7 @@ This directory contains mbsync (isync) version 1.5.1 built from source with SASL
 The compiled binary is located at: `./src/mbsync`
 
 To use this version instead of the Homebrew version:
+
 ```bash
 # Use directly
 ./src/mbsync [options]
@@ -27,6 +29,7 @@ export PATH="/Users/ben/.dotfiles/mbsync-build/isync-1.5.1/src:$PATH"
 ## OAuth2 configuration
 
 To use OAuth2 with Office 365, configure your `.mbsyncrc` with:
+
 ```
 IMAPAccount office365
 Host outlook.office365.com
