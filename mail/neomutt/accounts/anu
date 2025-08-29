@@ -23,7 +23,10 @@ set envelope_from = yes
 
 # ANU account specific settings
 set signature = ""
-set status_format = "ANU: %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
+set status_format = "[ANU] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
+
+# Account-specific colours
+color status brightwhite red
 
 # Reply settings
 set fast_reply = yes

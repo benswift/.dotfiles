@@ -23,7 +23,10 @@ set envelope_from = yes
 
 # Personal account specific settings
 set signature = ""
-set status_format = "Personal: %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
+set status_format = "[PERSONAL] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
+
+# Account-specific colours
+color status brightwhite blue
 
 # Reply settings
 set fast_reply = yes
