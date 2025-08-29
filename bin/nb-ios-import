@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+#
+# Import notes and bookmarks from iOS nb-inbox to nb
+#
+# Notes are imported from nb-inbox/notes/*.txt as markdown with title from first line
+# Bookmarks are imported from nb-inbox/bookmarks.txt (one URL per line)
+# All items are tagged with #inbox
+
+set -e
+
+INBOX_DIR="/Users/ben/Library/Mobile Documents/com~apple~CloudDocs/nb-inbox"
+NOTES_DIR="${INBOX_DIR}/notes"
+BOOKMARKS_FILE="${INBOX_DIR}/bookmarks.txt"
+
+# Check if inbox directory exists
+if [[ ! -d "${INBOX_DIR}" ]]; then
+    echo "Error: Cannot access inbox directory: ${INBOX_DIR}" >&2
+    echo "Check if iCloud Drive is synced or if permissions are granted" >&2
+    exit 1
+fi
+
+echo "Importing from iOS nb-inbox..."
+
+# Process notes
+if [[ -d "${NOTES_DIR}" ]]; then
+    echo ""
+    echo "Processing notes..."
+    
+    for file in "${NOTES_DIR}"/*.txt; do
+        # Skip if no files match
+        [[ ! -e "$file" ]] && continue
+        
+        basename=$(basename "${file}")
+        
+        # Skip empty files
+        if [[ ! -s "${file}" ]]; then
+            echo "  Skipping empty file: ${basename}" >&2
+            rm "${file}"
+            continue
+        fi
+        
+        echo "  Importing: ${basename}"
+        
+        # Read content and extract title from first line
+        content=$(cat "${file}")
+        title=$(echo "${content}" | head -1)
+        
+        # Create temporary markdown file
+        temp_md="/tmp/$(basename "${file}" .txt).md"
+        echo "${content}" > "${temp_md}"
+        
+        # Import with title and inbox tag
+        if nb import "${temp_md}" --title "${title}" --tags "inbox" >/dev/null 2>&1; then
+            echo "    Success"
+            rm "${file}"
+        else
+            echo "    Failed to import" >&2
+        fi
+        
+        rm -f "${temp_md}"
+    done
+fi
+
+# Process bookmarks
+if [[ -f "${BOOKMARKS_FILE}" ]]; then
+    echo ""
+    echo "Processing bookmarks..."
+    
+    if [[ ! -s "${BOOKMARKS_FILE}" ]]; then
+        echo "  Bookmarks file is empty"
+    else
+        # Process each URL
+        while IFS= read -r url; do
+            # Skip empty lines
+            [[ -z "${url}" ]] && continue
+            
+            echo "  Adding: ${url}"
+            
+            # Add bookmark with inbox tag
+            nb "${url}" --tags "inbox" >/dev/null 2>&1 || echo "    Failed to add bookmark" >&2
+            
+        done < "${BOOKMARKS_FILE}"
+        
+        # Clear the bookmarks file
+        > "${BOOKMARKS_FILE}"
+        echo "  Cleared bookmarks.txt"
+    fi
+fi
+
+echo ""
+echo "Done."
