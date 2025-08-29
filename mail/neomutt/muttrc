@@ -17,7 +17,7 @@ set reverse_alias = yes
 set simple_search = "~f %s | ~t %s | ~c %s | ~s %s"
 
 # Editor
-set editor = "zed-preview --wait --add"
+set editor = "zed-preview --wait"
 set edit_headers = yes
 
 # Compose
