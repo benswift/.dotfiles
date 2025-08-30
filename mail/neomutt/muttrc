@@ -123,6 +123,7 @@ macro index ,m "<tag-pattern>~U<enter><tag-prefix><clear-flag>N<untag-pattern>~T
 macro index U "<toggle-new>" "toggle unread status"
 
 # Sync bindings
+bind index x sync-mailbox
 macro index ,s "<shell-escape>mailsync<enter>" "sync all mail"
 macro index ,S "<shell-escape>mbsync -a<enter>" "sync mail (no index)"
 
@@ -212,7 +213,6 @@ macro index,pager dd "<delete-message><sync-mailbox>" "move to trash"
 macro index,pager dat "<delete-thread><sync-mailbox>" "delete thread"
 
 # Quick limit (filter) shortcuts
-macro index L "<limit>all<enter>" "remove limit"
 macro index \Cl "<limit>all<enter>" "remove limit"
 macro index ,u "<limit>~U<enter>" "limit to unread"
 macro index ,t "<limit>~d <1w<enter>" "limit to this week"

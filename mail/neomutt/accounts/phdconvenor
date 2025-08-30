@@ -25,7 +25,7 @@ set signature = ""
 set status_format = "[PHD CONVENOR] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 
 # Account-specific colours
-color status brightwhite green
+color status black green
 
 # Reply settings
 set fast_reply = yes

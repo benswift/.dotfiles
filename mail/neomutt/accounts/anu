@@ -25,7 +25,7 @@ set signature = ""
 set status_format = "[ANU] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 
 # Account-specific colours
-color status brightwhite red
+color status black red
 
 # Reply settings
 set fast_reply = yes
