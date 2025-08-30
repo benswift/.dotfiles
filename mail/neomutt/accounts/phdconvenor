@@ -1,7 +1,6 @@
 # PhD Convenor (delegated mailbox) account settings
 
 # Clear previous account settings
-unmailboxes *
 unset signature
 set reverse_name = yes
 
