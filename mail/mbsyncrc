@@ -24,7 +24,7 @@ SubFolders Verbatim
 Channel personal
 Far :personal-remote:
 Near :personal-local:
-Patterns * !"Calendar" !"Contacts"
+Patterns INBOX Archive "Sent Items" Drafts Trash "Junk Mail"
 Create Near
 Sync All
 Expunge Both
