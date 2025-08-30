@@ -24,9 +24,6 @@ print_warning() {
     echo -e "${YELLOW}[$(date '+%H:%M:%S')] WARNING:${NC} $1"
 }
 
-# Always update mu index on exit (ensures consistency even on interrupt)
-trap 'mu index --quiet 2>/dev/null || true' EXIT
-
 # Check dependencies
 for cmd in mbsync mu; do
     if ! command -v "$cmd" &> /dev/null; then
@@ -57,21 +54,14 @@ else
     sync_errors=$((sync_errors + 1))
 fi
 
+# Update mu index
+print_status "Updating search index..."
+mu index
+
 # Summary
 echo ""
 if [ $sync_errors -eq 0 ]; then
     print_status "Mail sync completed successfully!"
 else
     print_warning "Mail sync completed with $sync_errors account(s) having issues"
-fi
-
-# Show new message count
-unread_count=$(mu find flag:unread 2>/dev/null | wc -l | tr -d ' ')
-today_count=$(mu find date:today 2>/dev/null | wc -l | tr -d ' ')
-
-if [ "$today_count" -gt 0 ]; then
-    print_status "You have $today_count message(s) from today"
-fi
-if [ "$unread_count" -gt 0 ]; then
-    print_status "Total unread: $unread_count message(s)"
 fi
