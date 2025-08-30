@@ -24,7 +24,7 @@ set edit_headers = yes
 set compose_format = "-- NeoMutt: Compose [Approx. msg size: %l | Atts: %a]%>-"
 set attribution = "On %{%a, %d %b %Y at %I:%M %p %Z}, %n wrote:"
 set quote_regex = "^([ \t]*[|>:}#])+"
-set reply_regex = "^((re|aw|sv|ang):[ \t]*)+"
+set reply_regex = "^(re:[ \t]*)+"
 
 # Behaviour
 set wait_key = no
