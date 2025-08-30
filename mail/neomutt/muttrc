@@ -167,7 +167,7 @@ alternative_order text/plain text/html
 auto_view text/html
 set implicit_autoview = yes
 set abort_noattach = ask-yes
-set abort_noattach_regex = "\\<(attach(|ed|ments?)|^attached|^attachment|(see|check) (attachments?|attached))\\>"
+set abort_noattach_regex = "\\<(attach|attached|attachments?|^attached|^attachment|(see|check) (attachments?|attached))\\>"
 set forward_attachments = yes
 set mime_forward = ask-no
 set attach_save_dir = "~/Downloads"
@@ -207,6 +207,7 @@ macro index \Ca "<tag-pattern>~A<enter>" "tag all messages"
 macro index \Cn "<untag-pattern>~T<enter>" "untag all messages"
 
 # Better deletion workflow
+bind index,pager d noop
 macro index,pager dd "<delete-message><sync-mailbox>" "move to trash"
 macro index,pager dat "<delete-thread><sync-mailbox>" "delete thread"
 
@@ -220,6 +221,7 @@ macro index ,f "<limit>~F<enter>" "limit to flagged"
 
 # Additional folder navigation
 macro index,pager gt "<change-folder>=" "go to folder root"
+bind index M noop
 macro index,pager Mi "<change-folder>=INBOX<enter>" "go to inbox"
 macro index,pager Ms "<change-folder>=Sent<enter>" "go to sent"
 macro index,pager Md "<change-folder>=Drafts<enter>" "go to drafts"
