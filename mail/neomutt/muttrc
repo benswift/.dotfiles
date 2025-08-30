@@ -7,7 +7,7 @@ set header_cache_backend = "lmdb"
 set message_cachedir = ~/.cache/neomutt/messages
 set confirmappend = no
 set confirmcreate = yes
-set delete_untag = yes
+set delete_untag = no
 set tmpdir = ~/.cache/neomutt/temp
 set save_history = 100
 set history = 1000
@@ -122,7 +122,6 @@ macro index ,r "<change-folder-readonly>~/.mu/results<enter>" "mu results"
 macro index,pager ,u "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results flag:unread<enter><change-folder-readonly>~/.mu/results<enter>" "show unread"
 
 # Unread management
-macro index ,m "<tag-pattern>~U<enter><tag-prefix><clear-flag>N<untag-pattern>~T<enter>" "mark all as read"
 macro index U "<toggle-new>" "toggle unread status"
 
 # Sync bindings
@@ -196,8 +195,8 @@ macro index \Cn "<untag-pattern>~T<enter>" "untag all messages"
 
 # Better deletion workflow
 bind index,pager d noop
-macro index,pager dd "<delete-message><sync-mailbox>" "move to trash"
-macro index,pager dat "<delete-thread><sync-mailbox>" "delete thread"
+macro index,pager dd "<delete-message>" "mark for deletion"
+macro index,pager dt "<delete-thread>" "mark thread for deletion"
 
 # Quick limit (filter) shortcuts
 macro index \Cl "<limit>all<enter>" "remove limit"
