@@ -69,15 +69,15 @@ set display_filter = "sed 's/\x1b\[[0-9;]*[mGKHF]//g'"
 
 # Sidebar
 set sidebar_visible = yes
-set sidebar_width = 30
-set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?%S"
+set sidebar_width = 25
+set sidebar_format = "%D%?F? [%F]?%* %?N?%N/?%S"
 set sidebar_short_path = yes
 set sidebar_delim_chars = "/"
 set sidebar_folder_indent = no
 set sidebar_indent_string = "  "
 set sidebar_new_mail_only = no
 set sidebar_sort_method = "unsorted"
-set sidebar_component_depth = 2
+set sidebar_component_depth = 1
 
 # Key bindings for sidebar
 bind index,pager K sidebar-prev
@@ -88,17 +88,17 @@ bind index,pager H sidebar-toggle-visible
 # Mailboxes with named labels
 # Define these BEFORE sourcing account configs that change folder
 unmailboxes *
-named-mailboxes "── Personal ──" =personal/INBOX
+named-mailboxes "Personal" =personal/INBOX
 named-mailboxes "  Archive" =personal/Archive
 named-mailboxes "  Drafts" =personal/Drafts
 named-mailboxes "  Sent" =personal/"Sent Items"
 named-mailboxes "  Trash" =personal/Trash
-named-mailboxes "── ANU ──" =anu/INBOX
+named-mailboxes "ANU" =anu/INBOX
 named-mailboxes "  Archive" =anu/Archive
 named-mailboxes "  Drafts" =anu/Drafts
 named-mailboxes "  Sent" =anu/"Sent Items"
 named-mailboxes "  Deleted" =anu/"Deleted Items"
-named-mailboxes "── PhD Convenor ──" =phdconvenor/INBOX
+named-mailboxes "PhD Convenor" =phdconvenor/INBOX
 named-mailboxes "  Archive" =phdconvenor/Archive
 named-mailboxes "  Drafts" =phdconvenor/Drafts
 named-mailboxes "  Sent" =phdconvenor/"Sent Items"
