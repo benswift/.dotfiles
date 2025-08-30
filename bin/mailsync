@@ -50,13 +50,11 @@ fi
 
 # Sync all accounts
 print_status "Syncing all mail accounts..."
-if output=$(mbsync -a 2>&1); then
+if mbsync -a; then
     print_status "All accounts synced successfully"
 else
     print_warning "Mail sync had issues"
     sync_errors=$((sync_errors + 1))
-    # Only show output if there was an error
-    echo "$output" | sed 's/^/  /'
 fi
 
 # Summary
