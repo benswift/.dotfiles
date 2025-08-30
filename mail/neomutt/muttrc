@@ -104,6 +104,9 @@ named-mailboxes "  Drafts" =phdconvenor/Drafts
 named-mailboxes "  Sent" =phdconvenor/"Sent Items"
 named-mailboxes "  Deleted" =phdconvenor/"Deleted Items"
 
+# Load vombatidae color theme first
+source ~/.config/neomutt/vombatidae.mutt
+
 # Account switching - source after mailboxes are defined
 source ~/.config/neomutt/accounts/personal
 folder-hook personal/* source ~/.config/neomutt/accounts/personal
@@ -177,22 +180,6 @@ set attach_save_dir = "~/Downloads"
 set crypt_use_gpgme = no
 set crypt_autosign = no
 set crypt_opportunistic_encrypt = no
-
-# Colours (basic)
-color normal default default
-color hdrdefault cyan default
-color signature cyan default
-color attachment yellow default
-color quoted green default
-color quoted1 cyan default
-color quoted2 yellow default
-color quoted3 red default
-color indicator black yellow
-color error red default
-color status white blue
-color tree yellow default
-color tilde blue default
-color markers red default
 
 # === Additional Quality-of-Life Settings ===
 
