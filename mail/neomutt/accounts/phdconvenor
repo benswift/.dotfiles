@@ -23,4 +23,4 @@ set status_format = "[PHD CONVENOR] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t ta
 color status black green
 
 # Account-specific search (restricted to this account)
-macro index / "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results maildir:/phdconvenor/ " "search phdconvenor"
+macro index / "<shell-escape>~/.config/neomutt/scripts/mu-search.sh /phdconvenor/<enter><change-folder-readonly>~/.mu/results<enter>" "search phdconvenor"

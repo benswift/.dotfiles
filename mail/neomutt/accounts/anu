@@ -23,4 +23,4 @@ set status_format = "[ANU] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 color status black red
 
 # Account-specific search (restricted to this account)
-macro index / "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results maildir:/anu/ " "search anu"
+macro index / "<shell-escape>~/.config/neomutt/scripts/mu-search.sh /anu/<enter><change-folder-readonly>~/.mu/results<enter>" "search anu"
