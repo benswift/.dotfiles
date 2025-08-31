@@ -10,8 +10,8 @@ sync), msmtp (SMTP), and neomutt (email client).
 - `neomutt/` - neomutt email client configuration
 - `mutt_oauth2.py` - OAuth2 authentication script (from mutt source)
 - `keychain-store.sh` - Helper script to store OAuth tokens in macOS Keychain
-- `reauth-anu-oauth.sh` - Script to re-authenticate Office365 OAuth
-- `anu_oauth2_keychain_stub` - Token stub file for Office365
+- `reauth-oauth.sh` - Script to re-authenticate Office365 OAuth
+- `oauth2_keychain_stub` - Token stub file for Office365
 
 ## Office365 mbsync setup
 
@@ -37,56 +37,19 @@ To sync Office365 email with mbsync using OAuth2 authentication:
    - Use devicecode flow for initial authentication (localhostauthcode doesn't
      work with Thunderbird)
    - Store tokens securely in macOS Keychain using `keychain-store.sh` wrapper
-   - Run `./reauth-anu-oauth.sh` from the mail directory to re-authenticate
+   - Run `./reauth-oauth.sh` from the mail directory to re-authenticate
 
 4. **Configure mbsync** (`mbsyncrc`):
 
    - Set `AuthMech XOAUTH2`
    - Use `PassCmd` with full paths to scripts
    - Example:
-     `PassCmd "/Users/ben/.dotfiles/mail/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/mail/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/mail/anu_oauth2_keychain_stub"`
+     `PassCmd "/path/to/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a user@example.com -s mutt_oauth2_account -w' --encryption-pipe '/path/to/keychain-store.sh user@example.com mutt_oauth2_account' /path/to/oauth2_keychain_stub"`
 
-5. **Configure aerc** for Office365 SMTP:
-
-   - Use `smtp+xoauth2://` protocol (not `smtps+oauthbearer://`)
-   - Use actual username (e.g., `u2548636@anu.edu.au`) not display name
-   - Server: `smtp.office365.com:587`
-   - Token format: plain token (not SASL-encoded)
-
-6. **Optional: Configure msmtp** for scripted sending:
+5. **Optional: Configure msmtp** for scripted sending:
    - Install with `brew install msmtp`
    - Use same OAuth token from keychain
    - See `msmtprc` for configuration
 
-See `reauth-anu-oauth.sh`, `keychain-store.sh`, and `mutt_oauth2.py` in this
+See `reauth-oauth.sh`, `keychain-store.sh`, and `mutt_oauth2.py` in this
 directory for working examples.
-
-## Troubleshooting
-
-### mbsync "unexpected tag" error or hanging
-
-If `mbsync` fails with an "unexpected tag" error or hangs, this usually
-indicates corrupted `.mbsyncstate` files. To fix:
-
-```bash
-# try this first, it's probably this one that's the issue
-rm -f ~/Maildir/anu/Archive/.mbsyncstate.*
-
-# Remove all state files
-rm -f ~/Maildir/anu/*/.mbsyncstate*
-rm -f ~/Maildir/anu/*/.uidvalidity
-
-# Check for large journal or lock files (especially in Archive folder)
-ls -lah ~/Maildir/anu/*/.mbsyncstate*
-
-# Test individual folders to identify problematic ones
-for folder in INBOX Archive "Deleted Items" Drafts "Junk E-Mail" "Sent Items"; do
-  echo "Testing $folder..."
-  timeout 5 mbsync "anu:$folder"
-done
-```
-
-This removes the state files and forces mbsync to rebuild them on the next sync.
-Note that this may cause mbsync to re-download message headers but won't
-duplicate emails. Large folders (like Archive with 40k+ messages) may take
-longer to sync initially after clearing state.
