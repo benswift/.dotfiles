@@ -209,7 +209,7 @@ macro index ,t "<limit>~d <1w<enter>" "limit to this week"
 macro index ,y "<limit>~d <1d<enter>" "limit to today"
 
 # === URL and HTML handling ===
-macro index,pager ,b "<pipe-message> urlscan<enter>" "call urlscan to extract URLs"
-macro attach,compose ,b "<pipe-entry> urlscan<enter>" "call urlscan to extract URLs"
+macro index,pager ,b "<pipe-message> urlview<enter>" "extract URLs with urlview"
+macro attach,compose ,b "<pipe-entry> urlview<enter>" "extract URLs with urlview"
 macro index,pager ,o "<view-attachments><search>text/html<enter><pipe-entry>cat > /tmp/neomutt-msg.html && open /tmp/neomutt-msg.html<enter><exit>" "open HTML in browser"
 macro index,pager ,O "<enter-command>set pipe_decode=no<enter><pipe-message>cat > /tmp/neomutt-msg.eml && open /tmp/neomutt-msg.eml<enter><enter-command>set pipe_decode=yes<enter>" "open raw message in default app"
