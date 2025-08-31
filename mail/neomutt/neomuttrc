@@ -1,80 +1,96 @@
-# Core settings
+# === Core paths and identity ===
 set realname = "Ben Swift"
 set mbox_type = Maildir
 set folder = ~/Maildir/
+set tmpdir = ~/.cache/neomutt/temp
+set signature = "~/.config/neomutt/signature"
+set attach_save_dir = "~/Downloads"
+
+# === Cache configuration ===
 set header_cache = ~/.cache/neomutt/headers
 set header_cache_backend = "lmdb"
 set message_cachedir = ~/.cache/neomutt/messages
-set confirmappend = no
-set confirmcreate = yes
-set delete_untag = yes
-set tmpdir = ~/.cache/neomutt/temp
-set save_history = 100
-set history = 1000
-set change_folder_next = yes
-set mark_macro_prefix = "'"
-set reverse_alias = yes
-set simple_search = "~f %s | ~t %s | ~c %s | ~s %s"
 
-# Editor
+# === Editor ===
 set editor = "zed-preview --wait"
 set edit_headers = yes
 
-# Compose
+# === Compose and reply behaviour ===
 set compose_format = "-- NeoMutt: Compose [Approx. msg size: %l | Atts: %a]%>-"
 set attribution = "On %{%a, %d %b %Y at %I:%M %p %Z}, %n wrote:"
+set forward_format = "Fwd: %s"
 set quote_regex = "^([ \t]*[|>:}#])+"
 set reply_regex = "^(re: *)?"
-bind editor <Tab> complete-query  # Tab completion for addresses in compose mode
 set fast_reply = yes
 set include = yes
-set forward_format = "Fwd: %s"
 set forward_quote = yes
 set reverse_name = yes
-set signature = "~/.config/neomutt/signature"
+set reverse_alias = yes
 set text_flowed = yes  # Use format=flowed for better plain text rendering
+bind editor <Tab> complete-query  # Tab completion for addresses in compose mode
 
-# Behaviour
-set wait_key = no        # non-default: don't prompt "Press any key to continue" after shell commands
+# === General behaviour ===
+set wait_key = no        # Don't prompt "Press any key to continue" after shell commands
+set sleep_time = 0       # No pause when displaying informational messages
 set quit = ask-yes
-set delete = yes         # non-default: actually delete messages marked for deletion on sync (instead of just marking)
-set move = no
-set mark_old = no        # non-default: don't distinguish between 'new' and 'old unread' messages
+set confirmappend = no
+set confirmcreate = yes
 set beep_new = no
-set pipe_decode = yes
+set change_folder_next = yes
+set mark_macro_prefix = "'"
+
+# === Message management ===
+set delete = yes         # Actually delete messages marked for deletion on sync
+set delete_untag = yes
+set move = no
+set mark_old = no        # Don't distinguish between 'new' and 'old unread' messages
+
+# === Search and filtering ===
+set simple_search = "~f %s | ~t %s | ~c %s | ~s %s"
 set thorough_search = yes
-set sleep_time = 0       # non-default: no pause when displaying informational messages
+set pipe_decode = yes
+
+# === Performance settings ===
 set mail_check = 60
+set mail_check_stats = yes
+set mail_check_stats_interval = 60
 set read_inc = 100
 set write_inc = 100
 set net_inc = 5
+set save_history = 100
+set history = 1000
 
-# Address lookup
+# === Address lookup ===
 set query_command = "( mu cfind --format=mutt-ab '%s' 2>/dev/null | awk '!seen[tolower($1)]++' )"
 set query_format = "%3c %t %-25.25n %-25.25a %?e?(%e)?"
 
-# Display
+# === Display and formatting ===
+set date_format = "%d/%m/%y %H:%M"
+set index_format = "%4C %Z %?X?A& ? %{%b %d} %-15.15L %?M?(#%03M)&(%4l)? %s"
+set pager_format = "-%Z- %C/%m: %.20n   %s %* -- (%P)"
+set attach_format = "[%D %t] %2n [%-7.7m/%10.10M] %.40d %> [%s] "
+
+# === Message sorting and threading ===
 set sort = threads
 set sort_aux = reverse-last-date-received
 set sort_re = yes
 set strict_threads = no
 set hide_thread_subject = yes
 set narrow_tree = yes
+set collapse_unread = no
+set uncollapse_jump = yes
+
+# === Pager settings ===
 set pager_index_lines = 10
 set pager_context = 3
 set pager_stop = yes
 set pager_read_delay = 0
-set pager_format = "-%Z- %C/%m: %.20n   %s %* -- (%P)"
 set menu_scroll = yes
 set smart_wrap = yes
 set tilde = yes
 set markers = no
-set date_format = "%d/%m/%y %H:%M"
-set index_format = "%4C %Z %?X?A& ? %{%b %d} %-15.15L %?M?(#%03M)&(%4l)? %s"
-set mail_check_stats = yes
-set mail_check_stats_interval = 60
 
-# Sidebar
+# === Sidebar configuration ===
 set sidebar_visible = yes
 set sidebar_width = 25
 set sidebar_format = "%D%?F? [%F]?%* %?N?%N/?%S"
@@ -86,13 +102,7 @@ set sidebar_new_mail_only = no
 set sidebar_sort_method = "unsorted"
 set sidebar_component_depth = 1
 
-# Key bindings for sidebar
-bind index,pager K sidebar-prev
-bind index,pager J sidebar-next
-bind index,pager L sidebar-open
-bind index,pager H sidebar-toggle-visible
-
-# Mailboxes with named labels
+# === Mailboxes configuration ===
 # Define these BEFORE sourcing account configs that change folder
 unmailboxes *
 named-mailboxes "Personal" =personal/INBOX
@@ -111,44 +121,33 @@ named-mailboxes "  Drafts" =phdconvenor/Drafts
 named-mailboxes "  Sent" =phdconvenor/"Sent Items"
 named-mailboxes "  Deleted" =phdconvenor/"Deleted Items"
 
-# Load color theme first
+# === External configuration files ===
 source ~/.config/neomutt/colors.muttrc
+source ~/.config/neomutt/mailcap.muttrc
 
-# Account switching - source after mailboxes are defined
+# === Account configuration ===
+# Source after mailboxes are defined
 source ~/.config/neomutt/accounts/personal
 folder-hook personal/* source ~/.config/neomutt/accounts/personal
 folder-hook anu/* source ~/.config/neomutt/accounts/anu
 folder-hook phdconvenor/* source ~/.config/neomutt/accounts/phdconvenor
 
-# Search bindings (vim-style)
-# Global search across all accounts (overridden per-account for / binding)
-macro index ,/ "<shell-escape>~/.config/neomutt/scripts/mu-search.sh<enter><change-folder-readonly>~/.mu/results<enter>" "search all accounts"
-macro index ? "<search-reverse>" "search backwards"
-macro index n "<search-next>" "next search result"
-macro index N "<search-opposite>" "previous search result"
-macro index ,r "<change-folder-readonly>~/.mu/results<enter>" "mu results"
-macro index,pager ,u "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results flag:unread<enter><change-folder-readonly>~/.mu/results<enter>" "show unread"
+# === Attachments configuration ===
+set abort_noattach = ask-yes
+set abort_noattach_regex = "\\<(attach|attached|attachments?|^attached|^attachment|(see|check) (attachments?|attached))\\>"
+set forward_attachments = yes
+set mime_forward = ask-no
 
-# Unread management
-macro index U "<toggle-new>" "toggle unread status"
+# === Encryption (disabled) ===
+set crypt_use_gpgme = no
+set crypt_autosign = no
+set crypt_opportunistic_encrypt = no
 
-# Sync bindings
-bind index x sync-mailbox
-macro index ,s "<shell-escape>mailsync<enter>" "sync all mail"
-macro index ,S "<shell-escape>mbsync -a<enter>" "sync mail (no index)"
+# ==============================
+# === KEY BINDINGS AND MACROS ===
+# ==============================
 
-# Account switching macros
-macro index,pager ,f '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/personal<enter><change-folder>!<enter>'
-macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/anu<enter><change-folder>!<enter>'
-macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
-
-# Threading
-set collapse_unread = no
-set uncollapse_jump = yes
-bind index za collapse-thread
-bind index zA collapse-all
-
-# Vim-style navigation
+# === Vim-style navigation ===
 bind pager g noop
 bind pager gg top
 bind pager G bottom
@@ -160,48 +159,57 @@ bind index,pager \Ck half-up
 bind pager \CJ next-line
 bind pager \CK previous-line
 
-# Archive workflow
+# === Sidebar navigation ===
+bind index,pager K sidebar-prev
+bind index,pager J sidebar-next
+bind index,pager L sidebar-open
+bind index,pager H sidebar-toggle-visible
+
+# === Search bindings ===
+macro index ,/ "<shell-escape>~/.config/neomutt/scripts/mu-search.sh<enter><change-folder-readonly>~/.mu/results<enter>" "search all accounts"
+macro index ? "<search-reverse>" "search backwards"
+macro index n "<search-next>" "next search result"
+macro index N "<search-opposite>" "previous search result"
+macro index ,r "<change-folder-readonly>~/.mu/results<enter>" "mu results"
+macro index,pager ,u "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results flag:unread<enter><change-folder-readonly>~/.mu/results<enter>" "show unread"
+
+# === Account switching ===
+macro index,pager ,f '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/personal<enter><change-folder>!<enter>'
+macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/anu<enter><change-folder>!<enter>'
+macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
+
+# === Sync operations ===
+bind index x sync-mailbox
+macro index ,s "<shell-escape>mailsync<enter>" "sync all mail"
+macro index ,S "<shell-escape>mbsync -a<enter>" "sync mail (no index)"
+
+# === Archive workflow ===
 macro index,pager e "<save-message>=Archive<enter>" "archive message"
 macro index,pager E "<tag-subthread><tag-prefix><save-message>=Archive<enter>" "archive downthread"
-# macro pager d "<exit><save-message>=Archive<enter>" "archive from pager"
 
-# Attachments
-set attach_format = "[%D %t] %2n [%-7.7m/%10.10M] %.40d %> [%s] "
-# Source mailcap configuration
-source ~/.config/neomutt/mailcap.muttrc
-set abort_noattach = ask-yes
-set abort_noattach_regex = "\\<(attach|attached|attachments?|^attached|^attachment|(see|check) (attachments?|attached))\\>"
-set forward_attachments = yes
-set mime_forward = ask-no
-set attach_save_dir = "~/Downloads"
-
-# GPG/encryption (optional)
-set crypt_use_gpgme = no
-set crypt_autosign = no
-set crypt_opportunistic_encrypt = no
-
-# === Additional Quality-of-Life Settings ===
-
-# URL handling
-macro index,pager ,b "<pipe-message> urlscan<enter>" "call urlscan to extract URLs"
-macro attach,compose ,b "<pipe-entry> urlscan<enter>" "call urlscan to extract URLs"
-
-# Open message in browser
-macro index,pager ,o "<view-attachments><search>text/html<enter><pipe-entry>cat > /tmp/neomutt-msg.html && open /tmp/neomutt-msg.html<enter><exit>" "open HTML in browser"
-macro index,pager ,O "<enter-command>set pipe_decode=no<enter><pipe-message>cat > /tmp/neomutt-msg.eml && open /tmp/neomutt-msg.eml<enter><enter-command>set pipe_decode=yes<enter>" "open raw message in default app"
-
-# Message tagging shortcuts
+# === Message management ===
+macro index U "<toggle-new>" "toggle unread status"
 bind index <space> tag-entry
 bind index <Esc><space> tag-thread
 bind index <Esc>t tag-pattern
 
-# Better deletion workflow
+# === Deletion workflow ===
 bind index,pager d noop
 macro index,pager dd "<delete-message>" "mark for deletion"
 macro index,pager dt "<delete-thread>" "mark thread for deletion"
 
-# Quick limit (filter) shortcuts
+# === Threading ===
+bind index za collapse-thread
+bind index zA collapse-all
+
+# === Quick filters ===
 macro index ,l "<limit>all<enter>" "remove limit"
 macro index ,L "<limit>~U<enter>" "limit to unread in folder"
 macro index ,t "<limit>~d <1w<enter>" "limit to this week"
 macro index ,y "<limit>~d <1d<enter>" "limit to today"
+
+# === URL and HTML handling ===
+macro index,pager ,b "<pipe-message> urlscan<enter>" "call urlscan to extract URLs"
+macro attach,compose ,b "<pipe-entry> urlscan<enter>" "call urlscan to extract URLs"
+macro index,pager ,o "<view-attachments><search>text/html<enter><pipe-entry>cat > /tmp/neomutt-msg.html && open /tmp/neomutt-msg.html<enter><exit>" "open HTML in browser"
+macro index,pager ,O "<enter-command>set pipe_decode=no<enter><pipe-message>cat > /tmp/neomutt-msg.eml && open /tmp/neomutt-msg.eml<enter><enter-command>set pipe_decode=yes<enter>" "open raw message in default app"
