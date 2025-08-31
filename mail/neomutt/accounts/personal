@@ -1,9 +1,5 @@
 # Personal (Fastmail) account settings
 
-# Clear previous account settings
-unset signature
-set reverse_name = yes
-
 # Email addresses for this account
 alternates ^benswift@fastmail\\.com$ ^ben@benswift\\.me$
 
@@ -21,17 +17,10 @@ set use_from = yes
 set envelope_from = yes
 
 # Personal account specific settings
-set signature = ""
 set status_format = "[PERSONAL] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 
 # Account-specific colours
 color status black blue
-
-# Reply settings
-set fast_reply = yes
-set include = yes
-set forward_format = "Fwd: %s"
-set forward_quote = yes
 
 # Account-specific search (restricted to this account)
 macro index / "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results maildir:/personal/ " "search personal"

@@ -7,7 +7,7 @@ set header_cache_backend = "lmdb"
 set message_cachedir = ~/.cache/neomutt/messages
 set confirmappend = no
 set confirmcreate = yes
-set delete_untag = no
+set delete_untag = yes
 set tmpdir = ~/.cache/neomutt/temp
 set save_history = 100
 set history = 1000
@@ -24,8 +24,14 @@ set edit_headers = yes
 set compose_format = "-- NeoMutt: Compose [Approx. msg size: %l | Atts: %a]%>-"
 set attribution = "On %{%a, %d %b %Y at %I:%M %p %Z}, %n wrote:"
 set quote_regex = "^([ \t]*[|>:}#])+"
-set reply_regex = "^(re:[ \t]*)+"
+set reply_regex = "^(re: *)?"
 bind editor <Tab> complete-query  # Tab completion for addresses in compose mode
+set fast_reply = yes
+set include = yes
+set forward_format = "Fwd: %s"
+set forward_quote = yes
+set reverse_name = yes
+set signature = "~/.config/neomutt/signature"
 
 # Behaviour
 set wait_key = no        # non-default: don't prompt "Press any key to continue" after shell commands
@@ -66,7 +72,6 @@ set date_format = "%d/%m/%y %H:%M"
 set index_format = "%4C %Z %?X?A& ? %{%b %d} %-15.15L %?M?(#%03M)&(%4l)? %s"
 set mail_check_stats = yes
 set mail_check_stats_interval = 60
-set display_filter = "sed 's/\x1b\[[0-9;]*[mGKHF]//g'"
 
 # Sidebar
 set sidebar_visible = yes
@@ -154,15 +159,9 @@ bind index,pager \Ck half-up
 bind pager \CJ next-line
 bind pager \CK previous-line
 
-# Quick folder navigation
-macro index gi '<change-folder>=INBOX<enter>' "go to inbox"
-macro index ga '<change-folder>=Archive<enter>' "go to archive"
-macro index gs '<change-folder>=Sent<enter>' "go to sent"
-macro index gd '<change-folder>=Drafts<enter>' "go to drafts"
-
 # Archive workflow
 macro index,pager e "<save-message>=Archive<enter>" "archive message"
-macro index,pager E "<tag-thread><tag-prefix><save-message>=Archive<enter>" "archive thread"
+macro index,pager E "<tag-subthread><tag-prefix><save-message>=Archive<enter>" "archive downthread"
 # macro pager d "<exit><save-message>=Archive<enter>" "archive from pager"
 
 # Attachments
@@ -183,15 +182,13 @@ set crypt_opportunistic_encrypt = no
 # === Additional Quality-of-Life Settings ===
 
 # URL handling
-macro index,pager \cb "<pipe-message> urlscan<enter>" "call urlscan to extract URLs"
-macro attach,compose \cb "<pipe-entry> urlscan<enter>" "call urlscan to extract URLs"
+macro index,pager ,b "<pipe-message> urlscan<enter>" "call urlscan to extract URLs"
+macro attach,compose ,b "<pipe-entry> urlscan<enter>" "call urlscan to extract URLs"
 
 # Message tagging shortcuts
 bind index <space> tag-entry
 bind index <Esc><space> tag-thread
 bind index <Esc>t tag-pattern
-macro index \Ca "<tag-pattern>~A<enter>" "tag all messages"
-macro index \Cn "<untag-pattern>~T<enter>" "untag all messages"
 
 # Better deletion workflow
 bind index,pager d noop
@@ -199,8 +196,7 @@ macro index,pager dd "<delete-message>" "mark for deletion"
 macro index,pager dt "<delete-thread>" "mark thread for deletion"
 
 # Quick limit (filter) shortcuts
-macro index \Cl "<limit>all<enter>" "remove limit"
-macro index ,u "<limit>~U<enter>" "limit to unread"
+macro index ,l "<limit>all<enter>" "remove limit"
+macro index ,L "<limit>~U<enter>" "limit to unread in folder"
 macro index ,t "<limit>~d <1w<enter>" "limit to this week"
 macro index ,y "<limit>~d <1d<enter>" "limit to today"
-# macro index ,f "<limit>~F<enter>" "limit to flagged"
