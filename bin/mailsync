@@ -41,6 +41,7 @@ if [ ! -d ~/.cache/mu ]; then
     mu init --maildir=~/Maildir \
         --personal-address=u2548636@anu.edu.au \
         --personal-address=ben.swift@anu.edu.au \
+        --personal-address=phdconvenor.cybernetics@anu.edu.au \
         --personal-address=benswift@fastmail.com \
         --personal-address=ben@benswift.me
 fi
