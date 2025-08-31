@@ -185,6 +185,10 @@ set crypt_opportunistic_encrypt = no
 macro index,pager ,b "<pipe-message> urlscan<enter>" "call urlscan to extract URLs"
 macro attach,compose ,b "<pipe-entry> urlscan<enter>" "call urlscan to extract URLs"
 
+# Open message in browser
+macro index,pager ,o "<view-attachments><search>text/html<enter><pipe-entry>cat > /tmp/neomutt-msg.html && open /tmp/neomutt-msg.html<enter><exit>" "open HTML in browser"
+macro index,pager ,O "<enter-command>set pipe_decode=no<enter><pipe-message>cat > /tmp/neomutt-msg.eml && open /tmp/neomutt-msg.eml<enter><enter-command>set pipe_decode=yes<enter>" "open raw message in default app"
+
 # Message tagging shortcuts
 bind index <space> tag-entry
 bind index <Esc><space> tag-thread
