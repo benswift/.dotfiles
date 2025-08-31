@@ -115,7 +115,8 @@ folder-hook anu/* source ~/.config/neomutt/accounts/anu
 folder-hook phdconvenor/* source ~/.config/neomutt/accounts/phdconvenor
 
 # Search bindings (vim-style)
-macro index / "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results " "mu find"
+# Global search across all accounts (overridden per-account for / binding)
+macro index ,/ "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results " "search all accounts"
 macro index ? "<search-reverse>" "search backwards"
 macro index n "<search-next>" "next search result"
 macro index N "<search-opposite>" "previous search result"
