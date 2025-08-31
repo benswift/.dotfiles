@@ -49,7 +49,7 @@ set write_inc = 100
 set net_inc = 5
 
 # Address lookup
-set query_command = "( mu cfind --format=mutt-ab '%s' 2>/dev/null )"
+set query_command = "( mu cfind --format=mutt-ab '%s' 2>/dev/null | awk '!seen[tolower($1)]++' )"
 set query_format = "%3c %t %-25.25n %-25.25a %?e?(%e)?"
 
 # Display
