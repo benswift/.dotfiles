@@ -25,6 +25,7 @@ set compose_format = "-- NeoMutt: Compose [Approx. msg size: %l | Atts: %a]%>-"
 set attribution = "On %{%a, %d %b %Y at %I:%M %p %Z}, %n wrote:"
 set quote_regex = "^([ \t]*[|>:}#])+"
 set reply_regex = "^(re:[ \t]*)+"
+bind editor <Tab> complete-query  # Tab completion for addresses in compose mode
 
 # Behaviour
 set wait_key = no        # non-default: don't prompt "Press any key to continue" after shell commands

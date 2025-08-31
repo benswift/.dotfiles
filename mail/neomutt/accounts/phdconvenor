@@ -16,7 +16,7 @@ set record = +"Sent Items"
 set trash = +"Deleted Items"
 
 # Sending mail via msmtp
-set sendmail = "/usr/local/bin/msmtp -a phdconvenor"
+set sendmail = "msmtp -a phdconvenor"
 set use_from = yes
 set envelope_from = yes
 

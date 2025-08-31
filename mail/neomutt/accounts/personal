@@ -8,7 +8,7 @@ set reverse_name = yes
 alternates ^benswift@fastmail\\.com$ ^ben@benswift\\.me$
 
 # Folder settings
-set from = "benswift@fastmail.com"
+set from = "ben@benswift.me"
 set folder = ~/Maildir/personal/
 set spoolfile = +INBOX
 set postponed = +Drafts
@@ -16,7 +16,7 @@ set record = +"Sent Items"
 set trash = +Trash
 
 # Sending mail via msmtp
-set sendmail = "/usr/local/bin/msmtp -a personal"
+set sendmail = "msmtp -a personal"
 set use_from = yes
 set envelope_from = yes
 

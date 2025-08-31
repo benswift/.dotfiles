@@ -8,7 +8,7 @@ set reverse_name = yes
 alternates ^u2548636@anu\\.edu\\.au$ ^ben\\.swift@anu\\.edu\\.au$
 
 # Folder settings
-set from = "u2548636@anu.edu.au"
+set from = "ben.swift@anu.edu.au"
 set folder = ~/Maildir/anu/
 set spoolfile = +INBOX
 set postponed = +Drafts
@@ -16,7 +16,7 @@ set record = +"Sent Items"
 set trash = +Deleted\ Items
 
 # Sending mail via msmtp
-set sendmail = "/usr/local/bin/msmtp -a anu"
+set sendmail = "msmtp -a anu"
 set use_from = yes
 set envelope_from = yes
 
