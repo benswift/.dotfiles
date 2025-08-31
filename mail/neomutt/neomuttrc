@@ -32,6 +32,7 @@ set forward_format = "Fwd: %s"
 set forward_quote = yes
 set reverse_name = yes
 set signature = "~/.config/neomutt/signature"
+set text_flowed = yes  # Use format=flowed for better plain text rendering
 
 # Behaviour
 set wait_key = no        # non-default: don't prompt "Press any key to continue" after shell commands
