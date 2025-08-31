@@ -131,7 +131,7 @@ macro index ,s "<shell-escape>mailsync<enter>" "sync all mail"
 macro index ,S "<shell-escape>mbsync -a<enter>" "sync mail (no index)"
 
 # Account switching macros
-macro index,pager ,p '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/personal<enter><change-folder>!<enter>'
+macro index,pager ,f '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/personal<enter><change-folder>!<enter>'
 macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/anu<enter><change-folder>!<enter>'
 macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
 
@@ -148,10 +148,10 @@ bind pager G bottom
 bind index g noop
 bind index gg first-entry
 bind index G last-entry
-bind index,pager \Cd half-down
-bind index,pager \Cu half-up
-bind pager \Cj next-line
-bind pager \Ck previous-line
+bind index,pager \Cj half-down
+bind index,pager \Ck half-up
+bind pager \CJ next-line
+bind pager \CK previous-line
 
 # Quick folder navigation
 macro index gi '<change-folder>=INBOX<enter>' "go to inbox"
@@ -160,10 +160,9 @@ macro index gs '<change-folder>=Sent<enter>' "go to sent"
 macro index gd '<change-folder>=Drafts<enter>' "go to drafts"
 
 # Archive workflow
-macro index,pager a "<save-message>=Archive<enter>" "archive message"
-macro index,pager A "<tag-thread><tag-prefix><save-message>=Archive<enter>" "archive thread"
-macro index,pager e "<save-message>=Archive<enter><sync-mailbox>" "archive and sync"
-macro pager d "<exit><save-message>=Archive<enter>" "archive from pager"
+macro index,pager e "<save-message>=Archive<enter>" "archive message"
+macro index,pager E "<tag-thread><tag-prefix><save-message>=Archive<enter>" "archive thread"
+# macro pager d "<exit><save-message>=Archive<enter>" "archive from pager"
 
 # Attachments
 set attach_format = "[%D %t] %2n [%-7.7m/%10.10M] %.40d %> [%s] "
@@ -203,12 +202,4 @@ macro index \Cl "<limit>all<enter>" "remove limit"
 macro index ,u "<limit>~U<enter>" "limit to unread"
 macro index ,t "<limit>~d <1w<enter>" "limit to this week"
 macro index ,y "<limit>~d <1d<enter>" "limit to today"
-macro index ,f "<limit>~F<enter>" "limit to flagged"
-
-# Additional folder navigation
-macro index,pager gt "<change-folder>=" "go to folder root"
-bind index M noop
-macro index,pager Mi "<change-folder>=INBOX<enter>" "go to inbox"
-macro index,pager Ms "<change-folder>=Sent<enter>" "go to sent"
-macro index,pager Md "<change-folder>=Drafts<enter>" "go to drafts"
-macro index,pager Ma "<change-folder>=Archive<enter>" "go to archive"
+# macro index ,f "<limit>~F<enter>" "limit to flagged"
