@@ -1,8 +1,0 @@
-INBOX=path:anu/INBOX/**
-Unread=tag:unread AND path:anu/** AND NOT tag:spam
-Today=date:today.. AND path:anu/**
-Sent=path:anu/Sent/**
-Archive=path:anu/Archive/**
-Drafts=path:anu/Drafts/**
-Trash=path:anu/Trash/**
-All=path:anu/**

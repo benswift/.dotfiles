@@ -19,8 +19,8 @@
     "command": "gitu"
   },
   {
-    "label": "aerc",
-    "command": "aerc",
+    "label": "neomutt",
+    "command": "neomutt",
     "reveal": "always",
     "use_new_terminal": true,
     "allow_concurrent_runs": false

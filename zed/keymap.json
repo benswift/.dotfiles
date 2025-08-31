@@ -11,7 +11,7 @@
       ],
       "alt-m": [
         "task::Spawn",
-        { "task_name": "aerc", "reveal_target": "center" }
+        { "task_name": "neomutt", "reveal_target": "center" }
       ]
     }
   },

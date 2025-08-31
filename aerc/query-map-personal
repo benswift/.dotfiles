@@ -1,8 +1,0 @@
-INBOX=path:personal/INBOX/**
-Unread=tag:unread AND path:personal/** AND NOT tag:spam
-Today=date:today.. AND path:personal/**
-Sent=path:personal/Sent/**
-Archive=path:personal/Archive/**
-Drafts=path:personal/Drafts/**
-Trash=path:personal/Trash/**
-All=path:personal/**
