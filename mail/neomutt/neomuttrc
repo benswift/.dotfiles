@@ -27,15 +27,15 @@ set quote_regex = "^([ \t]*[|>:}#])+"
 set reply_regex = "^(re:[ \t]*)+"
 
 # Behaviour
-set wait_key = no
+set wait_key = no        # non-default: don't prompt "Press any key to continue" after shell commands
 set quit = ask-yes
-set delete = yes
+set delete = yes         # non-default: actually delete messages marked for deletion on sync (instead of just marking)
 set move = no
-set mark_old = no
-set beep_new = yes
+set mark_old = no        # non-default: don't distinguish between 'new' and 'old unread' messages
+set beep_new = no
 set pipe_decode = yes
 set thorough_search = yes
-set sleep_time = 0
+set sleep_time = 0       # non-default: no pause when displaying informational messages
 set mail_check = 60
 set read_inc = 100
 set write_inc = 100
@@ -104,8 +104,8 @@ named-mailboxes "  Drafts" =phdconvenor/Drafts
 named-mailboxes "  Sent" =phdconvenor/"Sent Items"
 named-mailboxes "  Deleted" =phdconvenor/"Deleted Items"
 
-# Load vombatidae color theme first
-source ~/.config/neomutt/vombatidae.mutt
+# Load color theme first
+source ~/.config/neomutt/colors.muttrc
 
 # Account switching - source after mailboxes are defined
 source ~/.config/neomutt/accounts/personal
