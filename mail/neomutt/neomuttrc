@@ -66,7 +66,7 @@ set query_format = "%3c %t %-25.25n %-25.25a %?e?(%e)?"
 
 # === Display and formatting ===
 set date_format = "%d/%m/%y %H:%M"
-set index_format = "%4C %Z %?X?A& ? %{%b %d} %-15.15L %?M?(#%03M)&(%4l)? %s"
+set index_format = "%4C %Z %?X?A& ? %{%b %d} %-15.15L %?M?(#%03M)&(%5c)? %s"
 set pager_format = "-%Z- %C/%m: %.20n   %s %* -- (%P)"
 set attach_format = "[%D %t] %2n [%-7.7m/%10.10M] %.40d %> [%s] "
 
