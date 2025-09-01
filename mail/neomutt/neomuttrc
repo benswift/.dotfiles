@@ -179,13 +179,16 @@ macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/acco
 macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
 
 # === Sync operations ===
-bind index x sync-mailbox
 macro index ,s "<shell-escape>mailsync<enter>" "sync all mail"
 macro index ,S "<shell-escape>mbsync -a<enter>" "sync mail (no index)"
 
 # === Archive workflow ===
+# Immediate archive (message disappears from index)
 macro index,pager e "<save-message>=Archive<enter>" "archive message"
-macro index,pager E "<tag-subthread><tag-prefix><save-message>=Archive<enter>" "archive downthread"
+macro index,pager E "<tag-thread><tag-prefix><save-message>=Archive<enter>" "archive thread"
+
+# Execute all pending operations
+bind index,pager x sync-mailbox
 
 # === Message management ===
 bind index,pager r reply
