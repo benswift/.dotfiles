@@ -92,7 +92,6 @@ main() {
         "RProfile"
         "gitconfig"
         "gitignore"
-        "notmuch-config"
         "zshenv"
         "zshrc"
     )
