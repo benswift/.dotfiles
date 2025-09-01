@@ -41,7 +41,7 @@ set mark_macro_prefix = "'"
 
 # === Message management ===
 set delete = yes         # Actually delete messages marked for deletion on sync
-set delete_untag = yes
+set delete_untag = no
 set move = no
 set mark_old = no        # Don't distinguish between 'new' and 'old unread' messages
 
@@ -188,6 +188,8 @@ macro index,pager e "<save-message>=Archive<enter>" "archive message"
 macro index,pager E "<tag-subthread><tag-prefix><save-message>=Archive<enter>" "archive downthread"
 
 # === Message management ===
+bind index,pager r reply
+bind index,pager R group-reply
 macro index U "<toggle-new>" "toggle unread status"
 bind index <space> tag-entry
 bind index <Esc><space> tag-thread
