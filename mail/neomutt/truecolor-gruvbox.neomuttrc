@@ -1,0 +1,87 @@
+# Gruvbox dark
+# Colors from https://github.com/sainnhe/gruvbox-material (original variant)
+
+# bg0    = 235 #282828
+# bg1    = 236 #32302f
+# bg2    = 237 #45403d
+# bg2    = 239 #5a524c
+#
+# gray0  = 243 #7c6f64
+# gray1  = 245 #928374
+# gray0  = 246 #a89984
+#
+# fg     = 223 #ebdbb2
+#
+# red    = 167 #fb4934
+# green  = 142 #b8bb26
+# yellow = 214 #fabd2f
+# blue   = 109 #83a598
+# purple = 175 #d3869b
+# aqua   = 108 #8ec07c
+# orange = 208 #fe8019
+
+# See https://neomutt.org/guide/configuration.html#color
+
+color attachment #83a598 #282828
+color bold bold  #ebdbb2 #282828
+color error      #fb4934 #282828
+color hdrdefault #a89984 #282828
+color indicator  #ebdbb2 #45403d
+color markers    #7c6f64 #282828
+color normal     #ebdbb2 #282828
+color quoted     #a89984 #282828
+color quoted1    #8ec07c #282828
+color quoted2    #a89984 #282828
+color quoted3    #8ec07c #282828
+color quoted4    #a89984 #282828
+color quoted5    #8ec07c #282828
+color quoted6    #a89984 #282828
+color quoted7    #8ec07c #282828
+color quoted8    #a89984 #282828
+color quoted9    #8ec07c #282828
+color search     #282828 #b8bb26
+color signature  #8ec07c #282828
+color status     #282828 #a89984
+color tilde      #7c6f64 #282828
+color tree       #a89984 #282828
+color underline  #ebdbb2 #5a524c
+
+color sidebar_divider   #7c6f64 #282828
+color sidebar_new       #b8bb26 #282828
+color sidebar_unread    #b8bb26 #282828
+color sidebar_highlight #fe8019 #282828
+
+color index_number       #7c6f64 #282828
+color index_author       #fabd2f #282828 '.*'
+color index_subject      #b8bb26 #282828 '.*'
+color index         bold #ebdbb2 #282828 '~N'
+color index_flags   bold #b8bb26 #282828 '~N'
+color index_author  bold #fabd2f #282828 '~N'
+color index_subject bold #b8bb26 #282828 '~N'
+color index              #7c6f64 #282828 '~D'
+color index_flags        #fb4934 #282828 '~D'
+color index_author       #7c6f64 #282828 '~D'
+color index_subject      #7c6f64 #282828 '~D'
+
+color header #fabd2f #282828 "^From:"
+color header #fe8019 #282828 "^(To:|Cc:)"
+color header #b8bb26 #282828 "^Subject:"
+color header #8ec07c #282828 "^X-Spam-Status:"
+color header #8ec07c #282828 "^Received:"
+
+color compose header           #ebdbb2 #282828
+color compose security_encrypt #d3869b #282828
+color compose security_sign    #83a598 #282828
+color compose security_both    #b8bb26 #282828
+color compose security_none    #fe8019 #282828
+
+# URL
+color body #d3869b #282828 "[a-z]{3,255}://[-a-zA-Z0-9@:%._\\+~#=/?&,]+"
+# email
+color body #fe8019 #282828 "[-a-z_0-9.%$]+@[-a-z_0-9.]+\\.[-a-z][-a-z]+"
+# mailto link
+color body #fe8019 #282828 "mailto:[-a-z_0-9.]+@[-a-z_0-9.]+"
+# smileys
+color body #282828 #fabd2f "[;:]-[)(pPsS\|D]"
+# *bold*
+color body bold #ebdbb2 #282828 "(^|[[:space:][:punct:]])\\*[^*]+\\*([[:space:][:punct:]]|$)"
