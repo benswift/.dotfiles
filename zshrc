@@ -13,6 +13,7 @@ alias zp="zed-preview"
 alias todo="nb todo undone"
 alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
+alias neomutt='TERM=xterm-direct neomutt'
 
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 

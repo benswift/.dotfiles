@@ -123,9 +123,8 @@ named-mailboxes "  Deleted" =phdconvenor/"Deleted Items"
 
 # === External configuration files ===
 # Enable true color support (must be set before color commands)
-# set color_directcolor = yes
-# source ~/.config/neomutt/colors.muttrc
-source ~/.config/neomutt/colors-monokai-256.muttrc
+set color_directcolor = yes
+source ~/.config/neomutt/truecolor-gruvbox.neomuttrc
 source ~/.config/neomutt/mailcap.muttrc
 
 # === Account configuration ===
