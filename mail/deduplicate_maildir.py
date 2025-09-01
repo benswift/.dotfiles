@@ -4,16 +4,14 @@
 # ///
 """Deduplicate email messages in a maildir folder based on Message-ID headers.
 
-This script scans a maildir folder structure (with cur/, new/, tmp/ subdirectories),
+This script uses Python's mailbox module to scan a maildir folder,
 identifies duplicate emails using Message-ID headers, keeps the first occurrence
-(by filename sort), and deletes subsequent duplicates.
+(by key sort), and deletes subsequent duplicates.
 """
 
-import email
-import email.parser
+import mailbox
 from collections import defaultdict
 from pathlib import Path
-from typing import Iterator
 
 import typer
 from rich.console import Console
@@ -29,74 +27,26 @@ console = Console()
 app = typer.Typer()
 
 
-def extract_message_id(file_path: Path) -> str | None:
-    """Extract Message-ID from an email file.
-
-    Args:
-        file_path: Path to the email file
-
-    Returns:
-        The Message-ID if found, None otherwise
-    """
-    try:
-        with open(file_path, "rb") as f:
-            # Use email parser that handles multi-line headers correctly
-            parser = email.parser.BytesHeaderParser()
-            msg = parser.parse(f)
-
-            # Get the Message-ID header (parser handles multi-line headers)
-            msg_id = msg.get("Message-ID")
-            if msg_id:
-                # The parser returns the full value with whitespace normalized
-                return msg_id.strip()
-
-    except Exception as e:
-        console.print(f"[yellow]Warning: Could not read {file_path}: {e}[/yellow]")
-    return None
-
-
-def scan_maildir(maildir_path: Path) -> Iterator[Path]:
-    """Scan a maildir folder for email files.
-
-    Args:
-        maildir_path: Path to the maildir folder
-
-    Yields:
-        Paths to email files
-    """
-    # Maildir folders typically have cur/, new/, and tmp/ subdirectories
-    subdirs = ["cur", "new", "tmp"]
-
-    for subdir in subdirs:
-        subdir_path = maildir_path / subdir
-        if subdir_path.exists() and subdir_path.is_dir():
-            # Yield all files (excluding . files and directories)
-            for file_path in subdir_path.iterdir():
-                if file_path.is_file() and not file_path.name.startswith("."):
-                    yield file_path
-
-
 def find_duplicates(
-    maildir_path: Path, show_progress: bool = True
-) -> tuple[dict[str, list[Path]], int]:
+    mbox: mailbox.Maildir, show_progress: bool = True
+) -> tuple[dict[str, list[str]], int]:
     """Find duplicate messages in a maildir folder.
 
     Args:
-        maildir_path: Path to the maildir folder
+        mbox: Maildir object
         show_progress: Whether to show progress bar
 
     Returns:
-        A tuple of (dict mapping Message-IDs to lists of file paths, total file count)
+        A tuple of (dict mapping Message-IDs to lists of message keys, total message count)
     """
-    message_id_to_files: dict[str, list[Path]] = defaultdict(list)
-    total_files = 0
+    message_id_to_keys: dict[str, list[str]] = defaultdict(list)
+    
+    # Get all message keys
+    keys = list(mbox.keys())
+    total_messages = len(keys)
 
-    # First, count total files for progress bar
-    all_files = list(scan_maildir(maildir_path))
-    total_files = len(all_files)
-
-    if total_files == 0:
-        return message_id_to_files, 0
+    if total_messages == 0:
+        return message_id_to_keys, 0
 
     if show_progress:
         with Progress(
@@ -107,21 +57,29 @@ def find_duplicates(
             console=console,
         ) as progress:
             task = progress.add_task(
-                f"Scanning {total_files} files...", total=total_files
+                f"Scanning {total_messages} messages...", total=total_messages
             )
 
-            for file_path in all_files:
-                message_id = extract_message_id(file_path)
-                if message_id:
-                    message_id_to_files[message_id].append(file_path)
+            for key in keys:
+                try:
+                    msg = mbox[key]
+                    msg_id = msg.get("Message-ID")
+                    if msg_id:
+                        message_id_to_keys[msg_id.strip()].append(key)
+                except Exception as e:
+                    console.print(f"[yellow]Warning: Could not read message {key}: {e}[/yellow]")
                 progress.update(task, advance=1)
     else:
-        for file_path in all_files:
-            message_id = extract_message_id(file_path)
-            if message_id:
-                message_id_to_files[message_id].append(file_path)
+        for key in keys:
+            try:
+                msg = mbox[key]
+                msg_id = msg.get("Message-ID")
+                if msg_id:
+                    message_id_to_keys[msg_id.strip()].append(key)
+            except Exception as e:
+                console.print(f"[yellow]Warning: Could not read message {key}: {e}[/yellow]")
 
-    return message_id_to_files, total_files
+    return message_id_to_keys, total_messages
 
 
 def deduplicate(
@@ -135,52 +93,59 @@ def deduplicate(
         verbose: If True, print detailed information
 
     Returns:
-        A tuple of (total files processed, unique messages kept, duplicates removed)
+        A tuple of (total messages processed, unique messages kept, duplicates removed)
     """
     console.print(f"\n[bold]Scanning maildir: {maildir_path}[/bold]")
 
-    # Find all messages and group by Message-ID
-    message_id_to_files, total_files = find_duplicates(maildir_path)
+    try:
+        # Open the maildir
+        mbox = mailbox.Maildir(maildir_path, create=False)
+    except Exception as e:
+        console.print(f"[red]Error opening maildir: {e}[/red]")
+        return 0, 0, 0
 
-    if total_files == 0:
-        console.print("[yellow]No email files found in maildir[/yellow]")
+    # Find all messages and group by Message-ID
+    message_id_to_keys, total_messages = find_duplicates(mbox)
+
+    if total_messages == 0:
+        console.print("[yellow]No messages found in maildir[/yellow]")
         return 0, 0, 0
 
     # Count duplicates
-    unique_count = len(message_id_to_files)
+    unique_count = len(message_id_to_keys)
     duplicate_count = 0
-    files_to_delete = []
+    keys_to_delete = []
 
-    for message_id, file_paths in message_id_to_files.items():
-        if len(file_paths) > 1:
-            # Sort files by name to ensure consistent behavior
-            sorted_paths = sorted(file_paths, key=lambda p: str(p))
+    for message_id, keys in message_id_to_keys.items():
+        if len(keys) > 1:
+            # Sort keys to ensure consistent behavior
+            sorted_keys = sorted(keys)
             # Keep the first one, mark the rest for deletion
-            files_to_delete.extend(sorted_paths[1:])
-            duplicate_count += len(sorted_paths) - 1
+            keys_to_delete.extend(sorted_keys[1:])
+            duplicate_count += len(sorted_keys) - 1
 
-            if verbose and len(sorted_paths) > 1:
+            if verbose and len(sorted_keys) > 1:
                 console.print(f"\n[cyan]Message-ID: {message_id}[/cyan]")
-                console.print(f"  [green]Keeping:[/green] {sorted_paths[0].name}")
-                for path in sorted_paths[1:]:
-                    console.print(f"  [red]Deleting:[/red] {path.name}")
+                console.print(f"  [green]Keeping:[/green] {sorted_keys[0]}")
+                for key in sorted_keys[1:]:
+                    console.print(f"  [red]Deleting:[/red] {key}")
 
     # Print summary
     console.print("\n[bold]Summary:[/bold]")
-    console.print(f"  Total files scanned: {total_files:,}")
+    console.print(f"  Total messages scanned: {total_messages:,}")
     console.print(f"  Unique messages: {unique_count:,}")
-    console.print(f"  Duplicate files to remove: {duplicate_count:,}")
+    console.print(f"  Duplicate messages to remove: {duplicate_count:,}")
 
     if duplicate_count == 0:
         console.print("\n[green]No duplicates found![/green]")
-        return total_files, unique_count, 0
+        return total_messages, unique_count, 0
 
     if dry_run:
-        console.print("\n[yellow]DRY RUN: No files were deleted[/yellow]")
-        return total_files, unique_count, duplicate_count
+        console.print("\n[yellow]DRY RUN: No messages were deleted[/yellow]")
+        return total_messages, unique_count, duplicate_count
 
     # Delete duplicates
-    console.print(f"\n[bold]Deleting {duplicate_count:,} duplicate files...[/bold]")
+    console.print(f"\n[bold]Deleting {duplicate_count:,} duplicate messages...[/bold]")
 
     deleted_count = 0
     failed_count = 0
@@ -192,24 +157,28 @@ def deduplicate(
         TaskProgressColumn(),
         console=console,
     ) as progress:
-        task = progress.add_task("Deleting duplicates...", total=len(files_to_delete))
+        task = progress.add_task("Deleting duplicates...", total=len(keys_to_delete))
 
-        for file_path in files_to_delete:
+        for key in keys_to_delete:
             try:
-                file_path.unlink()
+                mbox.remove(key)
                 deleted_count += 1
             except Exception as e:
-                console.print(f"[red]Failed to delete {file_path}: {e}[/red]")
+                console.print(f"[red]Failed to delete message {key}: {e}[/red]")
                 failed_count += 1
             progress.update(task, advance=1)
 
+    # Flush changes to disk
+    mbox.flush()
+    mbox.close()
+
     console.print(
-        f"\n[green]Successfully deleted {deleted_count:,} duplicate files[/green]"
+        f"\n[green]Successfully deleted {deleted_count:,} duplicate messages[/green]"
     )
     if failed_count > 0:
-        console.print(f"[red]Failed to delete {failed_count:,} files[/red]")
+        console.print(f"[red]Failed to delete {failed_count:,} messages[/red]")
 
-    return total_files, unique_count, deleted_count
+    return total_messages, unique_count, deleted_count
 
 
 @app.command()
@@ -234,9 +203,9 @@ def main(
 ):
     """Deduplicate email messages in a maildir folder based on Message-ID headers.
 
-    This script scans a maildir folder structure (with cur/, new/, tmp/ subdirectories),
+    This script uses Python's mailbox module to scan a maildir folder,
     identifies duplicate emails using Message-ID headers, keeps the first occurrence
-    (by filename sort), and deletes subsequent duplicates.
+    (by key sort), and deletes subsequent duplicates.
     """
     try:
         # Verify it looks like a maildir
