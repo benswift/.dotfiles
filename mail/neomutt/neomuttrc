@@ -122,6 +122,8 @@ named-mailboxes "  Sent" =phdconvenor/"Sent Items"
 named-mailboxes "  Deleted" =phdconvenor/"Deleted Items"
 
 # === External configuration files ===
+# Enable true color support (must be set before color commands)
+set color_directcolor = yes
 source ~/.config/neomutt/colors.muttrc
 source ~/.config/neomutt/mailcap.muttrc
 
