@@ -33,9 +33,9 @@ color tilde             #75715e         #272822         # Empty lines (~)
 color markers           #fd971f         #272822         # Line continuation markers (+)
 
 # === Text Attributes ===
-color bold              #f8f8f2         #272822         bold
-color italic            #88846f         #272822         standout
-color underline         #a6e22e         #272822         underline
+color bold              #f8f8f2         #272822
+color italic            #88846f         #272822
+color underline         #a6e22e         #272822
 
 # === Attachments ===
 color attachment        #ae81ff         #272822         # Attachment list
@@ -45,7 +45,7 @@ color signature         #75715e         #272822         # Signature blocks
 color compose_header        #90908a     #272822         # Headers in compose view
 color compose_security_encrypt  #a6e22e #272822         # Encryption indicator
 color compose_security_sign     #66d9ef #272822         # Signing indicator
-color compose_security_both     #a6e22e #272822         bold
+color compose_security_both     #a6e22e #272822
 color compose_security_none     #75715e #272822         # No security
 
 # === Headers (when viewing messages) ===

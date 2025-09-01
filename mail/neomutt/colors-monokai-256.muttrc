@@ -1,0 +1,147 @@
+# Monokai color theme for NeoMutt (256 color version)
+# Complete theme covering all colorable elements
+# Using 256 color palette
+
+# === Monokai-like colors in 256 palette ===
+# Background: color233 (close to #272822)
+# Foreground: color231 (close to #f8f8f2)
+# Comments: color243 (close to #88846f)
+# Red: color197 (close to #f92672)
+# Green: color148 (close to #a6e22e)
+# Yellow: color186 (close to #e6db74)
+# Blue: color81 (close to #66d9ef)
+# Purple: color141 (close to #ae81ff)
+# Orange: color208 (close to #fd971f)
+# Dark Gray: color239 (close to #75715e)
+# Light Gray: color245 (close to #90908a)
+
+# === Basic UI Elements ===
+color normal            color231        color233        # Default text
+color error             color197        color233        # Error messages
+color warning           color208        color233        # Warning messages
+color message           color186        color233        # Informational messages
+color prompt            color81         color233        # Command prompt
+color options           color148        color233        # Options in prompts
+color progress          color81         color237        # Progress bar
+color search            color233        color186        # Search results highlighting
+color indicator         color233        color231        # Selected item cursor
+color status            color231        color237        # Status bar
+color tree              color239        color233        # Thread tree lines
+color tilde             color239        color233        # Empty lines (~)
+color markers           color208        color233        # Line continuation markers (+)
+
+# === Text Attributes ===
+color bold              color231        color233
+color italic            color243        color233
+color underline         color148        color233
+
+# === Attachments ===
+color attachment        color141        color233        # Attachment list
+color signature         color239        color233        # Signature blocks
+
+# === Compose View ===
+color compose_header        color245    color233        # Headers in compose view
+color compose_security_encrypt  color148 color233       # Encryption indicator
+color compose_security_sign     color81 color233        # Signing indicator
+color compose_security_both     color148 color233
+color compose_security_none     color239 color233       # No security
+
+# === Headers (when viewing messages) ===
+color hdrdefault        color239        color233        # Default header
+color header            color81         color233        "^(From):"
+color header            color148        color233        "^(To|Cc|Bcc):"
+color header            color197        color233        "^(Subject):"
+color header            color186        color233        "^(Date):"
+color header            color141        color233        "^(User-Agent|X-Mailer):"
+color header            color208        color233        "^(Reply-To):"
+color header            color245        color233        "^(Message-ID|References|In-Reply-To):"
+color header            color239        color233        "^(X-.*|List-.*|Organization):"
+
+# === Body (message content patterns) ===
+# URLs
+color body              color81         color233        "(https?|ftp)://[^\"\t\r\n ]*"
+color body              color81         color233        "www\\.[^\"\t\r\n ]*"
+# Email addresses
+color body              color148        color233        "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+# Emphasis
+color body              color197        color233        "[*][-[:alnum:]]+[*]"    # *bold*
+color body              color186        color233        "_[-[:alnum:]]+_"        # _underline_
+# Emoticons
+color body              color208        color233        "[;:]-?[)>(<|/\\]"
+# PGP
+color body              color148        color233        "^gpg:.*Good signature.*"
+color body              color197        color233        "^gpg:.*Bad signature.*"
+color body              color186        color233        "^gpg:.*Can't check signature.*"
+
+# === Quoted Text (nested replies) ===
+color quoted            color243        color233        # First level quote
+color quoted1           color239        color233        # Second level
+color quoted2           color245        color233        # Third level
+color quoted3           color243        color233        # Fourth level
+color quoted4           color239        color233        # Fifth level
+color quoted5           color245        color233        # Sixth level
+color quoted6           color243        color233        # Seventh level
+color quoted7           color239        color233        # Eighth level
+color quoted8           color245        color233        # Ninth level
+color quoted9           color243        color233        # Tenth level
+
+# === Index (message list) ===
+# Base index colors
+color index             color231        color233        ~A          # All messages
+color index             color81         color233        ~N          # New messages
+color index             color81         color233        ~U          # Unread messages
+color index             color141        color233        ~F          # Flagged messages
+color index             color186        color233        ~T          # Tagged messages
+color index             color239        color233        ~D          # Deleted messages
+color index             color208        color233        ~O          # Old messages
+color index             color148        color233        ~v          # Collapsed thread
+color index             color197        color233        ~P          # From me
+color index             color245        color233        ~Q          # Replied to
+
+# Highlight important patterns
+color index             brightcolor197  color233        "~F ~N"     # Flagged and new
+color index             brightcolor186  color233        "~T ~N"     # Tagged and new
+color index             color237        color234        ~D          # Deleted (dimmed)
+
+# === Index Field Colors ===
+color index_author      color148        color233        ~A
+color index_author      brightcolor148  color233        ~N          # New messages author
+color index_author      color239        color233        ~D          # Deleted messages author
+color index_collapsed   color141        color233                    # Collapsed threads count
+color index_date        color239        color233
+color index_flags       color197        color233        ~F          # Flagged
+color index_flags       color81         color233        ~N          # New
+color index_flags       color186        color233        ~T          # Tagged
+color index_label       color141        color233
+color index_number      color245        color233
+color index_size        color239        color233
+color index_subject     color231        color233        ~A
+color index_subject     brightcolor186  color233        ~N          # New messages subject
+color index_subject     color239        color233        ~D          # Deleted messages subject
+color index_tag         color148        color233        ~T          # Tagged indicator
+color index_tags        color208        color233                    # All tags
+
+# === Sidebar ===
+color sidebar_divider       color239    color233        # Divider line
+color sidebar_background    color231    color233        # Background
+color sidebar_indicator     color233    color231        # Current mailbox
+color sidebar_highlight     color231    color237        # Highlighted mailbox
+color sidebar_ordinary      color245    color233        # Normal mailbox
+color sidebar_new           color81     color233        # Mailbox with new mail
+color sidebar_unread        color81     color233        # Mailbox with unread mail
+color sidebar_flagged       color197    color233        # Mailbox with flagged messages
+color sidebar_spool_file    color148    color233        # Spool mailbox
+
+# === Status Bar Patterns ===
+# These can use patterns to color different parts of the status bar
+color status            color233        color81         '\[.*\]'    # Brackets
+color status            color233        color148        '\(.*\)'    # Parentheses
+color status            color233        color186        '[0-9]+%'   # Percentage
+color status            color233        color197        'NEW'       # NEW indicator
+
+# === Attachment Headers ===
+color attach_headers    color245        color233        "Content-Type:"
+color attach_headers    color239        color233        "Content-Transfer-Encoding:"
+color attach_headers    color141        color233        "Content-Disposition:"
+
+# vim: ft=muttrc
