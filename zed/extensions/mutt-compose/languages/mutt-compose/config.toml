@@ -1,0 +1,20 @@
+name = "Mutt Compose"
+grammar = "mutt_compose"
+path_suffixes = ["mutt-compose"]
+file_types = ["mutt-compose"]
+line_comments = ["# "]
+block_comment = ["# ", ""]
+
+# Match files in neomutt cache directory
+[file_path_patterns]
+patterns = [
+  "**/neomutt/cache/**/*",
+  "**/mutt/cache/**/*",
+  "**/tmp/neomutt-*",
+  "**/tmp/mutt-*"
+]
+
+[language_servers]
+
+[tab_size]
+default = 2

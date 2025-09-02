@@ -1,0 +1,18 @@
+{
+  "name": "tree-sitter-mutt-compose",
+  "version": "0.1.0",
+  "description": "Tree-sitter grammar for mutt compose files",
+  "main": "bindings/node",
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.mutt_compose",
+      "file-types": [
+        "mutt-compose"
+      ]
+    }
+  ]
+}
