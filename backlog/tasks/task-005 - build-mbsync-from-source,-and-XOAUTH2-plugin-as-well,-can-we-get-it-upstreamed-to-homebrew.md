@@ -1,8 +1,8 @@
 ---
 id: task-005
 title: >-
-  build mbsync from source, and XOAUTH2 plugin as well, can we get it upstreamed
-  to homebrew
+  Create Homebrew formulae for mbsync with XOAUTH2 support and upstream to
+  homebrew-core
 status: To Do
 assignee: []
 created_date: "2025-08-23 13:01"
@@ -12,20 +12,49 @@ dependencies: []
 
 ## Description
 
-The homebrew-procvided mbsync formula (called isync for legacy reasons - file is
-here /opt/homebrew/Library/Taps/homebrew/homebrew-core/Formula/i/isync.rb)
-doesn't have the XOAUTH2 plugin.
+The current Homebrew-provided mbsync formula (called isync for legacy reasons -
+located at /opt/homebrew/Library/Taps/homebrew/homebrew-core/Formula/i/isync.rb)
+doesn't include XOAUTH2 authentication support, which is required for modern
+OAuth2-based email services like Office 365.
 
-In the @mbsync-build/ directory (and also in /tmp/cyrus-sasl-xoauth2/) I have
-built (and make installed) an mbsync with the XOAUTH2 plugin.
+I've successfully built mbsync from source with XOAUTH2 support (see
+@mbsync-build/ directory), which required the cyrus-sasl-xoauth2 plugin (built
+in /tmp/cyrus-sasl-xoauth2/). This proves the functionality works, but requires
+manual compilation.
 
-Examine the folders, source code and built artefacts to determine:
+## Goal
 
-- could the cyrus-sasl-xoauth2 plugin be upstreamed to homebrew?
-- what changes are required to the mbsync formula upstream the XOAUTH2 plugin to
-  homebrew?
+Create and upstream Homebrew formulae to enable XOAUTH2 support in mbsync:
 
-Note that the homebrew contribution information is here:
+1. **Create a cyrus-sasl-xoauth2 formula** for Homebrew (if it doesn't exist)
 
-- https://raw.githubusercontent.com/Homebrew/homebrew-core/refs/heads/main/CONTRIBUTING.md
-- https://docs.brew.sh/How-To-Open-a-Homebrew-Pull-Request
+   - Package the cyrus-sasl-xoauth2 plugin as a Homebrew formula
+   - Ensure it integrates properly with the existing cyrus-sasl formula
+
+2. **Modify the isync (mbsync) formula** to:
+
+   - Add optional XOAUTH2 support (possibly as a build option or variant)
+   - Depend on cyrus-sasl-xoauth2 when the option is enabled
+   - Ensure proper SASL plugin discovery at runtime
+
+3. **Submit pull requests** to homebrew-core:
+   - Follow Homebrew contribution guidelines
+   - Create separate PRs for each formula if needed
+   - Include test cases and documentation
+
+## Resources
+
+- Working source build: @mbsync-build/
+- Homebrew contribution docs:
+  - https://raw.githubusercontent.com/Homebrew/homebrew-core/refs/heads/main/CONTRIBUTING.md
+  - https://docs.brew.sh/How-To-Open-a-Homebrew-Pull-Request
+- Current isync formula:
+  /opt/homebrew/Library/Taps/homebrew/homebrew-core/Formula/i/isync.rb
+- cyrus-sasl-xoauth2 source: https://github.com/moriyoshi/cyrus-sasl-xoauth2
+
+## Success criteria
+
+- Users can install mbsync with XOAUTH2 support via:
+  `brew install isync --with-xoauth2` (or similar)
+- No manual compilation required
+- Changes accepted upstream to homebrew-core

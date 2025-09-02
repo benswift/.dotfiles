@@ -1,7 +1,7 @@
 ---
 id: task-009
 title: sanity check on anu Archive mailbox
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-08-28 11:28"
 labels: []

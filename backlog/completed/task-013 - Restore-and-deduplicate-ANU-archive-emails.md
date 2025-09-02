@@ -1,7 +1,7 @@
 ---
 id: task-013
 title: Restore and deduplicate ANU archive emails
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-09-01 14:08"
 labels: []
@@ -10,6 +10,9 @@ dependencies: []
 
 Copy the most complete ANU archive backup and remove duplicates, keeping only
 unique messages for local mu searching without mbsync
+
+NOTE: This didn't work... still issues with sync. PROCEED WITH CAUTION (probably
+safest to never upload these emails back to the server).
 
 ## Background
 

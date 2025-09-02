@@ -1,7 +1,7 @@
 ---
 id: task-011
 title: Nuclear cleanup of ANU Archive maildir
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-08-29 10:42"
 labels: ["email", "critical", "data-recovery"]
@@ -65,7 +65,9 @@ This will:
 
 ### 2. Fix File Timestamps ⚠️ CRITICAL
 
-**DISCOVERED ISSUE**: mbsync uses the file's filesystem timestamp (not the email's Date header) as the IMAP INTERNALDATE when uploading. Without fixing timestamps first, all emails will show today's date in Outlook.
+**DISCOVERED ISSUE**: mbsync uses the file's filesystem timestamp (not the
+email's Date header) as the IMAP INTERNALDATE when uploading. Without fixing
+timestamps first, all emails will show today's date in Outlook.
 
 After deduplication, fix timestamps on all remaining messages:
 
@@ -74,13 +76,14 @@ cd ~/.dotfiles/mail/utils
 python3 fix_maildir_timestamps.py ~/Maildir/anu/Archive/cur
 ```
 
-This will update each file's timestamp to match its Date header, ensuring correct dates after upload.
+This will update each file's timestamp to match its Date header, ensuring
+correct dates after upload.
 
 ### 3. Server Preparation ✓ COMPLETE
 
 In Outlook (Web or Mac):
 
-1. ✓ Renamed "Archive" folder to "Archive-OLD" 
+1. ✓ Renamed "Archive" folder to "Archive-OLD"
 2. ✓ Created new empty "Archive" folder
 3. ✓ Verified mbsync sees 0 messages in Archive
 
@@ -118,7 +121,8 @@ All scripts are in `~/.dotfiles/mail/utils/`:
 
 - `deduplicate_maildir.py` - Analyzes and creates deduplication plan
 - `extract_unique_messages.py` - Extracts unique messages based on dedup plan
-- `fix_maildir_timestamps.py` - Fixes file timestamps to match Date headers (CRITICAL for date preservation)
+- `fix_maildir_timestamps.py` - Fixes file timestamps to match Date headers
+  (CRITICAL for date preservation)
 - `nuclear_archive_cleanup.sh` - Orchestrates the complete nuclear cleanup
 - Test scripts (can be removed): `test_date_preservation*.sh`
 
@@ -144,5 +148,7 @@ If anything goes wrong:
 - Office365 corruption can cause re-downloads
 - Nuclear option is cleaner than fighting sync corruption
 - Always backup before major operations
-- **CRITICAL**: mbsync uses filesystem timestamps (not Date headers) for IMAP INTERNALDATE
-- Must fix file timestamps before uploading to preserve email dates in Outlook/Office365
+- **CRITICAL**: mbsync uses filesystem timestamps (not Date headers) for IMAP
+  INTERNALDATE
+- Must fix file timestamps before uploading to preserve email dates in
+  Outlook/Office365
