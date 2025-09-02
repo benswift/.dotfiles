@@ -4,3 +4,11 @@ path_suffixes = ["muttrc", "neomuttrc"]
 line_comments = ["# "]
 tab_size = 2
 hard_tabs = false
+
+[file_path_patterns]
+patterns = [
+  "**/muttrc",
+  "**/neomuttrc",
+  "**/.muttrc",
+  "**/.neomuttrc"
+]
