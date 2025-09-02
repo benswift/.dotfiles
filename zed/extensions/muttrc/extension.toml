@@ -7,4 +7,4 @@ authors = ["Ben Swift"]
 
 [grammars.muttrc]
 repository = "https://github.com/neomutt/tree-sitter-muttrc"
-rev = "173b0ab"
+rev = "173b0ab53a9c07962c9777189c4c70e90f1c1837"
