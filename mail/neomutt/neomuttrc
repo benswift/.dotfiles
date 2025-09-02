@@ -26,12 +26,16 @@ set include = yes
 set forward_quote = yes
 set reverse_name = yes
 set reverse_alias = yes
-set text_flowed = yes  # Use format=flowed for better plain text rendering
-bind editor <Tab> complete-query  # Tab completion for addresses in compose mode
+# Use format=flowed for better plain text rendering
+set text_flowed = yes
+# Tab completion for addresses in compose mode
+bind editor <Tab> complete-query
 
 # === General behaviour ===
-set wait_key = no        # Don't prompt "Press any key to continue" after shell commands
-set sleep_time = 0       # No pause when displaying informational messages
+# Don't prompt "Press any key to continue" after shell commands
+set wait_key = no
+# No pause when displaying informational messages
+set sleep_time = 0
 set quit = ask-yes
 set confirmappend = no
 set confirmcreate = yes
@@ -40,10 +44,12 @@ set change_folder_next = yes
 set mark_macro_prefix = "'"
 
 # === Message management ===
-set delete = yes         # Actually delete messages marked for deletion on sync
+# Actually delete messages marked for deletion on sync
+set delete = yes
 set delete_untag = no
 set move = no
-set mark_old = no        # Don't distinguish between 'new' and 'old unread' messages
+# Don't distinguish between 'new' and 'old unread' messages
+set mark_old = no
 
 # === Search and filtering ===
 set simple_search = "~f %s | ~t %s | ~c %s | ~s %s"
