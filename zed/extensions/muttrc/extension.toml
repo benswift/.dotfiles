@@ -1,0 +1,10 @@
+id = "muttrc"
+name = "Muttrc"
+description = "Syntax highlighting for muttrc configuration files"
+version = "0.1.0"
+schema_version = 1
+authors = ["Ben Swift"]
+
+[grammars.muttrc]
+repository = "https://github.com/neomutt/tree-sitter-muttrc"
+rev = "173b0ab"
