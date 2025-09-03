@@ -1,16 +1,5 @@
 ; Email headers
-(header) @keyword
+(header key: (_) @keyword)
+(header value: (_) @string)
 
-; Quoted lines (replies)
-(quoted_line) @comment
-
-; Quote attribution
-(quote_attribution) @comment.documentation
-
-; Markdown elements
-(markdown_heading) @markup.heading
-(markdown_list_item) @markup.list
-(markdown_code_fence) @markup.raw
-
-; Regular text
-(text_line) @text
+; The body will be highlighted by the injected markdown grammar
