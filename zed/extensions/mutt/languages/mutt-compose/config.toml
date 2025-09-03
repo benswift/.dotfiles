@@ -14,7 +14,4 @@ patterns = [
   "**/tmp/mutt-*"
 ]
 
-[language_servers]
-
-[tab_size]
-default = 2
+tab_size = 2
