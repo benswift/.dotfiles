@@ -1,5 +1,4 @@
 mail/backups-and-logs/
 
 # Zed extension build artifacts
-zed/extensions/*/grammars/
 zed/extensions/**/*.wasm

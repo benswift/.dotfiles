@@ -10,8 +10,10 @@ block_comment = ["# ", ""]
 patterns = [
   "**/neomutt/cache/**/*",
   "**/mutt/cache/**/*",
-  "**/tmp/neomutt-*",
-  "**/tmp/mutt-*"
+  "neomutt-*",
+  "mutt-*",
+  "/tmp/neomutt-*",
+  "/tmp/mutt-*"
 ]
 
 tab_size = 2

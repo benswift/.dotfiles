@@ -12,4 +12,4 @@ rev = "173b0ab53a9c07962c9777189c4c70e90f1c1837"
 
 [grammars.mutt_compose]
 repository = "https://github.com/benswift/tree-sitter-mutt-compose"
-rev = "6c335a5e1f24beced2e6ad01cda89b80a76ae48e"
+rev = "db2039c17271db0382ee13a74e6d77f1629709ee"
