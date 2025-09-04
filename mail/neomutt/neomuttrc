@@ -67,7 +67,7 @@ set save_history = 100
 set history = 1000
 
 # === Address lookup ===
-set query_command = "( mu cfind --format=mutt-ab '%s' 2>/dev/null | while IFS=$$'\\t' read -r email name rest; do printf \"%%s\\t%%s\\t%%s\\t%%s\\n\" \"$$(echo \"$$email\" | tr '[:upper:]' '[:lower:]')\" \"$$email\" \"$$name\" \"$$rest\"; done | sort -t$$'\\t' -k1,1 -u | cut -f2- )"
+set query_command = "mu cfind --format=mutt-ab '%s' 2>/dev/null"
 set query_format = "%3c %t %-25.25n %-25.25a %?e?(%e)?"
 
 # === Display and formatting ===
