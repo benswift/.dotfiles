@@ -13,6 +13,12 @@ sync), msmtp (SMTP), and neomutt (email client).
 - `reauth-oauth.sh` - Script to re-authenticate Office365 OAuth
 - `oauth2_keychain_stub` - Token stub file for Office365
 
+## Zed extension
+
+If you're a Zed user, you might find
+[this zed extension for syntax highlighting of muttrc files and mutt compose buffers](https://github.com/benswift/zed-mutt)
+helpful.
+
 ## Office365 mbsync setup
 
 To sync Office365 email with mbsync using OAuth2 authentication:
