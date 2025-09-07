@@ -2,6 +2,15 @@
 
 # Re-authorize ANU Office365 OAuth token for mbsync
 # Uses Thunderbird's client ID which doesn't require a client secret
+#
+# NOTE: This script is only needed for:
+# - Initial OAuth setup
+# - Recovery when token is corrupted/deleted from keychain
+# - When Microsoft revokes the refresh token (rare)
+# - Setting up on a new device
+#
+# During normal operation, mutt_oauth2.py in the PassCmd automatically
+# handles token refresh when tokens expire.
 
 # Change to script directory
 cd "$(dirname "$0")"
