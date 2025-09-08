@@ -1,0 +1,27 @@
+# -*- mode: snippet -*-
+# name: comp2300-assignment-re-mark
+# key: remark
+# --
+Hi ${1:`(ben-find-to-firstname)`}
+
+Firstly, I'm sorry to hear about your situation---I know that you worked hard and I understand your disappointment.
+
+As stated in the assignment FAQ, here's the course policy on assignment appeals:
+
+https://cs.anu.edu.au/courses/comp2300/policies/#appeals
+
+As stated on that page, these appeals are considered at the end of the course (i.e. during the final exam period). I'm sorry about the delay, but it's the ANU rules (and it's also the only way to keep on top of things in a course this size).
+
+If you wish to have your assignment independently re-marked, can you tell me (in your reply email):
+
+- in one paragraph, why do you feel your grade was inconsistent with the
+  criteria laid out on the assignment page?
+
+- are you aware that the new mark may be lower, higher or the same as your
+  original mark for this item, and do you agree to accept this new mark whatever
+  the outcome?
+
+If so, then I'll put it on the list of appeals for consideration at the end of the semester. Thanks for your patience.
+
+Cheers,
+Ben

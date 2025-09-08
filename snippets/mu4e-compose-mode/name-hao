@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: name-hao
+# key: hao
+# --
+$1 hao
+
+$0
+
+Cheers,
+Ben

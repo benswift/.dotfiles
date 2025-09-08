@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: csprojects-parental-leave
+# key: csproj
+# --
+Hi ${1:`(ben-find-to-firstname)`},
+
+I'm actually taking parental leave in S2 2020 and so I won't be working for the
+next 6 months. Sorry about that :(
+
+Cheers,
+Ben

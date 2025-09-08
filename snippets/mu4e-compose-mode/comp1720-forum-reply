@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: comp1720-forum-reply
+# key: forum
+# --
+It's a good question; can I ask you to ask it on the forum? That way everyone benefits :)
+
+Perhaps in the "${1:$$(yas-choose-value '("Visual Diary" "Admin" "Code" "Art"))}" subcategory?

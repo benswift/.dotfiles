@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: comp1720-2020-parental-leave
+# key: comp1720
+# --
+Hi ${1:`(progn (message-add-header "Cc: charles.martin@anu.edu.au")(ben-find-to-firstname))`},
+
+I'm not actually teaching COMP1720/6720 in S2 this year because I'll be on parental leave. Instead, it'll be taught by my colleague Charles Martin (cc'd). He's awesome, and I'm sure he'll look after you.
+
+Good luck with the coming semester - I'm sure you'll make amazing stuff in the course.
+
+Cheers,
+Ben

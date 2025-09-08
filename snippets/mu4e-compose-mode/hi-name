@@ -1,0 +1,11 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: hi-name
+# key: hi
+# binding: direct-keybinding
+# --
+Hi ${1:`(ben-find-to-firstname)`}
+
+$0
+
+Cheers,
+Ben

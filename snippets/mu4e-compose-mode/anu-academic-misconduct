@@ -1,0 +1,67 @@
+# -*- mode: snippet -*-
+# name: anu-academic-misconduct
+# --
+Date: ${1:`(format-time-string "%b %e %Y")`}
+Course: ${2:COMP1720}
+Convenor Name: Ben Swift
+Student ID: $3
+Student Name: $4
+
+Dear $4,
+
+Notice under Rule 13 of the Academic Misconduct Rules 2014
+
+I have received a report alleging that you may have engaged in academic
+misconduct as per the ANU Academic Misconduct Rules (2014), see
+http://www.comlaw.gov.au/Details/F2014L01785. The allegations have been
+made in relation to your submission for $2 ${5:assessment item} and was
+detected by $6.
+
+Pursuant to Clause 13 of the Rules, I consider there are reasonable
+grounds for believing that you may have engaged in academic misconduct
+and therefore intend to hold an Initial Review of the allegation under
+Rule 15.
+
+Allegation of academic misconduct
+
+It is alleged that your behaviour may constitute academic misconduct
+pursuant to Sub-Clauses 6.1(a) (i) – (viii) of the Rules in that you are
+alleged to potentially have:
+
+6.1(a)(i) Cheating
+6.1(a)(ii) Plagiarism
+6.1(a)(iii) Improperly colluding with another person
+6.1(a)(iv) Acting, or assisting another person to act, dishonestly or unfairly in or in connection with an examination
+6.1(a)(v) taking a prohibited document into an examination venue
+6.1(a)(vi) failing to comply with examination or assessment Rule or directions
+6.1(a)(vii) engaging in conduct with a view to gaining unfair or unjustified advantage
+6.1(a)(viii) submitting work that is not original
+
+Notification of Initial Review
+
+This email is notice given to you specifying the nature of the alleged
+academic misconduct and advising you that you are entitled to appear at
+a meeting that I propose to hold at ${7:time}.
+
+The purpose of the meeting is to investigate whether there is substance
+to the allegation and if there is substance to make a finding as to
+whether your alleged behaviour constitutes Poor Academic Practice or
+Potential Academic Misconduct. The meeting will be held in an informal
+manner.
+
+You are entitled to appear in person at the meeting. If you do not so
+appear, the Initial Review may proceed in your absence. If you have
+reasonable grounds for not being able to appear at the above time,
+please contact me immediately by reply email so I can consider that
+ground and, if I consider it appropriate, make alternative arrangements.
+
+You may present oral or written statements (whether made by you or
+another person) at the meeting.
+
+You may, in addition to, or instead of, appearing in person at the
+meeting, furnish to the Initial Review a written statement (whether made
+by you or another person) in relation to the alleged academic
+misconduct.
+
+Regards,
+Dr. Ben Swift

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: to-admin
+# key: a
+# --
+${1:$$(yas-choose-value '("studentadmin.cecs" "admins.comp.cecs"))}@anu.edu.au
