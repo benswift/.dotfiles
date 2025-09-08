@@ -1,7 +1,7 @@
 ---
 id: task-011
 title: tree-sitter grammar and zed syntax highlighting for mutt compose file
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-09-02 06:32"
 labels: []
