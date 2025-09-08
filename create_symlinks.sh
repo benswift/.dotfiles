@@ -127,6 +127,7 @@ main() {
     echo -e "\nLinking directories..."
     link_directory "$DOTFILES_DIR/claude/agents" "$HOME/.claude/agents"
     link_directory "$DOTFILES_DIR/mail/neomutt" "$HOME/.config/neomutt"
+    link_directory "$DOTFILES_DIR/zed/snippets" "$HOME/.config/zed/snippets"
 
     echo -e "\n${GREEN}Done!${NC}"
 }
