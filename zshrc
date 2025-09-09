@@ -19,7 +19,13 @@ source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
 if [ -f "/opt/homebrew/bin/brew" ]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
+  # Add Homebrew completions to FPATH
+  FPATH="$HOMEBREW_PREFIX/share/zsh/site-functions:$FPATH"
 fi
+
+# Initialize completions
+autoload -Uz compinit
+compinit
 
 eval "$(mise activate zsh)"
 
