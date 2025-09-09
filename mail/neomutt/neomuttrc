@@ -188,8 +188,7 @@ macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/acco
 macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
 
 # === Sync operations ===
-macro index ,s "<shell-escape>mailsync<enter>" "sync all mail"
-macro index ,S "<shell-escape>mbsync -a<enter>" "sync mail (no index)"
+macro index,pager ,s "<shell-escape>mailsync<enter>" "sync all mail"
 
 # === Archive workflow ===
 # Immediate archive (message disappears from index)
