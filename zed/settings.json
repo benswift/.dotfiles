@@ -69,6 +69,7 @@
     },
     "Markdown": {
       "format_on_save": "on",
+      "show_completions_on_input": false,
       "formatter": {
         "external": {
           "command": "prettier",
