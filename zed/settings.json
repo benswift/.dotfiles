@@ -130,5 +130,6 @@
   "ui_font_size": 18,
   "buffer_font_size": 15,
   "buffer_font_family": "Operator Mono",
-  "file_scan_inclusions": ["mise.local.toml"]
+  "file_scan_inclusions": ["mise.local.toml"],
+  "use_system_window_tabs": true
 }
