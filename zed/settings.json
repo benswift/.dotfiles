@@ -28,6 +28,9 @@
           "paths": ["/home/ben/.dotfiles"]
         },
         {
+          "paths": ["/home/ben/.nb/home"]
+        },
+        {
           "paths": ["/home/ben/Code/panic"]
         },
         {
