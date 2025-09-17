@@ -37,7 +37,7 @@ EXAMPLES:
                      -s "Report" -b "Please find attached" -a report.pdf
 
     # Email with body from stdin
-    echo "This is the message body" | $(basename "$0") -f personal -t user@example.com -s "Test"
+    echo "This is the message body" | $(basename "$0") -f personal -t user@example.com -s "Test" -b -
 
     # Email with multiple attachments
     $(basename "$0") -f phd -t student@anu.edu.au -s "Documents" \\
