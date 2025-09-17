@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Usage: claude-tmux [session-name] [working-dir]
+# If no args provided, uses current directory
+
+SESSION_NAME="${1:-$(basename "$(pwd)")}"
+WORKING_DIR="${2:-$(pwd)}"
+
+# Sanitize session name for tmux (replace dots and other special chars with dashes)
+SESSION_NAME=$(echo "$SESSION_NAME" | sed 's/[^a-zA-Z0-9_-]/-/g' | sed 's/^-//')
+
+# Check if tmux session exists
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    # Attach to existing session
+    tmux attach-session -t "$SESSION_NAME"
+else
+    # Create new session with claude and attach
+    tmux new-session -d -s "$SESSION_NAME" -c "$WORKING_DIR" 'claude --dangerously-skip-permissions'
+    tmux attach-session -t "$SESSION_NAME"
+fi
