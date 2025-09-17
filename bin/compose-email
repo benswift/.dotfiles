@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Default values
+FROM_ACCOUNT=""
+TO=""
+CC=""
+SUBJECT=""
+BODY=""
+
+# Display usage
+usage() {
+    cat << EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Open neomutt compose view with pre-filled email fields.
+
+OPTIONS:
+    -f, --from ACCOUNT    Email account to send from:
+                          'personal' (ben@benswift.me)
+                          'anu' (ben.swift@anu.edu.au)
+                          'phd' (phdconvenor.cybernetics@anu.edu.au)
+    -t, --to EMAIL        To recipient(s) (comma-separated)
+    -c, --cc EMAIL        CC recipient(s) (comma-separated)
+    -s, --subject TEXT    Email subject
+    -b, --body TEXT       Email body (or - for stdin)
+    -a, --attach FILE     Attachment(s) (can be used multiple times)
+    -h, --help            Display this help message
+
+EXAMPLES:
+    # Simple email from personal account
+    $(basename "$0") -f personal -t friend@example.com -s "Hello" -b "How are you?"
+
+    # Email with CC and attachment
+    $(basename "$0") -f anu -t colleague@anu.edu.au -c boss@anu.edu.au \\
+                     -s "Report" -b "Please find attached" -a report.pdf
+
+    # Email with body from stdin
+    echo "This is the message body" | $(basename "$0") -f personal -t user@example.com -s "Test"
+
+    # Email with multiple attachments
+    $(basename "$0") -f phd -t student@anu.edu.au -s "Documents" \\
+                     -b "Here are the files" -a file1.pdf -a file2.docx
+
+EOF
+    exit 0
+}
+
+# Parse command line arguments
+ATTACHMENTS=()
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -f|--from)
+            FROM_ACCOUNT="$2"
+            shift 2
+            ;;
+        -t|--to)
+            TO="$2"
+            shift 2
+            ;;
+        -c|--cc)
+            CC="$2"
+            shift 2
+            ;;
+        -s|--subject)
+            SUBJECT="$2"
+            shift 2
+            ;;
+        -b|--body)
+            if [[ "$2" == "-" ]]; then
+                BODY=$(cat)
+            else
+                BODY="$2"
+            fi
+            shift 2
+            ;;
+        -a|--attach)
+            ATTACHMENTS+=("$2")
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            ;;
+        *)
+            echo "Unknown option: $1"
+            usage
+            ;;
+    esac
+done
+
+# Map account shortcuts to config files
+case "$FROM_ACCOUNT" in
+    personal)
+        CONFIG_SOURCE="$HOME/.config/neomutt/accounts/personal"
+        ;;
+    anu)
+        CONFIG_SOURCE="$HOME/.config/neomutt/accounts/anu"
+        ;;
+    phd|phdconvenor)
+        CONFIG_SOURCE="$HOME/.config/neomutt/accounts/phdconvenor"
+        ;;
+    "")
+        echo "Error: --from account is required"
+        echo "Use -h for help"
+        exit 1
+        ;;
+    *)
+        echo "Error: Unknown account '$FROM_ACCOUNT'"
+        echo "Valid accounts: personal, anu, phd"
+        exit 1
+        ;;
+esac
+
+# Build a draft file with headers and body
+DRAFT_FILE=$(mktemp /tmp/neomutt-compose.XXXXXX)
+trap 'rm -f "$DRAFT_FILE"' EXIT
+
+# Add headers
+echo "To: $TO" >> "$DRAFT_FILE"
+if [[ -n "$CC" ]]; then
+    echo "Cc: $CC" >> "$DRAFT_FILE"
+fi
+echo "Subject: $SUBJECT" >> "$DRAFT_FILE"
+
+# Add blank line between headers and body
+echo "" >> "$DRAFT_FILE"
+
+# Add body
+if [[ -n "$BODY" ]]; then
+    echo "$BODY" >> "$DRAFT_FILE"
+fi
+
+# Build neomutt command
+NEOMUTT_CMD=(env TERM=xterm-direct neomutt)
+
+# Source the appropriate account config
+NEOMUTT_CMD+=(-e "source $CONFIG_SOURCE")
+
+# Use the draft file
+NEOMUTT_CMD+=(-H "$DRAFT_FILE")
+
+# Add attachments (must come before the final --)
+for attachment in "${ATTACHMENTS[@]}"; do
+    if [[ -f "$attachment" ]]; then
+        NEOMUTT_CMD+=(-a "$attachment")
+    else
+        echo "Warning: Attachment file not found: $attachment"
+    fi
+done
+
+# Add the separator if we have attachments
+if [[ ${#ATTACHMENTS[@]} -gt 0 ]]; then
+    NEOMUTT_CMD+=(--)
+fi
+
+# Execute neomutt with the compose view
+exec "${NEOMUTT_CMD[@]}"
