@@ -49,7 +49,7 @@ nb --tags                  # List all tags
 
 ```bash
 nb notebooks               # List notebooks
-nb notebooks add <name>    # Create new notebook  
+nb notebooks add <name>    # Create new notebook
 nb notebooks use <name>    # Switch to notebook
 nb move 42 archive/        # Move item to folder
 nb delete 42               # Delete item (prompts for confirmation)
@@ -63,8 +63,7 @@ prefix).**
 
 When a user asks you to save information, here's exactly what you should do:
 
-**User**: "Save this API documentation as a reference"  
-**You should run**:
+**User**: "Save this API documentation as a reference" **You should run**:
 
 ```bash
 nb add "API Documentation"  # Creates note with title, opens editor
@@ -72,7 +71,8 @@ nb add "API Documentation"  # Creates note with title, opens editor
 nb add --content "API endpoint details here..."  # Creates note with content directly
 ```
 
-**NOT**: `/add-note "API Documentation"` ❌ (This is wrong - slash commands don't exist)
+**NOT**: `/add-note "API Documentation"` ❌ (This is wrong - slash commands
+don't exist)
 
 ## Your Core Responsibilities
 
@@ -134,31 +134,32 @@ You always:
 
 ## Handy CLI Commands
 
-| Action                 | Example                                        |
-| ---------------------- | ---------------------------------------------- |
-| Add note (editor)      | `nb add`                                       |
-| Add note with title    | `nb add "Title"`                               |
-| Add note with content  | `nb add --content "Content"`                   |
-| Add bookmark           | `nb https://url.com`                          |
-| Add todo               | `nb todo add "Task description"`               |
-| List items             | `nb` or `nb ls`                               |
-| List all items         | `nb list`                                      |
-| List with tags         | `nb --tags`                                   |
-| Search content         | `nb search "keyword"`                          |
-| Show item              | `nb show 42`                                   |
-| Edit item              | `nb edit 42`                                   |
-| Move item              | `nb move 42 archive/`                          |
-| Delete item            | `nb delete 42`                                 |
-| Create notebook        | `nb notebooks add project-notes`               |
-| Switch notebook        | `nb notebooks use project-notes`               |
-| Sync with git          | `nb sync`                                      |
-| Git status             | `nb git status`                                |
+| Action                | Example                          |
+| --------------------- | -------------------------------- |
+| Add note (editor)     | `nb add`                         |
+| Add note with title   | `nb add "Title"`                 |
+| Add note with content | `nb add --content "Content"`     |
+| Add bookmark          | `nb https://url.com`             |
+| Add todo              | `nb todo add "Task description"` |
+| List items            | `nb` or `nb ls`                  |
+| List all items        | `nb list`                        |
+| List with tags        | `nb --tags`                      |
+| Search content        | `nb search "keyword"`            |
+| Show item             | `nb show 42`                     |
+| Edit item             | `nb edit 42`                     |
+| Move item             | `nb move 42 archive/`            |
+| Delete item           | `nb delete 42`                   |
+| Create notebook       | `nb notebooks add project-notes` |
+| Switch notebook       | `nb notebooks use project-notes` |
+| Sync with git         | `nb sync`                        |
+| Git status            | `nb git status`                  |
 
 Full help: `nb --help`
 
 ## Tips for AI Agents
 
-- **Provide content directly** with --content flag to avoid editor opens when creating notes
+- **Provide content directly** with --content flag to avoid editor opens when
+  creating notes
 - **Use selectors** like ids, filenames, or titles to reference items
 - **Use notebook:item** format for cross-notebook references
 - **Remember** nb uses standard CLI commands, not slash commands
