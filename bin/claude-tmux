@@ -15,6 +15,7 @@ if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
     tmux attach-session -t "$SESSION_NAME"
 else
     # Create new session with claude and attach
-    tmux new-session -d -s "$SESSION_NAME" -c "$WORKING_DIR" 'claude --dangerously-skip-permissions'
+    # Use current shell to preserve environment (including mise/asdf variables)
+    tmux new-session -d -s "$SESSION_NAME" -c "$WORKING_DIR" "$SHELL -c 'claude --dangerously-skip-permissions'"
     tmux attach-session -t "$SESSION_NAME"
 fi
