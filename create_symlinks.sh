@@ -92,6 +92,7 @@ main() {
         "RProfile"
         "gitconfig"
         "gitignore"
+        "tmux.conf"
         "zshenv"
         "zshrc"
     )
