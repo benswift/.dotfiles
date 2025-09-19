@@ -22,12 +22,4 @@
     "label": "gitu",
     "command": "gitu"
   },
-  {
-    "label": "neomutt",
-    "command": "zsh",
-    "args": ["-c", "TERM=xterm-direct neomutt"],
-    "reveal": "always",
-    "use_new_terminal": true,
-    "allow_concurrent_runs": false
-  }
 ]
