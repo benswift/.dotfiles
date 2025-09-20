@@ -54,7 +54,7 @@
       ]
     },
     "Python": {
-      "language_servers": ["ruff"],
+      "language_servers": ["ruff", "ty", "!basedpyright"],
       "format_on_save": "on",
       "formatter": [
         {
