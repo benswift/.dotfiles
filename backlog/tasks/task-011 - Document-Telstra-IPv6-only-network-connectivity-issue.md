@@ -1,7 +1,7 @@
 ---
 id: task-011
 title: Document Telstra IPv6-only network connectivity issue
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-09-10 23:56"
 labels:
@@ -12,6 +12,8 @@ labels:
 dependencies: []
 priority: medium
 ---
+
+Note: this is done, the info is in a daily note.
 
 ## Description
 

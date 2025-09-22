@@ -1,12 +1,14 @@
 ---
 id: task-002
 title: Configure Playwright MCP to use Chrome Beta with distinct icon
-status: Wontfix
+status: Done
 assignee: []
 created_date: "2025-08-19 04:04"
 labels: []
 dependencies: []
 ---
+
+WONTFIX: this isn't a good idea.
 
 ## Description
 
