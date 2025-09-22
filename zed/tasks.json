@@ -9,22 +9,15 @@
   },
   {
     "label": "claude",
-    "command": "sh",
-    "args": [
-      "-c",
-      "claude-tmux \"$(basename \"$ZED_WORKTREE_ROOT\")\" \"$ZED_WORKTREE_ROOT\""
-    ],
+    "command": "claude-tmux",
     "reveal": "always",
     "use_new_terminal": true,
     "allow_concurrent_runs": false
   },
   {
     "label": "claude (new session)",
-    "command": "sh",
-    "args": [
-      "-c",
-      "claude-tmux --new \"$(basename \"$ZED_WORKTREE_ROOT\")\" \"$ZED_WORKTREE_ROOT\""
-    ],
+    "command": "claude-tmux",
+    "args": ["--new"],
     "reveal": "always",
     "use_new_terminal": true,
     "allow_concurrent_runs": false
