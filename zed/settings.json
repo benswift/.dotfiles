@@ -84,6 +84,15 @@
           ]
         }
       }
+    },
+    "Typst": {
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "typstyle",
+          "arguments": ["--wrap-text"]
+        }
+      }
     }
   },
   "agent": {
