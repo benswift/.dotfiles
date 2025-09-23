@@ -133,6 +133,7 @@ set color_directcolor = yes
 source ~/.config/neomutt/colors-dracula-true.muttrc
 # source ~/.config/neomutt/colors-monokai-true.muttrc
 source ~/.config/neomutt/mailcap.muttrc
+source ~/.config/neomutt/aliases
 
 # === Account configuration ===
 # Source after mailboxes are defined
