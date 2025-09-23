@@ -9,9 +9,9 @@
         "task::Spawn",
         { "task_name": "claude", "reveal_target": "center" }
       ],
-      "alt-m": [
+      "ctrl-alt-c": [
         "task::Spawn",
-        { "task_name": "neomutt", "reveal_target": "center" }
+        { "task_name": "claude (new session)", "reveal_target": "center" }
       ]
     }
   },
