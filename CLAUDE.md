@@ -2,7 +2,7 @@
 
 This repo contains all of the (public) config files that I use on my machines.
 
-DO NOT EVER ADD RAW CREDENTIALS/PASSWORDS TO THIS REPO.
+**DO NOT EVER ADD RAW CREDENTIALS/PASSWORDS TO THIS REPO.**
 
 ## Repo structure
 
@@ -15,10 +15,21 @@ preceding dot, but the symlink source does (e.g. `~/.zshrc` is linked to
 Apart from a few one-off config files, these config files and scripts are
 grouped into the following categories.
 
-# Shell
+## Shell
 
 Shell config stuff is in the top-level. I mostly use zsh (on macOS), so I have
 @zshrc and @zshenv files.
+
+## Git
+
+Git configuration files in the top-level:
+- @gitconfig - global git configuration
+- @gitignore - global gitignore patterns
+
+## Utilities
+
+The @bin/ directory contains utility scripts for system tasks (backup scripts,
+etc.).
 
 ## Zed (text editor)
 
