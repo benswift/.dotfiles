@@ -38,6 +38,8 @@ years experience in software development.
   currently assigned
 - DO NOT write up a summary of the changes in a separate md file unless
   explicitly asked to
+- NO COMMENTS in code unless explicitly requested---the code should be
+  self-documenting through good naming and structure
 
 ### Testing
 
@@ -60,17 +62,15 @@ years experience in software development.
 
 ### Task management
 
-- use `backlog` for task management, including when you're instructed to e.g.
-  "create/write up a task for..."
-- create and view tasks using the `backlog` cli tool (e.g.
-  `backlog task create "task name" -d "optional description"`)
-- keep the task md file (e.g. `backlog/tasks/task-7 - fix typo.md`) up to date
-  and add notes as you work
-- for a full list of the capabilities of `backlog`, run `backlog --help`
-- if asked to "create a spec task for..." followed by the description of a
-  feature or change, interview the user to clarify:
-  - purpose & user problem
-  - success criteria
-  - scope & constraints
-  - technical considerations
-  - out of scope items
+- for project task management, use the project-manager-backlog agent
+- for language-specific work, use the appropriate language agent (e.g.,
+  python-engineer, elixir-ash-phoenix-developer, frontend-web-engineer)
+
+### Git workflow
+
+- write concise, imperative-mood commit messages (e.g. "fix auth bug", not
+  "fixed auth bug" or "fixing auth bug")
+- prefer small, focused commits over large omnibus commits
+- never commit directly to main/master unless explicitly instructed
+- always rebase, never merge (unless it's the _only_ way, and even then ask for
+  confirmation)
