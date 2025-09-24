@@ -140,6 +140,8 @@ nb todo do 3                            # Mark todo as done
 3. **Prefer search over browsing** - it's more efficient for finding content
 4. **Use --print for clean output** - avoids pager when not needed
 5. **Reference items flexibly** - by id, filename, or title as convenient
+6. **Don't commit large files** - while nb can import large image or pdf files,
+   it degrades performance significantly
 
 ## Common Command Reference
 
