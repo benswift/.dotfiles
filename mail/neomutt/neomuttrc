@@ -12,7 +12,6 @@ set header_cache_backend = "lmdb"
 set message_cachedir = ~/.cache/neomutt/messages
 
 # === Editor ===
-set editor = "zed-preview --wait"
 set edit_headers = yes
 
 # === Compose and reply behaviour ===
