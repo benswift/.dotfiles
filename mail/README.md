@@ -13,6 +13,13 @@ sync), msmtp (SMTP), and neomutt (email client).
 - `reauth-oauth.sh` - Script to re-authenticate Office365 OAuth
 - `oauth2_keychain_stub` - Token stub file for Office365
 
+## Markdown email composition
+
+Neomutt is configured with a macro (press `m` in compose mode) to convert
+markdown emails to multipart/alternative format with both plaintext and HTML
+versions. Write your email in markdown, then press `m` before sending to
+generate the HTML version.
+
 ## Zed extension
 
 If you're a Zed user, you might find

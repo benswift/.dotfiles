@@ -230,10 +230,10 @@ macro index,pager ,O "<enter-command>set pipe_decode=no<enter><pipe-message>cat 
 # === Markdown email composition ===
 macro compose m \
 "<enter-command>set pipe_decode<enter>\
-<pipe-message>pandoc -f gfm -t plain -o /tmp/neomutt-msg.txt<enter>\
-<pipe-message>pandoc -s -f gfm --self-contained -o /tmp/neomutt-msg.html --resource-path ~/.config/neomutt/templates/ --template email<enter>\
+<pipe-message>cat > /tmp/neomutt-msg.txt<enter>\
+<pipe-message>pandoc -s -f markdown --self-contained -o /tmp/neomutt-msg.html --resource-path ~/.config/neomutt/templates/ --template email<enter>\
 <enter-command>unset pipe_decode<enter>\
 <attach-file>/tmp/neomutt-msg.txt<enter>\
-<attach-file>/tmp/neomutt-msg.html<enter>\
-<tag-entry><previous-entry><tag-entry><group-alternatives>" \
+<tag-entry><attach-file>/tmp/neomutt-msg.html<enter>\
+<tag-entry><group-alternatives>" \
 "convert markdown to multipart/alternative"
