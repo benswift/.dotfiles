@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -euo pipefail
+
+selection=$(mu cfind --format=mutt-ab '' 2>/dev/null \
+    | awk -F'\t' '!seen[$1]++' \
+    | fzf --height=40% --reverse --no-sort --ansi)
+
+if [ -n "$selection" ]; then
+    echo "$selection" | pbcopy
+    echo "Copied to clipboard: $selection"
+fi
