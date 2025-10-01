@@ -12,6 +12,10 @@
       "ctrl-alt-c": [
         "task::Spawn",
         { "task_name": "claude (new session)", "reveal_target": "center" }
+      ],
+      "alt-m": [
+        "task::Spawn",
+        { "task_name": "neomutt", "reveal_target": "center" }
       ]
     }
   },
