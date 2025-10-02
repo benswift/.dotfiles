@@ -62,7 +62,8 @@ years experience in software development.
 
 ### Task management
 
-- for project task management, use the project-manager-backlog agent
+- for project task management, especially when asked to "create a backlog task",
+  use the backlog CLI tool (via the project-manager-backlog agent)
 - for language-specific work, use the appropriate language agent (e.g.,
   python-engineer, elixir-ash-phoenix-developer, frontend-web-engineer)
 
