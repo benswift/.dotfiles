@@ -6,6 +6,8 @@ set -euo pipefail
 # Default search depth is 4, can be overridden with -d flag
 
 DEPTH=4
+CYAN='\033[1;36m'
+NC='\033[0m'
 
 while getopts "d:" opt; do
   case $opt in
@@ -22,7 +24,7 @@ done
 for dir in $(find "$HOME" -maxdepth "$DEPTH" -type d -name "backlog" 2>/dev/null); do
   parent=$(dirname "$dir")
   if [ -d "$parent/.git" ]; then
-    echo "$parent"
+    echo -e "${CYAN}${parent}${NC}"
     (cd "$parent" && backlog task list --plain 2>/dev/null || true)
     echo
   fi
