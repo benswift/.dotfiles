@@ -5,8 +5,8 @@
     "DISABLE_TELEMETRY": "1"
   },
   "includeCoAuthoredBy": false,
+  "alwaysThinkingEnabled": false,
   "feedbackSurveyState": {
     "lastShownTime": 1754026648340
-  },
-  "alwaysThinkingEnabled": true
+  }
 }
