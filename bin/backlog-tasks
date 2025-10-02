@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Find all backlog-aware git repositories
+# Default search depth is 4, can be overridden with -d flag
+
+DEPTH=4
+
+while getopts "d:" opt; do
+  case $opt in
+    d)
+      DEPTH="$OPTARG"
+      ;;
+    \?)
+      echo "Usage: $0 [-d depth]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+for dir in $(find "$HOME" -maxdepth "$DEPTH" -type d -name "backlog" 2>/dev/null); do
+  parent=$(dirname "$dir")
+  if [ -d "$parent/.git" ]; then
+    echo "$parent"
+    (cd "$parent" && backlog task list --plain 2>/dev/null || true)
+    echo
+  fi
+done
