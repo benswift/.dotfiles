@@ -19,8 +19,8 @@ set envelope_from = yes
 # Personal account specific settings
 set status_format = "[PERSONAL] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 
-# Account-specific colours (using Dracula theme)
-color status #282a36 #8be9fd
+# Account-specific colours (using Tokyo Night Storm theme)
+color status #24283b #ff9e64
 
 # Account-specific search (restricted to this account)
 macro index / "<shell-escape>~/.config/neomutt/scripts/mu-search.sh /personal/<enter><change-folder-readonly>~/.mu/results<enter>" "search personal"

@@ -1,0 +1,142 @@
+# Tokyo Night Storm color theme for NeoMutt (True Color version)
+# Using hex RGB codes
+# Requires 'set color_directcolor = yes' in main config
+
+# === Tokyo Night Storm Color Palette ===
+# Background: #24283b
+# Background Dark: #1f2335
+# Current Line/Selection: #292e42
+# Foreground: #c0caf5
+# Foreground Dark: #a9b1d6
+# Comment: #565f89
+# Blue: #7aa2f7
+# Cyan: #7dcfff
+# Green: #9ece6a
+# Orange: #ff9e64
+# Pink/Magenta: #bb9af7
+# Purple: #9d7cd8
+# Red: #f7768e
+# Yellow: #e0af68
+
+# === Basic UI Elements ===
+color normal            #c0caf5 #24283b
+color error             #f7768e #24283b
+color warning           #ff9e64 #24283b
+color message           #e0af68 #24283b
+color prompt            #7dcfff #24283b
+color options           #9ece6a #24283b
+color progress          #7dcfff #292e42
+color search            #24283b #e0af68
+color indicator         #24283b #c0caf5
+color status            #c0caf5 #292e42
+color tree              #565f89 #24283b
+color tilde             #565f89 #24283b
+color markers           #ff9e64 #24283b
+
+# === Text Attributes ===
+color bold         bold #c0caf5 #24283b
+color italic            #565f89 #24283b
+color underline         #9ece6a #24283b
+
+# === Attachments ===
+color attachment        #bb9af7 #24283b
+color signature         #565f89 #24283b
+
+# === Compose View ===
+color compose header            #a9b1d6 #24283b
+color compose security_encrypt  #9ece6a #24283b
+color compose security_sign     #7dcfff #24283b
+color compose security_both     #9ece6a #24283b
+color compose security_none     #565f89 #24283b
+
+# === Headers (when viewing messages) ===
+color hdrdefault        #565f89 #24283b
+color header            #7dcfff #24283b "^From:"
+color header            #9ece6a #24283b "^(To:|Cc:|Bcc:)"
+color header            #bb9af7 #24283b "^Subject:"
+color header            #e0af68 #24283b "^Date:"
+color header            #9d7cd8 #24283b "^(User-Agent:|X-Mailer:)"
+color header            #ff9e64 #24283b "^Reply-To:"
+color header            #a9b1d6 #24283b "^(Message-ID:|References:|In-Reply-To:)"
+color header            #565f89 #24283b "^(X-.*|List-.*|Organization:)"
+
+# === Body (message content patterns) ===
+# URLs
+color body              #7dcfff #24283b "[a-z]{3,255}://[-a-zA-Z0-9@:%._\\+~#=/?&,]+"
+# Email addresses
+color body              #9ece6a #24283b "[-a-z_0-9.%$]+@[-a-z_0-9.]+\\.[-a-z][-a-z]+"
+# Mailto links
+color body              #9ece6a #24283b "mailto:[-a-z_0-9.]+@[-a-z_0-9.]+"
+# Emphasis - *bold*
+color body         bold #c0caf5 #24283b "(^|[[:space:][:punct:]])\\*[^*]+\\*([[:space:][:punct:]]|$)"
+# Emphasis - _underline_
+color body              #e0af68 #24283b "(^|[[:space:][:punct:]])_[^_]+_([[:space:][:punct:]]|$)"
+# Emoticons
+color body              #24283b #ff9e64 "[;:]-[)(pPsS\\|D]"
+# PGP signatures
+color body              #9ece6a #24283b "^gpg:.*Good signature.*"
+color body              #f7768e #24283b "^gpg:.*Bad signature.*"
+color body              #e0af68 #24283b "^gpg:.*Can't check signature.*"
+
+# === Quoted Text (nested replies) ===
+color quoted            #565f89 #24283b
+color quoted1           #9d7cd8 #24283b
+color quoted2           #bb9af7 #24283b
+color quoted3           #7dcfff #24283b
+color quoted4           #9ece6a #24283b
+color quoted5           #e0af68 #24283b
+color quoted6           #ff9e64 #24283b
+color quoted7           #f7768e #24283b
+color quoted8           #a9b1d6 #24283b
+color quoted9           #565f89 #24283b
+
+# === Index (message list) ===
+color index             #c0caf5 #24283b '~A'     # All messages
+color index        bold #7dcfff #24283b '~N'     # New messages
+color index             #7dcfff #24283b '~U'     # Unread messages
+color index             #bb9af7 #24283b '~F'     # Flagged messages
+color index             #e0af68 #24283b '~T'     # Tagged messages
+color index             #565f89 #24283b '~D'     # Deleted messages
+color index             #ff9e64 #24283b '~O'     # Old messages
+color index             #9ece6a #24283b '~v'     # Collapsed thread
+color index             #bb9af7 #24283b '~P'     # From me
+color index             #a9b1d6 #24283b '~Q'     # Replied to
+
+# === Index Field Colors ===
+color index_number      #a9b1d6 #24283b
+color index_author      #9ece6a #24283b '.*'
+color index_subject     #c0caf5 #24283b '.*'
+color index_author bold #9ece6a #24283b '~N'    # New messages author
+color index_subject bold #e0af68 #24283b '~N'   # New messages subject
+color index_flags  bold #7dcfff #24283b '~N'    # New message flags
+color index_author      #565f89 #24283b '~D'    # Deleted messages author
+color index_subject     #565f89 #24283b '~D'    # Deleted messages subject
+color index_collapsed   #9d7cd8 #24283b
+color index_date        #565f89 #24283b
+color index_label       #bb9af7 #24283b
+color index_size        #565f89 #24283b
+color index_tags        #ff9e64 #24283b
+
+# === Sidebar ===
+color sidebar_divider       #565f89 #24283b
+color sidebar_background    #c0caf5 #24283b
+color sidebar_indicator     #24283b #c0caf5
+color sidebar_highlight     #bb9af7 #24283b
+color sidebar_ordinary      #a9b1d6 #24283b
+color sidebar_new           #7dcfff #24283b
+color sidebar_unread        #7dcfff #24283b
+color sidebar_flagged       #f7768e #24283b
+color sidebar_spool_file    #9ece6a #24283b
+
+# === Status Bar Patterns ===
+color status            #24283b #7dcfff '[.*]'    # Brackets
+color status            #24283b #f7768e '(.*)'    # Parentheses
+color status            #24283b #e0af68 '[0-9]+%'   # Percentage
+color status            #24283b #bb9af7 'NEW'       # NEW indicator
+
+# === Attachment Headers ===
+color attach_headers    #a9b1d6 #24283b "Content-Type:"
+color attach_headers    #565f89 #24283b "Content-Transfer-Encoding:"
+color attach_headers    #bb9af7 #24283b "Content-Disposition:"
+
+# vim: ft=muttrc
