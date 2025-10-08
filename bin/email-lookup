@@ -7,6 +7,6 @@ selection=$(mu cfind --format=mutt-ab '' 2>/dev/null \
 
 if [ -n "$selection" ]; then
     formatted=$(echo "$selection" | awk -F'\t' '{print $2 " <" $1 ">"}')
-    echo "$formatted" | pbcopy
+    printf "%s" "$formatted" | pbcopy
     echo "Copied to clipboard: $formatted"
 fi
