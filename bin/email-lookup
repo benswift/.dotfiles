@@ -3,10 +3,10 @@
 set -euo pipefail
 
 selection=$(mu cfind --format=mutt-ab '' 2>/dev/null \
-    | awk -F'\t' '!seen[$1]++' \
     | fzf --height=40% --reverse --no-sort --ansi)
 
 if [ -n "$selection" ]; then
-    echo "$selection" | pbcopy
-    echo "Copied to clipboard: $selection"
+    formatted=$(echo "$selection" | awk -F'\t' '{print $2 " <" $1 ">"}')
+    echo "$formatted" | pbcopy
+    echo "Copied to clipboard: $formatted"
 fi
