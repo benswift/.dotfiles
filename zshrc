@@ -31,6 +31,7 @@ autoload -Uz compinit
 compinit
 
 eval "$(mise activate zsh)"
+eval "$(zoxide init zsh)"
 
 # this needs to be set after mise activate zsh
 if [ "$HOST" = "weddle" ] || [ "$(hostname)" = "weddle" ]; then
