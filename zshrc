@@ -11,6 +11,7 @@ setopt HIST_IGNORE_SPACE
 
 alias zp="zed-preview"
 alias bu="brew upgrade"
+alias bl="backlog"
 alias todo="nb todo undone"
 alias latest="nb --limit 10"
 alias sc='screencapture -i -t jpg screencap.jpg'
