@@ -10,12 +10,12 @@ setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 
 alias zp="zed-preview"
-alias claude="claude --dangerously-skip-permissions"
 alias todo="nb todo undone"
 alias latest="nb --limit 10"
 alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
-alias mm='TERM=xterm-direct neomutt'
+alias claude="claude --dangerously-skip-permissions"
+alias neomutt='TERM=xterm-direct neomutt'
 
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
