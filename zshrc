@@ -10,6 +10,7 @@ setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 
 alias zp="zed-preview"
+alias bu="brew upgrade"
 alias todo="nb todo undone"
 alias latest="nb --limit 10"
 alias sc='screencapture -i -t jpg screencap.jpg'
