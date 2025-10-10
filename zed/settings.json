@@ -15,6 +15,7 @@
   "ssh_connections": [
     {
       "host": "cybersonic",
+      "args": [],
       "projects": [
         {
           "paths": ["~/Code/trajectory-tracer"]
@@ -23,12 +24,16 @@
     },
     {
       "host": "weddle",
+      "args": [],
       "projects": [
         {
           "paths": ["/home/ben/.dotfiles"]
         },
         {
           "paths": ["/home/ben/.nb/home"]
+        },
+        {
+          "paths": ["/home/ben/Code/elixir/hendrix-homeostat"]
         },
         {
           "paths": ["/home/ben/Code/panic"]
