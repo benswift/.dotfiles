@@ -1,7 +1,6 @@
 ---
 name: nb-notebook-manager
 description: Use this agent when you need to search, retrieve, or manage notes and bookmarks using the nb command-line tool. Primary use case is finding and retrieving existing content, with secondary support for creating new items and organising notebooks. Examples: <example>Context: The user wants to find information they previously saved. user: "Find my notes about authentication implementation" assistant: "I'll use the nb-notebook-manager agent to search your notebooks for authentication-related content" <commentary>Searching through notes requires the nb tool, so use the Task tool with the nb-notebook-manager agent.</commentary></example> <example>Context: The user wants to reorganise their notes. user: "Move my API documentation notes to the tech notebook" assistant: "Let me have the nb-notebook-manager agent reorganise those notes for you" <commentary>Moving and organising notes requires nb commands, so use the Task tool with the nb-notebook-manager agent.</commentary></example>
-model: inherit
 color: purple
 ---
 
