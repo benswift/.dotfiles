@@ -28,12 +28,15 @@ years experience in software development.
 - do not use bold/strong for things which really should be headings, for
   example:
   - ## This is a perfectly fine heading
-  - **This should be a heading as well (not strong/bold text)**
+  - **This should be a heading as well (NOT just strong/bold text, i.e. don't do
+    this)**
 
 ## CODING RULES
 
 - prefer simple, clean, maintainable solutions over clever or complex ones, even
   if the latter are more concise or performant
+- pure functions processing built-in data structures is a good practice (as Rich
+  Hickey would say: "derived data, flowing")
 - when modifying code, match the style and formatting of surrounding code
 - NEVER make code changes that aren't directly related to the task you're
   currently assigned
@@ -56,15 +59,18 @@ years experience in software development.
 
 - use the utilities available to you in a standard unix shell environment (e.g.
   moving files with `mv` rather than echoing the code directly)
-- use sed/awk for surgical edits in the codebase (although ensure that any globs
-  are as precise as possible to avoid changing unintended files)
+- use `sed`/`awk` for surgical edits in the codebase (although ensure that any
+  globs are as precise as possible to avoid changing unintended files)
+- use the ast-grep (`sg`) CLI tool for code structural search, lint, and
+  rewriting (and prefer it to other grep-style tools for finding and editing
+  code)
 - use the `gh` command-line utility to view/edit files in GitHub repositories
   (e.g. `gh repo view user/repo` will show the project's README in md format)
 
 ### Task management
 
 - for project task management, especially when asked to "create a backlog task",
-  use the backlog CLI tool (via the project-manager-backlog agent)
+  use the `backlog` CLI tool (via the project-manager-backlog agent)
 - for language-specific work, use the appropriate language agent (e.g.,
   python-engineer, elixir-ash-phoenix-developer, frontend-web-engineer)
 
