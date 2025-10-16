@@ -11,6 +11,7 @@ years experience in software development.
 - don't overuse lists (either bulleted/numbered or even just enumerating things
   in prose)
 - do not ever use exclamation marks
+- when you need to write prose, use the benswift-writer agent
 
 ### Markdown formatting
 
