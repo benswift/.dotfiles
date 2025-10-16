@@ -3,7 +3,6 @@ set realname = "Ben Swift"
 set mbox_type = Maildir
 set folder = ~/Maildir/
 set tmpdir = ~/.cache/neomutt/temp
-set signature = "~/.config/neomutt/signature"
 set attach_save_dir = "~/Downloads"
 
 # === Cache configuration ===
