@@ -11,10 +11,10 @@ setopt HIST_IGNORE_SPACE
 
 alias zp="zed-preview"
 alias bu="brew upgrade"
-alias bl="backlog"
+alias task="backlog task"
 alias todo="nb todo undone"
 alias latest="nb --limit 10"
-alias sc='screencapture -i -t jpg screencap.jpg'
+# alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
 alias claude="claude --dangerously-skip-permissions"
 alias neomutt='TERM=xterm-direct neomutt'
