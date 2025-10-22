@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+###############################################################################
+# docx.nb-plugin
+#
+# Convert markdown notes to DOCX and open them
+#
+# Add this file to your `nb` notebook or to the plugins directory to enable
+# the `nb docx` subcommand.
+#
+# Installation:
+#   nb plugins install /path/to/docx.nb-plugin
+# -or-
+#   cp docx.nb-plugin ~/.nb/.plugins/
+###############################################################################
+
+_subcommands add "docx"
+
+_docx() {
+  local _selector="${1:-}"
+
+  if [[ -z "${_selector}" ]]; then
+    _exit_1 printf "Usage: nb docx <selector>\\n"
+  fi
+
+  # Get the full path of the selected note
+  local _path
+  _path="$(_show "${_selector}" --path 2>/dev/null)"
+
+  if [[ -z "${_path}" ]]; then
+    _exit_1 printf "Error: Note not found: %s\\n" "${_selector}"
+  fi
+
+  # Check if it's a markdown file
+  if [[ ! "${_path}" =~ \.md$ ]]; then
+    _exit_1 printf "Error: Only markdown (.md) files can be converted to DOCX.\\nSelected file: %s\\n" "${_path}"
+  fi
+
+  # Check if required tools are installed
+  if ! command -v pandoc &> /dev/null; then
+    _exit_1 printf "Error: pandoc is not installed. Please install pandoc to use this plugin.\\n"
+  fi
+
+  # Create a temporary directory for the conversion
+  local _temp_dir
+  _temp_dir="$(mktemp -d)"
+
+  if [[ ! -d "${_temp_dir}" ]]; then
+    _exit_1 printf "Error: Failed to create temporary directory.\\n"
+  fi
+
+  # Get the base filename without extension
+  local _basename
+  _basename="$(basename "${_path}" .md)"
+
+  local _temp_docx="${_temp_dir}/${_basename}.docx"
+
+  printf "Converting %s to DOCX...\\n" "${_basename}.md"
+
+  # Convert markdown to docx
+  if ! pandoc "${_path}" \
+      --from markdown \
+      --to docx \
+      --output "${_temp_docx}"; then
+    rm -rf "${_temp_dir}"
+    _exit_1 printf "Error: Failed to convert markdown to DOCX.\\n"
+  fi
+
+  # Open the DOCX
+  printf "Opening DOCX...\\n"
+  if command -v open &> /dev/null; then
+    open "${_temp_docx}"
+  elif command -v xdg-open &> /dev/null; then
+    xdg-open "${_temp_docx}"
+  else
+    _exit_1 printf "Error: Could not find a suitable command to open the DOCX.\\n"
+  fi
+
+  # Keep the DOCX in the temp directory instead of deleting it
+  printf "DOCX saved to: %s\\n" "${_temp_docx}"
+  printf "Done.\\n"
+}
+
+_subcommands describe "docx" <<HEREDOC
+Usage:
+  nb docx <selector>
+
+Description:
+  Convert a markdown note to DOCX and open it using the system's default application.
+
+  The note must be a markdown (.md) file. The conversion uses pandoc to generate
+  a Microsoft Word-compatible DOCX output.
+
+  Requires:
+    - pandoc
+
+Examples:
+  nb docx 107
+  nb docx example.md
+  nb docx notebook:42
+
+HEREDOC
