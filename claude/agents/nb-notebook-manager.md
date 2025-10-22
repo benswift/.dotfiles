@@ -61,20 +61,27 @@ nb show 42 --print --no-color          # Plain text output
 
 ### File Access Best Practice
 
-**When you need to read or edit a file's content:**
+**CRITICAL: When you need to read or edit a file's content:**
 
-1. First use `nb show <id> --path` to get the file path
-2. Then use standard file operations on that path
-3. This avoids issues with special characters and formatting
+1. **ALWAYS** use `nb show <id> --path` to get the file path first
+2. **THEN** use standard Read/Edit tools on that path
+3. **NEVER** use the output of `nb show` directly for editing---it contains ANSI
+   color codes that will corrupt the file
 
 Example workflow:
 
 ```bash
 # Get the path
-path=$(nb show 42 --path)
-# Then read or edit the file directly
-cat "$path"
+file_path=$(nb show 42 --path)
+# Then use Read/Edit tools on the file path
+# NOT: nb show 42 > somefile.md (this will include color codes)
 ```
+
+**When you need to view content for reading only:**
+
+Use `nb show <id> --print --no-color` to get clean text output without color
+codes or pager formatting. But for any editing operations, always get the path
+first and use standard file tools.
 
 ## Secondary Functions
 
@@ -134,12 +141,17 @@ nb todo do 3                            # Mark todo as done
 
 ## Important Guidelines
 
-1. **Always verify items exist before operations** - use search or list first
-2. **Use --path for file operations** - get the path, then work with the file
-3. **Prefer search over browsing** - it's more efficient for finding content
-4. **Use --print for clean output** - avoids pager when not needed
-5. **Reference items flexibly** - by id, filename, or title as convenient
-6. **Don't commit large files** - while nb can import large image or pdf files,
+1. **NEVER edit files using nb show output** - always use `nb show <id> --path`
+   to get the file path, then use standard Read/Edit tools. The output of `nb
+   show` contains ANSI color codes that will corrupt files if written back.
+2. **Always verify items exist before operations** - use search or list first
+3. **Use --path for file operations** - get the path, then work with the file
+   using Read/Edit tools
+4. **Prefer search over browsing** - it's more efficient for finding content
+5. **Use --print --no-color for clean text** - when you need to read content
+   (not edit), use these flags to avoid color codes and pager formatting
+6. **Reference items flexibly** - by id, filename, or title as convenient
+7. **Don't commit large files** - while nb can import large image or pdf files,
    it degrades performance significantly
 
 ## Common Command Reference
