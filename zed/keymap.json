@@ -5,14 +5,8 @@
       "cmd-shift-y": "workspace::CopyRelativePath",
       "alt-p": "projects::OpenRecent",
       "alt-g": "git_panel::ToggleFocus",
-      "alt-c": [
-        "task::Spawn",
-        { "task_name": "claude", "reveal_target": "center" }
-      ],
-      "ctrl-alt-c": [
-        "task::Spawn",
-        { "task_name": "claude (new session)", "reveal_target": "center" }
-      ],
+      "alt-c": ["agent::NewExternalAgentThread", { "agent": "claude_code" }],
+      "ctrl-alt-c": ["agent::NewExternalAgentThread", { "agent": "codex" }],
       "alt-m": [
         "task::Spawn",
         { "task_name": "neomutt", "reveal_target": "center" }
