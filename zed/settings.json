@@ -4,7 +4,7 @@
       "default_mode": "bypassPermissions"
     },
     "codex": {
-      "default_mode": "bypassPermissions"
+      "default_mode": "full-access"
     }
   },
   "context_servers": {
