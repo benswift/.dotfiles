@@ -1,4 +1,9 @@
 {
+  "agent_servers": {
+    "claude": {
+      "default_mode": "bypassPermissions"
+    }
+  },
   "context_servers": {
     "ash_ai": {
       "enabled": false,
