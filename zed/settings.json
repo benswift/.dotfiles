@@ -2,6 +2,9 @@
   "agent_servers": {
     "claude": {
       "default_mode": "bypassPermissions"
+    },
+    "codex": {
+      "default_mode": "bypassPermissions"
     }
   },
   "context_servers": {
