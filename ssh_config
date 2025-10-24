@@ -16,7 +16,7 @@ Host panic-*
 
 # cybersonic
 Host bulwark
-  UseR u2548636
+  User u2548636
   Hostname bulwark.cecs.anu.edu.au
   IdentityFile ~/.ssh/cybersonic
 

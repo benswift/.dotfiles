@@ -21,11 +21,12 @@ while getopts "d:" opt; do
   esac
 done
 
-for dir in $(find "$HOME" -maxdepth "$DEPTH" -type d -name "backlog" 2>/dev/null); do
-  parent=$(dirname "$dir")
-  if [ -d "$parent/.git" ]; then
-    echo -e "${CYAN}${parent}${NC}"
-    (cd "$parent" && backlog task list --plain 2>/dev/null || true)
-    echo
-  fi
-done
+find "$HOME" -maxdepth "$DEPTH" -type d -name "backlog" -print0 2>/dev/null | \
+  while IFS= read -r -d '' dir; do
+    parent=$(dirname "$dir")
+    if [ -d "$parent/.git" ]; then
+      echo -e "${CYAN}${parent}${NC}"
+      (cd "$parent" && backlog task list --plain 2>/dev/null || true)
+      echo
+    fi
+  done
