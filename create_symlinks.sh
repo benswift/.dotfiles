@@ -115,14 +115,24 @@ main() {
     echo -e "\nLinking Zed config files..."
     link_files "$DOTFILES_DIR/zed" "$HOME/.config/zed" "" "" "${zed_files[@]}"
 
-    # Claude config files
-    local claude_files=(
-        "CLAUDE.md"
-        "settings.json"
-    )
+    # Agent config files
+    echo -e "\nLinking agent config files..."
 
-    echo -e "\nLinking Claude config files..."
-    link_files "$DOTFILES_DIR/claude" "$HOME/.claude" "" "" "${claude_files[@]}"
+    # Global agent instructions for all projects
+    create_symlink "$DOTFILES_DIR/GLOBAL-AGENTS.md" "$HOME/.claude/CLAUDE.md"
+    create_symlink "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
+
+    # Create codex config directory and symlink
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo -e "${YELLOW}[DRY RUN] Would create directory: $HOME/.codex${NC}"
+    else
+        mkdir -p "$HOME/.codex"
+    fi
+    create_symlink "$DOTFILES_DIR/GLOBAL-AGENTS.md" "$HOME/.codex/instructions.md"
+
+    # Project-level agent instructions (gitignored symlinks)
+    create_symlink "$DOTFILES_DIR/AGENTS.md" "$DOTFILES_DIR/CLAUDE.md"
+    create_symlink "$DOTFILES_DIR/AGENTS.md" "$DOTFILES_DIR/codex.md"
 
     # Directory symlinks
     echo -e "\nLinking directories..."

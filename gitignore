@@ -93,3 +93,8 @@ snippets/extempore-repl-mode
 .elixirls/
 
 .playwright-mcp/
+
+# agent instruction symlinks
+
+CLAUDE.md
+codex.md
