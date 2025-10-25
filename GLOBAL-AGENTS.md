@@ -163,6 +163,21 @@ For code modifications, prefer tools in this order:
 Never use bash echo or command-line tools to communicate with me---just output
 text directly.
 
+## Language and framework preferences
+
+- **Python**: _always_ use `uv`, Python 3.12+ with type hints, prefer polars
+  over pandas, pydantic for validation, httpx over requests, pytest with
+  parallel execution
+- **Elixir/Phoenix**: read the usage_rules, use Ash declarative resources,
+  Phoenix LiveView, use generators, PhoenixTest syntax, tidewave for debugging
+- **Frontend web**: semantic HTML with accessibility, modern browser features,
+  Grid/Flexbox, modern ES6+ with functional patterns, Playwright for testing
+- **Writing**: conversational academic voice (Australian English, em dashes,
+  self-aware, direct openings)
+- **Git**: use `gh` CLI for repository analysis and history investigation
+- **Tasks**: use `backlog` CLI exclusively (never edit task files directly)
+- **Notes**: use `nb` CLI, get paths with `nb show <id> --path` before editing
+
 ## Coding rules
 
 - prefer simple, clean, maintainable solutions over clever or complex ones
