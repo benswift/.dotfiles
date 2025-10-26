@@ -68,7 +68,7 @@
       ]
     },
     "Python": {
-      "language_servers": ["ruff", "ty", "!basedpyright"],
+      "language_servers": ["ty", "ruff", "!basedpyright"],
       "format_on_save": "on",
       "formatter": [
         { "code_action": "source.organizeImports.ruff" },
