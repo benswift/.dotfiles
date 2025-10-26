@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Find git root
+if ! git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+    echo "Error: not in a git repository"
+    exit 1
+fi
+
+# Check if AGENTS.md exists
+if [[ ! -f "$git_root/AGENTS.md" ]]; then
+    echo "No AGENTS.md file found in git root: $git_root"
+    exit 0
+fi
+
+# Create symlinks
+ln -sfn "$git_root/AGENTS.md" "$git_root/CLAUDE.md"
+echo "Created symlink: $git_root/CLAUDE.md -> AGENTS.md"
+
+ln -sfn "$git_root/AGENTS.md" "$git_root/codex.md"
+echo "Created symlink: $git_root/codex.md -> AGENTS.md"
