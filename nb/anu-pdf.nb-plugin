@@ -2,7 +2,7 @@
 ###############################################################################
 # anu-pdf.nb-plugin
 #
-# Convert markdown notes to PDF and open them
+# Convert markdown or typst notes to PDF and open them
 #
 # Add this file to your `nb` notebook or to the plugins directory to enable
 # the `nb anu-pdf` subcommand.
@@ -17,73 +17,84 @@ _subcommands add "anu-pdf"
 
 _anu-pdf() {
   local _selector="${1:-}"
-  
+
   if [[ -z "${_selector}" ]]; then
     _exit_1 printf "Usage: nb anu-pdf <selector>\\n"
   fi
-  
+
   # Get the full path of the selected note
   local _path
   _path="$(_show "${_selector}" --path 2>/dev/null)"
-  
+
   if [[ -z "${_path}" ]]; then
     _exit_1 printf "Error: Note not found: %s\\n" "${_selector}"
   fi
-  
-  # Check if it's a markdown file
-  if [[ ! "${_path}" =~ \.md$ ]]; then
-    _exit_1 printf "Error: Only markdown (.md) files can be converted to PDF.\\nSelected file: %s\\n" "${_path}"
+
+  # Determine file type
+  local _file_ext="${_path##*.}"
+
+  if [[ ! "${_file_ext}" =~ ^(md|typ)$ ]]; then
+    _exit_1 printf "Error: Only markdown (.md) or typst (.typ) files can be converted to PDF.\\nSelected file: %s\\n" "${_path}"
   fi
-  
-  # Check if required tools are installed
-  if ! command -v pandoc &> /dev/null; then
-    _exit_1 printf "Error: pandoc is not installed. Please install pandoc to use this plugin.\\n"
-  fi
-  
+
+  # Check if typst is installed (required for both file types)
   if ! command -v typst &> /dev/null; then
     _exit_1 printf "Error: typst is not installed. Please install typst to use this plugin.\\n"
   fi
-  
+
+  # Check if pandoc is installed (only required for markdown files)
+  if [[ "${_file_ext}" == "md" ]] && ! command -v pandoc &> /dev/null; then
+    _exit_1 printf "Error: pandoc is not installed. Please install pandoc to use this plugin.\\n"
+  fi
+
   # Create a temporary directory for the conversion
   local _temp_dir
   _temp_dir="$(mktemp -d)"
-  
+
   if [[ ! -d "${_temp_dir}" ]]; then
     _exit_1 printf "Error: Failed to create temporary directory.\\n"
   fi
-  
+
   # Get the base filename without extension
   local _basename
-  _basename="$(basename "${_path}" .md)"
-  
+  _basename="$(basename "${_path}" ".${_file_ext}")"
+
   local _temp_typ="${_temp_dir}/${_basename}.typ"
   local _temp_pdf="${_temp_dir}/${_basename}.pdf"
-  
-  printf "Converting %s to PDF...\\n" "${_basename}.md"
-  
-  # Convert markdown to typst
-  if ! pandoc "${_path}" \
-      --from markdown \
-      --to typst \
-      --template anu \
-      --output "${_temp_typ}" 2>/dev/null; then
-    
-    # If the template is not found, try without it
+
+  printf "Converting %s to PDF...\\n" "${_basename}.${_file_ext}"
+
+  if [[ "${_file_ext}" == "md" ]]; then
+    # Convert markdown to typst
     if ! pandoc "${_path}" \
         --from markdown \
         --to typst \
-        --output "${_temp_typ}"; then
+        --template anu \
+        --output "${_temp_typ}" 2>/dev/null; then
+
+      # If the template is not found, try without it
+      if ! pandoc "${_path}" \
+          --from markdown \
+          --to typst \
+          --output "${_temp_typ}"; then
+        rm -rf "${_temp_dir}"
+        _exit_1 printf "Error: Failed to convert markdown to typst.\\n"
+      fi
+    fi
+
+    # Compile typst to PDF
+    if ! typst compile "${_temp_typ}" "${_temp_pdf}"; then
       rm -rf "${_temp_dir}"
-      _exit_1 printf "Error: Failed to convert markdown to typst.\\n"
+      _exit_1 printf "Error: Failed to compile typst to PDF.\\n"
+    fi
+  elif [[ "${_file_ext}" == "typ" ]]; then
+    # Compile typst directly to PDF
+    if ! typst compile "${_path}" "${_temp_pdf}"; then
+      rm -rf "${_temp_dir}"
+      _exit_1 printf "Error: Failed to compile typst to PDF.\\n"
     fi
   fi
-  
-  # Compile typst to PDF
-  if ! typst compile "${_temp_typ}" "${_temp_pdf}"; then
-    rm -rf "${_temp_dir}"
-    _exit_1 printf "Error: Failed to compile typst to PDF.\\n"
-  fi
-  
+
   # Open the PDF
   printf "Opening PDF...\\n"
   if command -v open &> /dev/null; then
@@ -93,7 +104,7 @@ _anu-pdf() {
   else
     _exit_1 printf "Error: Could not find a suitable command to open the PDF.\\n"
   fi
-  
+
   # Keep the PDF in the temp directory instead of deleting it
   printf "PDF saved to: %s\\n" "${_temp_pdf}"
   printf "Done.\\n"
@@ -104,18 +115,20 @@ Usage:
   nb anu-pdf <selector>
 
 Description:
-  Convert a markdown note to PDF and open it using the system's default PDF viewer.
-  
-  The note must be a markdown (.md) file. The conversion uses pandoc and typst
-  to generate a high-quality PDF output.
-  
+  Convert a markdown or typst note to PDF and open it using the system's default PDF viewer.
+
+  The note must be either a markdown (.md) or typst (.typ) file.
+  - For markdown files: converts to typst using pandoc, then compiles to PDF
+  - For typst files: compiles directly to PDF using typst
+
   Requires:
-    - pandoc
-    - typst
+    - typst (always)
+    - pandoc (only for markdown files)
 
 Examples:
   nb anu-pdf 107
   nb anu-pdf example.md
+  nb anu-pdf document.typ
   nb anu-pdf notebook:42
 
 HEREDOC
