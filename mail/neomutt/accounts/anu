@@ -13,7 +13,7 @@ set trash = +Deleted\ Items
 
 # Sending mail via msmtpq (with queue support)
 # EMAIL_CONN_TEST=x disables network check for non-blocking sends
-set sendmail = "EMAIL_CONN_TEST=x msmtpq -a anu"
+set sendmail = "EMAIL_CONN_TEST=x /Users/ben/.dotfiles/bin/msmtpq -a anu"
 set use_from = yes
 set envelope_from = yes
 
