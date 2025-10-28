@@ -11,8 +11,8 @@ set postponed = +Drafts
 set record = +"Sent Items"
 set trash = +Trash
 
-# Sending mail via msmtp
-set sendmail = "msmtp -a personal"
+# Sending mail via msmtpq (with queue support)
+set sendmail = "msmtpq -a personal"
 set use_from = yes
 set envelope_from = yes
 

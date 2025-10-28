@@ -59,10 +59,49 @@ To sync Office365 email with mbsync using OAuth2 authentication:
    - Example:
      `PassCmd "/path/to/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a user@example.com -s mutt_oauth2_account -w' --encryption-pipe '/path/to/keychain-store.sh user@example.com mutt_oauth2_account' /path/to/oauth2_keychain_stub"`
 
-5. **Optional: Configure msmtp** for scripted sending:
+5. **Configure msmtp** for sending:
    - Install with `brew install msmtp`
    - Use same OAuth token from keychain
    - See `msmtprc` for configuration
 
 See `reauth-oauth.sh`, `keychain-store.sh`, and `mutt_oauth2.py` in this
 directory for working examples.
+
+## msmtpq queue setup
+
+The email setup uses msmtpq to queue outgoing mail when offline and
+automatically flush the queue when the network is available.
+
+### Configuration
+
+1. **Queue directory and config**:
+
+   - Queue directory: `~/.msmtp.queue` (created with 0700 permissions)
+   - Config file: `~/.msmtpqrc` defines queue and log locations
+   - Queue log: `~/.msmtp.queue.log`
+
+2. **Neomutt integration**:
+
+   - All account configs use `msmtpq` instead of `msmtp` directly
+   - Mail is queued automatically when offline
+   - Sent immediately when online
+
+3. **Automatic queue flushing**:
+
+   - Managed by launchd agent:
+     `~/Library/LaunchAgents/me.benswift.msmtpq-flush.plist`
+   - Event-driven: flushes immediately on network state changes
+   - Safety net: also flushes every 30 minutes as fallback
+   - Throttled: 10-second minimum between flush attempts to prevent rapid-fire
+     on network flapping
+
+4. **Manual queue management**:
+   ```bash
+   msmtp-queue -d    # display queue contents
+   msmtp-queue -r    # flush/run queue manually
+   msmtp-queue -p    # purge specific mail(s)
+   msmtp-queue -a    # purge all mail in queue
+   ```
+
+The launchd agent provides a pragmatic balance: fast response to network changes
+with a periodic safety net for edge cases, without excessive polling.
