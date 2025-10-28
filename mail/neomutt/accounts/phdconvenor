@@ -12,8 +12,7 @@ set record = +"Sent Items"
 set trash = +"Deleted Items"
 
 # Sending mail via msmtpq (with queue support)
-# EMAIL_CONN_TEST=x disables network check for non-blocking sends
-set sendmail = "EMAIL_CONN_TEST=x /Users/ben/.dotfiles/bin/msmtpq -a phdconvenor"
+set sendmail = "/Users/ben/.dotfiles/bin/msmtpq-send -a phdconvenor"
 set use_from = yes
 set envelope_from = yes
 
