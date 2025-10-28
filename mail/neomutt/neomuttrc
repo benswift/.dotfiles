@@ -28,6 +28,8 @@ set reverse_alias = yes
 set text_flowed = yes
 # Tab completion for addresses in compose mode
 bind editor <Tab> complete-query
+# Background sendmail process (don't wait for it to complete)
+set sendmail_wait = -1
 
 # === General behaviour ===
 # Don't prompt "Press any key to continue" after shell commands
