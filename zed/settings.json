@@ -1,4 +1,13 @@
 {
+  "git_panel": {
+    "status_style": "label_color"
+  },
+  "project_panel": {
+    "hide_root": true
+  },
+  "terminal": {
+    
+  },
   "agent_servers": {
     "claude": {
       "default_mode": "bypassPermissions"
