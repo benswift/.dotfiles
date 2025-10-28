@@ -20,7 +20,9 @@ expected locations.
 
 ## Email configuration
 
-All email-related configuration has been organized into the `mail/` directory. This includes configurations for mbsync (IMAP sync), msmtp (SMTP), neomutt (email client), and OAuth2 authentication scripts.
+All email-related configuration has been organized into the `mail/` directory.
+This includes configurations for mbsync (IMAP sync), msmtp (SMTP), neomutt
+(email client), and OAuth2 authentication scripts.
 
 For detailed setup instructions, see [`mail/README.md`](mail/README.md).
 

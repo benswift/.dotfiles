@@ -142,8 +142,8 @@ nb todo do 3                            # Mark todo as done
 ## Important Guidelines
 
 1. **NEVER edit files using nb show output** - always use `nb show <id> --path`
-   to get the file path, then use standard Read/Edit tools. The output of `nb
-   show` contains ANSI color codes that will corrupt files if written back.
+   to get the file path, then use standard Read/Edit tools. The output of
+   `nb show` contains ANSI color codes that will corrupt files if written back.
 2. **Always verify items exist before operations** - use search or list first
 3. **Use --path for file operations** - get the path, then work with the file
    using Read/Edit tools

@@ -9,6 +9,7 @@ When working with maildir folders, follow these best practices:
 ### For Python scripts: Use the mailbox module
 
 The `mailbox.Maildir` class provides proper handling of maildir semantics:
+
 - Automatic management of cur/, new/, tmp/ subdirectories
 - Proper handling of maildir info strings (flags after `:2,`)
 - Safe message removal and manipulation
@@ -38,9 +39,11 @@ mbox.close()
 
 ### General principles
 
-1. **Use message keys, not file paths** - The mailbox module abstracts away the filesystem details
+1. **Use message keys, not file paths** - The mailbox module abstracts away the
+   filesystem details
 2. **Always flush after modifications** - Ensures changes are written to disk
-3. **Handle exceptions gracefully** - Email parsing can fail on malformed messages
+3. **Handle exceptions gracefully** - Email parsing can fail on malformed
+   messages
 4. **Preserve maildir flags** - The module handles this automatically
 5. **Sort by key for consistency** - Keys sort naturally by timestamp
 
@@ -53,18 +56,20 @@ When working with maildir in shell scripts:
 ```bash
 maildir/
 ├── cur/     # Read messages
-├── new/     # Unread messages  
+├── new/     # Unread messages
 ├── tmp/     # Temporary files during delivery
 ```
 
 #### Filename format
 
 Maildir filenames follow this pattern:
+
 ```
 unique_name:2,FLAGS
 ```
 
 Where FLAGS can include:
+
 - `D` - Draft
 - `F` - Flagged
 - `P` - Passed (forwarded)
@@ -126,4 +131,5 @@ fi
 
 ## Current scripts
 
-- `deduplicate_maildir.py` - Remove duplicate messages based on Message-ID headers
+- `deduplicate_maildir.py` - Remove duplicate messages based on Message-ID
+  headers
