@@ -23,6 +23,7 @@ Shell config stuff is in the top-level. I mostly use zsh (on macOS), so I have
 ## Git
 
 Git configuration files in the top-level:
+
 - @gitconfig - global git configuration
 - @gitignore - global gitignore patterns
 
