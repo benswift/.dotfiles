@@ -39,6 +39,8 @@ Delegate to specialized agents when their expertise matches the task:
 Keep tasks in the main conversation when they're simple, cross-cutting, or
 require tight integration with ongoing work.
 
+Use subagents.
+
 ### Context management
 
 Balance context efficiency with thoroughness:
@@ -102,8 +104,7 @@ application), explicitly state what verification you were unable to perform.
 
 ## Writing rules
 
-- use clear, concise language and don't use unnecessary adjectives (think
-  Hemingway, not Joyce)
+- use clear, concise language and don't use unnecessary adjectives
 - use Australian English spelling
 - don't overuse lists (either bulleted/numbered or even just enumerating things
   in prose)
@@ -165,6 +166,9 @@ text directly.
 
 ## Language and framework preferences
 
+- **mise** if a project has a `mise.toml` file then use `mise` to manage
+  dependencies and environments (including prefixing commands with
+  `mise exec --` when necessary)
 - **Python**: _always_ use `uv`, Python 3.12+ with type hints, prefer polars
   over pandas, pydantic for validation, httpx over requests, pytest with
   parallel execution
