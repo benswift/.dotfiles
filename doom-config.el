@@ -67,65 +67,20 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-;; even with the :editor format module activated, we need to require the aphelia
-;; package otherwise the first invocation of +format/region will error out with
-;; "Symbol's function definition is void: apheleia--get-formatters".
-(require 'apheleia)
-
 ;; I like my snipe to stay in the buffer
 (after! evil-snipe
   (setq evil-snipe-scope 'buffer
         evil-snipe-repeat-scope 'buffer))
 
-;;; elixir
-
-(after! eglot
-  (add-to-list 'eglot-server-programs
-               '((elixir-ts-mode heex-ts-mode elixir-mode)
-                 "nextls" "--stdio=true")))
-
-(after! elixir
-  (require 'inf-elixir)
-  (defalias '+elixir/open-repl #'inf-elixir-project)
-  (set-repl-handler! 'elixir-mode #'+elixir/open-repl))
-
 ;; just like Spacemacs
 (setq doom-localleader-key ",")
 
 ;; Keybinds
-(defun open-main-todo-file ()
-  (interactive)
-  (find-file "~/Documents/md-scratch/todo.md"))
-
-(map! :leader :desc "open main todo.md file" :n "b o" #'open-main-todo-file)
-
 ;; don't use autocomplete in markdown mode - it just slows things down
 (add-hook! 'markdown-mode-hook (company-mode -1))
 
-(map! (:after evil-org
-       :map evil-org-mode-map
-       :n "gk" (cmd! (if (org-at-heading-p)
-                         (org-backward-element)
-                       (evil-previous-visual-line)))
-       :n "gj" (cmd! (if (org-at-heading-p)
-                         (org-forward-element)
-                       (evil-next-visual-line))))
-
-      :o "o" #'evil-inner-symbol
-
+(map! :o "o" #'evil-inner-symbol
       :leader "x" #'evil-switch-to-windows-last-buffer)
-
-;;; org-mode
-
-(after! evil-org
-  (setq org-roam-dailies-capture-templates
-        '(("d" "default" entry "* %?"
-           :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d (%A)>
-
-* tasks for today [/]
-- [ ]
-* journal
-")))))
 
 ;;;;;;;;;;;;;;;
 ;; Extempore ;;

@@ -49,7 +49,4 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
 
-(package! csv)
-(package! inf-elixir)
-
 (package! extempore-mode)
