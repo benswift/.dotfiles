@@ -19,19 +19,6 @@
 ;; Extempore ;;
 ;;;;;;;;;;;;;;;
 
-(cond
- ;; new MBP
- ((string-prefix-p "mitch." (system-name))
-  (setq extempore-path (expand-file-name "~/Desktop/extempore/")))
- ((string= (system-name) "paranoid-android")
-  (setq extempore-path (expand-file-name "~/Documents/research/extemporelang/extempore/")))
- ((string= "smithy" (system-name))
-  ;; (setq extempore-program-args "--frames 128")
-  (setq extempore-path (expand-file-name "~/Documents/research/extemporelang/extempore/"))
-  (setq user-extempore-lib-directory (expand-file-name "~/Documents/research/extemporelang/xtm/")))
- (t
-  (message "unrecognised machine (%s), skipping Extempore mode var setup" (system-name))))
-
 ;; handy for tapping out rhythms
 
 (defvar extempore-pattern-hydra-hit-value "1" "value for the 'hit'")
