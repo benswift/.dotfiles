@@ -50,3 +50,4 @@
 ;(unpin! t)
 
 (package! extempore-mode)
+(package! s)
