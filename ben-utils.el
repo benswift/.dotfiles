@@ -21,7 +21,7 @@
 
 (cond
  ;; new MBP
- ((s-starts-with? "mitch." (system-name) "mitch.local")
+ ((string-prefix-p "mitch." (system-name))
   (setq extempore-path (expand-file-name "~/Desktop/extempore/")))
  ((string= (system-name) "paranoid-android")
   (setq extempore-path (expand-file-name "~/Documents/research/extemporelang/extempore/")))
