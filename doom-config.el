@@ -24,7 +24,7 @@
 (setq doom-font (font-spec :family "Operator Mono" :size 18 :weight 'regular)
       doom-variable-pitch-font (font-spec :family "Fira Sans" :size 18))
 
-(setq doom-theme 'doom-one)
+(setq doom-theme 'modus-vivendi)
 
 (setq display-line-numbers-type nil)
 
