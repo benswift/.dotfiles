@@ -16,7 +16,6 @@ alias todo="nb todo undone"
 alias latest="nb --limit 10"
 # alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
-alias claude="claude --dangerously-skip-permissions"
 alias neomutt='TERM=xterm-direct neomutt'
 alias prettify-md='prettier --prose-wrap always --write "**/*.md"'
 alias zed-update-expert='rm -rf "$HOME/Library/Application Support/Zed/extensions/work/elixir/expert-nightly" && echo "Expert cache cleared. Restart Zed to download latest."'
