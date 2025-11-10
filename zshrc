@@ -19,6 +19,7 @@ alias update-usage-rules='mix usage_rules.sync AGENTS.md --all --inline usage_ru
 alias claude="claude --dangerously-skip-permissions"
 alias neomutt='TERM=xterm-direct neomutt'
 alias prettify-md='prettier --prose-wrap always --write "**/*.md"'
+alias zed-update-expert='rm -rf "$HOME/Library/Application Support/Zed/extensions/work/elixir/expert-nightly" && echo "Expert cache cleared. Restart Zed to download latest."'
 
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
