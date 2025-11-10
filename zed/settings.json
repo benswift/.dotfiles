@@ -5,9 +5,7 @@
   "project_panel": {
     "hide_root": true
   },
-  "terminal": {
-    
-  },
+  "terminal": {},
   "agent_servers": {
     "claude": {
       "default_mode": "bypassPermissions"
@@ -68,6 +66,15 @@
   "theme": "Tokyo Night Storm",
   "languages": {
     "Elixir": {
+      "language_servers": [
+        "expert",
+        "!elixir-ls",
+        "!next-ls",
+        "!lexical",
+        "..."
+      ]
+    },
+    "HEEX": {
       "language_servers": [
         "expert",
         "!elixir-ls",
