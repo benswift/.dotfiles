@@ -90,6 +90,7 @@ main() {
     # Dotfiles in home directory (with . prefix)
     local home_files=(
         "RProfile"
+        "gitattributes"
         "gitconfig"
         "gitignore"
         "tmux.conf"
