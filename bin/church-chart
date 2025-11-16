@@ -37,8 +37,8 @@ if ! command -v fzf &> /dev/null; then
     exit 1
 fi
 
-if ! command -v pdfjam &> /dev/null; then
-    echo "Error: pdfjam is not installed. Install with: brew install pdfjam"
+if ! command -v pdfunite &> /dev/null; then
+    echo "Error: pdfunite is not installed. Install with: brew install poppler"
     exit 1
 fi
 
@@ -99,9 +99,9 @@ echo "Selected ${#selected_charts[@]} chart(s)"
 # Generate output filename
 output_filename="/tmp/$(date_of_next_sunday).pdf"
 
-# Build pdfjam command
+# Build pdfunite command
 cd "$CHURCH_MUSIC_DIR"
-pdfjam "${selected_charts[@]}" -o "$output_filename"
+pdfunite "${selected_charts[@]}" "$output_filename"
 
 # Open the compiled PDF
 open "$output_filename"
