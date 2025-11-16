@@ -1,0 +1,109 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Configuration
+CHURCH_MUSIC_DIR="$HOME/Documents/Church/Music"
+CHORD_CHARTS_DIR="$CHURCH_MUSIC_DIR/chord-charts"
+LEAD_SHEETS_DIR="$CHURCH_MUSIC_DIR/lead-sheets"
+
+# Calculate next Sunday's date
+date_of_next_sunday() {
+    # Get current day of week (1=Monday, 7=Sunday)
+    local day_of_week
+    day_of_week=$(date +%u)
+
+    # Calculate days until next Sunday
+    local days_until_sunday=$(( (7 - day_of_week) % 7 ))
+
+    # If today is Sunday and we haven't passed midnight, use today
+    if [ "$days_until_sunday" -eq 0 ]; then
+        days_until_sunday=0
+    fi
+
+    # Calculate next Sunday's date
+    if [ "$(uname)" = "Darwin" ]; then
+        # macOS
+        date -v+"${days_until_sunday}d" +%Y-%m-%d
+    else
+        # Linux
+        date -d "+${days_until_sunday} days" +%Y-%m-%d
+    fi
+}
+
+# Check dependencies
+if ! command -v fzf &> /dev/null; then
+    echo "Error: fzf is not installed. Install with: brew install fzf"
+    exit 1
+fi
+
+if ! command -v pdfjam &> /dev/null; then
+    echo "Error: pdfjam is not installed. Install with: brew install pdfjam"
+    exit 1
+fi
+
+# Check if music directories exist
+if [ ! -d "$CHORD_CHARTS_DIR" ] && [ ! -d "$LEAD_SHEETS_DIR" ]; then
+    echo "Error: Neither $CHORD_CHARTS_DIR nor $LEAD_SHEETS_DIR exists"
+    exit 1
+fi
+
+# Build list of available PDFs
+candidates=()
+
+if [ -d "$CHORD_CHARTS_DIR" ]; then
+    while IFS= read -r file; do
+        candidates+=("chord-charts/$file")
+    done < <(find "$CHORD_CHARTS_DIR" -name "*.pdf" -exec basename {} \; | sort)
+fi
+
+if [ -d "$LEAD_SHEETS_DIR" ]; then
+    while IFS= read -r file; do
+        candidates+=("lead-sheets/$file")
+    done < <(find "$LEAD_SHEETS_DIR" -name "*.pdf" -exec basename {} \; | sort)
+fi
+
+if [ ${#candidates[@]} -eq 0 ]; then
+    echo "Error: No PDF files found in chord-charts or lead-sheets directories"
+    exit 1
+fi
+
+# Select songs using fzf (press ESC to finish selection)
+selected_charts=()
+count=1
+
+echo "Select charts using fzf (press ESC when done)"
+while true; do
+    # Temporarily disable exit on error for fzf
+    set +e
+    chart=$(printf '%s\n' "${candidates[@]}" | fzf --prompt="Select chart $count (ESC to finish): " --height=40%)
+    fzf_exit=$?
+    set -e
+
+    # ESC or Ctrl+C will result in non-zero exit code
+    if [ $fzf_exit -ne 0 ]; then
+        break
+    fi
+
+    selected_charts+=("$chart")
+    ((count++))
+done
+
+if [ ${#selected_charts[@]} -eq 0 ]; then
+    echo "No charts selected, exiting"
+    exit 0
+fi
+
+echo "Selected ${#selected_charts[@]} chart(s)"
+
+# Generate output filename
+output_filename="/tmp/$(date_of_next_sunday).pdf"
+
+# Build pdfjam command
+cd "$CHURCH_MUSIC_DIR"
+pdfjam "${selected_charts[@]}" -o "$output_filename"
+
+# Open the compiled PDF
+open "$output_filename"
+
+echo "Compiled chord charts saved to: $output_filename"
