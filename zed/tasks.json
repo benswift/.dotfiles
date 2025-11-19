@@ -1,5 +1,13 @@
 [
   {
+    "label": "Unwrap selection to clipboard",
+    "command": "printenv ZED_SELECTED_TEXT | prettier --stdin-filepath temp.md --prose-wrap never | pbcopy",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "never",
+    "shell": "system"
+  },
+  {
     "label": "Prettify file in-place",
     "command": "prettier",
     "args": ["--prose-wrap", "always", "--write", "$ZED_FILE"],
