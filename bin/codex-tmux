@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: claude-tmux [--new] [session-name] [working-dir]
+# Usage: codex-tmux [--new] [session-name] [working-dir]
 # If no args provided, uses current directory
 # --new: force creation of a new session (append number if name exists)
 
@@ -17,8 +17,8 @@ WORKING_DIR="${2:-$(pwd)}"
 
 # Sanitize session name for tmux (replace dots and other special chars with dashes)
 SESSION_NAME=$(echo "$SESSION_NAME" | sed 's/[^a-zA-Z0-9_-]/-/g' | sed 's/^-//')
-# Prefix with 'claude-' to avoid clashes with codex-tmux
-SESSION_NAME="claude-${SESSION_NAME}"
+# Prefix with 'codex-' to avoid clashes with claude-tmux
+SESSION_NAME="codex-${SESSION_NAME}"
 
 if [[ "$FORCE_NEW" == true ]]; then
     # Find an available session name by appending numbers
@@ -30,8 +30,8 @@ if [[ "$FORCE_NEW" == true ]]; then
     done
     SESSION_NAME="$FINAL_SESSION_NAME"
 
-    # Create new session with claude and attach
-    tmux new-session -d -s "$SESSION_NAME" -c "$WORKING_DIR" "$SHELL -lic 'claude --dangerously-skip-permissions'"
+    # Create new session with codex and attach
+    tmux new-session -d -s "$SESSION_NAME" -c "$WORKING_DIR" "$SHELL -lic 'codex --dangerously-skip-permissions'"
     tmux attach-session -t "$SESSION_NAME"
 else
     # Check if tmux session exists
@@ -39,9 +39,9 @@ else
         # Attach to existing session
         tmux attach-session -t "$SESSION_NAME"
     else
-        # Create new session with claude and attach
+        # Create new session with codex and attach
         # Use interactive login shell to load mise/asdf and other environment variables
-        tmux new-session -d -s "$SESSION_NAME" -c "$WORKING_DIR" "$SHELL -lic 'claude --dangerously-skip-permissions'"
+        tmux new-session -d -s "$SESSION_NAME" -c "$WORKING_DIR" "$SHELL -lic 'codex --dangerously-skip-permissions'"
         tmux attach-session -t "$SESSION_NAME"
     fi
 fi
