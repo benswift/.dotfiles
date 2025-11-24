@@ -36,10 +36,25 @@ etc.).
 
 My zed editor config is in the @zed/ folder.
 
-## Claude Code
+## AI coding agents
+
+### Claude Code
 
 My Claude Code editor config is in the @claude/ folder (this includes agent
 definitions).
+
+### Codex CLI
+
+Codex CLI uses @~/.codex/instructions.md for global instructions (symlinked to
+@GLOBAL-AGENTS.md). Project-level instructions use @codex.md (symlinked to
+@AGENTS.md, gitignored).
+
+### Gemini CLI
+
+Gemini CLI is configured via @~/.gemini/settings.json to use `AGENTS.md` as a
+context file (in addition to the default `GEMINI.md`). This allows it to reuse
+the same project instructions as other agents without requiring additional
+symlinks.
 
 ## Email
 
