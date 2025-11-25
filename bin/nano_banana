@@ -8,8 +8,9 @@
 Environment:
     REPLICATE_API_KEY: Your Replicate API token (required)
 
-Provide a single prompt. Optionally include an input image with --input-image
-to transform or use as reference.
+Provide a single prompt. Optionally include one or more input images with
+--input-image (repeatable) to transform or use as reference (model supports up
+to 14).
 
 Generated images will be saved to:
     <output-dir>/<iso-timestamp>/<slugified-image-prompt>.<ext>
@@ -107,7 +108,7 @@ def generate_image(
     resolution: str,
     output_format: str,
     safety_filter_level: str,
-    input_image_path: Path | None = None,
+    input_image_paths: list[Path] | None = None,
 ) -> None:
     """Generate image using Nano Banana Pro via Replicate API."""
     model_input: dict[str, str | list] = {
@@ -118,9 +119,14 @@ def generate_image(
         "safety_filter_level": safety_filter_level,
     }
 
-    if input_image_path:
-        with open(input_image_path, "rb") as image_file:
-            model_input["image_input"] = [image_file]
+    if input_image_paths:
+        from contextlib import ExitStack
+
+        with ExitStack() as stack:
+            image_files = [
+                stack.enter_context(open(path, "rb")) for path in input_image_paths
+            ]
+            model_input["image_input"] = image_files
             output = client.run(MODEL_ID, input=model_input)
     else:
         output = client.run(MODEL_ID, input=model_input)
@@ -142,13 +148,14 @@ def _main_impl(
         "nano_banana_output"
     ),
     input_image: Annotated[
-        Path | None,
+        list[Path],
         typer.Option(
-            help="Optional input image to transform or use as reference",
+            "--input-image",
+            help="Optional input image(s) to transform or use as reference (repeat to supply multiple)",
             exists=True,
             dir_okay=False,
         ),
-    ] = None,
+    ] = [],
     aspect_ratio: Annotated[
         str,
         typer.Option(help="Aspect ratio for generated images"),
@@ -200,7 +207,7 @@ def _main_impl(
     print(f"Format: {output_format}")
     print(f"Safety filter: {safety_filter_level}")
     if input_image:
-        print(f"Input image: {input_image}")
+        print(f"Input images: {', '.join(str(p) for p in input_image)}")
     print(f"Output directory: {target_dir}")
     print("Generating 1 image...")
     print()
