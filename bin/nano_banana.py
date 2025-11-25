@@ -1,0 +1,246 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11,<3.14"
+# dependencies = ["replicate", "httpx", "typer"]
+# ///
+"""Generate an image using Google's Nano Banana Pro model via Replicate API.
+
+Environment:
+    REPLICATE_API_KEY: Your Replicate API token (required)
+
+Provide a single prompt. Optionally include an input image with --input-image
+to transform or use as reference.
+
+Generated images will be saved to:
+    <output-dir>/<iso-timestamp>/<slugified-image-prompt>.<ext>
+"""
+
+import datetime
+import os
+import re
+import sys
+from pathlib import Path
+from typing import Annotated, NoReturn
+
+import httpx
+import replicate
+import typer
+from replicate.exceptions import ReplicateError
+
+MODEL_ID = "google/nano-banana-pro/llms.txt"
+
+app = typer.Typer()
+
+
+def error_exit(message: str) -> NoReturn:
+    """Print error message and exit with status 1."""
+    print(f"Error: {message}", file=sys.stderr)
+    sys.exit(1)
+
+
+def get_api_token() -> str:
+    """Get Replicate API token from environment.
+
+    Returns:
+        API token string
+
+    Raises:
+        KeyError: If REPLICATE_API_KEY is not set
+    """
+    try:
+        return os.environ["REPLICATE_API_KEY"]
+    except KeyError:
+        raise KeyError(
+            "REPLICATE_API_KEY environment variable not set. "
+            "Get your token at https://replicate.com/account/api-tokens"
+        )
+
+
+def slugify(text: str, max_words: int = 6) -> str:
+    """Convert text to slug, taking only first max_words words.
+
+    Args:
+        text: Text to slugify
+        max_words: Maximum number of words to include (default: 6)
+
+    Returns:
+        Slugified string (e.g., "Hello World Example" -> "hello-world-example")
+    """
+    # Convert to lowercase and split into words
+    words = text.lower().split()
+
+    # Take first max_words
+    words = words[:max_words]
+
+    # Join and clean: keep only alphanumeric and hyphens
+    slug = "-".join(words)
+    slug = re.sub(r"[^a-z0-9-]", "-", slug)
+
+    # Remove multiple consecutive hyphens and strip leading/trailing hyphens
+    slug = re.sub(r"-+", "-", slug)
+    slug = slug.strip("-")
+
+    return slug if slug else "untitled"
+
+
+def download_image(url: str, output_path: Path) -> None:
+    """Download image from URL and save to file.
+
+    Args:
+        url: URL to download from
+        output_path: Path where the image should be saved
+
+    Raises:
+        httpx.HTTPError: If download fails
+        OSError: If file cannot be written
+    """
+    response = httpx.get(url, timeout=60.0, follow_redirects=True)
+    response.raise_for_status()
+    output_path.write_bytes(response.content)
+
+
+def generate_image(
+    prompt: str,
+    output_path: Path,
+    client: replicate.Client,
+    aspect_ratio: str,
+    resolution: str,
+    output_format: str,
+    safety_filter_level: str,
+    input_image_path: Path | None = None,
+) -> None:
+    """Generate image using Nano Banana Pro via Replicate API."""
+    model_input: dict[str, str | list] = {
+        "prompt": prompt,
+        "output_format": output_format,
+        "aspect_ratio": aspect_ratio,
+        "resolution": resolution,
+        "safety_filter_level": safety_filter_level,
+    }
+
+    if input_image_path:
+        with open(input_image_path, "rb") as image_file:
+            model_input["image_input"] = [image_file]
+            output = client.run(MODEL_ID, input=model_input)
+    else:
+        output = client.run(MODEL_ID, input=model_input)
+
+    if not output:
+        raise ValueError("Model returned empty output")
+
+    image_url = str(output)
+    download_image(image_url, output_path)
+
+
+@app.command()
+def _main_impl(
+    prompt: Annotated[str, typer.Argument(help="Image prompt")],
+    style: Annotated[
+        str, typer.Option(help="Visual style for images")
+    ] = "heavily stylised line drawings",
+    output_dir: Annotated[Path, typer.Option(help="Output directory")] = Path(
+        "nano_banana_output"
+    ),
+    input_image: Annotated[
+        Path | None,
+        typer.Option(
+            help="Optional input image to transform or use as reference",
+            exists=True,
+            dir_okay=False,
+        ),
+    ] = None,
+    aspect_ratio: Annotated[
+        str,
+        typer.Option(help="Aspect ratio for generated images"),
+    ] = "16:9",
+    resolution: Annotated[
+        str,
+        typer.Option(help="Resolution for generated images"),
+    ] = "2K",
+    output_format: Annotated[
+        str,
+        typer.Option(help="Output image format"),
+    ] = "jpg",
+    safety_filter_level: Annotated[
+        str,
+        typer.Option(
+            help=(
+                "Safety filter setting "
+                "(block_low_and_above, block_medium_and_above, block_only_high)"
+            )
+        ),
+    ] = "block_only_high",
+) -> None:
+    """Generate a single image using Google's Nano Banana Pro model via Replicate API."""
+    api_token = get_api_token()
+
+    # Create output directory structure with ISO timestamp
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%dT%H-%M-%SZ"
+    )
+    target_dir = output_dir / timestamp
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create Replicate client once
+    client = replicate.Client(api_token=api_token)
+
+    # Build base instruction for presentation backgrounds
+    base_instruction = (
+        f"{style}, "
+        "composition fills frame with visual interest concentrated in upper 2/3, "
+        "bottom third remains sparse for text overlay, "
+        "no text or letters in image. "
+        "The key theme/idea of the image is: "
+    )
+
+    print(f"Model: {MODEL_ID}")
+    print(f"Style: {style}")
+    print(f"Aspect ratio: {aspect_ratio}")
+    print(f"Resolution: {resolution}")
+    print(f"Format: {output_format}")
+    print(f"Safety filter: {safety_filter_level}")
+    if input_image:
+        print(f"Input image: {input_image}")
+    print(f"Output directory: {target_dir}")
+    print("Generating 1 image...")
+    print()
+
+    full_prompt = f"{base_instruction}{prompt}"
+    image_slug = slugify(prompt)
+    output_path = target_dir / f"{image_slug}.{output_format}"
+
+    print(f"Prompt: {prompt}")
+    print(f"Full prompt: {full_prompt}")
+    print(f"Output: {output_path}")
+
+    generate_image(
+        full_prompt,
+        output_path,
+        client,
+        aspect_ratio,
+        resolution,
+        output_format,
+        safety_filter_level,
+        input_image,
+    )
+
+    print()
+    print("Image generated successfully")
+
+
+if __name__ == "__main__":
+    try:
+        app()
+    except KeyboardInterrupt:
+        print("\nInterrupted by user", file=sys.stderr)
+        sys.exit(130)
+    except KeyError as e:
+        error_exit(str(e))
+    except ValueError as e:
+        error_exit(str(e))
+    except OSError as e:
+        error_exit(f"File operation failed: {e}")
+    except httpx.HTTPError as e:
+        error_exit(f"HTTP request failed: {e}")
+    except ReplicateError as e:
+        error_exit(f"Replicate API error: {e}")
