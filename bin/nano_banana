@@ -191,11 +191,15 @@ def _main_impl(
     """
     api_token = get_api_token()
 
-    # Create output directory structure with ISO timestamp
-    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
-        "%Y-%m-%dT%H-%M-%SZ"
-    )
-    target_dir = output_dir / timestamp
+    # Create output directory structure
+    # If output_filename is specified, use output_dir directly; otherwise create timestamped subdir
+    if output_filename:
+        target_dir = output_dir
+    else:
+        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
+            "%Y-%m-%dT%H-%M-%SZ"
+        )
+        target_dir = output_dir / timestamp
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # Create Replicate client once
