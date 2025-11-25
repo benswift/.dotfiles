@@ -178,7 +178,14 @@ def _main_impl(
         ),
     ] = "block_only_high",
 ) -> None:
-    """Generate a single image using Google's Nano Banana Pro model via Replicate API."""
+    """Generate a single image using Google's Nano Banana Pro model via Replicate API.
+
+    Examples:
+
+      nano_banana "sunrise over a misty valley" --resolution 2K --aspect-ratio 4:3
+
+      nano_banana "studio portrait" --input-image headshot.jpg --input-image lighting_reference.png --resolution 4K --aspect-ratio 1:1 --output-format png
+    """
     api_token = get_api_token()
 
     # Create output directory structure with ISO timestamp
