@@ -28,7 +28,7 @@ import replicate
 import typer
 from replicate.exceptions import ReplicateError
 
-MODEL_ID = "google/nano-banana-pro/llms.txt"
+MODEL_ID = "google/nano-banana-pro"
 
 app = typer.Typer()
 
@@ -141,9 +141,6 @@ def generate_image(
 @app.command()
 def _main_impl(
     prompt: Annotated[str, typer.Argument(help="Image prompt")],
-    style: Annotated[
-        str, typer.Option(help="Visual style for images")
-    ] = "heavily stylised line drawings",
     output_dir: Annotated[Path, typer.Option(help="Output directory")] = Path(
         "nano_banana_output"
     ),
@@ -168,6 +165,12 @@ def _main_impl(
         str,
         typer.Option(help="Output image format"),
     ] = "jpg",
+    output_filename: Annotated[
+        str | None,
+        typer.Option(
+            help="Output filename (without extension, defaults to slugified prompt)"
+        ),
+    ] = None,
     safety_filter_level: Annotated[
         str,
         typer.Option(
@@ -198,17 +201,7 @@ def _main_impl(
     # Create Replicate client once
     client = replicate.Client(api_token=api_token)
 
-    # Build base instruction for presentation backgrounds
-    base_instruction = (
-        f"{style}, "
-        "composition fills frame with visual interest concentrated in upper 2/3, "
-        "bottom third remains sparse for text overlay, "
-        "no text or letters in image. "
-        "The key theme/idea of the image is: "
-    )
-
     print(f"Model: {MODEL_ID}")
-    print(f"Style: {style}")
     print(f"Aspect ratio: {aspect_ratio}")
     print(f"Resolution: {resolution}")
     print(f"Format: {output_format}")
@@ -219,16 +212,14 @@ def _main_impl(
     print("Generating 1 image...")
     print()
 
-    full_prompt = f"{base_instruction}{prompt}"
-    image_slug = slugify(prompt)
-    output_path = target_dir / f"{image_slug}.{output_format}"
+    filename = output_filename if output_filename else slugify(prompt)
+    output_path = target_dir / f"{filename}.{output_format}"
 
     print(f"Prompt: {prompt}")
-    print(f"Full prompt: {full_prompt}")
     print(f"Output: {output_path}")
 
     generate_image(
-        full_prompt,
+        prompt,
         output_path,
         client,
         aspect_ratio,
