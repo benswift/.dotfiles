@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+###############################################################################
+# cpath.nb-plugin
+#
+# Copy the full path of a note to the clipboard
+#
+# Installation:
+#   nb plugins install /path/to/cpath.nb-plugin
+# -or-
+#   cp cpath.nb-plugin ~/.nb/.plugins/
+###############################################################################
+
+_subcommands add "cpath"
+
+_cpath() {
+  local _selector="${1:-}"
+
+  if [[ -z "${_selector}" ]]; then
+    _exit_1 printf "Usage: nb cpath <selector>\\n"
+  fi
+
+  local _path
+  _path="$(_show "${_selector}" --path 2>/dev/null)"
+
+  if [[ -z "${_path}" ]]; then
+    _exit_1 printf "Error: Note not found: %s\\n" "${_selector}"
+  fi
+
+  if command -v pbcopy &> /dev/null; then
+    printf "%s" "${_path}" | pbcopy
+  elif command -v xclip &> /dev/null; then
+    printf "%s" "${_path}" | xclip -selection clipboard
+  elif command -v xsel &> /dev/null; then
+    printf "%s" "${_path}" | xsel --clipboard
+  else
+    _exit_1 printf "Error: No clipboard command found (pbcopy, xclip, or xsel).\\n"
+  fi
+
+  printf "Copied to clipboard: %s\\n" "${_path}"
+}
+
+_subcommands describe "cpath" <<HEREDOC
+Usage:
+  nb cpath <selector>
+
+Description:
+  Copy the full path of a note to the clipboard.
+
+Examples:
+  nb cpath 412
+  nb cpath example.md
+  nb cpath notebook:42
+
+HEREDOC
