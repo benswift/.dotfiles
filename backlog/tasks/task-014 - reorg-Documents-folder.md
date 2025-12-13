@@ -23,180 +23,33 @@ teaching, and general documents.
 ## Target structure
 
 ```
-~/Code/           # Active coding projects (by language) - keep as-is
-~/Documents/      # Non-code documents, app data, media
-~/Research/       # Academic research (NEW)
-~/Teaching/       # Course materials (NEW)
+~/Code/              # Active coding projects (by language) - keep as-is
+~/Documents/         # Non-code documents, app data, media
+~/Documents/research # Academic research (reorganised)
+~/Documents/teaching # Course materials (reorganised)
 ```
 
 ## Implementation plan
 
 ### Recommended: run the idempotent script
 
-This plan is now encoded in an idempotent, collision-safe script (defaults to
+This plan is encoded in an idempotent, collision-safe script (defaults to
 dry-run and refuses to overwrite anything):
 
 ```bash
 bash backlog/tasks/task-014-reorg-Documents-folder.sh
 bash backlog/tasks/task-014-reorg-Documents-folder.sh --apply
-bash backlog/tasks/task-014-reorg-Documents-folder.sh --apply --move-git-repos-to-code-archive
 ```
 
-Notes:
+### Key changes
 
-- Optionally, any remaining git repos under `~/Documents/` can be moved into
-  `~/Code/archive/from-documents/` (with a stable hash suffix to avoid name
-  collisions) via `--move-git-repos-to-code-archive`.
-- “Deletes” are implemented as moves into
-  `~/Documents/_reorg-trash/<timestamp>/` (no `rm -rf`).
-
-### Manual phases (reference only)
-
-### Phase 1: create new directories
-
-```bash
-mkdir -p ~/Research ~/Teaching
-mkdir -p ~/Research/{students/{confirmations,theses},service/reviews,studio/admin,admin/anu-internal,archive}
-mkdir -p ~/Teaching/{admin,tools,archive}
-```
-
-### Phase 2: move software projects from edex to ~/Code/
-
-```bash
-mv ~/Documents/edex/cozzieloops ~/Code/elixir/
-mv ~/Documents/edex/fair_dinkum ~/Code/elixir/
-mv ~/Documents/edex/langchain ~/Code/elixir/
-mv ~/Documents/edex/presserbot ~/Code/elixir/
-mv ~/Documents/edex/presserbot-crawler ~/Code/elixir/
-mv ~/Documents/edex/swarm_grid ~/Code/elixir/
-mv ~/Documents/edex/ascii-experiments ~/Code/js/
-```
-
-### Phase 3: move non-software edex projects to ~/Research/studio/
-
-```bash
-mv ~/Documents/edex/ai-art ~/Research/studio/
-mv ~/Documents/edex/australian-cybernetic-scripts ~/Research/studio/
-mv ~/Documents/edex/cybernetic-futures ~/Research/studio/
-mv ~/Documents/edex/human-scale-ai ~/Research/studio/
-mv ~/Documents/edex/llms-unplugged ~/Research/studio/
-mv ~/Documents/edex/metrics ~/Research/studio/
-mv ~/Documents/edex/nga ~/Research/studio/
-mv ~/Documents/edex/panic ~/Research/studio/
-mv ~/Documents/edex/recruitment ~/Research/studio/
-mv ~/Documents/edex/reg ~/Research/studio/
-mv ~/Documents/edex/shitposting ~/Research/studio/
-mv ~/Documents/edex/studio-bites ~/Research/studio/
-mv ~/Documents/edex/systems-modelling ~/Research/studio/
-mv ~/Documents/edex/working_with_name_for_dummies ~/Research/studio/
-mv ~/Documents/studio-documents/* ~/Research/studio/admin/
-rmdir ~/Documents/studio-documents
-```
-
-### Phase 4: move research content to ~/Research/
-
-```bash
-# Main content
-mv ~/Documents/research/papers ~/Research/
-mv ~/Documents/research/grants ~/Research/
-mv ~/Documents/research/conferences ~/Research/
-mv ~/Documents/research/student-theses ~/Research/students/theses
-mv ~/Documents/research/blurbs ~/Research/talks/blurbs
-mv ~/Documents/research/rscs-researcher-slides ~/Research/talks/
-mv ~/Documents/research/benswift.me ~/Research/website
-mv ~/Documents/research/tools ~/Research/
-mv ~/Documents/research/media ~/Research/
-mv ~/Documents/research/anu-internal-documents ~/Research/admin/anu-internal
-
-# Studio projects from research
-mv ~/Documents/research/ccc-studio ~/Research/studio/
-mv ~/Documents/research/ccc-studio-website-eleventy ~/Research/studio/ccc-studio-website
-
-# Service
-mv ~/Documents/service/* ~/Research/service/
-rmdir ~/Documents/service
-mv ~/Documents/ace-26-reviews ~/Research/service/reviews/ace-26
-
-# Archive (old/inactive)
-mv ~/Documents/research/archive/* ~/Research/archive/
-mv ~/Documents/research/R ~/Research/archive/
-mv ~/Documents/research/SuperCollider ~/Research/archive/
-mv ~/Documents/research/altair-sizing-examples ~/Research/archive/
-mv ~/Documents/research/anu-cs-blog ~/Research/archive/
-mv ~/Documents/research/code2k18 ~/Research/archive/
-mv ~/Documents/research/codeisbeautiful ~/Research/archive/
-mv ~/Documents/research/covid19-taskforce ~/Research/archive/
-mv ~/Documents/research/extemporelang ~/Research/archive/
-mv ~/Documents/research/francophone-pronunciation-app ~/Research/archive/francophone-app
-mv ~/Documents/research/ggerganov ~/Research/archive/
-mv ~/Documents/research/godot ~/Research/archive/
-mv ~/Documents/research/jekyll-fontawesome-svg ~/Research/archive/
-mv ~/Documents/research/microbit ~/Research/archive/
-mv ~/Documents/research/ned ~/Research/archive/
-mv ~/Documents/research/skeleton-pic ~/Research/archive/
-mv ~/Documents/research/tidalcycles ~/Research/archive/
-
-# Loose PDFs
-mv ~/Documents/*.pdf ~/Research/students/confirmations/
-
-# Clean up empty research folder
-rmdir ~/Documents/research
-```
-
-### Phase 5: move teaching content to ~/Teaching/
-
-```bash
-# Admin
-mv ~/Documents/teaching/awards ~/Teaching/admin/
-mv ~/Documents/teaching/curriculum-design ~/Teaching/admin/
-mv ~/Documents/teaching/course-peer-reviews ~/Teaching/admin/
-mv ~/Documents/teaching/higher-education-academy ~/Teaching/admin/
-mv ~/Documents/teaching/letters ~/Teaching/admin/
-
-# Tools
-mv ~/Documents/teaching/comp-course-homepage ~/Teaching/tools/
-mv ~/Documents/teaching/marking ~/Teaching/tools/
-mv ~/Documents/teaching/enrolment-datavis ~/Teaching/tools/
-mv ~/Documents/teaching/cs-projects-visualisation ~/Teaching/tools/
-mv ~/Documents/teaching/tools ~/Teaching/tools/misc
-
-# Archive (all courses, since none are currently active)
-mv ~/Documents/teaching/archive/* ~/Teaching/archive/
-mv ~/Documents/teaching/comp1100-2020-s2-website ~/Teaching/archive/comp1100-2020-s2
-mv ~/Documents/teaching/comp2710-lens-2021 ~/Teaching/archive/
-mv ~/Documents/teaching/comp4610-2021 ~/Teaching/archive/
-mv ~/Documents/teaching/extn1019 ~/Teaching/archive/
-mv ~/Documents/teaching/socy-adire ~/Teaching/archive/
-mv ~/Documents/teaching/ccc-studio ~/Teaching/archive/
-mv ~/Documents/teaching/cs-outreach-hub ~/Teaching/archive/
-mv ~/Documents/teaching/comp-course-grade-bimodality ~/Teaching/archive/
-
-# Clean up empty teaching folder
-rmdir ~/Documents/teaching
-```
-
-### Phase 6: rename and cleanup in ~/Documents/
-
-```bash
-# Rename business to admin
-mv ~/Documents/business ~/Documents/admin
-
-# "Delete" cruft (prefer moving into a dated trash folder first)
-TRASH=~/Documents/_reorg-trash/$(date +%Y%m%d-%H%M%S)
-mkdir -p "$TRASH"
-mv ~/Documents/edx "$TRASH/edx"
-mv ~/Documents/paperless-ngx "$TRASH/paperless-ngx"
-mv ~/Documents/personal/__MACOSX "$TRASH/__MACOSX"
-mv ~/Documents/REORGANISATION-PLAN.md "$TRASH/REORGANISATION-PLAN.md"
-rmdir ~/Documents/edex  # should be empty after phases 2-3
-```
-
-### Phase 7: notes consolidation (optional)
-
-```bash
-# Import obsidian content to nb if desired, then:
-rm -rf ~/Documents/obsidian
-```
+1. Software projects from edex move to ~/Code/elixir/ and ~/Code/js/
+   - fair_dinkum renamed to fair_dinkum_game (collision with different project)
+2. Non-code edex projects move to ~/Documents/research/studio/
+3. Research content reorganised within ~/Documents/research/
+4. Teaching content reorganised within ~/Documents/teaching/
+5. ~/Documents/business renamed to ~/Documents/admin
+6. Cruft deleted: edx, paperless-ngx, personal/\_\_MACOSX, notes, md-scratch
 
 ## Verification checklist
 
@@ -204,7 +57,6 @@ rm -rf ~/Documents/obsidian
 - [ ] No broken symlinks
 - [ ] Update any hardcoded paths in scripts/configs
 - [ ] Set up rclone backup config for new structure
-- [ ] `find ~/Documents -name .git -prune` returns nothing
 
 ## Final structure
 
@@ -215,7 +67,7 @@ rm -rf ~/Documents/obsidian
 ├── elixir/
 │   ├── (existing)
 │   ├── cozzieloops/
-│   ├── fair_dinkum/
+│   ├── fair_dinkum_game/   # renamed from fair_dinkum (collision)
 │   ├── langchain/
 │   ├── presserbot/
 │   ├── presserbot-crawler/
@@ -226,10 +78,10 @@ rm -rf ~/Documents/obsidian
 └── (other language folders unchanged)
 ```
 
-### ~/Research/
+### ~/Documents/research/
 
 ```
-~/Research/
+~/Documents/research/
 ├── papers/
 ├── grants/
 ├── conferences/
@@ -237,18 +89,22 @@ rm -rf ~/Documents/obsidian
 │   ├── theses/
 │   └── confirmations/
 ├── talks/
-├── website/
+│   ├── blurbs/
+│   └── rscs-researcher-slides/
+├── website/              # from benswift.me
 ├── service/
 │   ├── cecs-website-tiger-team/
 │   ├── socy-phd-convenor/
 │   └── reviews/ace-26/
 ├── studio/
-│   ├── admin/
+│   ├── admin/            # from studio-documents
 │   ├── ai-art/
 │   ├── ccc-studio/
+│   ├── ccc-studio-website/
 │   ├── cybernetic-futures/
 │   ├── human-scale-ai/
-│   └── (other non-code studio projects)
+│   ├── llms-unplugged/
+│   └── (other non-code studio projects from edex)
 ├── tools/
 ├── media/
 ├── admin/anu-internal/
@@ -256,33 +112,45 @@ rm -rf ~/Documents/obsidian
     ├── ben-phd-2008-2012/
     ├── extemporelang/
     ├── SuperCollider/
+    ├── R/
     └── (other old projects)
 ```
 
-### ~/Teaching/
+### ~/Documents/teaching/
 
 ```
-~/Teaching/
-├── courses/              (empty - no active courses)
+~/Documents/teaching/
 ├── admin/
 │   ├── awards/
 │   ├── curriculum-design/
+│   ├── course-peer-reviews/
+│   ├── higher-education-academy/
 │   └── letters/
 ├── tools/
 │   ├── comp-course-homepage/
 │   ├── marking/
-│   └── misc/
+│   ├── enrolment-datavis/
+│   ├── cs-projects-visualisation/
+│   └── misc/              # other tools
 └── archive/
     ├── comp1720/
     ├── comp1100-2020-s2/
-    └── (other past courses)
+    ├── comp2710-lens-2021/
+    ├── comp4610-2021/
+    ├── extn1019/
+    ├── socy-adire/
+    ├── ccc-studio/
+    ├── cs-outreach-hub/
+    └── comp-course-grade-bimodality/
 ```
 
 ### ~/Documents/ (slimmed down)
 
 ```
 ~/Documents/
-├── admin/                (renamed from business/)
+├── admin/                # renamed from business
+├── research/             # reorganised
+├── teaching/             # reorganised
 ├── personal/
 ├── church/
 ├── org/
@@ -291,15 +159,16 @@ rm -rf ~/Documents/obsidian
 ├── Music/
 ├── Native Instruments/
 ├── Paperless/
-└── (other app data)
+└── (other app data: ATEM, Blackmagic, Digital Editions, etc.)
 ```
 
 ## Acceptance criteria
 
-- [ ] ~/Research/ exists with papers, grants, conferences, studio, archive
-      subdirs
-- [ ] ~/Teaching/ exists with admin, tools, archive subdirs
+- [ ] ~/Documents/research/ exists with papers, grants, conferences, studio,
+      archive subdirs
+- [ ] ~/Documents/teaching/ exists with admin, tools, archive subdirs
 - [ ] Software projects from edex are in ~/Code/elixir/ and ~/Code/js/
-- [ ] ~/Documents/ contains only app data, personal docs, and admin
+- [ ] ~/Documents/ contains only app data, personal docs, research, teaching,
+      and admin
 - [ ] No orphaned empty directories
 - [ ] Git repos verified working
