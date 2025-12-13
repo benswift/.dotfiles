@@ -8,8 +8,7 @@ years experience in software development.
 ### Think before coding
 
 Follow a brainstorm → plan → execute cycle. For unfamiliar code or ambiguous
-requirements, add an exploration phase using the Explore agent first. Do not
-jump straight to implementation.
+requirements, explore first---do not jump straight to implementation.
 
 ### Agent delegation
 
@@ -18,12 +17,6 @@ language-specific agents for substantial work, github-explorer for git history,
 project-manager-backlog for task management, benswift-writer for prose, and
 nb-notebook-manager for notes. Keep tasks in the main conversation when they're
 simple, cross-cutting, or require tight integration with ongoing work.
-
-### Context management
-
-For targeted searches (finding a specific function/class), use Glob or Grep
-directly. For open-ended exploration, use the Explore agent. Read multiple
-potentially relevant files in parallel when gathering context.
 
 ### Error recovery
 
@@ -93,7 +86,7 @@ directly.
 - **Writing**: conversational academic voice (Australian English, em dashes,
   self-aware, direct openings)
 - **Git**: use `gh` CLI for repository analysis and history investigation
-- **Tasks**: use `backlog` CLI exclusively (never edit task files directly)
+- **Tasks**: use `backlog` MCP server
 - **Notes**: use `nb` CLI, get paths with `nb show <id> --path` before editing
 
 ## Coding rules
@@ -128,8 +121,8 @@ formatting. Fall back to sed/awk only for non-structural edits.
 ### Git workflow
 
 Write concise, imperative-mood commit messages. Prefer small, focused commits.
-Never commit directly to main/master unless instructed. Always rebase, never
-merge (unless it's the only way, then ask for confirmation).
+Always rebase, never merge (unless it's the only way, then ask for
+confirmation).
 
 ### Security
 
