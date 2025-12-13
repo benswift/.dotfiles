@@ -2,31 +2,95 @@
 
 set -euo pipefail
 
-EXCLUDE_FROM_FILE="$(mktemp -t rclone-excludes.XXXXXX)"
-CLONE_ROOT_DIR="${CLONE_ROOT_DIR:-$HOME/Documents}"
+# Configuration
+SOURCE_DIR="${RCLONE_SOURCE:-$HOME/Documents}"
+REMOTE="${RCLONE_REMOTE:-weddle}"
+REMOTE_PATH="${RCLONE_REMOTE_PATH:-backup/mitch/Documents}"
+DRY_RUN="${DRY_RUN:-false}"
 
-## visit it at https://anu365-my.sharepoint.com/personal/u2548636_anu_edu_au/PreservationHoldLibrary
-REMOTE=anu-onedrive
+# Exclude patterns for build artifacts and regeneratable content
+EXCLUDES=(
+  ".git/**"
+  "node_modules/**"
+  ".venv/**"
+  "venv/**"
+  "_build/**"
+  "deps/**"
+  ".elixir_ls/**"
+  "target/**"
+  "__pycache__/**"
+  ".pytest_cache/**"
+  "*.egg-info/**"
+  ".DS_Store"
+  ".cache/**"
+)
 
-cleanup() {
-  rm -f "$EXCLUDE_FROM_FILE"
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Sync ~/Documents to remote storage using rclone.
+
+Options:
+  -n, --dry-run    Show what would be transferred without making changes
+  -r, --remote     Set remote name (default: weddle)
+  -h, --help       Show this help message
+
+Environment variables:
+  RCLONE_SOURCE       Source directory (default: ~/Documents)
+  RCLONE_REMOTE       Remote name (default: weddle)
+  RCLONE_REMOTE_PATH  Remote path (default: backup/mitch/Documents)
+  DRY_RUN             Set to 'true' for dry run mode
+
+Excludes:
+  .git/, node_modules/, .venv/, venv/, _build/, deps/, .elixir_ls/,
+  target/, __pycache__/, .pytest_cache/, *.egg-info/, .DS_Store, .cache/
+EOF
 }
-trap cleanup EXIT
 
-## find all git repo enclosing folders (including trailing slash), munge them
-## into the form that rclone expects for its "exclude from" file
-echo "finding git repos to ignore..."
-: > "$EXCLUDE_FROM_FILE"
-(cd "$CLONE_ROOT_DIR" && find . -type d -name .git -print0) | \
-  while IFS= read -r -d '' git_dir; do
-    repo_dir=$(dirname "$git_dir")
-    printf '%s/\n' "${repo_dir#./}" >> "$EXCLUDE_FROM_FILE"
-  done
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -n|--dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    -r|--remote)
+      REMOTE="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      usage
+      exit 1
+      ;;
+  esac
+done
 
-## add a few extra excludes
-echo ".DS_Store" >> "$EXCLUDE_FROM_FILE"
-echo "ignoring files in $(wc -l < "$EXCLUDE_FROM_FILE" | tr -s ' ') git repos"
+# Build exclude arguments
+EXCLUDE_ARGS=()
+for pattern in "${EXCLUDES[@]}"; do
+  EXCLUDE_ARGS+=(--exclude "$pattern")
+done
 
-## sync to remote
-echo "syncing to remote $REMOTE"
-rclone sync --progress --exclude-from="$EXCLUDE_FROM_FILE" "$CLONE_ROOT_DIR" "$REMOTE:mitch-rclone${CLONE_ROOT_DIR}"
+# Build rclone command
+RCLONE_ARGS=(
+  sync
+  --progress
+  "${EXCLUDE_ARGS[@]}"
+)
+
+if [[ "$DRY_RUN" == "true" ]]; then
+  RCLONE_ARGS+=(--dry-run)
+  echo "DRY RUN MODE - no changes will be made"
+fi
+
+echo "Syncing $SOURCE_DIR to $REMOTE:$REMOTE_PATH"
+echo "Excluding: ${EXCLUDES[*]}"
+echo
+
+rclone "${RCLONE_ARGS[@]}" "$SOURCE_DIR" "$REMOTE:$REMOTE_PATH"
