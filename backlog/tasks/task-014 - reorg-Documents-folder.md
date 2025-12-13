@@ -1,7 +1,7 @@
 ---
 id: task-014
 title: reorg ~/Documents/ folder
-status: To Do
+status: Done
 priority: medium
 assignee: []
 created_date: "2025-12-05 06:30"
