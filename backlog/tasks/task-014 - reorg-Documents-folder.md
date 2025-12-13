@@ -31,11 +31,33 @@ teaching, and general documents.
 
 ## Implementation plan
 
+### Recommended: run the idempotent script
+
+This plan is now encoded in an idempotent, collision-safe script (defaults to
+dry-run and refuses to overwrite anything):
+
+```bash
+bash backlog/tasks/task-014-reorg-Documents-folder.sh
+bash backlog/tasks/task-014-reorg-Documents-folder.sh --apply
+bash backlog/tasks/task-014-reorg-Documents-folder.sh --apply --move-git-repos-to-code-archive
+```
+
+Notes:
+
+- Optionally, any remaining git repos under `~/Documents/` can be moved into
+  `~/Code/archive/from-documents/` (with a stable hash suffix to avoid name
+  collisions) via `--move-git-repos-to-code-archive`.
+- “Deletes” are implemented as moves into
+  `~/Documents/_reorg-trash/<timestamp>/` (no `rm -rf`).
+
+### Manual phases (reference only)
+
 ### Phase 1: create new directories
 
 ```bash
-mkdir -p ~/Research/{papers,grants,conferences,students/confirmations,talks,website,service/reviews,studio/admin,tools,media,admin/anu-internal,archive}
-mkdir -p ~/Teaching/{courses,admin,tools,archive}
+mkdir -p ~/Research ~/Teaching
+mkdir -p ~/Research/{students/{confirmations,theses},service/reviews,studio/admin,admin/anu-internal,archive}
+mkdir -p ~/Teaching/{admin,tools,archive}
 ```
 
 ### Phase 2: move software projects from edex to ~/Code/
@@ -159,11 +181,13 @@ rmdir ~/Documents/teaching
 # Rename business to admin
 mv ~/Documents/business ~/Documents/admin
 
-# Delete cruft
-rm -rf ~/Documents/edx  # contains duplicate cozzieloops (not a git repo) and old my_first_lm
-rm -rf ~/Documents/paperless-ngx
-rm -rf ~/Documents/personal/__MACOSX
-rm ~/Documents/REORGANISATION-PLAN.md  # no longer needed
+# "Delete" cruft (prefer moving into a dated trash folder first)
+TRASH=~/Documents/_reorg-trash/$(date +%Y%m%d-%H%M%S)
+mkdir -p "$TRASH"
+mv ~/Documents/edx "$TRASH/edx"
+mv ~/Documents/paperless-ngx "$TRASH/paperless-ngx"
+mv ~/Documents/personal/__MACOSX "$TRASH/__MACOSX"
+mv ~/Documents/REORGANISATION-PLAN.md "$TRASH/REORGANISATION-PLAN.md"
 rmdir ~/Documents/edex  # should be empty after phases 2-3
 ```
 
@@ -180,6 +204,7 @@ rm -rf ~/Documents/obsidian
 - [ ] No broken symlinks
 - [ ] Update any hardcoded paths in scripts/configs
 - [ ] Set up rclone backup config for new structure
+- [ ] `find ~/Documents -name .git -prune` returns nothing
 
 ## Final structure
 
