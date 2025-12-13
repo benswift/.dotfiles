@@ -1,32 +1,26 @@
 {
   "git_panel": {
-    "status_style": "label_color"
+    "status_style": "label_color",
   },
   "project_panel": {
-    "hide_root": true
+    "hide_root": true,
   },
   "terminal": {},
   "agent_servers": {
     "claude": {
-      "default_mode": "bypassPermissions"
+      "default_mode": "bypassPermissions",
     },
     "codex": {
-      "default_mode": "full-access"
-    }
+      "default_model": "gpt-5.2/medium",
+      "default_mode": "full-access",
+    },
   },
   "context_servers": {
-    "ash_ai": {
-      "enabled": false,
-      "source": "custom",
-      "command": "mcp-proxy",
-      "args": ["http://localhost:4000/ash_ai/mcp"]
-    },
     "tidewave": {
       "env": {},
-      "source": "custom",
       "command": "mcp-proxy",
-      "args": ["http://localhost:${PORT:-4000}/tidewave/mcp"]
-    }
+      "args": ["http://localhost:${PORT:-4000}/tidewave/mcp"],
+    },
   },
   "ssh_connections": [
     {
@@ -34,34 +28,34 @@
       "args": [],
       "projects": [
         {
-          "paths": ["~/Code/trajectory-tracer"]
-        }
-      ]
+          "paths": ["~/Code/trajectory-tracer"],
+        },
+      ],
     },
     {
       "host": "weddle",
       "args": [],
       "projects": [
         {
-          "paths": ["/home/ben/.dotfiles"]
+          "paths": ["/home/ben/.dotfiles"],
         },
         {
-          "paths": ["/home/ben/.nb/home"]
+          "paths": ["/home/ben/.nb/home"],
         },
         {
-          "paths": ["/home/ben/Code/elixir/hendrix-homeostat"]
+          "paths": ["/home/ben/Code/elixir/hendrix-homeostat"],
         },
         {
-          "paths": ["/home/ben/Code/panic"]
+          "paths": ["/home/ben/Code/panic"],
         },
         {
-          "paths": ["~/Code/panic_tda"]
-        }
-      ]
-    }
+          "paths": ["~/Code/panic_tda"],
+        },
+      ],
+    },
   ],
   "diagnostics": {
-    "include_warnings": true
+    "include_warnings": true,
   },
   "theme": "Tokyo Night Storm",
   "languages": {
@@ -71,8 +65,8 @@
         "!elixir-ls",
         "!next-ls",
         "!lexical",
-        "..."
-      ]
+        "...",
+      ],
     },
     "HEEX": {
       "language_servers": [
@@ -80,25 +74,25 @@
         "!elixir-ls",
         "!next-ls",
         "!lexical",
-        "..."
-      ]
+        "...",
+      ],
     },
     "Python": {
       "language_servers": ["ty", "ruff", "!basedpyright"],
       "format_on_save": "on",
       "formatter": [
         {
-          "code_action": "source.organizeImports.ruff"
+          "code_action": "source.organizeImports.ruff",
         },
         {
-          "code_action": "source.fixAll.ruff"
+          "code_action": "source.fixAll.ruff",
         },
         {
           "language_server": {
-            "name": "ruff"
-          }
-        }
-      ]
+            "name": "ruff",
+          },
+        },
+      ],
     },
     "Markdown": {
       "format_on_save": "on",
@@ -110,25 +104,25 @@
             "--prose-wrap",
             "always",
             "--stdin-filepath",
-            "{buffer_path}"
-          ]
-        }
-      }
+            "{buffer_path}",
+          ],
+        },
+      },
     },
     "Typst": {
       "format_on_save": "on",
       "formatter": {
         "external": {
           "command": "typstyle",
-          "arguments": ["--wrap-text"]
-        }
-      }
-    }
+          "arguments": ["--wrap-text"],
+        },
+      },
+    },
   },
   "agent": {
     "inline_assistant_model": {
       "provider": "copilot_chat",
-      "model": "claude-sonnet-4"
+      "model": "claude-sonnet-4",
     },
     "profiles": {
       "write": {
@@ -154,18 +148,18 @@
           "rename": true,
           "symbol_info": true,
           "thinking": true,
-          "web_search": true
+          "web_search": true,
         },
         "enable_all_context_servers": true,
-        "context_servers": {}
-      }
+        "context_servers": {},
+      },
     },
     "always_allow_tool_actions": true,
     "default_profile": "write",
     "default_model": {
       "provider": "zed.dev",
-      "model": "claude-3-7-sonnet-thinking"
-    }
+      "model": "claude-3-7-sonnet-thinking",
+    },
   },
   "close_on_file_delete": true,
   "vim_mode": true,
@@ -177,8 +171,8 @@
   "lsp": {
     "expert": {
       "binary": {
-        "arguments": ["--stdio"]
-      }
-    }
-  }
+        "arguments": ["--stdio"],
+      },
+    },
+  },
 }
