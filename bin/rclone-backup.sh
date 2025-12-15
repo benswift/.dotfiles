@@ -17,12 +17,18 @@ EXCLUDES=(
   "_build/**"
   "deps/**"
   ".elixir_ls/**"
+  ".expert/**"
+  ".tox/**"
   "target/**"
+  "build/**"
+  "llvm/**"
   "__pycache__/**"
   ".pytest_cache/**"
   "*.egg-info/**"
   ".DS_Store"
   ".cache/**"
+  "CLAUDE.md"
+  "codex.md"
 )
 
 usage() {
@@ -43,8 +49,9 @@ Environment variables:
   DRY_RUN             Set to 'true' for dry run mode
 
 Excludes:
-  .git/, node_modules/, .venv/, venv/, _build/, deps/, .elixir_ls/,
-  target/, __pycache__/, .pytest_cache/, *.egg-info/, .DS_Store, .cache/
+  .git/, node_modules/, .venv/, venv/, _build/, deps/, .elixir_ls/, .expert/,
+  .tox/, target/, build/, llvm/, __pycache__/, .pytest_cache/, *.egg-info/,
+  .DS_Store, .cache/, CLAUDE.md, codex.md
 EOF
 }
 
