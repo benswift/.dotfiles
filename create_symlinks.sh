@@ -138,6 +138,7 @@ main() {
     # Directory symlinks
     echo -e "\nLinking directories..."
     link_directory "$DOTFILES_DIR/claude/skills" "$HOME/.claude/skills"
+    link_directory "$DOTFILES_DIR/claude/skills" "$HOME/.codex/skills"
     link_directory "$DOTFILES_DIR/mail/neomutt" "$HOME/.config/neomutt"
     link_directory "$DOTFILES_DIR/zed/snippets" "$HOME/.config/zed/snippets"
 

@@ -49,7 +49,8 @@ My Claude Code config is in the @claude/ folder. This includes:
 
 Codex CLI uses @~/.codex/instructions.md for global instructions (symlinked to
 @GLOBAL-AGENTS.md). Project-level instructions use @codex.md (symlinked to
-@AGENTS.md, gitignored).
+@AGENTS.md, gitignored). Skills are shared with Claude Code via a symlink from
+@~/.codex/skills to the same @claude/skills/ directory.
 
 ### Gemini CLI
 
