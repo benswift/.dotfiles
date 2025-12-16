@@ -46,6 +46,9 @@
           "paths": ["/home/ben/Code/elixir/hendrix-homeostat"],
         },
         {
+          "paths": ["/home/ben/Code/extemporelang/extempore"],
+        },
+        {
           "paths": ["/home/ben/Code/panic"],
         },
         {
