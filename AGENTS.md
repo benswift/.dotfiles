@@ -40,8 +40,10 @@ My zed editor config is in the @zed/ folder.
 
 ### Claude Code
 
-My Claude Code editor config is in the @claude/ folder (this includes agent
-definitions).
+My Claude Code config is in the @claude/ folder. This includes:
+
+- @claude/settings.json - Claude Code settings
+- @claude/skills/ - skills that Claude loads dynamically based on task context
 
 ### Codex CLI
 
