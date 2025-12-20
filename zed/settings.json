@@ -11,7 +11,7 @@
       "default_mode": "bypassPermissions",
     },
     "codex": {
-      "default_model": "gpt-5.2/medium",
+      "default_model": "gpt-5.2-codex/medium",
       "default_mode": "full-access",
     },
   },
