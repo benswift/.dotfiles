@@ -65,3 +65,8 @@ Host edex-experiments
   User azureuser
   Hostname 13.73.193.68
   IdentityFile ~/.ssh/edex-experiments_key.pem
+
+Host extempore-win
+  User azureuser
+  Hostname 68.218.107.86
+  IdentityFile ~/.ssh/extempore_windows_vm
