@@ -119,6 +119,15 @@
         },
       },
     },
+    "LaTeX": {
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "tex-fmt",
+          "arguments": ["--stdin"],
+        },
+      },
+    },
     "Typst": {
       "format_on_save": "on",
       "formatter": {
