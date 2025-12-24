@@ -55,6 +55,24 @@ else
     sync_errors=$((sync_errors + 1))
 fi
 
+# Fix local UID counters to stay ahead of server UIDs
+# This prevents archived messages from being ignored by mbsync
+for state in ~/Maildir/*/.mbsyncstate ~/Maildir/*/*/.mbsyncstate; do
+    [ -f "$state" ] || continue
+    dir=$(dirname "$state")
+    uidvalidity="$dir/.uidvalidity"
+    [ -f "$uidvalidity" ] || continue
+
+    max_pulled=$(grep "^MaxPulledUid" "$state" | awk '{print $2}')
+    [ -z "$max_pulled" ] && continue
+
+    current_next=$(sed -n '2p' "$uidvalidity")
+    if [ "$current_next" -le "$max_pulled" ]; then
+        current_validity=$(sed -n '1p' "$uidvalidity")
+        printf "%s\n%s\n" "$current_validity" "$((max_pulled + 1))" > "$uidvalidity"
+    fi
+done
+
 # Update mu index
 print_status "Updating search index..."
 mu index
