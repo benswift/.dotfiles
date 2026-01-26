@@ -23,9 +23,13 @@ cpath() { realpath "$1" | pbcopy && echo "Copied to clipboard: $(realpath "$1")"
 
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
-if [ -f "/opt/homebrew/bin/brew" ]; then
+if [[ -f /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
-  # Add Homebrew completions to FPATH
+elif [[ -f /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+if [[ -n $HOMEBREW_PREFIX ]]; then
   FPATH="$HOMEBREW_PREFIX/share/zsh/site-functions:$FPATH"
 fi
 
