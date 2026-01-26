@@ -40,11 +40,4 @@ compinit
 eval "$(mise activate zsh)"
 eval "$(zoxide init zsh)"
 
-# this needs to be set after mise activate zsh
-if [ "$HOST" = "weddle" ] || [ "$(hostname)" = "weddle" ]; then
-  # On weddle: black text on colored backgrounds for SSH sessions
-  export PS1='%K{red}[%D{%H:%M}]%k%f %K{cyan}%m%k%f:%F{green}%1~%f %F{%(?.green.red)}%(!.#.$)%f '
-else
-  # Default prompt for other machines
-  export PS1='%F{magenta}[%D{%H:%M}]%f %F{cyan}%m%f:%F{green}%1~%f %F{%(?.green.red)}%(!.#.$)%f '
-fi
+[[ -f $HOMEBREW_PREFIX/opt/spaceship/spaceship.zsh ]] && source "$HOMEBREW_PREFIX/opt/spaceship/spaceship.zsh"
