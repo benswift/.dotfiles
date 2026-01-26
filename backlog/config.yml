@@ -14,3 +14,4 @@ zero_padded_ids: 3
 bypass_git_hooks: false
 check_active_branches: false
 active_branch_days: 30
+task_prefix: "task"
