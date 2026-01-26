@@ -25,8 +25,6 @@ source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
 if [[ -f /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [[ -f /usr/local/bin/brew ]]; then
-  eval "$(/usr/local/bin/brew shellenv)"
 fi
 
 if [[ -n $HOMEBREW_PREFIX ]]; then
