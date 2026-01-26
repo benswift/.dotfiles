@@ -1,1 +1,3 @@
 font-family = "Operator Mono"
+font-size = 14
+theme = "Gruvbox Light"
