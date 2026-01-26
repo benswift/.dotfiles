@@ -1,4 +1,4 @@
-set -o emacs
+set -o vi
 
 # History configuration
 HISTFILE=~/.zsh_history
