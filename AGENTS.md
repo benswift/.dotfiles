@@ -107,7 +107,16 @@ My Zellij config is in the @zellij/ folder. This includes:
 
 ### Claude Code
 
-My Claude Code config is in the @claude/ folder. This includes:
+Two directories are involved --- note the difference:
+
+- `claude/` (no dot) --- tracked config source, symlinked to `~/.claude/` on
+  each machine. Contains `settings.json`, `skills/`, and a `.gitignore`
+  whitelist.
+- `.claude/` (with dot) --- project-local working directory auto-created by
+  Claude Code. Fully gitignored (both globally and in this repo). Contains
+  machine-specific state like `settings.local.json`, plans, and session data.
+
+The @claude/ folder includes:
 
 - @claude/settings.json - Claude Code settings
 - @claude/skills/ - skills that Claude loads dynamically based on task context

@@ -5,3 +5,6 @@ zed/extensions/**/*.wasm
 
 # jj working directory
 .jj/
+
+# Claude Code project-local directory (machine-specific)
+.claude/
