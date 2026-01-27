@@ -20,6 +20,7 @@ sysup() {
     sudo apt update && sudo apt upgrade
   fi
   mise upgrade
+  uv tool upgrade --all
 }
 alias task="backlog task"
 alias todo="nb todo undone"
@@ -67,4 +68,4 @@ compinit
 eval "$(mise activate zsh)"
 eval "$(zoxide init zsh)"
 
-[[ -f $HOMEBREW_PREFIX/opt/spaceship/spaceship.zsh ]] && source "$HOMEBREW_PREFIX/opt/spaceship/spaceship.zsh"
+eval "$(starship init zsh)"
