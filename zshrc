@@ -30,7 +30,21 @@ alias todo="nb todo undone"
 alias latest="nb --limit 10"
 # alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
+# jj shortcuts
+alias js="jj st"
+alias jd="jj diff"
+alias jl="jj log"
+alias jn="jj new"
+alias jQ="jj squash"
+alias je="jj edit"
+alias jb="jj bookmark"
+jm() { jj describe -m "$*"; }
+# zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
+alias za="zellij attach"
+alias zl="zellij list-sessions"
+alias zr="zellij run --"
+alias zk="zellij kill-session"
 alias neomutt='TERM=xterm-direct neomutt'
 alias prettify-md='prettier --prose-wrap always --write "**/*.md"'
 # macOS-only aliases
