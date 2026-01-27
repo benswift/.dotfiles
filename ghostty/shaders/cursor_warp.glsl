@@ -3,7 +3,7 @@
 
 // --- CONFIGURATION ---
 vec4 TRAIL_COLOR = iCurrentCursorColor;
-const float DURATION = 0.2;
+const float DURATION = 0.1;
 const float TRAIL_SIZE = 0.6;
 const float THRESHOLD_MIN_DISTANCE = 1.5;
 const float BLUR = 1.0;
