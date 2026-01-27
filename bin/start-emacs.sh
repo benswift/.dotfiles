@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # from https://github.com/railwaycat/homebrew-emacsmacport/blob/master/docs/emacs-start-helpers.md
 "$(brew --prefix)/opt/emacs-mac/Emacs.app/Contents/MacOS/Emacs.sh" "$@" &

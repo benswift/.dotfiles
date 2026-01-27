@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Usage: gemini-tmux [--new] [session-name] [working-dir]
 # If no args provided, uses current directory

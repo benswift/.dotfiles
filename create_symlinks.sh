@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -134,6 +134,10 @@ main() {
     # Project-level agent instructions (gitignored symlinks)
     create_symlink "$DOTFILES_DIR/AGENTS.md" "$DOTFILES_DIR/CLAUDE.md"
     create_symlink "$DOTFILES_DIR/AGENTS.md" "$DOTFILES_DIR/codex.md"
+
+    # Tool config files
+    echo -e "\nLinking tool config files..."
+    create_symlink "$DOTFILES_DIR/mise/config.toml" "$HOME/.config/mise/config.toml"
 
     # Directory symlinks
     echo -e "\nLinking directories..."

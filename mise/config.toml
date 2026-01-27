@@ -1,0 +1,10 @@
+[tools]
+node = "latest"
+pnpm = "latest"
+ruby = "latest"
+uv = "latest"
+bun = "latest"
+"core:elixir" = "1.18.4-otp-27"
+
+[settings]
+idiomatic_version_file_enable_tools = ["[]"]

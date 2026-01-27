@@ -4,6 +4,21 @@ This repo contains all of the (public) config files that I use on my machines.
 
 **DO NOT EVER ADD RAW CREDENTIALS/PASSWORDS TO THIS REPO.**
 
+## Philosophy
+
+- modern, zsh-only (no bash configs)
+- cross-platform: macOS (Apple Silicon and Intel) and Linux
+- mise-first for tool version management
+- easy to provision a new machine via `install.sh`
+
+## Key commands
+
+- `dotfiles doctor` --- check if everything is set up correctly
+- `dotfiles update` --- pull latest and re-run symlinks
+- `dotfiles edit` --- open dotfiles in editor
+- `./install.sh` --- bootstrap a new machine (also works via curl)
+- `./create_symlinks.sh` --- create/update symlinks only
+
 ## Repo structure
 
 All these files are expected to be in specific locations (e.g. @~/.config). The
@@ -30,7 +45,17 @@ Git configuration files in the top-level:
 ## Utilities
 
 The @bin/ directory contains utility scripts for system tasks (backup scripts,
-etc.).
+etc.). Key scripts:
+
+- `dotfiles` --- main management command (doctor, update, edit)
+- `mailsync` --- sync all email accounts
+- `claude-tmux`, `codex-tmux`, `gemini-tmux` --- tmux wrappers for AI agents
+
+## Tool management (mise)
+
+Global tool versions are defined in @mise/config.toml. This file is symlinked to
+`~/.config/mise/config.toml` and provides fallback versions for tools when not
+in a project with its own `mise.toml`.
 
 ## Zed (text editor)
 

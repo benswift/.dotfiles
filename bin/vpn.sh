@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 # pull ANU password out of 1Password, pipe it to stdin
 op item get "ANU Identity" --fields pw |

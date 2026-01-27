@@ -18,13 +18,32 @@ alias latest="nb --limit 10"
 alias update-usage-rules='mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
 alias neomutt='TERM=xterm-direct neomutt'
 alias prettify-md='prettier --prose-wrap always --write "**/*.md"'
-alias zed-update-expert='rm -rf "$HOME/Library/Application Support/Zed/extensions/work/elixir/expert-nightly" && echo "Expert cache cleared. Restart Zed to download latest."'
-cpath() { realpath "$1" | pbcopy && echo "Copied to clipboard: $(realpath "$1")"; }
+# macOS-only aliases
+if [[ "$OSTYPE" == darwin* ]]; then
+  alias zed-update-expert='rm -rf "$HOME/Library/Application Support/Zed/extensions/work/elixir/expert-nightly" && echo "Expert cache cleared. Restart Zed to download latest."'
+fi
+# Platform-specific clipboard command
+if command -v pbcopy &>/dev/null; then
+  clipboard() { pbcopy; }
+elif command -v xclip &>/dev/null; then
+  clipboard() { xclip -selection clipboard; }
+elif command -v wl-copy &>/dev/null; then
+  clipboard() { wl-copy; }
+else
+  clipboard() { cat > /dev/null; echo "No clipboard tool available" >&2; return 1; }
+fi
+cpath() { realpath "$1" | clipboard && echo "Copied to clipboard: $(realpath "$1")"; }
 
-source ~/.orbstack/shell/init.zsh 2>/dev/null || :
+# macOS-specific integrations
+[[ -f ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
 
+# Homebrew setup (macOS Apple Silicon, macOS Intel, or Linux)
 if [[ -f /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -f /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+elif [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
 if [[ -n $HOMEBREW_PREFIX ]]; then

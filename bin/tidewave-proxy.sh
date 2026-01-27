@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # MCP Proxy Development Script
 # This script starts mcp-proxy instance for tidewave MCP server

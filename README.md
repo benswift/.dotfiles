@@ -7,16 +7,38 @@ Where I've taken anything from the web I've tried to give credit appropriate to
 the licence. If I've missed giving you a shout out, then let me know and I'll
 gladly add one in.
 
-## Installation
+## Quick start
 
-Run the included script to create symlinks for all config files:
+Bootstrap a new machine with:
 
 ```bash
-./create_symlinks.sh
+curl -fsSL https://raw.githubusercontent.com/benswift/.dotfiles/main/install.sh | bash
 ```
 
-This will automatically link all dotfiles and Zed configuration files to their
-expected locations.
+This installs Homebrew and mise, clones the repo, creates symlinks, and installs
+mise-managed tools.
+
+## Installation (manual)
+
+If you prefer to set things up manually:
+
+```bash
+git clone https://github.com/benswift/.dotfiles.git ~/.dotfiles
+~/.dotfiles/create_symlinks.sh
+```
+
+## Verification
+
+Check that everything is set up correctly:
+
+```bash
+dotfiles doctor
+```
+
+## Platform support
+
+Works on macOS (Apple Silicon or Intel) and Linux with Homebrew. The setup is
+zsh-only and mise-first for tool management.
 
 ## AI coding agents
 
