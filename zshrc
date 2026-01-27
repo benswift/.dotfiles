@@ -19,6 +19,7 @@ sysup() {
   else
     sudo apt update && sudo apt upgrade
   fi
+  mise plugin update
   mise upgrade
   uv tool upgrade --all
   pnpm update -g
