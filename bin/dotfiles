@@ -55,18 +55,25 @@ check_core() {
         check_fail "mise not installed"
     fi
 
-    # git
-    if command_exists git; then
-        local git_name git_email
-        git_name=$(git config --global user.name 2>/dev/null || echo "")
-        git_email=$(git config --global user.email 2>/dev/null || echo "")
-        if [[ -n "$git_name" && -n "$git_email" ]]; then
-            check_pass "git configured ($git_name <$git_email>)"
+    # jj
+    if command_exists jj; then
+        local jj_name jj_email
+        jj_name=$(jj config get user.name 2>/dev/null || echo "")
+        jj_email=$(jj config get user.email 2>/dev/null || echo "")
+        if [[ -n "$jj_name" && -n "$jj_email" ]]; then
+            check_pass "jj configured ($jj_name <$jj_email>)"
         else
-            check_warn "git installed but not configured"
+            check_warn "jj installed but not configured"
         fi
     else
-        check_fail "git not installed"
+        check_fail "jj not installed"
+    fi
+
+    # git (needed for colocated repos and gh CLI)
+    if command_exists git; then
+        check_pass "git installed"
+    else
+        check_warn "git not installed"
     fi
 
     # zoxide
@@ -216,7 +223,12 @@ doctor() {
 
 update() {
     echo "Updating dotfiles..."
-    git -C "$DOTFILES_DIR" pull --rebase
+    if [[ -d "$DOTFILES_DIR/.jj" ]] && command_exists jj; then
+        jj -R "$DOTFILES_DIR" git fetch
+        jj -R "$DOTFILES_DIR" rebase -d main@origin
+    else
+        git -C "$DOTFILES_DIR" pull --rebase
+    fi
     "$DOTFILES_DIR/create_symlinks.sh"
     echo "Done!"
 }

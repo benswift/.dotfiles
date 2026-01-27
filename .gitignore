@@ -2,3 +2,6 @@ mail/backups-and-logs/
 
 # Zed extension build artifacts
 zed/extensions/**/*.wasm
+
+# jj working directory
+.jj/

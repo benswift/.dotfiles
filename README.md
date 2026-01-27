@@ -27,7 +27,15 @@ mise-managed tools.
 If you prefer to set things up manually:
 
 ```bash
+jj git clone https://github.com/benswift/.dotfiles.git ~/.dotfiles
+~/.dotfiles/create_symlinks.sh
+```
+
+Or with plain git (if jj isn't installed yet):
+
+```bash
 git clone https://github.com/benswift/.dotfiles.git ~/.dotfiles
+cd ~/.dotfiles && jj git init --colocate
 ~/.dotfiles/create_symlinks.sh
 ```
 
