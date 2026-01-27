@@ -21,6 +21,7 @@ sysup() {
   fi
   mise upgrade
   uv tool upgrade --all
+  pnpm update -g
   cargo install-update -a
 }
 alias task="backlog task"

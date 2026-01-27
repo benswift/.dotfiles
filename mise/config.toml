@@ -1,8 +1,10 @@
 [tools]
-jj = "latest"
 rust = "latest"
-starship = "latest"
 uv = "latest"
+node = "lts"
+pnpm = "latest"
+jj = "latest"
+starship = "latest"
 yazi = "latest"
 zellij = "latest"
 zoxide = "latest"
