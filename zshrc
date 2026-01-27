@@ -28,6 +28,7 @@ alias todo="nb todo undone"
 alias latest="nb --limit 10"
 # alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
+zs() { zellij --session "${PWD##*/}" "$@"; }
 alias neomutt='TERM=xterm-direct neomutt'
 alias prettify-md='prettier --prose-wrap always --write "**/*.md"'
 # macOS-only aliases
