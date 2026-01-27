@@ -70,6 +70,32 @@ My Helix config is in the @helix/ folder. This includes:
 - @helix/config.toml - main configuration (theme, editor settings, keybindings)
 - @helix/languages.toml - language server and formatter configuration
 
+## Terminal multiplexer
+
+### Zellij
+
+My Zellij config is in the @zellij/ folder. This includes:
+
+- @zellij/config.kdl - main configuration with keybindings
+- @zellij/layouts/dev.kdl - dev layout (hx + claude-yolo + terminal)
+
+Keybindings (clear-defaults, no conflicts with helix):
+
+- `Ctrl Space` - enter pane mode (leader key)
+- `Alt h/j/k/l` - move focus between panes
+- `Alt y` - floating yazi file manager
+- `Alt f` - floating jj diff (status + diff, paged)
+- `Alt t` - floating terminal
+
+Pane mode (after `Ctrl Space`):
+
+- `h/j/k/l` - new pane in direction
+- `x` - close pane
+- `f` - fullscreen toggle
+- `w` - toggle floating panes
+- `t` - new tab, `1-5` - go to tab
+- `q` - quit, `d` - detach, `g` - locked mode
+
 ## AI coding agents
 
 ### Claude Code

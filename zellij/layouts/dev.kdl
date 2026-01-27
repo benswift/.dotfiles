@@ -1,0 +1,13 @@
+layout {
+    tab name="dev" {
+        pane split_direction="vertical" {
+            pane size="60%" command="hx"
+            pane split_direction="horizontal" {
+                pane command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+                pane
+            }
+        }
+    }
+}
