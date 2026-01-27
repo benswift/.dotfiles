@@ -13,7 +13,14 @@ alias zp="zed-preview"
 alias claude-yolo="claude --dangerously-skip-permissions"
 alias codex-yolo="codex --dangerously-bypass-approvals-and-sandbox"
 alias gemini-yolo="gemini --yolo"
-alias bu="brew upgrade"
+sysup() {
+  if [[ "$OSTYPE" == darwin* ]]; then
+    brew upgrade
+  else
+    sudo apt update && sudo apt upgrade
+  fi
+  mise upgrade
+}
 alias task="backlog task"
 alias todo="nb todo undone"
 alias latest="nb --limit 10"
