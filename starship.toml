@@ -1,0 +1,67 @@
+# Starship prompt with gruvbox light colours
+
+# Gruvbox light palette:
+# fg: #3c3836, bg: #fbf1c7
+# red: #9d0006, green: #79740e, yellow: #b57614
+# blue: #076678, purple: #8f3f71, aqua: #427b58, orange: #af3a03
+
+format = """
+$time\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$python\
+$elixir\
+$nodejs\
+$rust\
+$cmd_duration\
+$character"""
+
+[directory]
+style = "bold #076678"
+truncation_length = 3
+
+[git_branch]
+style = "bold #8f3f71"
+format = "[$branch]($style) "
+
+[git_status]
+style = "#9d0006"
+format = "[$all_status$ahead_behind]($style)"
+
+[python]
+style = "#b57614"
+format = "[py $version]($style) "
+
+[elixir]
+style = "#8f3f71"
+format = "[ex $version]($style) "
+
+[nodejs]
+style = "#79740e"
+format = "[node $version]($style) "
+
+[rust]
+style = "#af3a03"
+format = "[rs $version]($style) "
+
+[time]
+disabled = false
+style = "#7c6f64"
+format = "[$time]($style) "
+time_format = "%H:%M"
+
+[hostname]
+ssh_only = true
+style = "bold #af3a03"
+format = "[$hostname]($style) "
+
+[cmd_duration]
+min_time = 2000
+style = "#b57614"
+format = "[took $duration]($style) "
+
+[character]
+success_symbol = "[❯](bold #79740e)"
+error_symbol = "[❯](bold #9d0006)"

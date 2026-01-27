@@ -138,6 +138,7 @@ main() {
     # Tool config files
     echo -e "\nLinking tool config files..."
     create_symlink "$DOTFILES_DIR/mise/config.toml" "$HOME/.config/mise/config.toml"
+    create_symlink "$DOTFILES_DIR/starship.toml" "$HOME/.config/starship.toml"
 
     # Directory symlinks
     echo -e "\nLinking directories..."
@@ -147,6 +148,7 @@ main() {
     link_directory "$DOTFILES_DIR/helix" "$HOME/.config/helix"
     link_directory "$DOTFILES_DIR/mail/neomutt" "$HOME/.config/neomutt"
     link_directory "$DOTFILES_DIR/zed/snippets" "$HOME/.config/zed/snippets"
+    link_directory "$DOTFILES_DIR/zellij" "$HOME/.config/zellij"
 
     echo -e "\n${GREEN}Done!${NC}"
 }
