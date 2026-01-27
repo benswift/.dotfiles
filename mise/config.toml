@@ -4,6 +4,9 @@ pnpm = "latest"
 ruby = "latest"
 uv = "latest"
 bun = "latest"
+yazi = "latest"
+zellij = "latest"
+zoxide = "latest"
 "core:elixir" = "1.18.4-otp-27"
 
 [settings]
