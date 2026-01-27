@@ -1,3 +1,4 @@
 font-family = "Operator Mono"
 font-size = 16
 theme = "Gruvbox Light"
+custom-shader = shaders/cursor_warp.glsl
