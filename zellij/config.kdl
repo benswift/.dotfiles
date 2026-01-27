@@ -1,56 +1,20 @@
 keybinds clear-defaults=true {
-    // Zellij mode switching - using Ctrl-Space as leader to avoid helix conflicts
-    shared_except "locked" {
-        bind "Ctrl Space" { SwitchToMode "pane"; }
+    shared {
         bind "Alt h" { MoveFocusOrTab "Left"; }
         bind "Alt l" { MoveFocusOrTab "Right"; }
         bind "Alt k" { MoveFocus "Up"; }
         bind "Alt j" { MoveFocus "Down"; }
-    }
-
-    locked {
-        bind "Ctrl Space" { SwitchToMode "normal"; }
-    }
-
-    pane {
-        bind "Escape" "Ctrl c" { SwitchToMode "normal"; }
-        bind "h" { NewPane "Left"; SwitchToMode "normal"; }
-        bind "j" { NewPane "Down"; SwitchToMode "normal"; }
-        bind "k" { NewPane "Up"; SwitchToMode "normal"; }
-        bind "l" { NewPane "Right"; SwitchToMode "normal"; }
-        bind "x" { CloseFocus; SwitchToMode "normal"; }
-        bind "f" { ToggleFocusFullscreen; SwitchToMode "normal"; }
-        bind "z" { TogglePaneFrames; SwitchToMode "normal"; }
-        bind "w" { ToggleFloatingPanes; SwitchToMode "normal"; }
-        bind "e" { TogglePaneEmbedOrFloating; SwitchToMode "normal"; }
-        bind "r" { SwitchToMode "renamepane"; PaneNameInput 0; }
-        bind "t" { NewTab; SwitchToMode "normal"; }
-        bind "1" { GoToTab 1; SwitchToMode "normal"; }
-        bind "2" { GoToTab 2; SwitchToMode "normal"; }
-        bind "3" { GoToTab 3; SwitchToMode "normal"; }
-        bind "4" { GoToTab 4; SwitchToMode "normal"; }
-        bind "5" { GoToTab 5; SwitchToMode "normal"; }
-        bind "Tab" { GoToNextTab; SwitchToMode "normal"; }
-        bind "Shift Tab" { GoToPreviousTab; SwitchToMode "normal"; }
-        bind "q" { Quit; }
-        bind "d" { Detach; }
-        bind "g" { SwitchToMode "locked"; }
-    }
-
-    renamepane {
-        bind "Escape" "Ctrl c" { UndoRenamePane; SwitchToMode "normal"; }
-        bind "Enter" { SwitchToMode "normal"; }
-    }
-
-    // Floating pane launchers - available everywhere except locked mode
-    shared_except "locked" {
+        bind "Alt x" { CloseFocus; }
+        bind "Alt f" { ToggleFocusFullscreen; }
+        bind "Alt q" { Quit; }
+        bind "Alt d" { Detach; }
         bind "Alt y" {
             Run "yazi" {
                 floating true
                 close_on_exit true
             }
         }
-        bind "Alt f" {
+        bind "Alt g" {
             Run "sh" {
                 args "-c" "{ jj log --no-graph -r @ --stat; echo; jj diff; } | less -R"
                 floating true
