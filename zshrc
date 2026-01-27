@@ -10,6 +10,9 @@ setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 
 alias zp="zed-preview"
+alias claude-yolo="claude --dangerously-skip-permissions"
+alias codex-yolo="codex --dangerously-bypass-approvals-and-sandbox"
+alias gemini-yolo="gemini --yolo"
 alias bu="brew upgrade"
 alias task="backlog task"
 alias todo="nb todo undone"
