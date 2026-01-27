@@ -43,3 +43,8 @@ formatter = { command = "typstyle", args = ["--wrap-text"] }
 name = "toml"
 auto-format = true
 formatter = { command = "taplo", args = ["fmt", "-"] }
+
+[[language]]
+name = "kdl"
+auto-format = true
+formatter = { command = "kdlfmt", args = ["format", "-"] }

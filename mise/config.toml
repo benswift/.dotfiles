@@ -1,5 +1,6 @@
 [tools]
 jj = "latest"
+rust = "latest"
 starship = "latest"
 uv = "latest"
 yazi = "latest"
