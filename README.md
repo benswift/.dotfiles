@@ -1,7 +1,11 @@
 # Ben's dotfiles
 
-My dotfiles. These days, [Zed](https://zed.dev) is the bright star around which
-most of the rest of it revolves.
+My dotfiles. They've gone through many ups and downs over the years, but at the
+moment they're:
+
+- text and terminal centric (hx, zellij, yazi)
+- cross-platform (macOS and linux)
+- designed to work just as well over ssh as run locally
 
 Where I've taken anything from the web I've tried to give credit appropriate to
 the licence. If I've missed giving you a shout out, then let me know and I'll
