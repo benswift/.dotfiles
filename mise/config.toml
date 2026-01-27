@@ -1,9 +1,5 @@
 [tools]
-node = "latest"
-pnpm = "latest"
-ruby = "latest"
 uv = "latest"
-bun = "latest"
 yazi = "latest"
 zellij = "latest"
 zoxide = "latest"
