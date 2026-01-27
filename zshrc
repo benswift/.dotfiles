@@ -21,6 +21,7 @@ sysup() {
   fi
   mise upgrade
   uv tool upgrade --all
+  cargo install-update -a
 }
 alias task="backlog task"
 alias todo="nb todo undone"
