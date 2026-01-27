@@ -10,9 +10,9 @@ setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
 
 alias zp="zed-preview"
-alias claude-yolo="claude --dangerously-skip-permissions"
-alias codex-yolo="codex --dangerously-bypass-approvals-and-sandbox"
-alias gemini-yolo="gemini --yolo"
+alias ayolo="claude --dangerously-skip-permissions"
+alias oyolo="codex --dangerously-bypass-approvals-and-sandbox"
+alias gyolo="gemini --yolo"
 sysup() {
   if [[ "$OSTYPE" == darwin* ]]; then
     brew upgrade
