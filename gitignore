@@ -94,6 +94,9 @@ snippets/extempore-repl-mode
 
 .playwright-mcp/
 
+# backup files
+*.bak
+
 # agent instruction symlinks
 
 CLAUDE.md
