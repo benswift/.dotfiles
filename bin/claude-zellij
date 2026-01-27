@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# Usage: claude-zellij [--new] [session-name] [working-dir]
+# If no args provided, uses current directory
+# --new: force creation of a new session (append number if name exists)
+
+FORCE_NEW=false
+
+# Parse --new flag
+if [[ "$1" == "--new" ]]; then
+    FORCE_NEW=true
+    shift
+fi
+
+SESSION_NAME="${1:-$(basename "$(pwd)")}"
+WORKING_DIR="${2:-$(pwd)}"
+
+# Sanitize session name (replace dots and other special chars with dashes)
+SESSION_NAME=$(echo "$SESSION_NAME" | sed 's/[^a-zA-Z0-9_-]/-/g' | sed 's/^-//')
+# Prefix with 'claude-' to avoid clashes with other zellij scripts
+SESSION_NAME="claude-${SESSION_NAME}"
+
+cd "$WORKING_DIR" || exit 1
+
+session_exists() {
+    zellij list-sessions 2>/dev/null | grep -qE "^${1}[[:space:]]" || \
+    zellij list-sessions 2>/dev/null | grep -qE "^${1}$"
+}
+
+if [[ "$FORCE_NEW" == true ]]; then
+    # Find an available session name by appending numbers
+    FINAL_SESSION_NAME="$SESSION_NAME"
+    COUNTER=1
+    while session_exists "$FINAL_SESSION_NAME"; do
+        FINAL_SESSION_NAME="${SESSION_NAME}-${COUNTER}"
+        ((COUNTER++))
+    done
+    SESSION_NAME="$FINAL_SESSION_NAME"
+fi
+
+if session_exists "$SESSION_NAME"; then
+    zellij attach "$SESSION_NAME"
+else
+    zellij -s "$SESSION_NAME" -- $SHELL -lic 'claude --dangerously-skip-permissions'
+fi

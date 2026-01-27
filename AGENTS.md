@@ -49,7 +49,7 @@ etc.). Key scripts:
 
 - `dotfiles` --- main management command (doctor, update, edit)
 - `mailsync` --- sync all email accounts
-- `claude-tmux`, `codex-tmux`, `gemini-tmux` --- tmux wrappers for AI agents
+- `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI agents
 
 ## Tool management (mise)
 
