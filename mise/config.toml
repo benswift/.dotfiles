@@ -1,4 +1,6 @@
 [tools]
+jj = "latest"
+starship = "latest"
 uv = "latest"
 yazi = "latest"
 zellij = "latest"
