@@ -57,9 +57,18 @@ Global tool versions are defined in @mise/config.toml. This file is symlinked to
 `~/.config/mise/config.toml` and provides fallback versions for tools when not
 in a project with its own `mise.toml`.
 
-## Zed (text editor)
+## Text editors
 
-My zed editor config is in the @zed/ folder.
+### Zed
+
+My Zed config is in the @zed/ folder.
+
+### Helix
+
+My Helix config is in the @helix/ folder. This includes:
+
+- @helix/config.toml - main configuration (theme, editor settings, keybindings)
+- @helix/languages.toml - language server and formatter configuration
 
 ## AI coding agents
 

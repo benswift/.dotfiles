@@ -1,0 +1,45 @@
+[[language]]
+name = "python"
+language-servers = ["ruff", "ty"]
+auto-format = true
+
+[language-server.ruff]
+command = "ruff"
+args = ["server"]
+
+[language-server.ty]
+command = "ty"
+args = ["server"]
+
+[[language]]
+name = "elixir"
+language-servers = ["elixir-ls"]
+auto-format = true
+
+[[language]]
+name = "heex"
+language-servers = ["elixir-ls"]
+auto-format = true
+
+[language-server.elixir-ls]
+command = "elixir-ls"
+
+[[language]]
+name = "markdown"
+auto-format = true
+formatter = { command = "prettier", args = ["--prose-wrap", "always", "--stdin-filepath", "file.md"] }
+
+[[language]]
+name = "latex"
+auto-format = true
+formatter = { command = "tex-fmt", args = ["--stdin"] }
+
+[[language]]
+name = "typst"
+auto-format = true
+formatter = { command = "typstyle", args = ["--wrap-text"] }
+
+[[language]]
+name = "toml"
+auto-format = true
+formatter = { command = "taplo", args = ["fmt", "-"] }

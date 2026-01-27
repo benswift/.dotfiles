@@ -1,0 +1,41 @@
+theme = "gruvbox_light"
+
+[editor]
+line-number = "relative"
+cursorline = true
+auto-save = true
+bufferline = "multiple"
+color-modes = true
+true-color = true
+rulers = [80, 100]
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.file-picker]
+hidden = false
+
+[editor.lsp]
+display-messages = true
+display-inlay-hints = true
+
+[editor.indent-guides]
+render = true
+
+[editor.soft-wrap]
+enable = true
+wrap-at-text-width = true
+
+[editor.statusline]
+left = ["mode", "spinner", "file-name", "file-modification-indicator"]
+right = ["diagnostics", "selections", "register", "position", "file-type"]
+
+[keys.normal]
+C-s = ":w"
+C-q = ":q"
+space = { f = "file_picker", b = "buffer_picker", s = ":w", q = ":q" }
+
+[keys.insert]
+C-s = ["normal_mode", ":w"]
