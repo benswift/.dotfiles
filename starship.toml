@@ -9,8 +9,7 @@ format = """
 $time\
 $hostname\
 $directory\
-$git_branch\
-$git_status\
+${custom.jj}\
 $python\
 $elixir\
 $nodejs\
@@ -22,13 +21,11 @@ $character"""
 style = "bold #076678"
 truncation_length = 3
 
-[git_branch]
+[custom.jj]
+when = "jj-starship detect"
+shell = ["jj-starship", "--no-color"]
 style = "bold #8f3f71"
-format = "[$branch]($style) "
-
-[git_status]
-style = "#9d0006"
-format = "[$all_status$ahead_behind]($style)"
+format = "[$output]($style) "
 
 [python]
 style = "#b57614"
