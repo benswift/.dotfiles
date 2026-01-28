@@ -72,7 +72,7 @@ You have access to two powerful tools for email searching:
      ```
    - Set environment and launch neomutt with `ht_execute_command`:
      ```bash
-     export EDITOR=vim TERM=xterm-direct && neomutt
+     neomutt
      ```
    - Navigate with `ht_send_keys`:
      - `["/"]` for search within current view

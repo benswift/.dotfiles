@@ -36,7 +36,7 @@
   },
   {
     "label": "neomutt",
-    "command": "tmux new-session -A -s neomutt 'TERM=xterm-direct neomutt'",
+    "command": "tmux new-session -A -s neomutt neomutt",
     "reveal": "always",
     "use_new_terminal": true,
     "allow_concurrent_runs": false

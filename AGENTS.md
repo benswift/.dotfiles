@@ -154,7 +154,7 @@ tools:
 
 1. Create a session with `mcp__headless-terminal__ht_create_session` using
    `["bash"]` as the command and `enableWebServer: true`
-2. Set `EDITOR=vim` and run neomutt with `ht_execute_command`
+2. Run neomutt with `ht_execute_command`
 3. Use `ht_send_keys` to send keystrokes (e.g., `["m"]` to compose mail)
 4. Use `ht_take_snapshot` to view the current terminal state
 5. Close the session with `ht_close_session` when done

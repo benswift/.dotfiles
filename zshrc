@@ -45,7 +45,6 @@ alias za="zellij attach"
 alias zl="zellij list-sessions"
 alias zr="zellij run --"
 alias zk="zellij kill-session"
-alias neomutt='TERM=xterm-direct neomutt'
 alias prettify-md='prettier --prose-wrap always --write "**/*.md"'
 # macOS-only aliases
 if [[ "$OSTYPE" == darwin* ]]; then

@@ -1,0 +1,143 @@
+# Gruvbox light color theme for NeoMutt (True Color version)
+# Using hex RGB codes
+# Requires 'set color_directcolor = yes' in main config
+
+# === Gruvbox Light Color Palette ===
+# Background (light0): #fbf1c7
+# Background Alt (light1): #ebdbb2
+# Background Sel (light2): #d5c4a1
+# Foreground (dark1): #3c3836
+# Foreground Alt (dark2): #504945
+# Foreground Dim (dark3): #665c54
+# Gray (dark4): #7c6f64
+# Gray Light: #928374
+# Blue: #076678
+# Cyan/Aqua: #427b58
+# Green: #79740e
+# Orange: #af3a03
+# Purple: #8f3f71
+# Red: #9d0006
+# Yellow: #b57614
+
+# === Basic UI Elements ===
+color normal            #3c3836 #fbf1c7
+color error             #9d0006 #fbf1c7
+color warning           #af3a03 #fbf1c7
+color message           #b57614 #fbf1c7
+color prompt            #076678 #fbf1c7
+color options           #79740e #fbf1c7
+color progress          #fbf1c7 #076678
+color search            #fbf1c7 #b57614
+color indicator         #3c3836 #d5c4a1
+color status            #3c3836 #ebdbb2
+color tree              #928374 #fbf1c7
+color tilde             #928374 #fbf1c7
+color markers           #af3a03 #fbf1c7
+
+# === Text Attributes ===
+color bold         bold #3c3836 #fbf1c7
+color italic            #665c54 #fbf1c7
+color underline         #79740e #fbf1c7
+
+# === Attachments ===
+color attachment        #8f3f71 #fbf1c7
+color signature         #928374 #fbf1c7
+
+# === Compose View ===
+color compose header            #504945 #fbf1c7
+color compose security_encrypt  #79740e #fbf1c7
+color compose security_sign     #076678 #fbf1c7
+color compose security_both     #79740e #fbf1c7
+color compose security_none     #928374 #fbf1c7
+
+# === Headers (when viewing messages) ===
+color hdrdefault        #928374 #fbf1c7
+color header            #076678 #fbf1c7 "^From:"
+color header            #427b58 #fbf1c7 "^(To:|Cc:|Bcc:)"
+color header            #8f3f71 #fbf1c7 "^Subject:"
+color header            #b57614 #fbf1c7 "^Date:"
+color header            #665c54 #fbf1c7 "^(User-Agent:|X-Mailer:)"
+color header            #af3a03 #fbf1c7 "^Reply-To:"
+color header            #504945 #fbf1c7 "^(Message-ID:|References:|In-Reply-To:)"
+color header            #928374 #fbf1c7 "^(X-.*|List-.*|Organization:)"
+
+# === Body (message content patterns) ===
+# URLs
+color body              #076678 #fbf1c7 "[a-z]{3,255}://[-a-zA-Z0-9@:%._\\+~#=/?&,]+"
+# Email addresses
+color body              #427b58 #fbf1c7 "[-a-z_0-9.%$]+@[-a-z_0-9.]+\\.[-a-z][-a-z]+"
+# Mailto links
+color body              #427b58 #fbf1c7 "mailto:[-a-z_0-9.]+@[-a-z_0-9.]+"
+# Emphasis - *bold*
+color body         bold #3c3836 #fbf1c7 "(^|[[:space:][:punct:]])\\*[^*]+\\*([[:space:][:punct:]]|$)"
+# Emphasis - _underline_
+color body              #b57614 #fbf1c7 "(^|[[:space:][:punct:]])_[^_]+_([[:space:][:punct:]]|$)"
+# Emoticons
+color body              #fbf1c7 #af3a03 "[;:]-[)(pPsS\\|D]"
+# PGP signatures
+color body              #79740e #fbf1c7 "^gpg:.*Good signature.*"
+color body              #9d0006 #fbf1c7 "^gpg:.*Bad signature.*"
+color body              #b57614 #fbf1c7 "^gpg:.*Can't check signature.*"
+
+# === Quoted Text (nested replies) ===
+color quoted            #928374 #fbf1c7
+color quoted1           #8f3f71 #fbf1c7
+color quoted2           #076678 #fbf1c7
+color quoted3           #427b58 #fbf1c7
+color quoted4           #79740e #fbf1c7
+color quoted5           #b57614 #fbf1c7
+color quoted6           #af3a03 #fbf1c7
+color quoted7           #9d0006 #fbf1c7
+color quoted8           #665c54 #fbf1c7
+color quoted9           #928374 #fbf1c7
+
+# === Index (message list) ===
+color index             #3c3836 #fbf1c7 '~A'     # All messages
+color index        bold #076678 #fbf1c7 '~N'     # New messages
+color index             #076678 #fbf1c7 '~U'     # Unread messages
+color index             #8f3f71 #fbf1c7 '~F'     # Flagged messages
+color index             #b57614 #fbf1c7 '~T'     # Tagged messages
+color index             #928374 #fbf1c7 '~D'     # Deleted messages
+color index             #af3a03 #fbf1c7 '~O'     # Old messages
+color index             #79740e #fbf1c7 '~v'     # Collapsed thread
+color index             #8f3f71 #fbf1c7 '~P'     # From me
+color index             #504945 #fbf1c7 '~Q'     # Replied to
+
+# === Index Field Colors ===
+color index_number      #7c6f64 #fbf1c7
+color index_author      #79740e #fbf1c7 '.*'
+color index_subject     #3c3836 #fbf1c7 '.*'
+color index_author bold #79740e #fbf1c7 '~N'    # New messages author
+color index_subject bold #076678 #fbf1c7 '~N'   # New messages subject
+color index_flags  bold #076678 #fbf1c7 '~N'    # New message flags
+color index_author      #928374 #fbf1c7 '~D'    # Deleted messages author
+color index_subject     #928374 #fbf1c7 '~D'    # Deleted messages subject
+color index_collapsed   #8f3f71 #fbf1c7
+color index_date        #7c6f64 #fbf1c7
+color index_label       #8f3f71 #fbf1c7
+color index_size        #7c6f64 #fbf1c7
+color index_tags        #af3a03 #fbf1c7
+
+# === Sidebar ===
+color sidebar_divider       #d5c4a1 #fbf1c7
+color sidebar_background    #3c3836 #fbf1c7
+color sidebar_indicator     #fbf1c7 #076678
+color sidebar_highlight     #3c3836 #ebdbb2
+color sidebar_ordinary      #504945 #fbf1c7
+color sidebar_new           #076678 #fbf1c7
+color sidebar_unread        #076678 #fbf1c7
+color sidebar_flagged       #9d0006 #fbf1c7
+color sidebar_spool_file    #79740e #fbf1c7
+
+# === Status Bar Patterns ===
+color status            #fbf1c7 #076678 '[.*]'    # Brackets
+color status            #fbf1c7 #9d0006 '(.*)'    # Parentheses
+color status            #fbf1c7 #b57614 '[0-9]+%'   # Percentage
+color status            #fbf1c7 #8f3f71 'NEW'       # NEW indicator
+
+# === Attachment Headers ===
+color attach_headers    #504945 #fbf1c7 "Content-Type:"
+color attach_headers    #928374 #fbf1c7 "Content-Transfer-Encoding:"
+color attach_headers    #8f3f71 #fbf1c7 "Content-Disposition:"
+
+# vim: ft=muttrc
