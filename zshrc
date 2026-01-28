@@ -1,5 +1,16 @@
 set -o vi
 
+zle-keymap-select() {
+  case $KEYMAP in
+    vicmd) printf '\e[2 q' ;;
+    viins|main) printf '\e[6 q' ;;
+  esac
+}
+zle -N zle-keymap-select
+
+zle-line-init() { printf '\e[6 q'; }
+zle -N zle-line-init
+
 # History configuration
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
