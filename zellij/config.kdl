@@ -159,7 +159,7 @@ keybinds clear-defaults=true {
         bind "Alt p" { TogglePaneInGroup; }
         bind "Alt Shift p" { ToggleGroupMarking; }
         bind "Alt s" {
-            LaunchOrFocusPlugin "sessionizer" {
+            LaunchOrFocusPlugin "session-manager" {
                 floating true
                 move_to_focused_tab true
             }
@@ -265,10 +265,6 @@ plugins {
     }
     plugin-manager location="zellij:plugin-manager"
     session-manager location="zellij:session-manager"
-    sessionizer location="https://github.com/laperlej/zellij-sessionizer/releases/download/v0.4.4/zellij-sessionizer.wasm" {
-        cwd "/"
-        root_dirs "/Users/ben/Code"
-    }
     status-bar location="zellij:status-bar"
     strider location="zellij:strider"
     tab-bar location="zellij:tab-bar"
