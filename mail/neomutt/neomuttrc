@@ -235,7 +235,7 @@ macro index ,y "<limit>~d <1d<enter>" "limit to today"
 # === URL and HTML handling ===
 macro index,pager ,b "<pipe-message>urlscan --dedupe<enter>" "extract URLs with urlscan"
 macro attach,compose ,b "<pipe-entry>urlscan --dedupe<enter>" "extract URLs with urlscan"
-macro index,pager ,o "<view-attachments><search>text/html<enter><pipe-entry>cat > /tmp/neomutt-msg.html && open /tmp/neomutt-msg.html<enter><exit>" "open HTML in browser"
+macro index,pager ,o "<view-attachments><search>html<enter><pipe-entry>TERM=xterm-256color w3m -T text/html<enter><exit>" "view HTML in w3m"
 macro index,pager ,O "<enter-command>set pipe_decode=no<enter><pipe-message>cat > /tmp/neomutt-msg.eml && open /tmp/neomutt-msg.eml<enter><enter-command>set pipe_decode=yes<enter>" "open raw message in default app"
 
 # === Markdown email composition ===
