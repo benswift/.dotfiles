@@ -48,3 +48,16 @@ formatter = { command = "taplo", args = ["fmt", "-"] }
 name = "kdl"
 auto-format = true
 formatter = { command = "kdlfmt", args = ["format", "-"] }
+
+[language-server.mutt-compose-lsp]
+command = "mutt-compose-lsp"
+
+[[language]]
+name = "mutt-compose"
+scope = "text.mutt-compose"
+language-servers = ["mutt-compose-lsp"]
+file-types = [{ glob = "neomutt-*" }]
+
+[[grammar]]
+name = "mutt-compose"
+source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "69ce75871ad9860ab42aaa117ab94aea76b2a5a2" }

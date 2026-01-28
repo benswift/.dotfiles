@@ -3,6 +3,12 @@ mail/backups-and-logs/
 # Zed extension build artifacts
 zed/extensions/**/*.wasm
 
+# Helix compiled tree-sitter grammars
+helix/runtime/grammars/
+
+# Python bytecode
+__pycache__/
+
 # jj working directory
 .jj/
 
