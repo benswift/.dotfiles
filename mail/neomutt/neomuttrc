@@ -203,6 +203,15 @@ bind index,pager x sync-mailbox
 # === Message management ===
 bind index,pager r reply
 bind index,pager R group-reply
+macro index,pager A "\
+<enter-command>unset pipe_decode<enter>\
+<pipe-message>cat > ~/.cache/neomutt/temp/ai-reply-source.eml<enter>\
+<enter-command>set pipe_decode<enter>\
+<enter-command>set my_old_editor=\$editor<enter>\
+<enter-command>set editor=ai-reply-editor<enter>\
+<reply>\
+<enter-command>set editor=\$my_old_editor<enter>" \
+"AI-assisted reply"
 macro index U "<toggle-new>" "toggle unread status"
 bind index <space> tag-entry
 bind index <Esc><space> tag-thread

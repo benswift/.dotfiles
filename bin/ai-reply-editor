@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DRAFT_FILE="$1"
+SOURCE_EMAIL="${XDG_CACHE_HOME:-$HOME/.cache}/neomutt/temp/ai-reply-source.eml"
+
+PROMPTS=(
+    "accept/confirm"
+    "decline politely"
+    "short acknowledgement"
+    "ask for clarification"
+    "provide requested information"
+    "custom"
+)
+
+if [[ ! -f "$SOURCE_EMAIL" ]]; then
+    printf 'Warning: source email not found\n' >/dev/tty
+    exec hx "$DRAFT_FILE"
+fi
+
+SELECTED=$(printf '%s\n' "${PROMPTS[@]}" | fzf --no-sort --prompt="Reply style › " --height=~10) || exec hx "$DRAFT_FILE"
+
+if [[ "$SELECTED" == "custom" ]]; then
+    printf 'Instructions: ' >/dev/tty
+    read -r INSTRUCTIONS </dev/tty
+else
+    INSTRUCTIONS="$SELECTED"
+fi
+
+HEADERS=$(sed -n '1,/^$/p' "$DRAFT_FILE")
+
+printf 'Generating reply...\n' >/dev/tty
+
+PROMPT=$(printf 'You are drafting an email reply on behalf of Ben Swift. Read the original email at: %s\n\nInstructions: %s\n\nWrite only the email body — no headers, no signature block. Professional but friendly tone, concise. Australian English spelling.' "$SOURCE_EMAIL" "$INSTRUCTIONS")
+
+if BODY=$(claude --dangerously-skip-permissions -p "$PROMPT" 2>/dev/null); then
+    printf '%s\n%s\n' "$HEADERS" "$BODY" >"$DRAFT_FILE"
+else
+    printf 'Claude failed — opening draft as-is\n' >/dev/tty
+fi
+
+exec hx "$DRAFT_FILE"
