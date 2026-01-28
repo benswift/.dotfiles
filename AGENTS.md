@@ -7,8 +7,10 @@ This repo contains all of the (public) config files that I use on my machines.
 ## Philosophy
 
 - modern, zsh-only (no bash configs)
-- cross-platform: macOS (Apple Silicon and Intel) and Linux
+- cross-platform: macOS (Apple Silicon) and Linux
 - mise-first for tool version management
+- native package managers: Homebrew on macOS only, use apt/dnf/etc on Linux (no
+  Linuxbrew)
 - easy to provision a new machine via `install.sh`
 
 ## Key commands

@@ -39,10 +39,6 @@ install_homebrew() {
     # Set up brew for this session
     if [[ -f /opt/homebrew/bin/brew ]]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [[ -f /usr/local/bin/brew ]]; then
-        eval "$(/usr/local/bin/brew shellenv)"
-    elif [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     fi
 }
 
@@ -113,7 +109,9 @@ main() {
         exit 1
     fi
 
-    install_homebrew
+    if [[ "$platform" == "macos" ]]; then
+        install_homebrew
+    fi
     install_mise
     clone_dotfiles
     setup_symlinks
@@ -125,7 +123,11 @@ main() {
     echo "Next steps:"
     echo "  1. Restart your shell or run: source ~/.zshrc"
     echo "  2. Run 'dotfiles doctor' to verify setup"
-    echo "  3. Install additional tools as needed with 'brew install' or 'mise use'"
+    if [[ "$platform" == "macos" ]]; then
+        echo "  3. Install additional tools as needed with 'brew install' or 'mise use'"
+    else
+        echo "  3. Install additional tools as needed with your package manager or 'mise use'"
+    fi
     echo ""
 }
 

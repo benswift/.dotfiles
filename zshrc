@@ -77,13 +77,9 @@ cpath() { realpath "$1" | clipboard && echo "Copied to clipboard: $(realpath "$1
 # macOS-specific integrations
 [[ -f ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
 
-# Homebrew setup (macOS Apple Silicon, macOS Intel, or Linux)
+# Homebrew setup (macOS only)
 if [[ -f /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [[ -f /usr/local/bin/brew ]]; then
-  eval "$(/usr/local/bin/brew shellenv)"
-elif [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
 if [[ -n $HOMEBREW_PREFIX ]]; then

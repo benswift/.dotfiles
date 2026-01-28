@@ -49,8 +49,9 @@ dotfiles doctor
 
 ## Platform support
 
-Works on macOS (Apple Silicon or Intel) and Linux with Homebrew. The setup is
-zsh-only and mise-first for tool management.
+Works on macOS (Apple Silicon) and Linux. The setup is zsh-only and mise-first
+for tool management, using Homebrew on macOS and native package managers on
+Linux.
 
 ## AI coding agents
 
