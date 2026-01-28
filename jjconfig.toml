@@ -1,0 +1,2 @@
+[aliases]
+ship = ["util", "exec", "--", "bash", "-c", "jj bookmark set main -r @- && jj git push"]

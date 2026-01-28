@@ -93,6 +93,7 @@ main() {
         "gitattributes"
         "gitconfig"
         "gitignore"
+        "jjconfig.toml"
         "tmux.conf"
         "zshenv"
         "zshrc"

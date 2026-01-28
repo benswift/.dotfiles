@@ -50,6 +50,7 @@ alias jQ="jj squash"
 alias je="jj edit"
 alias jb="jj bookmark"
 jm() { jj describe -m "$*"; }
+alias jship="jj ship"
 # zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
 alias za="zellij attach"
