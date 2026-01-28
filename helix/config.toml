@@ -19,3 +19,13 @@ display-inlay-hints = true
 [editor.soft-wrap]
 # enable = true
 wrap-at-text-width = true
+
+[keys.normal]
+y = "yank_to_clipboard"
+p = "paste_clipboard_after"
+P = "paste_clipboard_before"
+
+[keys.select]
+y = "yank_to_clipboard"
+p = "paste_clipboard_after"
+P = "paste_clipboard_before"
