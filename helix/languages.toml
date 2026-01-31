@@ -24,16 +24,20 @@ auto-format = true
 [language-server.elixir-ls]
 command = "elixir-ls"
 
-[language-server.harper-ls]
-command = "harper-ls"
-args = ["--stdio"]
+[language-server.nb-lsp]
+command = "nb-lsp"
 
-[language-server.harper-ls.config.harper-ls]
-dialect = "Australian"
+# harper-ls: grammar checker for prose (disabled by default---too noisy)
+# to enable, add "harper-ls" to language-servers below and uncomment:
+# [language-server.harper-ls]
+# command = "harper-ls"
+# args = ["--stdio"]
+# [language-server.harper-ls.config.harper-ls]
+# dialect = "Australian"
 
 [[language]]
 name = "markdown"
-language-servers = ["harper-ls"]
+language-servers = ["marksman", "nb-lsp"]
 auto-format = true
 formatter = { command = "prettier", args = ["--prose-wrap", "always", "--stdin-filepath", "file.md"] }
 
