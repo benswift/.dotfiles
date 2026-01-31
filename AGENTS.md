@@ -83,6 +83,27 @@ Global tool versions are defined in @mise/config.toml. This file is symlinked to
 `~/.config/mise/config.toml` and provides fallback versions for tools when not
 in a project with its own `mise.toml`.
 
+### Package installation hierarchy
+
+When a tool can be installed multiple ways, prefer this order:
+
+1. **mise** --- for tools required by scripts and configs in this repo, plus
+   development runtimes (python, node, go, rust). Ensures consistent versions
+   across machines and makes dependencies explicit in @mise/config.toml.
+2. **Platform package manager** (brew on macOS, apt/dnf on Linux) --- for system
+   utilities (curl, git, jq) and tools needing OS integration. Fast, prebuilt
+   binaries.
+3. **Language package managers** (`uv tool`, `pnpm add -g`, `cargo install`)
+   --- only when the tool's documentation explicitly recommends this method, or
+   mise doesn't support the tool.
+
+Avoid `cargo install` for tools available via mise or brew---it compiles from
+source, which is slow and resource-intensive. Use it only when the tool's docs
+say to, or for Rust-specific tooling in Rust projects.
+
+Pick one installation method per tool and stick with it so `dotfiles doctor` can
+verify the setup.
+
 ## Text editors
 
 ### Zed
