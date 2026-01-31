@@ -24,8 +24,16 @@ auto-format = true
 [language-server.elixir-ls]
 command = "elixir-ls"
 
+[language-server.harper-ls]
+command = "harper-ls"
+args = ["--stdio"]
+
+[language-server.harper-ls.config.harper-ls]
+dialect = "Australian"
+
 [[language]]
 name = "markdown"
+language-servers = ["harper-ls"]
 auto-format = true
 formatter = { command = "prettier", args = ["--prose-wrap", "always", "--stdin-filepath", "file.md"] }
 
