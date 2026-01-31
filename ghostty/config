@@ -4,3 +4,4 @@ font-size = 16
 theme = "Gruvbox Light"
 custom-shader = shaders/cursor_warp.glsl
 macos-option-as-alt = true
+shell-integration-features = ssh-terminfo,ssh-env
