@@ -82,6 +82,16 @@ install_mise_tools() {
     mise install --yes
 }
 
+install_claude() {
+    if command_exists claude; then
+        info "Claude Code already installed"
+        return
+    fi
+
+    info "Installing Claude Code..."
+    curl -fsSL https://claude.ai/install.sh | bash
+}
+
 main() {
     echo ""
     echo "╔═══════════════════════════════════════╗"
@@ -116,6 +126,7 @@ main() {
     clone_dotfiles
     setup_symlinks
     install_mise_tools
+    install_claude
 
     echo ""
     info "Bootstrap complete!"
