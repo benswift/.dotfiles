@@ -8,6 +8,7 @@ starship = "latest"
 yazi = "latest"
 zellij = "latest"
 zoxide = "latest"
+helix = "latest"
 "core:elixir" = "1.18.4-otp-27"
 
 [settings]
