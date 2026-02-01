@@ -51,6 +51,7 @@ alias je="jj edit"
 alias jb="jj bookmark"
 jm() { jj describe -m "$*"; }
 alias jship="jj ship"
+alias jpush="jj bookmark set main && jj git push"
 # zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
 alias za="zellij attach"
