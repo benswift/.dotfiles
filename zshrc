@@ -50,8 +50,13 @@ alias jQ="jj squash"
 alias je="jj edit"
 alias jb="jj bookmark"
 jm() { jj describe -m "$*"; }
-alias jship="jj ship"
-alias jpush="jj bookmark set main && jj git push"
+jship() {
+  local rev="@"
+  if [[ "$(jj log -r @ --no-graph -T 'empty')" == "true" ]]; then
+    rev="@-"
+  fi
+  jj bookmark set main -r "$rev" && jj git push
+}
 # zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
 alias za="zellij attach"
