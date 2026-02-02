@@ -32,8 +32,7 @@ style = "#b57614"
 format = "[py $version]($style) "
 
 [elixir]
-style = "#8f3f71"
-format = "[ex $version]($style) "
+disabled = true
 
 [nodejs]
 style = "#79740e"
