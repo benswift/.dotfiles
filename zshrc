@@ -55,7 +55,7 @@ jship() {
   if [[ "$(jj log -r @ --no-graph -T 'empty')" == "true" ]]; then
     rev="@-"
   fi
-  jj bookmark set main -r "$rev" && jj git push
+  jj bookmark set main -r "$rev" && jj git push && jj new
 }
 # zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
