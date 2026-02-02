@@ -38,6 +38,7 @@ sysup() {
 }
 alias task="backlog task"
 alias todo="nb todo undone"
+alias daily="nb daily"
 alias latest="nb --limit 10"
 # alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
