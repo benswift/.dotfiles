@@ -225,14 +225,34 @@ jj st                  # should show clean working copy
 
 ### Step 3: configure gitignore
 
-Add `.jj/` to the project's `.gitignore` (jj does this automatically on init,
-but verify):
+Add `.jj/` to the project's `.gitignore`. jj sometimes does this automatically
+on init, but you must verify it's present:
 
 ```
-echo '.jj/' >> .gitignore
+grep -q '^\.jj/' .gitignore || echo '.jj/' >> .gitignore
 ```
 
-### Step 4: start using jj
+This prevents the `.jj/` directory from being tracked by git, which is essential
+for colocated repos.
+
+### Step 4: update agent instructions (if applicable)
+
+If the project has an `AGENTS.md`, `CLAUDE.md`, or similar agent instruction
+file, add a note that agents should use `jj` for version control, not raw `git`
+commands. For example:
+
+```markdown
+## Version control
+
+This repo uses jj (Jujutsu) as a colocated repo. **Always use `jj` for version
+control operations, never raw `git` commands.** The `gh` CLI is still fine for
+GitHub API operations (PRs, issues, etc.).
+```
+
+This prevents agents from accidentally using git commands that could conflict
+with jj's operation log or cause bookmark synchronisation issues.
+
+### Step 5: start using jj
 
 From this point, use `jj` for all VCS operations. The colocated mode
 automatically syncs between jj and git on every command, so:
