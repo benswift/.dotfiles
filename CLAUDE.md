@@ -128,6 +128,10 @@ My Zellij config is in the @zellij/ folder. This includes:
 
 ## AI coding agents
 
+All three AI coding agents (Claude Code, Codex CLI, Gemini CLI) are configured
+to read `CLAUDE.md` as the project-level instructions file. This means a single
+file works across all tools with no symlinks needed.
+
 ### Claude Code
 
 Two directories are involved --- note the difference:
@@ -147,16 +151,15 @@ The @claude/ folder includes:
 ### Codex CLI
 
 Codex CLI uses @~/.codex/instructions.md for global instructions (symlinked to
-@GLOBAL-AGENTS.md). Project-level instructions use @codex.md (symlinked to
-@AGENTS.md, gitignored). Skills are shared with Claude Code via a symlink from
-@~/.codex/skills to the same @claude/skills/ directory.
+@GLOBAL-AGENTS.md). Project-level instructions are read from `CLAUDE.md` via the
+`project_doc_fallback_filenames` setting in @~/.codex/config.toml. Skills are
+shared with Claude Code via a symlink from @~/.codex/skills to the same
+@claude/skills/ directory.
 
 ### Gemini CLI
 
-Gemini CLI is configured via @~/.gemini/settings.json to use `AGENTS.md` as a
-context file (in addition to the default `GEMINI.md`). This allows it to reuse
-the same project instructions as other agents without requiring additional
-symlinks.
+Gemini CLI is configured via @~/.gemini/settings.json to use `CLAUDE.md` as a
+context file (in addition to the default `GEMINI.md`).
 
 ## Email
 

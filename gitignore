@@ -100,6 +100,3 @@ snippets/extempore-repl-mode
 # AI agent working directories (machine-local, auto-generated)
 .claude/
 
-# agent instruction symlinks
-CLAUDE.md
-codex.md
