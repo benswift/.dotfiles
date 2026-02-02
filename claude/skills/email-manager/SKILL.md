@@ -84,6 +84,10 @@ You have access to two powerful tools for email searching:
 
 ## Email setup context
 
+For detailed setup instructions, OAuth troubleshooting, and infrastructure
+documentation, see `~/.dotfiles/mail/README.md` --- it's the authoritative source
+for how the email system is configured.
+
 The user has three email accounts configured:
 
 - **personal**: Fastmail account (~/Maildir/personal/)
