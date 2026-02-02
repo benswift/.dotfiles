@@ -59,6 +59,7 @@ alias zl="zellij list-sessions"
 alias zr="zellij run --"
 alias zk="zellij kill-session"
 alias prettify-md='prettier --prose-wrap always --write "**/*.md"'
+alias neomutt='TERM=xterm-direct neomutt'
 # macOS-only aliases
 if [[ "$OSTYPE" == darwin* ]]; then
   alias zed-update-expert='rm -rf "$HOME/Library/Application Support/Zed/extensions/work/elixir/expert-nightly" && echo "Expert cache cleared. Restart Zed to download latest."'

@@ -132,7 +132,7 @@ if [[ -n "$BODY" ]]; then
 fi
 
 # Build neomutt command
-NEOMUTT_CMD=(neomutt)
+NEOMUTT_CMD=(env TERM=xterm-direct neomutt)
 
 # Source the appropriate account config
 NEOMUTT_CMD+=(-e "source $CONFIG_SOURCE")
