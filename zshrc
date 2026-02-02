@@ -33,7 +33,7 @@ sysup() {
   mise plugin update
   mise upgrade
   uv tool upgrade --all
-  pnpm update -g --allow-build="*"
+  pnpm update -g
   cargo install-update -a
 }
 alias task="backlog task"
