@@ -69,6 +69,8 @@ name = "mutt-compose"
 scope = "text.mutt-compose"
 language-servers = ["mutt-compose-lsp"]
 file-types = [{ glob = "neomutt-*" }]
+text-width = 72
+soft-wrap.enable = true
 
 [[grammar]]
 name = "mutt-compose"
