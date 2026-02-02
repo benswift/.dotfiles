@@ -1,2 +1,9 @@
+[ui]
+default-command = "log"
+pager = "less -FRX"
+
+[git]
+auto-local-bookmark = false
+
 [aliases]
 ship = ["util", "exec", "--", "bash", "-c", "jj bookmark set main -r @- && jj git push"]
