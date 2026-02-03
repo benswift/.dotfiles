@@ -16,6 +16,9 @@ set sendmail = "/Users/ben/.dotfiles/bin/msmtpq-send -a phdconvenor"
 set use_from = yes
 set envelope_from = yes
 
+# Signature
+set signature = ~/.config/neomutt/signature-anu
+
 # PhD Convenor specific settings
 set status_format = "[PHD CONVENOR] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 

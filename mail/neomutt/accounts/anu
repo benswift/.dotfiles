@@ -16,6 +16,9 @@ set sendmail = "/Users/ben/.dotfiles/bin/msmtpq-send -a anu"
 set use_from = yes
 set envelope_from = yes
 
+# Signature
+set signature = ~/.config/neomutt/signature-anu
+
 # ANU account specific settings
 set status_format = "[ANU] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 

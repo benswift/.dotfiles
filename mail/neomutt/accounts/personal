@@ -16,6 +16,9 @@ set sendmail = "/Users/ben/.dotfiles/bin/msmtpq-send -a personal"
 set use_from = yes
 set envelope_from = yes
 
+# Signature
+set signature = ~/.config/neomutt/signature
+
 # Personal account specific settings
 set status_format = "[PERSONAL] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 
