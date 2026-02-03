@@ -332,3 +332,7 @@ Per-repo config: `jj config edit --repo` (stored in `.jj/repo/config.toml`).
 - Use `jj squash` to fold work-in-progress into a parent change
 - Rebase frequently with `jj rebase -d main` to stay current
 - If something goes wrong, `jj op log` and `jj op undo` are your safety net
+- **Avoid interactive flags** (`--interactive`, `-i`) --- they require a TTY and
+  will fail in non-interactive environments. Instead of `jj split --interactive`,
+  use `jj new @-` then `jj restore --from <change>` to manually move files
+  between changes
