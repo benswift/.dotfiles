@@ -1,13 +1,15 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["pytest", "typer"]
+# dependencies = ["jinja2", "pytest", "typer"]
 # ///
 """Tests for compose-email script."""
 
 import sys
 import tempfile
 from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "bin"))
 
@@ -27,6 +29,33 @@ spec.loader.exec_module(compose_email)
 substitute_template = compose_email.substitute_template
 filter_records = compose_email.filter_records
 build_email = compose_email.build_email
+strip_frontmatter = compose_email.strip_frontmatter
+combine_cc = compose_email.combine_cc
+
+
+class TestStripFrontmatter:
+    def test_strips_yaml_frontmatter(self):
+        content = """---
+title: Test
+tags: #test
+---
+
+Hello {{name}}"""
+        assert strip_frontmatter(content) == "Hello {{name}}"
+
+    def test_preserves_content_without_frontmatter(self):
+        content = "Hello {{name}}"
+        assert strip_frontmatter(content) == "Hello {{name}}"
+
+    def test_only_strips_frontmatter_at_start(self):
+        content = """Hello
+
+---
+This is not frontmatter
+---
+
+Goodbye"""
+        assert strip_frontmatter(content) == content
 
 
 class TestSubstituteTemplate:
@@ -40,18 +69,21 @@ class TestSubstituteTemplate:
         data = {"name": "Bob", "id": 12345}
         assert substitute_template(template, data) == "Dear Bob, your ID is 12345"
 
-    def test_missing_field_preserved(self):
+    def test_missing_field_raises(self):
+        from jinja2 import UndefinedError
+
         template = "Hello {{name}}, your {{unknown}} field"
         data = {"name": "Carol"}
-        assert substitute_template(template, data) == "Hello Carol, your {{unknown}} field"
+        with pytest.raises(UndefinedError):
+            substitute_template(template, data)
 
-    def test_list_field_joined(self):
-        template = "Panel: {{supervisory_panel}}"
+    def test_list_field_with_join_filter(self):
+        template = "Panel: {{supervisory_panel|join(', ')}}"
         data = {"supervisory_panel": ["Alice", "Bob", "Carol"]}
         assert substitute_template(template, data) == "Panel: Alice, Bob, Carol"
 
-    def test_empty_list(self):
-        template = "Panel: {{supervisory_panel}}"
+    def test_empty_list_with_join(self):
+        template = "Panel: {{supervisory_panel|join(', ')}}"
         data = {"supervisory_panel": []}
         assert substitute_template(template, data) == "Panel: "
 
@@ -70,7 +102,7 @@ class TestSubstituteTemplate:
 
 Your supervisor {{primary_supervisor}} will be in touch.
 
-Panel members: {{supervisory_panel}}"""
+Panel members: {{supervisory_panel|join(', ')}}"""
         data = {
             "preferred_name": "Danny",
             "primary_supervisor": "Alex Zafiroglu",
@@ -82,6 +114,16 @@ Your supervisor Alex Zafiroglu will be in touch.
 
 Panel members: Katherine Daniell, Amy McLennan"""
         assert substitute_template(template, data) == expected
+
+    def test_default_filter(self):
+        template = "Status: {{status|default('unknown')}}"
+        data = {}
+        assert substitute_template(template, data) == "Status: unknown"
+
+    def test_conditional(self):
+        template = "{% if status == 'active' %}Active{% else %}Inactive{% endif %}"
+        assert substitute_template(template, {"status": "active"}) == "Active"
+        assert substitute_template(template, {"status": "paused"}) == "Inactive"
 
 
 class TestFilterRecords:
@@ -149,6 +191,20 @@ class TestFilterRecords:
         result = filter_records(records, 'status == "active"')
         assert len(result) == 1
         assert result[0]["name"] == "Alice"
+
+
+class TestCombineCc:
+    def test_both_cc_and_cc_all(self):
+        assert combine_cc("alice@example.com", "admin@example.com") == "alice@example.com, admin@example.com"
+
+    def test_only_cc(self):
+        assert combine_cc("alice@example.com", None) == "alice@example.com"
+
+    def test_only_cc_all(self):
+        assert combine_cc(None, "admin@example.com") == "admin@example.com"
+
+    def test_neither(self):
+        assert combine_cc(None, None) is None
 
 
 class TestBuildEmail:
@@ -282,6 +338,20 @@ class TestIntegration:
             record,
         )
         assert body == "Hi Danny,\n\nYour supervisor is Alex Zafiroglu."
+
+    def test_real_student_data_with_panel(self):
+        record = {
+            "name": "Danny Bettay",
+            "preferred_name": "Danny",
+            "primary_supervisor": "Alex Zafiroglu",
+            "supervisory_panel": ["Katherine Daniell", "Amy McLennan"],
+        }
+
+        body = substitute_template(
+            "Panel: {{supervisory_panel|join(', ')}}",
+            record,
+        )
+        assert body == "Panel: Katherine Daniell, Amy McLennan"
 
 
 if __name__ == "__main__":

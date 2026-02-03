@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["typer"]
+# dependencies = ["jinja2", "typer"]
 # ///
 """Compose and send emails with template substitution support."""
 
@@ -19,6 +19,7 @@ from socket import gethostname
 from typing import Annotated, Optional
 
 import typer
+from jinja2 import Environment, StrictUndefined
 
 
 class Account(str, Enum):
@@ -92,15 +93,21 @@ def parse_json_lenient(text: str) -> list[dict]:
     return result
 
 
-def substitute_template(template: str, data: dict) -> str:
-    def replacer(match: re.Match) -> str:
-        key = match.group(1)
-        value = data.get(key, match.group(0))
-        if isinstance(value, list):
-            return ", ".join(str(v) for v in value)
-        return str(value)
+JINJA_ENV = Environment(undefined=StrictUndefined)
+FRONTMATTER_PATTERN = re.compile(r"^---\s*\n.*?\n---\s*\n", re.DOTALL)
 
-    return re.sub(r"\{\{(\w+)\}\}", replacer, template)
+
+def strip_frontmatter(content: str) -> str:
+    return FRONTMATTER_PATTERN.sub("", content)
+
+
+def substitute_template(template: str, data: dict) -> str:
+    return JINJA_ENV.from_string(template).render(data)
+
+
+def combine_cc(cc: str | None, cc_all: str | None) -> str | None:
+    parts = [addr for addr in (cc, cc_all) if addr]
+    return ", ".join(parts) if parts else None
 
 
 def filter_records(records: list[dict], filter_expr: str | None) -> list[dict]:
@@ -229,7 +236,8 @@ def open_neomutt_compose(
 def main(
     account: Annotated[Account, typer.Option("--from", "-f", help="Account to send from")],
     to: Annotated[Optional[str], typer.Option(help="Recipient (supports {{field}} templates)")] = None,
-    cc: Annotated[Optional[str], typer.Option("--cc", "-c", help="CC recipient")] = None,
+    cc: Annotated[Optional[str], typer.Option("--cc", "-c", help="CC recipient (supports templates in batch mode)")] = None,
+    cc_all: Annotated[Optional[str], typer.Option("--cc-all", help="CC recipient added to all emails")] = None,
     subject: Annotated[Optional[str], typer.Option("--subject", "-s", help="Subject line")] = None,
     body: Annotated[Optional[str], typer.Option("--body", "-b", help="Body text (or '-' for stdin)")] = None,
     template: Annotated[Optional[Path], typer.Option(help="Template file for body")] = None,
@@ -251,9 +259,14 @@ def main(
         compose-email -f anu -t colleague@example.com -s "Hello" -b "Body" --send
 
         # Batch with template
-        compose-email -f phd --data students.json --to 'u{{id}}@anu.edu.au'
-            --subject 'Hello {{preferred_name}}' --template body.md
+        compose-email -f phd --data students.json --to 'u{{id}}@anu.edu.au' \\
+            --subject 'Hello {{preferred_name}}' --template body.md \\
             --filter 'status == "active"' --send
+
+        # Batch with per-recipient CC and a fixed CC on all emails
+        compose-email -f phd --data students.json --to 'u{{id}}@anu.edu.au' \\
+            --cc '{{supervisor_email}}' --cc-all 'admin@example.com' \\
+            --subject 'Update' --template body.md --send
     """
     config = ACCOUNT_CONFIG[account]
 
@@ -262,7 +275,7 @@ def main(
         if not template.exists():
             typer.echo(f"Template file not found: {template}", err=True)
             raise typer.Exit(1)
-        email_body = template.read_text()
+        email_body = strip_frontmatter(template.read_text())
     elif body == "-":
         email_body = sys.stdin.read()
     elif body:
@@ -304,7 +317,8 @@ def main(
             email_to = substitute_template(to, record)
             email_subject = substitute_template(subject, record)
             email_content = substitute_template(email_body, record)
-            email_cc = substitute_template(cc, record) if cc else None
+            templated_cc = substitute_template(cc, record) if cc else None
+            email_cc = combine_cc(templated_cc, cc_all)
 
             msg = build_email(config.from_addr, email_to, email_subject, email_content, email_cc)
 
@@ -332,7 +346,7 @@ def main(
                 to,
                 subject or "",
                 email_body,
-                cc,
+                combine_cc(cc, cc_all),
                 attach,
             )
 
@@ -342,7 +356,7 @@ def main(
             else:
                 raise typer.Exit(1)
         else:
-            open_neomutt_compose(account, to, subject or "", email_body, cc, attach)
+            open_neomutt_compose(account, to, subject or "", email_body, combine_cc(cc, cc_all), attach)
 
 
 if __name__ == "__main__":
