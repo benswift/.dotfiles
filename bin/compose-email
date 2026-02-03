@@ -182,7 +182,7 @@ def send_email(msg: EmailMessage, account: Account, dry_run: bool = False) -> bo
         return True
 
     result = subprocess.run(
-        ["msmtpq", "-a", config.msmtp],
+        ["msmtpq", "-t", "-a", config.msmtp],
         input=msg.as_bytes(),
         capture_output=True,
     )
