@@ -1,0 +1,34 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""Split concatenated emails from stdin into separate files."""
+
+import sys
+import time
+from pathlib import Path
+
+BATCH_DIR = Path.home() / ".cache/neomutt/temp/ai-batch"
+BATCH_DIR.mkdir(parents=True, exist_ok=True)
+
+data = sys.stdin.buffer.read()
+messages = []
+current = bytearray()
+
+for line in data.split(b"\n"):
+    if line.startswith(b"Received: from ") and current and b"\nFrom: " in current:
+        messages.append(bytes(current))
+        current = bytearray()
+    current.extend(line)
+    current.extend(b"\n")
+
+if current.strip():
+    messages.append(bytes(current))
+
+for i, msg in enumerate(messages):
+    timestamp = int(time.time() * 1000000) + i
+    filepath = BATCH_DIR / f"{timestamp}.eml"
+    filepath.write_bytes(msg)
+
+print(f"Split into {len(messages)} email(s)", file=sys.stderr)

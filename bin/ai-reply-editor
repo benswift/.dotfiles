@@ -15,10 +15,10 @@ PROMPTS=(
 
 if [[ ! -f "$SOURCE_EMAIL" ]]; then
     printf 'Warning: source email not found\n' >/dev/tty
-    exec hx "$DRAFT_FILE"
+    exit 0
 fi
 
-SELECTED=$(printf '%s\n' "${PROMPTS[@]}" | fzf --no-sort --prompt="Reply style › " --height=~10) || exec hx "$DRAFT_FILE"
+SELECTED=$(printf '%s\n' "${PROMPTS[@]}" | fzf --no-sort --prompt="Reply style › " --height=~10) || exit 0
 
 if [[ "$SELECTED" == "custom" ]]; then
     printf 'Instructions: ' >/dev/tty
@@ -36,7 +36,5 @@ PROMPT=$(printf 'You are drafting an email reply on behalf of Ben Swift. Read th
 if BODY=$(claude --dangerously-skip-permissions -p "$PROMPT" 2>/dev/null); then
     printf '%s\n%s\n' "$HEADERS" "$BODY" >"$DRAFT_FILE"
 else
-    printf 'Claude failed — opening draft as-is\n' >/dev/tty
+    printf 'Claude failed — draft unchanged\n' >/dev/tty
 fi
-
-exec hx "$DRAFT_FILE"

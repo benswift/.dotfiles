@@ -1,0 +1,254 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""Generate AI draft replies for multiple emails."""
+
+import mailbox
+import subprocess
+import sys
+import tempfile
+import time
+from email.header import decode_header
+from pathlib import Path
+from socket import gethostname
+
+
+def decode_mime_header(header: str | None) -> str:
+    if not header:
+        return ""
+    parts = []
+    for data, charset in decode_header(header):
+        if isinstance(data, bytes):
+            parts.append(data.decode(charset or "utf-8", errors="replace"))
+        else:
+            parts.append(data)
+    return " ".join(parts)
+
+MAILDIR_BASE = Path.home() / "Maildir"
+
+ACCOUNT_DOMAINS = {
+    "anu.edu.au": "anu",
+    "benswift.me": "personal",
+}
+
+PHDCONVENOR_ADDRESS = "phdconvenor.cybernetics@anu.edu.au"
+
+
+def detect_account(msg) -> str:
+    to_header = msg.get("To", "") + msg.get("Cc", "")
+    if PHDCONVENOR_ADDRESS in to_header.lower():
+        return "phdconvenor"
+    for domain, account in ACCOUNT_DOMAINS.items():
+        if domain in to_header.lower():
+            return account
+    return "personal"
+
+
+def get_drafts_folder(account: str) -> Path:
+    return MAILDIR_BASE / account / "Drafts"
+
+
+def extract_summary(msg) -> str:
+    from_addr = decode_mime_header(msg.get("From", "unknown"))
+    subject = decode_mime_header(msg.get("Subject", "(no subject)"))
+    date = msg.get("Date", "")
+    return f"From: {from_addr}\nSubject: {subject}\nDate: {date}"
+
+
+def generate_instructions_template(messages: list) -> str:
+    lines = [
+        "# Batch reply instructions",
+        "",
+        "Write your instructions below. General instructions apply to all emails.",
+        "You can also add specific instructions under each email heading.",
+        "",
+        "## General instructions",
+        "",
+        "professional but friendly tone",
+        "",
+    ]
+    for i, msg in enumerate(messages, 1):
+        lines.extend(
+            [
+                f"## Email {i}",
+                "",
+                extract_summary(msg),
+                "",
+                "Instructions: ",
+                "",
+            ]
+        )
+    return "\n".join(lines)
+
+
+def parse_instructions(content: str, num_emails: int) -> tuple[str, list[str]]:
+    sections = content.split("## ")
+    general = ""
+    specific = [""] * num_emails
+
+    for section in sections:
+        if section.startswith("General"):
+            lines = section.split("\n", 1)
+            general = lines[1].strip() if len(lines) > 1 else ""
+        elif section.startswith("Email "):
+            try:
+                header_line = section.split("\n", 1)[0]
+                idx = int(header_line.split()[1]) - 1
+                if 0 <= idx < num_emails:
+                    rest = section.split("Instructions:", 1)
+                    if len(rest) > 1:
+                        next_section = rest[1].split("## ")[0]
+                        specific[idx] = next_section.strip()
+            except (ValueError, IndexError):
+                continue
+
+    return general, specific
+
+
+def write_maildir_draft(drafts_folder: Path, headers: str, body: str) -> Path:
+    cur_dir = drafts_folder / "cur"
+    cur_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = int(time.time() * 1000000)
+    hostname = gethostname().split(".")[0]
+    filename = f"{timestamp}.{hostname}:2,D"
+    filepath = cur_dir / filename
+
+    content = f"{headers}\n{body}\n"
+    filepath.write_text(content)
+    return filepath
+
+
+def generate_reply_headers(original_msg, account: str) -> str:
+    from_addresses = {
+        "personal": "Ben Swift <ben@benswift.me>",
+        "anu": "Ben Swift <ben.swift@anu.edu.au>",
+        "phdconvenor": "Ben Swift <phdconvenor.cybernetics@anu.edu.au>",
+    }
+
+    original_from = original_msg.get("From", "")
+    original_subject = decode_mime_header(original_msg.get("Subject", ""))
+    message_id = original_msg.get("Message-ID", "")
+
+    if not original_subject.lower().startswith("re:"):
+        subject = f"Re: {original_subject}"
+    else:
+        subject = original_subject
+
+    headers = [
+        f"From: {from_addresses.get(account, from_addresses['personal'])}",
+        f"To: {original_from}",
+        f"Subject: {subject}",
+    ]
+    if message_id:
+        headers.append(f"In-Reply-To: {message_id}")
+        headers.append(f"References: {message_id}")
+
+    return "\n".join(headers)
+
+
+def generate_draft_body(source_path: Path, instructions: str) -> str | None:
+    prompt = f"""You are drafting an email reply on behalf of Ben Swift.
+Read the original email at: {source_path}
+
+Instructions: {instructions}
+
+IMPORTANT: Output ONLY the email body text. No preamble, no "Here's the draft:",
+no explanation of what you found, no separators. Just the email content starting
+with the greeting (e.g. "Dear..." or "Hi...") and ending with the sign-off.
+
+Professional but friendly tone, concise. Australian English spelling."""
+
+    result = subprocess.run(
+        ["claude", "--dangerously-skip-permissions", "-p", prompt],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        return result.stdout.strip()
+    return None
+
+
+def load_messages(path: Path) -> list:
+    if path.is_dir():
+        messages = []
+        for eml_file in sorted(path.glob("*.eml")):
+            with open(eml_file, "rb") as f:
+                msg = mailbox.mboxMessage(f.read())
+                messages.append(msg)
+        return messages
+    else:
+        mbox = mailbox.mbox(str(path))
+        return list(mbox)
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: ai-draft-batch <mbox-file-or-directory>", file=sys.stderr)
+        sys.exit(1)
+
+    source_path = Path(sys.argv[1])
+    if not source_path.exists():
+        print(f"Path not found: {source_path}", file=sys.stderr)
+        sys.exit(1)
+
+    messages = load_messages(source_path)
+
+    if not messages:
+        print("No messages found in mbox file", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Found {len(messages)} email(s) to process", file=sys.stderr)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        source_files = []
+        for i, msg in enumerate(messages):
+            source_path = temp_path / f"source_{i}.eml"
+            source_path.write_bytes(msg.as_bytes())
+            source_files.append(source_path)
+
+        instructions_path = temp_path / "instructions.md"
+        instructions_path.write_text(generate_instructions_template(messages))
+
+        subprocess.run(["hx", str(instructions_path)])
+
+        content = instructions_path.read_text()
+        general_instructions, specific_instructions = parse_instructions(
+            content, len(messages)
+        )
+
+        drafts_created = 0
+        for i, (msg, source_path) in enumerate(zip(messages, source_files)):
+            instructions = general_instructions
+            if specific_instructions[i]:
+                instructions = (
+                    f"{general_instructions}\n\nAdditional: {specific_instructions[i]}"
+                )
+
+            if not instructions.strip():
+                print(f"Skipping email {i + 1}: no instructions", file=sys.stderr)
+                continue
+
+            print(f"Generating draft {i + 1}/{len(messages)}...", file=sys.stderr)
+
+            account = detect_account(msg)
+            body = generate_draft_body(source_path, instructions)
+
+            if body:
+                headers = generate_reply_headers(msg, account)
+                drafts_folder = get_drafts_folder(account)
+                filepath = write_maildir_draft(drafts_folder, headers, body)
+                print(f"  Created: {filepath.name} ({account})", file=sys.stderr)
+                drafts_created += 1
+            else:
+                print(f"  Failed to generate draft for email {i + 1}", file=sys.stderr)
+
+        print(f"\nCreated {drafts_created} draft(s)", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()

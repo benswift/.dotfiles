@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Convert markdown email to multipart/alternative
+# Generates neomutt commands to attach and group plain+HTML versions
+set -euo pipefail
+
+TXT_FILE="/tmp/neomutt-msg.txt"
+HTML_FILE="/tmp/neomutt-msg.html"
+MACRO_FILE="/tmp/neomutt-multipart-commands"
+TEMPLATE_PATH="$HOME/.config/neomutt/templates"
+
+# Save the piped markdown content
+cat > "$TXT_FILE"
+
+# Convert to HTML
+pandoc -f markdown \
+    --embed-resources \
+    --standalone \
+    --resource-path "$TEMPLATE_PATH" \
+    --template email \
+    -o "$HTML_FILE" \
+    "$TXT_FILE"
+
+# Generate neomutt commands (push prepends, so reverse order)
+# Execution order: attach txt -> tag -> attach html -> tag -> first-entry -> detach -> group
+# Must attach new files BEFORE detaching original (can't delete only attachment)
+cat > "$MACRO_FILE" << EOF
+push "<group-alternatives>"
+push "<detach-file>yes<enter>"
+push "<first-entry>"
+push "<tag-entry>"
+push "<attach-file>$HTML_FILE<enter><toggle-disposition>"
+push "<tag-entry>"
+push "<attach-file>$TXT_FILE<enter><toggle-disposition>"
+EOF

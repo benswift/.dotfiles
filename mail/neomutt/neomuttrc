@@ -212,6 +212,14 @@ macro index,pager A "\
 <reply>\
 <enter-command>set editor=\$my_old_editor<enter>" \
 "AI-assisted reply"
+macro index B "\
+<enter-command>unset pipe_decode<enter>\
+<shell-escape>rm -rf $HOME/.cache/neomutt/temp/ai-batch && mkdir -p $HOME/.cache/neomutt/temp/ai-batch<enter>\
+<tag-prefix><pipe-message>batch-email-collect<enter>\
+<enter-command>set pipe_decode<enter>\
+<shell-escape>ai-draft-batch $HOME/.cache/neomutt/temp/ai-batch; rm -rf $HOME/.cache/neomutt/temp/ai-batch<enter>\
+<untag-pattern>~A<enter>" \
+"AI batch drafts for tagged messages"
 macro index U "<toggle-new>" "toggle unread status"
 bind index <space> tag-entry
 bind index <Esc><space> tag-thread
@@ -239,12 +247,9 @@ macro index,pager ,o "<view-attachments><search>html<enter><pipe-entry>TERM=xter
 macro index,pager ,O "<enter-command>set pipe_decode=no<enter><pipe-message>cat > /tmp/neomutt-msg.eml && open /tmp/neomutt-msg.eml<enter><enter-command>set pipe_decode=yes<enter>" "open raw message in default app"
 
 # === Markdown email composition ===
-macro compose m \
-"<enter-command>set pipe_decode<enter>\
-<pipe-message>cat > /tmp/neomutt-msg.txt<enter>\
-<pipe-message>pandoc -s -f markdown --embed-resources --standalone -o /tmp/neomutt-msg.html --resource-path ~/.config/neomutt/templates/ --template email<enter>\
-<enter-command>unset pipe_decode<enter>\
-<attach-file>/tmp/neomutt-msg.txt<enter>\
-<tag-entry><attach-file>/tmp/neomutt-msg.html<enter>\
-<tag-entry><group-alternatives>" \
+# Converts markdown body to multipart/alternative (plain + HTML)
+macro compose m "\
+<first-entry>\
+<pipe-entry>convert-multipart<enter>\
+<enter-command>source /tmp/neomutt-multipart-commands<enter>" \
 "convert markdown to multipart/alternative"
