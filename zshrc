@@ -24,6 +24,8 @@ alias zp="zed-preview"
 alias ayolo="claude --dangerously-skip-permissions"
 alias oyolo="codex --dangerously-bypass-approvals-and-sandbox"
 alias gyolo="gemini --yolo"
+# pnpm build approvals are version-specific; to permanently approve a package's
+# build scripts, add it to pnpm.onlyBuiltDependencies in $PNPM_HOME/global/5/package.json
 sysup() {
   if [[ "$OSTYPE" == darwin* ]]; then
     brew upgrade
