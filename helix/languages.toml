@@ -72,6 +72,15 @@ file-types = [{ glob = "neomutt-*" }]
 text-width = 72
 soft-wrap.enable = true
 
+[[language]]
+name = "muttrc"
+scope = "source.muttrc"
+file-types = ["muttrc", { glob = "*muttrc" }]
+
 [[grammar]]
 name = "mutt-compose"
-source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "6a3140553864522efc49ec2ac756f7910a4b74fa" }
+source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "b2d406f082aa1944d2d39c65adf778cc790338a8" }
+
+[[grammar]]
+name = "muttrc"
+source = { git = "https://github.com/benswift/tree-sitter-muttrc", rev = "f75f401f7584bcb44f6bdca96b1419b7ccc4331c" }
