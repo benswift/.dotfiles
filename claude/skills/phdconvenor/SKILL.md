@@ -61,13 +61,14 @@ jq '[.[] | select(.commencement_date | startswith("2024"))]' ~/.nb/home/socy-phd
 
 ## Sending batch emails
 
-Use the `compose-email` script at `~/.dotfiles/bin/compose-email` to send
-personalised emails to students.
+Use `mail-compose` from the mail-utils package to send personalised emails to
+students. Run via `uv run --directory ~/.dotfiles/mail/utils mail-compose` or
+install with `uv tool install -e ~/.dotfiles/mail/utils`.
 
 ### Basic usage
 
 ```bash
-compose-email -f phdconvenor --data ~/.nb/home/socy-phd-students.json \
+mail-compose -f phdconvenor --data ~/.nb/home/socy-phd-students.json \
     --to '{{email}}' \
     --subject 'Hello {{preferred_name}}' \
     --template body.md \
@@ -129,7 +130,7 @@ The `--filter` option takes a Python expression evaluated against each record:
 #### Send to all active students
 
 ```bash
-compose-email -f phdconvenor \
+mail-compose -f phdconvenor \
     --data ~/.nb/home/socy-phd-students.json \
     --to '{{email}}' \
     --subject 'Important update for PhD students' \
@@ -141,7 +142,7 @@ compose-email -f phdconvenor \
 #### Email students and CC their primary supervisor
 
 ```bash
-compose-email -f phdconvenor \
+mail-compose -f phdconvenor \
     --data ~/.nb/home/socy-phd-students.json \
     --to '{{email}}' \
     --cc '{{primary_supervisor.email}}' \
@@ -154,7 +155,7 @@ compose-email -f phdconvenor \
 #### Email students with admin CC'd on all
 
 ```bash
-compose-email -f phdconvenor \
+mail-compose -f phdconvenor \
     --data ~/.nb/home/socy-phd-students.json \
     --to '{{email}}' \
     --cc-all 'school.admin@anu.edu.au' \
@@ -189,7 +190,7 @@ PhD Convenor, School of Cybernetics
 For one-off emails or when you need neomutt's full interface:
 
 ```bash
-compose-email -f phdconvenor --to 'student@anu.edu.au' \
+mail-compose -f phdconvenor --to 'student@anu.edu.au' \
     --subject 'Quick question' --body 'Draft text here'
 ```
 
@@ -219,7 +220,7 @@ For responding to prospective PhD applicants, use the template at
 To use this template for a one-off reply:
 
 ```bash
-compose-email -f phdconvenor --to 'enquirer@example.com' \
+mail-compose -f phdconvenor --to 'enquirer@example.com' \
     --subject 'Re: PhD enquiry' \
     --template ~/.nb/home/phd-enquiry-email.md
 ```

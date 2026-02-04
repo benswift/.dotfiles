@@ -1,0 +1,37 @@
+[project]
+name = "mail-utils"
+version = "0.1.0"
+description = "Email utilities for maildir management"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "python-dateutil>=2.8.0",
+    "jinja2>=3.0.0",
+]
+
+[project.scripts]
+mail-copy-id = "mail_utils.cli.copy_id:main"
+mail-copy-path = "mail_utils.cli.copy_path:main"
+mail-dedupe = "mail_utils.cli.dedupe:app"
+mail-analyze = "mail_utils.cli.analyze:app"
+mail-fix-timestamps = "mail_utils.cli.fix_timestamps:app"
+mail-compose = "mail_utils.cli.compose:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mail_utils"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-xdist>=3.5.0",
+]

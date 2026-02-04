@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = []
+# dependencies = ["mail-utils @ file:///Users/ben/.dotfiles/mail/utils"]
 # ///
 """Generate AI draft replies for multiple emails."""
 
@@ -13,6 +13,8 @@ import time
 from email.header import decode_header
 from pathlib import Path
 from socket import gethostname
+
+from mail_utils.accounts import Account, get_account_config
 
 
 def decode_mime_header(header: str | None) -> str:
@@ -26,28 +28,26 @@ def decode_mime_header(header: str | None) -> str:
             parts.append(data)
     return " ".join(parts)
 
-MAILDIR_BASE = Path.home() / "Maildir"
-
 ACCOUNT_DOMAINS = {
-    "anu.edu.au": "anu",
-    "benswift.me": "personal",
+    "anu.edu.au": Account.anu,
+    "benswift.me": Account.personal,
+    "phdconvenor.cybernetics@anu.edu.au": Account.phdconvenor,
 }
 
-PHDCONVENOR_ADDRESS = "phdconvenor.cybernetics@anu.edu.au"
 
-
-def detect_account(msg) -> str:
-    to_header = msg.get("To", "") + msg.get("Cc", "")
-    if PHDCONVENOR_ADDRESS in to_header.lower():
-        return "phdconvenor"
+def detect_account(msg) -> Account:
+    to_header = (msg.get("To", "") + msg.get("Cc", "")).lower()
+    if "phdconvenor.cybernetics@anu.edu.au" in to_header:
+        return Account.phdconvenor
     for domain, account in ACCOUNT_DOMAINS.items():
-        if domain in to_header.lower():
+        if domain in to_header:
             return account
-    return "personal"
+    return Account.personal
 
 
-def get_drafts_folder(account: str) -> Path:
-    return MAILDIR_BASE / account / "Drafts"
+def get_drafts_folder(account: Account) -> Path:
+    config = get_account_config(account)
+    return config.maildir / "Drafts"
 
 
 def extract_summary(msg) -> str:
@@ -121,12 +121,8 @@ def write_maildir_draft(drafts_folder: Path, headers: str, body: str) -> Path:
     return filepath
 
 
-def generate_reply_headers(original_msg, account: str) -> str:
-    from_addresses = {
-        "personal": "Ben Swift <ben@benswift.me>",
-        "anu": "Ben Swift <ben.swift@anu.edu.au>",
-        "phdconvenor": "Ben Swift <phdconvenor.cybernetics@anu.edu.au>",
-    }
+def generate_reply_headers(original_msg, account: Account) -> str:
+    config = get_account_config(account)
 
     original_from = original_msg.get("From", "")
     original_subject = decode_mime_header(original_msg.get("Subject", ""))
@@ -138,7 +134,7 @@ def generate_reply_headers(original_msg, account: str) -> str:
         subject = original_subject
 
     headers = [
-        f"From: {from_addresses.get(account, from_addresses['personal'])}",
+        f"From: {config.from_addr}",
         f"To: {original_from}",
         f"Subject: {subject}",
     ]
@@ -242,7 +238,7 @@ def main():
                 headers = generate_reply_headers(msg, account)
                 drafts_folder = get_drafts_folder(account)
                 filepath = write_maildir_draft(drafts_folder, headers, body)
-                print(f"  Created: {filepath.name} ({account})", file=sys.stderr)
+                print(f"  Created: {filepath.name} ({account.value})", file=sys.stderr)
                 drafts_created += 1
             else:
                 print(f"  Failed to generate draft for email {i + 1}", file=sys.stderr)
