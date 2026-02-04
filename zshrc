@@ -87,7 +87,7 @@ elif command -v wl-copy &>/dev/null; then
 else
   clipboard() { cat > /dev/null; echo "No clipboard tool available" >&2; return 1; }
 fi
-cpath() { realpath "$1" | clipboard && echo "Copied to clipboard: $(realpath "$1")"; }
+cpath() { realpath "${1:-.}" | clipboard && echo "Copied to clipboard: $(realpath "${1:-.}")"; }
 
 # macOS-specific integrations
 [[ -f ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
