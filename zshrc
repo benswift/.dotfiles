@@ -53,15 +53,10 @@ alias jb="jj bookmark"
 jm() { jj describe -m "$*"; }
 jship() {
   local rev="@"
-  local was_empty=false
   if [[ "$(jj log -r @ --no-graph -T 'empty')" == "true" ]]; then
     rev="@-"
-    was_empty=true
   fi
   jj bookmark set main -r "$rev" && jj git push
-  if [[ "$was_empty" == "false" ]]; then
-    jj new
-  fi
 }
 # zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
