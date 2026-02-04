@@ -9,6 +9,7 @@ dependencies = [
     "rich>=13.0.0",
     "python-dateutil>=2.8.0",
     "jinja2>=3.0.0",
+    "pydantic>=2.0.0",
 ]
 
 [project.scripts]
@@ -18,6 +19,7 @@ mail-dedupe = "mail_utils.cli.dedupe:app"
 mail-analyze = "mail_utils.cli.analyze:app"
 mail-fix-timestamps = "mail_utils.cli.fix_timestamps:app"
 mail-compose = "mail_utils.cli.compose:app"
+student-db = "mail_utils.cli.studentdb:app"
 
 [build-system]
 requires = ["hatchling"]

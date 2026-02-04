@@ -1,15 +1,16 @@
 """Tests for email composition utilities."""
 
+import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
+from typer.testing import CliRunner
 
 from mail_utils.accounts import Account, get_account_config
+from mail_utils.cli.compose import app
 from mail_utils.compose import (
     build_email,
     combine_cc,
-    save_to_sent,
     send_email,
     strip_frontmatter,
 )
@@ -173,3 +174,71 @@ class TestGetAccountConfig:
     def test_accepts_string_account(self):
         config = get_account_config("personal")
         assert config.msmtp == "personal"
+
+
+class TestComposeCLI:
+    runner = CliRunner()
+
+    def test_batch_reads_data_from_stdin(self):
+        data = [{"email": "test@example.com", "name": "Test User"}]
+        result = self.runner.invoke(
+            app,
+            [
+                "-f", "personal",
+                "--data", "-",
+                "--to", "{{email}}",
+                "--subject", "Hello {{name}}",
+                "--body", "Test body",
+                "--dry-run",
+            ],
+            input=json.dumps(data),
+        )
+
+        assert result.exit_code == 0
+        assert "test@example.com" in result.stdout
+        assert "Hello Test User" in result.stdout
+
+    def test_batch_reads_data_from_file(self, tmp_path: Path):
+        data_file = tmp_path / "data.json"
+        data_file.write_text('[{"email": "file@example.com", "name": "File User"}]')
+
+        result = self.runner.invoke(
+            app,
+            [
+                "-f", "personal",
+                "--data", str(data_file),
+                "--to", "{{email}}",
+                "--subject", "Hello {{name}}",
+                "--body", "Test body",
+                "--dry-run",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "file@example.com" in result.stdout
+        assert "Hello File User" in result.stdout
+
+    def test_batch_stdin_with_nested_data(self):
+        data = [
+            {
+                "recipient": {"email": "sup@example.com", "preferred_name": "Sup"},
+                "student": {"name": "Student One"},
+            }
+        ]
+        result = self.runner.invoke(
+            app,
+            [
+                "-f", "personal",
+                "--data", "-",
+                "--to", "{{recipient.email}}",
+                "--subject", "Re: {{student.name}}",
+                "--body", "Dear {{recipient.preferred_name}}",
+                "--dry-run",
+            ],
+            input=json.dumps(data),
+        )
+
+        assert result.exit_code == 0
+        assert "sup@example.com" in result.stdout
+        assert "Re: Student One" in result.stdout
+        assert "Dear Sup" in result.stdout

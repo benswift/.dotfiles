@@ -14,6 +14,7 @@ def main():
         print("No Message-ID found", file=sys.stderr)
         sys.exit(1)
 
+    assert message_id is not None
     if copy_to_clipboard(message_id):
         print(f"Copied: {message_id}", file=sys.stderr)
     else:

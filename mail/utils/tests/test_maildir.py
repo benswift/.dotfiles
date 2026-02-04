@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import pytest
 
 from mail_utils.maildir import (
     extract_flags,

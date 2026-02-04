@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from mail_utils.clipboard import copy_to_clipboard
 

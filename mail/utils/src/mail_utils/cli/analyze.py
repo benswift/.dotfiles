@@ -4,6 +4,7 @@ import re
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -21,9 +22,9 @@ console = Console()
 app = typer.Typer()
 
 
-def analyze_maildir(maildir_path: Path) -> dict:
+def analyze_maildir(maildir_path: Path) -> dict[str, Any]:
     """Analyze a maildir folder's format and characteristics."""
-    result = {
+    result: dict[str, Any] = {
         "message_count": 0,
         "filename_formats": defaultdict(int),
         "hostname_distribution": defaultdict(int),

@@ -89,7 +89,7 @@ def main(
         Optional[list[Path]], typer.Option("--attach", "-a", help="Attachment")
     ] = None,
     data: Annotated[
-        Optional[Path], typer.Option(help="JSON file for batch mode")
+        Optional[Path], typer.Option(help="JSON file for batch mode (use '-' for stdin)")
     ] = None,
     filter_expr: Annotated[
         Optional[str], typer.Option("--filter", help="Filter expression")
@@ -131,22 +131,26 @@ def main(
         email_body = body
 
     if data:
-        if not data.exists():
+        if str(data) == "-":
+            data_text = sys.stdin.read()
+        elif not data.exists():
             console.print(f"[red]Data file not found: {data}[/red]")
             raise typer.Exit(1)
+        else:
+            data_text = data.read_text()
 
         try:
-            records = parse_json_lenient(data.read_text())
+            records = parse_json_lenient(data_text)
         except ValueError as e:
             console.print(f"[red]Invalid data file: {e}[/red]")
             raise typer.Exit(1)
 
         records = filter_records(records, filter_expr)
         if filter_expr:
-            console.print(f"Filtered to {len(records)} record(s)", err=True)
+            console.print(f"Filtered to {len(records)} record(s)")
 
         if not records:
-            console.print("No records to process", err=True)
+            console.print("No records to process")
             raise typer.Exit(0)
 
         if not to:
@@ -209,9 +213,9 @@ def main(
                 if dry_run:
                     console.print(f"{message}\n{msg.as_string()}")
                 else:
-                    console.print(f"Sent to {to}", err=True)
+                    console.print(f"Sent to {to}")
             else:
-                console.print(f"[red]{message}[/red]", err=True)
+                console.print(f"[red]{message}[/red]")
                 raise typer.Exit(1)
         else:
             open_neomutt_compose(

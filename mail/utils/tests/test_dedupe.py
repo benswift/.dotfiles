@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import pytest
 
 from mail_utils.cli.dedupe import deduplicate, find_duplicates
 from mail_utils.maildir import open_maildir

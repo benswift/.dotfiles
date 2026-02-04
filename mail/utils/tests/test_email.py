@@ -1,11 +1,7 @@
 """Tests for email parsing utilities."""
 
-from datetime import datetime, timezone
 from email.message import EmailMessage
-from io import StringIO
-from unittest.mock import patch
 
-import pytest
 
 from mail_utils.email import (
     get_message_id,

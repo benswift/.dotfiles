@@ -11,178 +11,226 @@ You are an expert assistant for the PhD Convenor of the School of Cybernetics at
 ANU. Your role is to help with student administration, particularly sending
 personalised communications to PhD students and their supervisory panels.
 
-## Student data
+## Student database
 
-PhD student records are stored at `~/.nb/home/socy-phd-students.json`. Each
-record contains:
+PhD student data is stored in a normalised JSON database at nb note 488
+(`~/.nb/home/student-db.json`). The database has two sections:
+
+### People
+
+All people (students, supervisors, panel members, chairs) keyed by ID:
 
 ```json
 {
-  "name": "Full Name",
-  "preferred_name": "Nick",
-  "uid": "u1234567",
-  "email": "student@anu.edu.au",
-  "primary_supervisor": {
-    "name": "Supervisor Name",
-    "email": "supervisor@anu.edu.au"
-  },
-  "supervisory_panel": [
-    { "name": "Panel Member", "email": "member@anu.edu.au" }
-  ],
-  "commencement_date": "2024-03-18",
-  "status": "active",
-  "crp_chair": { "name": "Chair Name", "email": "chair@anu.edu.au" }
+  "people": {
+    "ben_swift": {
+      "name": "Ben Swift",
+      "preferred_name": "Ben",
+      "email": "ben.swift@anu.edu.au"
+    }
+  }
+}
+```
+
+### Students
+
+Student-specific data with references to people by ID:
+
+```json
+{
+  "students": [
+    {
+      "person_id": "ushini_attanayake",
+      "uid": "u5839004",
+      "primary_supervisor_id": "ben_swift",
+      "panel_ids": ["geoff_hinchcliffe", "kim_blackmore"],
+      "status": "confirmed",
+      "commencement_date": "2021-02-15",
+      "crp_chair_id": null
+    }
+  ]
 }
 ```
 
 ### Status values
 
-- `active`: currently enrolled students
-- `paused`: students on leave or suspended
-- `incoming`: accepted but not yet commenced
+- `pre-confirmation`: not yet passed confirmation
+- `confirmed`: passed confirmation, actively enrolled
+- `paused`: on leave or suspended
+- `completed`: finished their PhD
 
-### Querying student data
+## Querying with student-db
 
-Use `jq` to filter and extract student information:
+The `student-db` CLI denormalises the database, resolving all ID references to
+full person records. This is the primary way to query student data.
 
 ```bash
-# List all active students
-jq '[.[] | select(.status == "active")]' ~/.nb/home/socy-phd-students.json
+# List all students (denormalised)
+student-db students
 
-# Find a specific student
-jq '.[] | select(.preferred_name == "Danny")' ~/.nb/home/socy-phd-students.json
+# Filter by status
+student-db students --status confirmed
+student-db students --status pre-confirmation
 
-# Get all primary supervisors
-jq '[.[].primary_supervisor] | unique_by(.email)' ~/.nb/home/socy-phd-students.json
+# List all people in the database
+student-db people
+```
+
+Output is JSON with fully resolved supervisor and panel details:
+
+```json
+{
+  "name": "Ushini Attanayake",
+  "preferred_name": "Ushini",
+  "email": "ushini.attanayake@anu.edu.au",
+  "uid": "u5839004",
+  "status": "confirmed",
+  "commencement_date": "2021-02-15",
+  "supervisor": {
+    "name": "Ben Swift",
+    "preferred_name": "Ben",
+    "email": "ben.swift@anu.edu.au"
+  },
+  "panel": [
+    { "name": "Geoff Hinchcliffe", "email": "geoff.hinchcliffe@anu.edu.au" }
+  ],
+  "crp_chair": null
+}
+```
+
+### Filtering with jq
+
+Use jq for additional filtering after student-db:
+
+```bash
+# Students supervised by a specific person
+student-db students | jq '[.[] | select(.supervisor.name == "Katherine Daniell")]'
 
 # Students who commenced in 2024
-jq '[.[] | select(.commencement_date | startswith("2024"))]' ~/.nb/home/socy-phd-students.json
+student-db students | jq '[.[] | select(.commencement_date | startswith("2024"))]'
+
+# Find a specific student
+student-db students | jq '.[] | select(.preferred_name == "Danny")'
 ```
 
 ## Sending batch emails
 
-Use `mail-compose` from the mail-utils package to send personalised emails to
-students. Run via `uv run --directory ~/.dotfiles/mail/utils mail-compose` or
-install with `uv tool install -e ~/.dotfiles/mail/utils`.
+Use `mail-compose` with `student-db` output to send personalised emails. The
+`--data -` option reads JSON from stdin.
 
-### Basic usage
+### Email all confirmed students
 
 ```bash
-mail-compose -f phdconvenor --data ~/.nb/home/socy-phd-students.json \
+student-db students --status confirmed | \
+  mail-compose -f phdconvenor \
+    --data - \
     --to '{{email}}' \
-    --subject 'Hello {{preferred_name}}' \
-    --template body.md \
-    --filter 'status == "active"' \
-    --send
+    --subject 'Important update for PhD students' \
+    --template ~/announcement.md \
+    --dry-run
 ```
 
-### Key options
+### Email students and CC their supervisor
+
+```bash
+student-db students --status confirmed | \
+  mail-compose -f phdconvenor \
+    --data - \
+    --to '{{email}}' \
+    --cc '{{supervisor.email}}' \
+    --subject 'Milestone reminder for {{preferred_name}}' \
+    --template ~/milestone-reminder.md \
+    --dry-run
+```
+
+### Email supervisors about their students
+
+Use jq to pivot the data --- one record per supervisor with student details:
+
+```bash
+student-db students --status pre-confirmation | \
+  jq '[.[] | . as $s | {
+    recipient: .supervisor,
+    student: {name: $s.name, preferred_name: $s.preferred_name, email: $s.email, status: $s.status}
+  }]' | \
+  mail-compose -f phdconvenor \
+    --data - \
+    --to '{{recipient.email}}' \
+    --subject 'Confirmation status: {{student.preferred_name}}' \
+    --template ~/supervisor-reminder.md \
+    --dry-run
+```
+
+Template for supervisor emails:
+
+```markdown
+Dear {{recipient.preferred_name}},
+
+This is a reminder about {{student.name}}, who is currently in
+{{student.status}} status.
+
+Please ensure their confirmation process is progressing.
+
+Best regards,
+Ben Swift
+PhD Convenor
+```
+
+### Email all panel members for selected students
+
+Expand to one record per panel member (including supervisor):
+
+```bash
+student-db students --status pre-confirmation | \
+  jq '[.[] | . as $s | (.panel[], .supervisor) | {
+    recipient: .,
+    student: {name: $s.name, preferred_name: $s.preferred_name, email: $s.email}
+  }]' | \
+  mail-compose -f phdconvenor \
+    --data - \
+    --to '{{recipient.email}}' \
+    --cc '{{student.email}}' \
+    --subject 'Panel reminder: {{student.preferred_name}}' \
+    --template ~/panel-reminder.md \
+    --dry-run
+```
+
+## mail-compose options
 
 | Option | Description |
 |--------|-------------|
 | `-f phdconvenor` | Send from the phdconvenor account (required) |
-| `--data FILE` | JSON file with recipient records |
+| `--data FILE` | JSON file with recipient records (use `-` for stdin) |
 | `--to TEMPLATE` | Recipient address (supports `{{field}}` templates) |
 | `--cc TEMPLATE` | CC address per-email (supports templates) |
 | `--cc-all ADDR` | CC address added to all emails |
 | `--subject TEMPLATE` | Subject line (supports templates) |
 | `--template FILE` | Markdown file for email body |
 | `--body TEXT` | Inline body text (or `-` for stdin) |
-| `--filter EXPR` | Python expression to filter records |
 | `--send` | Send directly (required for batch mode) |
 | `--dry-run` | Preview emails without sending |
 
-### Template variables
+## Template variables
 
-All fields from the student JSON are available as Jinja2 variables:
+When emailing students directly, these variables are available:
 
-- `{{preferred_name}}` --- student's preferred name
-- `{{name}}` --- full name
-- `{{uid}}` --- university ID
-- `{{email}}` --- student email
-- `{{primary_supervisor.name}}` --- supervisor name
-- `{{primary_supervisor.email}}` --- supervisor email
-- `{{supervisory_panel}}` --- list of panel members
-- `{{commencement_date}}` --- start date
-- `{{status}}` --- current status
+- `{{name}}`, `{{preferred_name}}`, `{{email}}`, `{{uid}}`
+- `{{status}}`, `{{commencement_date}}`
+- `{{supervisor.name}}`, `{{supervisor.preferred_name}}`, `{{supervisor.email}}`
+- `{{panel}}` --- list of panel members
+- `{{crp_chair.name}}`, `{{crp_chair.email}}` (if set)
 
-Jinja2 filters are available:
+When using jq pivots, structure depends on your jq query. Common patterns:
+
+- `{{recipient.name}}`, `{{recipient.email}}` --- the person being emailed
+- `{{student.name}}`, `{{student.preferred_name}}` --- the student in question
+
+Jinja2 features work in templates:
 
 ```jinja
-{{ supervisory_panel | map(attribute='name') | join(', ') }}
+{{ panel | map(attribute='name') | join(', ') }}
 {% if crp_chair %}Your CRP chair is {{ crp_chair.name }}{% endif %}
 {{ preferred_name | default('Student') }}
-```
-
-### Filter expressions
-
-The `--filter` option takes a Python expression evaluated against each record:
-
-```bash
---filter 'status == "active"'
---filter 'status in ["active", "incoming"]'
---filter 'commencement_date.startswith("2024")'
---filter 'primary_supervisor["name"] == "Katherine Daniell"'
-```
-
-### Example workflows
-
-#### Send to all active students
-
-```bash
-mail-compose -f phdconvenor \
-    --data ~/.nb/home/socy-phd-students.json \
-    --to '{{email}}' \
-    --subject 'Important update for PhD students' \
-    --template ~/announcement.md \
-    --filter 'status == "active"' \
-    --dry-run
-```
-
-#### Email students and CC their primary supervisor
-
-```bash
-mail-compose -f phdconvenor \
-    --data ~/.nb/home/socy-phd-students.json \
-    --to '{{email}}' \
-    --cc '{{primary_supervisor.email}}' \
-    --subject 'Milestone reminder for {{preferred_name}}' \
-    --template ~/milestone-reminder.md \
-    --filter 'status == "active"' \
-    --send
-```
-
-#### Email students with admin CC'd on all
-
-```bash
-mail-compose -f phdconvenor \
-    --data ~/.nb/home/socy-phd-students.json \
-    --to '{{email}}' \
-    --cc-all 'school.admin@anu.edu.au' \
-    --subject 'Paperwork required' \
-    --template ~/paperwork.md \
-    --filter 'status == "incoming"' \
-    --send
-```
-
-### Writing email templates
-
-Create a markdown file for the body. Frontmatter is stripped automatically:
-
-```markdown
----
-title: Monthly update
----
-
-Dear {{preferred_name}},
-
-This is a reminder about upcoming deadlines.
-
-Your primary supervisor is {{primary_supervisor.name}}.
-
-Best regards,
-Ben Swift
-PhD Convenor, School of Cybernetics
 ```
 
 ## Interactive email
@@ -199,25 +247,18 @@ This opens neomutt for editing and sending.
 ## Best practices
 
 1. **Always use `--dry-run` first** to preview emails before sending
-2. **Use `--filter` to target the right students** rather than sending to all
-3. **Address students by `{{preferred_name}}`** not their formal name
-4. **CC supervisors on milestone-related emails** using `--cc`
-5. **Keep templates in a consistent location** (e.g., `~/Documents/phd-templates/`)
-6. **Update student data** in `~/.nb/home/socy-phd-students.json` when status changes
+2. **Use `student-db` filtering** rather than processing raw JSON
+3. **Address people by `{{preferred_name}}`** not their formal name
+4. **CC supervisors on milestone emails** using `--cc '{{supervisor.email}}'`
+5. **Update student data** via `nb edit student-db.json` when status changes
 
 ## Email templates
 
 ### PhD enquiry response
 
 For responding to prospective PhD applicants, use the template at
-`~/.nb/home/phd-enquiry-email.md`. This covers:
-
-- Eligibility requirements (honours degree or equivalent)
-- Application deadlines (31 Aug international, 31 Oct domestic)
-- Finding a supervisor (link to HDR supervisors page)
-- Post-application process and timelines
-
-To use this template for a one-off reply:
+`~/.nb/home/phd-enquiry-email.md`. This covers eligibility, deadlines, finding a
+supervisor, and the application process.
 
 ```bash
 mail-compose -f phdconvenor --to 'enquirer@example.com' \
@@ -225,19 +266,13 @@ mail-compose -f phdconvenor --to 'enquirer@example.com' \
     --template ~/.nb/home/phd-enquiry-email.md
 ```
 
-The template is written in Ben's voice and can be sent as-is or edited in
-neomutt before sending. Update the template via `nb edit phd-enquiry-email.md`
-if deadlines or processes change.
-
 ## Useful resources
 
 - **HDR Handbook**: https://anu365.sharepoint.com/sites/HDR-Handbook --- the
-  definitive guide for PhD students at ANU. Covers milestones, policies,
-  scholarships, leave, thesis submission, and more. Direct students here for
-  procedural questions.
+  definitive guide for PhD students at ANU
 
 ## Related tools
 
 - **email-manager skill**: for searching and reading emails in the phdconvenor mailbox
-- **nb**: student data and templates are managed via nb (`nb edit socy-phd-students.json`)
+- **nb**: student data is managed via nb (`nb edit student-db.json`)
 - **benswift-writer skill**: for drafting email content in Ben's voice

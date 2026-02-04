@@ -1,10 +1,7 @@
 """Shared test fixtures for mail-utils."""
 
 import mailbox
-import os
-import time
 from email.message import EmailMessage
-from email.utils import formatdate, make_msgid
 from pathlib import Path
 
 import pytest

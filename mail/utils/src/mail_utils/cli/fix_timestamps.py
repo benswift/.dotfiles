@@ -4,6 +4,7 @@ import random
 import socket
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -32,9 +33,9 @@ console = Console()
 app = typer.Typer()
 
 
-def analyze_for_fixes(maildir_path: Path) -> dict:
+def analyze_for_fixes(maildir_path: Path) -> dict[str, Any]:
     """Analyze a maildir to identify issues and gather statistics."""
-    stats = {
+    stats: dict[str, Any] = {
         "total_messages": 0,
         "timestamp_mismatches": 0,
         "missing_dates": 0,

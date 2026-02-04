@@ -30,6 +30,7 @@ mail-compose --help
 | `mail-dedupe` | Deduplicate messages by Message-ID |
 | `mail-analyze` | Analyze maildir format and identify issues |
 | `mail-fix-timestamps` | Fix maildir timestamps and convert to mbsync format |
+| `student-db` | Query the PhD student database (denormalises from nb) |
 
 ## Common usage
 
@@ -49,6 +50,21 @@ mail-compose -f phdconvenor --data students.json \
     --template body.md \
     --filter 'status == "active"' \
     --send
+```
+
+### Student database queries
+
+```bash
+# List all students (denormalised with supervisor/panel details)
+student-db students
+
+# Filter by status
+student-db students --status confirmed
+
+# Pipe to jq for further filtering, then to mail-compose
+student-db students --status pre-confirmation | \
+  jq '[.[] | . as $s | {recipient: .supervisor, student: $s}]' | \
+  mail-compose -f phdconvenor --data - --to '{{recipient.email}}' ...
 ```
 
 ### Maildir operations

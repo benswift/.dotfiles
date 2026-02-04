@@ -15,12 +15,14 @@ def main():
         print("No Message-ID found", file=sys.stderr)
         sys.exit(1)
 
+    assert message_id is not None
     path = find_message_path(message_id)
 
     if path is None:
         print("Could not find message path", file=sys.stderr)
         sys.exit(1)
 
+    assert path is not None
     if copy_to_clipboard(path):
         print(f"Copied: {path}", file=sys.stderr)
     else:
