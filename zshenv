@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.bun/bin:$PATH"
 export RUBY_YJIT_ENABLE=true
 export EDITOR="hx"

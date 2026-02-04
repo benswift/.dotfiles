@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 set -o vi
 
 zle-keymap-select() {
