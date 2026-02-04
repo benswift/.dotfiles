@@ -2,7 +2,7 @@
 rust = "latest"
 uv = "latest"
 node = "lts"
-pnpm = "latest"
+bun = "latest"
 jj = "latest"
 starship = "latest"
 yazi = "latest"
