@@ -74,4 +74,4 @@ soft-wrap.enable = true
 
 [[grammar]]
 name = "mutt-compose"
-source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "69ce75871ad9860ab42aaa117ab94aea76b2a5a2" }
+source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "6a3140553864522efc49ec2ac756f7910a4b74fa" }
