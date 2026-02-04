@@ -13,12 +13,16 @@ Provide a single prompt. Optionally include one or more input images with
 to 14).
 
 Generated images will be saved to:
-    <output-dir>/<iso-timestamp>/<slugified-image-prompt>.<ext>
+    <output-dir>/<iso-timestamp>/<slugified-image-prompt>.avif
+
+By default, images are converted to AVIF for better compression. Use --jpg to
+keep the original JPG format.
 """
 
 import datetime
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Annotated, NoReturn
@@ -100,6 +104,28 @@ def download_image(url: str, output_path: Path) -> None:
     output_path.write_bytes(response.content)
 
 
+AVIF_QUALITY = 60
+
+
+def convert_to_avif(jpg_path: Path, avif_path: Path) -> None:
+    """Convert JPG to AVIF and delete the original.
+
+    Args:
+        jpg_path: Path to the source JPG file
+        avif_path: Path where the AVIF should be saved
+
+    Raises:
+        subprocess.CalledProcessError: If avifenc fails
+        FileNotFoundError: If avifenc is not installed
+    """
+    subprocess.run(
+        ["avifenc", "-q", str(AVIF_QUALITY), str(jpg_path), str(avif_path)],
+        check=True,
+        capture_output=True,
+    )
+    jpg_path.unlink()
+
+
 def generate_image(
     prompt: str,
     output_path: Path,
@@ -159,12 +185,12 @@ def _main_impl(
     ] = "16:9",
     resolution: Annotated[
         str,
-        typer.Option(help="Resolution for generated images"),
+        typer.Option(help="Resolution: 1K, 2K, or 4K"),
     ] = "2K",
-    output_format: Annotated[
-        str,
-        typer.Option(help="Output image format"),
-    ] = "jpg",
+    jpg: Annotated[
+        bool,
+        typer.Option("--jpg", help="Keep original JPG instead of converting to AVIF"),
+    ] = False,
     output_filename: Annotated[
         str | None,
         typer.Option(
@@ -187,7 +213,7 @@ def _main_impl(
 
       nano_banana "sunrise over a misty valley" --resolution 2K --aspect-ratio 4:3
 
-      nano_banana "studio portrait" --input-image headshot.jpg --input-image lighting_reference.png --resolution 4K --aspect-ratio 1:1 --output-format png
+      nano_banana "studio portrait" --input-image headshot.jpg --resolution 1K --jpg
     """
     api_token = get_api_token()
 
@@ -205,6 +231,9 @@ def _main_impl(
     # Create Replicate client once
     client = replicate.Client(api_token=api_token)
 
+    output_format = "jpg" if jpg else "avif"
+    filename = output_filename if output_filename else slugify(prompt)
+
     print(f"Model: {MODEL_ID}")
     print(f"Aspect ratio: {aspect_ratio}")
     print(f"Resolution: {resolution}")
@@ -216,22 +245,26 @@ def _main_impl(
     print("Generating 1 image...")
     print()
 
-    filename = output_filename if output_filename else slugify(prompt)
-    output_path = target_dir / f"{filename}.{output_format}"
+    jpg_path = target_dir / f"{filename}.jpg"
+    final_path = target_dir / f"{filename}.{output_format}"
 
     print(f"Prompt: {prompt}")
-    print(f"Output: {output_path}")
+    print(f"Output: {final_path}")
 
     generate_image(
         prompt,
-        output_path,
+        jpg_path,
         client,
         aspect_ratio,
         resolution,
-        output_format,
+        "jpg",
         safety_filter_level,
         input_image,
     )
+
+    if not jpg:
+        print("Converting to AVIF...")
+        convert_to_avif(jpg_path, final_path)
 
     print()
     print("Image generated successfully")
@@ -247,6 +280,12 @@ if __name__ == "__main__":
         error_exit(str(e))
     except ValueError as e:
         error_exit(str(e))
+    except FileNotFoundError as e:
+        if "avifenc" in str(e):
+            error_exit("avifenc not found. Install with: brew install libavif")
+        error_exit(f"File not found: {e}")
+    except subprocess.CalledProcessError as e:
+        error_exit(f"AVIF conversion failed: {e.stderr.decode() if e.stderr else e}")
     except OSError as e:
         error_exit(f"File operation failed: {e}")
     except httpx.HTTPError as e:
