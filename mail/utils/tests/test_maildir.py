@@ -86,7 +86,9 @@ class TestExtractHostname:
         assert extract_hostname("1704067200.R123.myhost,U=1:2,S") == "myhost"
 
     def test_handles_complex_hostname(self):
-        assert extract_hostname("1704067200.R123.my-host-name,U=1:2,S") == "my-host-name"
+        assert (
+            extract_hostname("1704067200.R123.my-host-name,U=1:2,S") == "my-host-name"
+        )
 
     def test_returns_none_when_missing(self):
         assert extract_hostname("1704067200.R123:2,S") is None
@@ -120,7 +122,9 @@ class TestGenerateFilename:
         assert filename.endswith(":2,")
 
     def test_sequential_format(self):
-        filename = generate_filename(1704067200, "testhost", "1", "S", use_random_id=False)
+        filename = generate_filename(
+            1704067200, "testhost", "1", "S", use_random_id=False
+        )
         assert filename.startswith("1704067200.")
         assert ".R" not in filename
 

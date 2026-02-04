@@ -20,6 +20,13 @@ markdown emails to multipart/alternative format with both plaintext and HTML
 versions. Write your email in markdown, then press `m` before sending to
 generate the HTML version.
 
+## Editor integration (LSP)
+
+The `mutt-compose-lsp` command (part of `mail/utils/`) provides editor
+completions for compose buffers: email addresses via mu, file paths for
+attachments, and greeting expansions (type `hey` + complete to get "Hey
+{Name},"). Configured in helix for the `mutt-compose` language.
+
 ## Zed extension
 
 If you're a Zed user, you might find

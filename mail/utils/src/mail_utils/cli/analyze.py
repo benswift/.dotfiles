@@ -34,7 +34,12 @@ def analyze_maildir(maildir_path: Path) -> dict[str, Any]:
         "sample_filenames": [],
     }
 
-    state_files = [".mbsyncstate", ".mbsyncstate.journal", ".mbsyncstate.new", ".uidvalidity"]
+    state_files = [
+        ".mbsyncstate",
+        ".mbsyncstate.journal",
+        ".mbsyncstate.new",
+        ".uidvalidity",
+    ]
     for sf in state_files:
         sf_path = maildir_path / sf
         if sf_path.exists():
@@ -78,20 +83,26 @@ def analyze_maildir(maildir_path: Path) -> dict[str, Any]:
                         if year_match:
                             email_year = int(year_match.group(0))
                             if abs(file_date.year - email_year) > 1:
-                                result["timestamp_issues"].append({
-                                    "key": key,
-                                    "file_date": file_date.strftime("%Y-%m-%d"),
-                                    "email_date": date_header,
-                                })
+                                result["timestamp_issues"].append(
+                                    {
+                                        "key": key,
+                                        "file_date": file_date.strftime("%Y-%m-%d"),
+                                        "email_date": date_header,
+                                    }
+                                )
             except Exception:
                 pass
 
     if len(keys) > 1000:
         scale = len(keys) / 1000
         for fmt in result["filename_formats"]:
-            result["filename_formats"][fmt] = int(result["filename_formats"][fmt] * scale)
+            result["filename_formats"][fmt] = int(
+                result["filename_formats"][fmt] * scale
+            )
         for host in result["hostname_distribution"]:
-            result["hostname_distribution"][host] = int(result["hostname_distribution"][host] * scale)
+            result["hostname_distribution"][host] = int(
+                result["hostname_distribution"][host] * scale
+            )
 
     return result
 
@@ -115,15 +126,19 @@ def compare(
     table.add_row(
         "Message Count",
         f"{analysis1['message_count']:,}",
-        f"{analysis2['message_count']:,}"
+        f"{analysis2['message_count']:,}",
     )
 
     fmt1 = ", ".join(f"{k}: {v}" for k, v in analysis1["filename_formats"].items())
     fmt2 = ", ".join(f"{k}: {v}" for k, v in analysis2["filename_formats"].items())
     table.add_row("Filename Formats", fmt1 or "none", fmt2 or "none")
 
-    hosts1 = ", ".join(f"{k}: {v}" for k, v in analysis1["hostname_distribution"].items())
-    hosts2 = ", ".join(f"{k}: {v}" for k, v in analysis2["hostname_distribution"].items())
+    hosts1 = ", ".join(
+        f"{k}: {v}" for k, v in analysis1["hostname_distribution"].items()
+    )
+    hosts2 = ", ".join(
+        f"{k}: {v}" for k, v in analysis2["hostname_distribution"].items()
+    )
     table.add_row("Hostnames", hosts1 or "none", hosts2 or "none")
 
     state1 = ", ".join(f"{k}: {v}" for k, v in analysis1["state_files"].items())
@@ -133,7 +148,7 @@ def compare(
     table.add_row(
         "Timestamp Issues",
         f"{len(analysis1['timestamp_issues'])}",
-        f"{len(analysis2['timestamp_issues'])}"
+        f"{len(analysis2['timestamp_issues'])}",
     )
 
     console.print(table)
@@ -161,7 +176,9 @@ def single(
 ):
     """Analyze a single maildir folder."""
     if not is_maildir(maildir_path):
-        console.print(f"[red]Error: {maildir_path} doesn't appear to be a maildir folder.[/red]")
+        console.print(
+            f"[red]Error: {maildir_path} doesn't appear to be a maildir folder.[/red]"
+        )
         raise typer.Exit(code=1)
 
     analysis = analyze_maildir(maildir_path)

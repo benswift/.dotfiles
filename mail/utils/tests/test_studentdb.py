@@ -64,7 +64,9 @@ VALID_DATABASE = {
 
 class TestPerson:
     def test_creates_person_with_all_fields(self):
-        person = Person(name="Test Person", preferred_name="Test", email="test@example.com")
+        person = Person(
+            name="Test Person", preferred_name="Test", email="test@example.com"
+        )
         assert person.name == "Test Person"
         assert person.preferred_name == "Test"
         assert person.email == "test@example.com"

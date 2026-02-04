@@ -36,7 +36,9 @@ class StudentDatabase(BaseModel):
         errors = []
         for student in self.students:
             if student.person_id not in self.people:
-                errors.append(f"student references unknown person_id: {student.person_id}")
+                errors.append(
+                    f"student references unknown person_id: {student.person_id}"
+                )
             if student.primary_supervisor_id not in self.people:
                 errors.append(
                     f"student {student.person_id} references unknown supervisor: "

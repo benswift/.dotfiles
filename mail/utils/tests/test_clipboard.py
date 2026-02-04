@@ -24,7 +24,11 @@ class TestCopyToClipboard:
             result = copy_to_clipboard("test text")
             assert result is True
             assert mock_run.call_count == 2
-            assert mock_run.call_args_list[1][0][0] == ["xclip", "-selection", "clipboard"]
+            assert mock_run.call_args_list[1][0][0] == [
+                "xclip",
+                "-selection",
+                "clipboard",
+            ]
 
     def test_falls_back_to_wl_copy(self):
         with patch("subprocess.run") as mock_run:

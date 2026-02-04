@@ -70,7 +70,9 @@ def main(
     ] = None,
     cc: Annotated[
         Optional[str],
-        typer.Option("--cc", "-c", help="CC recipient (supports templates in batch mode)"),
+        typer.Option(
+            "--cc", "-c", help="CC recipient (supports templates in batch mode)"
+        ),
     ] = None,
     cc_all: Annotated[
         Optional[str], typer.Option("--cc-all", help="CC recipient added to all emails")
@@ -89,17 +91,14 @@ def main(
         Optional[list[Path]], typer.Option("--attach", "-a", help="Attachment")
     ] = None,
     data: Annotated[
-        Optional[Path], typer.Option(help="JSON file for batch mode (use '-' for stdin)")
+        Optional[Path],
+        typer.Option(help="JSON file for batch mode (use '-' for stdin)"),
     ] = None,
     filter_expr: Annotated[
         Optional[str], typer.Option("--filter", help="Filter expression")
     ] = None,
-    send: Annotated[
-        bool, typer.Option(help="Send directly without editor")
-    ] = False,
-    dry_run: Annotated[
-        bool, typer.Option(help="Preview without sending")
-    ] = False,
+    send: Annotated[bool, typer.Option(help="Send directly without editor")] = False,
+    dry_run: Annotated[bool, typer.Option(help="Preview without sending")] = False,
 ) -> None:
     """
     Compose and send emails with template substitution.

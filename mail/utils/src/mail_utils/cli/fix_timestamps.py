@@ -84,11 +84,15 @@ def analyze_for_fixes(maildir_path: Path) -> dict[str, Any]:
                             if diff > 86400:
                                 stats["timestamp_mismatches"] += 1
                                 if len(stats["sample_issues"]) < 5:
-                                    stats["sample_issues"].append({
-                                        "filename": filename[:50] + "...",
-                                        "file_date": file_date.strftime("%Y-%m-%d"),
-                                        "email_date": email_date.strftime("%Y-%m-%d"),
-                                    })
+                                    stats["sample_issues"].append(
+                                        {
+                                            "filename": filename[:50] + "...",
+                                            "file_date": file_date.strftime("%Y-%m-%d"),
+                                            "email_date": email_date.strftime(
+                                                "%Y-%m-%d"
+                                            ),
+                                        }
+                                    )
                     else:
                         stats["missing_dates"] += 1
                     break
@@ -166,7 +170,9 @@ def fix_maildir_timestamps(
                             message_date = parse_email_date(date_header)
                     except Exception as e:
                         if verbose:
-                            console.print(f"[yellow]Could not read message {filename}: {e}[/yellow]")
+                            console.print(
+                                f"[yellow]Could not read message {filename}: {e}[/yellow]"
+                            )
                     break
 
             if not message_date:
@@ -272,7 +278,9 @@ def analyze(
 ):
     """Analyze a maildir folder for timestamp and format issues."""
     if not is_maildir(maildir_path):
-        console.print(f"[red]Error: {maildir_path} doesn't appear to be a maildir folder.[/red]")
+        console.print(
+            f"[red]Error: {maildir_path} doesn't appear to be a maildir folder.[/red]"
+        )
         raise typer.Exit(code=1)
 
     stats = analyze_for_fixes(maildir_path)
@@ -293,10 +301,14 @@ def analyze(
         console.print("\n[bold]Sample timestamp issues:[/bold]")
         for issue in stats["sample_issues"]:
             console.print(f"  {issue['filename']}")
-            console.print(f"    File date: {issue['file_date']}, Email date: {issue['email_date']}")
+            console.print(
+                f"    File date: {issue['file_date']}, Email date: {issue['email_date']}"
+            )
 
     if stats["timestamp_mismatches"] > 0 or stats["old_format"] > 0:
-        console.print("\n[yellow]This maildir needs fixing. Run 'mail-fix-timestamps fix' command.[/yellow]")
+        console.print(
+            "\n[yellow]This maildir needs fixing. Run 'mail-fix-timestamps fix' command.[/yellow]"
+        )
 
 
 @app.command()
@@ -333,7 +345,9 @@ def fix(
 ):
     """Fix maildir timestamps and convert to mbsync-compatible format."""
     if not is_maildir(maildir_path):
-        console.print(f"[red]Error: {maildir_path} doesn't appear to be a maildir folder.[/red]")
+        console.print(
+            f"[red]Error: {maildir_path} doesn't appear to be a maildir folder.[/red]"
+        )
         raise typer.Exit(code=1)
 
     state_files = [".mbsyncstate", ".mbsyncstate.journal", ".mbsyncstate.new"]
@@ -355,7 +369,9 @@ def fix(
         )
 
         if not dry_run and existing_state:
-            console.print("\n[yellow]Remember to remove mbsync state files before syncing:[/yellow]")
+            console.print(
+                "\n[yellow]Remember to remove mbsync state files before syncing:[/yellow]"
+            )
             for f in existing_state:
                 console.print(f"  rm {maildir_path / f}")
 

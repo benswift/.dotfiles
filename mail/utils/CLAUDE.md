@@ -31,6 +31,7 @@ mail-compose --help
 | `mail-analyze` | Analyze maildir format and identify issues |
 | `mail-fix-timestamps` | Fix maildir timestamps and convert to mbsync format |
 | `student-db` | Query the PhD student database (denormalises from nb) |
+| `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers |
 
 ## Common usage
 
@@ -109,3 +110,20 @@ The following neomutt macros use this package:
 
 - `Ctrl+i` - copy Message-ID to clipboard
 - `,p` - copy file path to clipboard
+
+## Compose LSP
+
+The `mutt-compose-lsp` command provides a language server for editing mutt/neomutt
+compose buffers. It provides completions for:
+
+- **Email addresses** in To/Cc/Bcc headers (via `mu cfind`)
+- **File paths** in Attach headers (via `fd`)
+- **Greetings** in the message body --- type `hey`, `hi`, `hello`, `g'day`, or
+  `dear` and trigger completion to insert "Hey {Name}," based on the To: header
+
+The greeting name lookup first checks a hardcoded `NICKNAMES` dict in the LSP
+module (`src/mail_utils/lsp/__init__.py`), then falls back to the first name
+from the recipient's display name.
+
+Configured in helix via `~/.config/helix/languages.toml` for the `mutt-compose`
+language (files matching `neomutt-*`).

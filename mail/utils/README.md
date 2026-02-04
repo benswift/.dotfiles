@@ -27,6 +27,7 @@ uv run --directory ~/.dotfiles/mail/utils mail-dedupe --help
 | `mail-analyze` | Analyze maildir format and identify issues |
 | `mail-fix-timestamps` | Fix maildir timestamps and convert to mbsync format |
 | `student-db` | Query the PhD student database (denormalises from nb) |
+| `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers |
 
 ## Library usage
 

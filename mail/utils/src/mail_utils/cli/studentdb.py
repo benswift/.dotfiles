@@ -35,11 +35,17 @@ def load_db(file: Path | None) -> StudentDB:
 def students(
     status: Annotated[
         Optional[str],
-        typer.Option("--status", "-s", help="Filter by status (e.g., confirmed, pre-confirmation)"),
+        typer.Option(
+            "--status",
+            "-s",
+            help="Filter by status (e.g., confirmed, pre-confirmation)",
+        ),
     ] = None,
     file: Annotated[
         Optional[Path],
-        typer.Option("--file", "-f", help="Path to database file (default: load from nb)"),
+        typer.Option(
+            "--file", "-f", help="Path to database file (default: load from nb)"
+        ),
     ] = None,
 ) -> None:
     """List students with denormalised supervisor/panel information."""
@@ -55,7 +61,9 @@ def students(
 def people(
     file: Annotated[
         Optional[Path],
-        typer.Option("--file", "-f", help="Path to database file (default: load from nb)"),
+        typer.Option(
+            "--file", "-f", help="Path to database file (default: load from nb)"
+        ),
     ] = None,
 ) -> None:
     """List all people in the database."""

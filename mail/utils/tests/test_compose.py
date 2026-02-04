@@ -145,8 +145,9 @@ class TestSendEmail:
             body="Body",
         )
 
-        with patch("subprocess.run") as mock_run, patch(
-            "mail_utils.compose.save_to_sent"
+        with (
+            patch("subprocess.run") as mock_run,
+            patch("mail_utils.compose.save_to_sent"),
         ):
             mock_run.return_value = MagicMock(returncode=0)
             success, _ = send_email(msg, Account.personal, dry_run=False)
@@ -184,11 +185,16 @@ class TestComposeCLI:
         result = self.runner.invoke(
             app,
             [
-                "-f", "personal",
-                "--data", "-",
-                "--to", "{{email}}",
-                "--subject", "Hello {{name}}",
-                "--body", "Test body",
+                "-f",
+                "personal",
+                "--data",
+                "-",
+                "--to",
+                "{{email}}",
+                "--subject",
+                "Hello {{name}}",
+                "--body",
+                "Test body",
                 "--dry-run",
             ],
             input=json.dumps(data),
@@ -205,11 +211,16 @@ class TestComposeCLI:
         result = self.runner.invoke(
             app,
             [
-                "-f", "personal",
-                "--data", str(data_file),
-                "--to", "{{email}}",
-                "--subject", "Hello {{name}}",
-                "--body", "Test body",
+                "-f",
+                "personal",
+                "--data",
+                str(data_file),
+                "--to",
+                "{{email}}",
+                "--subject",
+                "Hello {{name}}",
+                "--body",
+                "Test body",
                 "--dry-run",
             ],
         )
@@ -228,11 +239,16 @@ class TestComposeCLI:
         result = self.runner.invoke(
             app,
             [
-                "-f", "personal",
-                "--data", "-",
-                "--to", "{{recipient.email}}",
-                "--subject", "Re: {{student.name}}",
-                "--body", "Dear {{recipient.preferred_name}}",
+                "-f",
+                "personal",
+                "--data",
+                "-",
+                "--to",
+                "{{recipient.email}}",
+                "--subject",
+                "Re: {{student.name}}",
+                "--body",
+                "Dear {{recipient.preferred_name}}",
                 "--dry-run",
             ],
             input=json.dumps(data),

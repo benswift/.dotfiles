@@ -38,7 +38,9 @@ def find_duplicates(
                 if msg_id:
                     message_id_to_keys[msg_id.strip()].append(key)
             except Exception as e:
-                console.print(f"[yellow]Warning: Could not read message {key}: {e}[/yellow]")
+                console.print(
+                    f"[yellow]Warning: Could not read message {key}: {e}[/yellow]"
+                )
             yield
 
     if show_progress:
@@ -134,7 +136,9 @@ def deduplicate(
     mbox.flush()
     mbox.close()
 
-    console.print(f"\n[green]Successfully deleted {deleted_count:,} duplicate messages[/green]")
+    console.print(
+        f"\n[green]Successfully deleted {deleted_count:,} duplicate messages[/green]"
+    )
     if failed_count > 0:
         console.print(f"[red]Failed to delete {failed_count:,} messages[/red]")
 
