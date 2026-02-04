@@ -10,7 +10,7 @@ Environment:
 
 Provide a single prompt. Optionally include one or more input images with
 --input-image (repeatable) to transform or use as reference (model supports up
-to 14).
+to 14). Use --preset to include predefined reference images from a preset.
 
 Generated images will be saved to:
     <output-dir>/<iso-timestamp>/<slugified-image-prompt>.avif
@@ -33,8 +33,34 @@ import typer
 from replicate.exceptions import ReplicateError
 
 MODEL_ID = "google/nano-banana-pro"
+PRESETS_DIR = Path(__file__).parent / "nano_banana_presets"
 
 app = typer.Typer()
+
+
+def get_preset_images(preset_name: str) -> list[Path]:
+    """Get all image files from a preset directory.
+
+    Args:
+        preset_name: Name of the preset (subdirectory of presets dir)
+
+    Returns:
+        List of image paths sorted alphabetically
+
+    Raises:
+        FileNotFoundError: If preset directory doesn't exist
+    """
+    preset_dir = PRESETS_DIR / preset_name
+    if not preset_dir.is_dir():
+        available = [d.name for d in PRESETS_DIR.iterdir() if d.is_dir()]
+        raise FileNotFoundError(
+            f"Preset '{preset_name}' not found. Available: {', '.join(available) or 'none'}"
+        )
+    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+    images = [
+        p for p in preset_dir.iterdir() if p.suffix.lower() in image_extensions
+    ]
+    return sorted(images)
 
 
 def error_exit(message: str) -> NoReturn:
@@ -179,6 +205,12 @@ def _main_impl(
             dir_okay=False,
         ),
     ] = [],
+    preset: Annotated[
+        str | None,
+        typer.Option(
+            help="Load reference images from a preset (images added before --input-image)"
+        ),
+    ] = None,
     aspect_ratio: Annotated[
         str,
         typer.Option(help="Aspect ratio for generated images"),
@@ -215,6 +247,11 @@ def _main_impl(
 
       nano_banana "studio portrait" --input-image headshot.jpg --resolution 1K --jpg
     """
+    all_input_images: list[Path] = []
+    if preset:
+        all_input_images.extend(get_preset_images(preset))
+    all_input_images.extend(input_image)
+
     api_token = get_api_token()
 
     # Create output directory structure
@@ -239,8 +276,10 @@ def _main_impl(
     print(f"Resolution: {resolution}")
     print(f"Format: {output_format}")
     print(f"Safety filter: {safety_filter_level}")
-    if input_image:
-        print(f"Input images: {', '.join(str(p) for p in input_image)}")
+    if preset:
+        print(f"Preset: {preset}")
+    if all_input_images:
+        print(f"Input images: {', '.join(str(p) for p in all_input_images)}")
     print(f"Output directory: {target_dir}")
     print("Generating 1 image...")
     print()
@@ -259,7 +298,7 @@ def _main_impl(
         resolution,
         "jpg",
         safety_filter_level,
-        input_image,
+        all_input_images if all_input_images else None,
     )
 
     if not jpg:
