@@ -3,7 +3,7 @@
 import json
 import sys
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -34,7 +34,7 @@ def load_db(file: Path | None) -> StudentDB:
 @app.command()
 def students(
     status: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             "--status",
             "-s",
@@ -42,7 +42,7 @@ def students(
         ),
     ] = None,
     file: Annotated[
-        Optional[Path],
+        Path | None,
         typer.Option(
             "--file", "-f", help="Path to database file (default: load from nb)"
         ),
@@ -60,7 +60,7 @@ def students(
 @app.command()
 def people(
     file: Annotated[
-        Optional[Path],
+        Path | None,
         typer.Option(
             "--file", "-f", help="Path to database file (default: load from nb)"
         ),

@@ -31,27 +31,14 @@ uv run --directory ~/.dotfiles/mail/utils mail-dedupe --help
 ## Library usage
 
 ```python
-from mail_utils import (
-    copy_to_clipboard,
-    get_message_id,
-    parse_email_date,
-    read_email_from_stdin,
-    open_maildir,
-    is_maildir,
-    extract_flags,
-    find_message_path,
-)
+from mail_utils.email import get_message_id, read_email_from_stdin
+from mail_utils.maildir import open_maildir, is_maildir
 
-# Parse email from stdin
 msg = read_email_from_stdin()
 message_id = get_message_id(msg)
 
-# Work with maildirs
 if is_maildir(path):
     mbox = open_maildir(path)
-    for key in mbox.keys():
-        msg = mbox[key]
-        # ...
 ```
 
 ## Development

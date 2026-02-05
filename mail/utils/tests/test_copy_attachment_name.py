@@ -68,7 +68,9 @@ class TestGetAttachmentFilenames:
         msg["From"] = "sender@example.com"
         msg.set_content("Body.")
         msg.add_related(b"<img>", maintype="image", subtype="png")
-        msg.add_attachment(b"data", maintype="application", subtype="pdf", filename="doc.pdf")
+        msg.add_attachment(
+            b"data", maintype="application", subtype="pdf", filename="doc.pdf"
+        )
         filenames = get_attachment_filenames(msg)
         assert filenames == ["doc.pdf"]
 
@@ -76,12 +78,12 @@ class TestGetAttachmentFilenames:
 class TestGetAttachmentFilenamesRaw:
     def test_extracts_from_mime_body_without_toplevel_headers(self):
         raw = (
-            b'--boundary\r\n'
+            b"--boundary\r\n"
             b'Content-Type: application/pdf; name="report.pdf"\r\n'
             b'Content-Disposition: attachment; filename="report.pdf"\r\n'
-            b'\r\n'
-            b'fake pdf content\r\n'
-            b'--boundary--\r\n'
+            b"\r\n"
+            b"fake pdf content\r\n"
+            b"--boundary--\r\n"
         )
         assert get_attachment_filenames_raw(raw) == ["report.pdf"]
 
@@ -95,13 +97,13 @@ class TestGetAttachmentFilenamesRaw:
     def test_multiple_attachments(self):
         raw = (
             b'Content-Disposition: attachment; filename="a.pdf"\r\n'
-            b'--boundary\r\n'
+            b"--boundary\r\n"
             b'Content-Disposition: attachment; filename="b.docx"\r\n'
         )
         assert get_attachment_filenames_raw(raw) == ["a.pdf", "b.docx"]
 
     def test_no_filenames(self):
-        raw = b'Content-Type: text/plain\r\n\r\nJust text.\r\n'
+        raw = b"Content-Type: text/plain\r\n\r\nJust text.\r\n"
         assert get_attachment_filenames_raw(raw) == []
 
     def test_filename_with_spaces(self):

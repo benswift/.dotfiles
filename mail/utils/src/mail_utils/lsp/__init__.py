@@ -40,7 +40,7 @@ def extract_query(line: str, character: int) -> str | None:
     return segments[-1].strip()
 
 
-def parse_contacts(output: str) -> list[dict[str, str | int]]:
+def parse_contacts(output: str) -> list[dict[str, str]]:
     if not output:
         return []
     contacts = []
@@ -62,7 +62,7 @@ def format_display_name(name: str | None, email: str) -> str:
 
 
 def contacts_to_completion_items(
-    contacts: list[dict[str, str | int]],
+    contacts: list[dict[str, str]],
 ) -> list[types.CompletionItem]:
     items = []
     for contact in contacts:

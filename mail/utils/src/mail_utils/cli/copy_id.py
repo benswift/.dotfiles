@@ -10,12 +10,10 @@ def main():
     msg = read_email_from_stdin()
     message_id = get_message_id(msg)
 
-    if not message_id:
+    if message_id is None:
         print("No Message-ID found", file=sys.stderr)
         sys.exit(1)
-
-    assert message_id is not None
-    if copy_to_clipboard(message_id):
+    elif copy_to_clipboard(message_id):
         print(f"Copied: {message_id}", file=sys.stderr)
     else:
         print(message_id)

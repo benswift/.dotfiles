@@ -81,13 +81,11 @@ mail-analyze compare ~/Maildir/anu/INBOX ~/Maildir/personal/INBOX
 ## Library usage
 
 ```python
-from mail_utils import (
-    Account, get_account_config,
-    build_email, send_email,
-    get_message_id, read_email_from_stdin,
-    open_maildir, is_maildir,
-    find_message_path,
-)
+from mail_utils.accounts import Account, get_account_config
+from mail_utils.compose import build_email, send_email
+from mail_utils.email import get_message_id, read_email_from_stdin
+from mail_utils.maildir import open_maildir, is_maildir
+from mail_utils.mu import find_message_path
 ```
 
 ## Development

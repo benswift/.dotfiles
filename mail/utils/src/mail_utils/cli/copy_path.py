@@ -11,19 +11,16 @@ def main():
     msg = read_email_from_stdin()
     message_id = get_message_id(msg)
 
-    if not message_id:
+    if message_id is not None:
+        path = find_message_path(message_id)
+    else:
         print("No Message-ID found", file=sys.stderr)
         sys.exit(1)
-
-    assert message_id is not None
-    path = find_message_path(message_id)
 
     if path is None:
         print("Could not find message path", file=sys.stderr)
         sys.exit(1)
-
-    assert path is not None
-    if copy_to_clipboard(path):
+    elif copy_to_clipboard(path):
         print(f"Copied: {path}", file=sys.stderr)
     else:
         print(path)
