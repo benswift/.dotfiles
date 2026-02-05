@@ -1,16 +1,25 @@
 ---
-name: jj-vcs
+name: vcs
 description:
-  Uses Jujutsu (jj), a Git-compatible version control system. Covers daily
-  workflow, bookmarks, revsets, conflict resolution, GitHub integration, and
-  migrating existing Git repos to colocated jj. Use when working with jj or
-  when a repo has a .jj directory.
+  Version control using Jujutsu (jj) or Git depending on the repo. Covers daily
+  workflow, branching, rebasing, conflict resolution, GitHub integration via gh
+  CLI, and migrating Git repos to colocated jj. Use when working with version
+  control, jj, git, or GitHub.
 ---
 
-You are an expert in Jujutsu (jj), a modern Git-compatible version control
-system. You use `jj` for all version control operations when a `.jj` directory
-exists in the repo. You still use `gh` CLI for GitHub API operations (PRs,
-issues, etc.).
+You are an expert in version control. You choose the right tool based on the
+repo:
+
+- If a `.jj` directory exists, use `jj` for all version control operations
+- Otherwise, use `git`
+- Always use `gh` CLI for GitHub API operations (PRs, issues, etc.)
+
+Never mix `jj` and raw `git` commands in a colocated jj repo --- it can cause
+bookmark synchronisation issues.
+
+---
+
+# Jujutsu (jj)
 
 ## Mental model
 
@@ -199,90 +208,10 @@ jj git fetch
 jj rebase -d main
 ```
 
-## Migrating a published git repo to jj
+## Migrating a git repo to jj
 
-This is the recommended approach for repos already published on GitHub. It uses
-colocated mode so that `.jj` and `.git` coexist, preserving full compatibility
-with GitHub, CI, and collaborators using git.
-
-### Step 1: initialise jj in the existing repo
-
-```
-cd /path/to/repo
-jj git init --colocate
-```
-
-This creates a `.jj/` directory alongside the existing `.git/`. All existing git
-history, branches, and tags are imported automatically.
-
-### Step 2: verify
-
-```
-jj log                 # should show full history
-jj bookmark list       # should show all git branches as bookmarks
-jj st                  # should show clean working copy
-```
-
-### Step 3: configure gitignore
-
-Add `.jj/` to the project's `.gitignore`. jj sometimes does this automatically
-on init, but you must verify it's present:
-
-```
-grep -q '^\.jj/' .gitignore || echo '.jj/' >> .gitignore
-```
-
-This prevents the `.jj/` directory from being tracked by git, which is essential
-for colocated repos.
-
-### Step 4: update agent instructions (if applicable)
-
-If the project has an `AGENTS.md`, `CLAUDE.md`, or similar agent instruction
-file, add a note that agents should use `jj` for version control, not raw `git`
-commands. For example:
-
-```markdown
-## Version control
-
-This repo uses jj (Jujutsu) as a colocated repo. **Always use `jj` for version
-control operations, never raw `git` commands.** The `gh` CLI is still fine for
-GitHub API operations (PRs, issues, etc.).
-```
-
-This prevents agents from accidentally using git commands that could conflict
-with jj's operation log or cause bookmark synchronisation issues.
-
-### Step 5: start using jj
-
-From this point, use `jj` for all VCS operations. The colocated mode
-automatically syncs between jj and git on every command, so:
-
-- `jj git push` updates the remote git branches
-- `jj git fetch` imports remote changes
-- collaborators using plain git see normal git history
-- CI/CD works unchanged
-- GitHub PRs work via bookmarks (see above)
-
-### What collaborators see
-
-Nothing changes for git users. jj commits are stored as regular git commits.
-The `.jj/` directory is gitignored. Bookmarks pushed by jj appear as normal git
-branches on the remote.
-
-### Limitations of colocated mode
-
-- no submodule support (they won't appear in working copy but aren't lost)
-- `.gitattributes` are not supported
-- git hooks are not triggered by jj commands
-- interleaving `jj` and `git` commands on the same repo can cause bookmark
-  conflicts; prefer using only `jj` for VCS operations
-- shared filesystem scenarios (NFS, Dropbox) can cause issues with concurrent
-  access
-
-### Rolling back
-
-If you decide to stop using jj, simply delete the `.jj/` directory. The git
-repo is fully intact and independent.
+See [references/migration.md](references/migration.md) for the full colocated
+migration guide.
 
 ## Conflict resolution
 
@@ -297,33 +226,9 @@ jj st                      # verify no remaining conflicts
 ```
 
 jj's conflict markers differ from git's. The `%%%%%%%` sections show diffs
-rather than raw content. You can switch to git-style markers with:
+rather than raw content.
 
-```toml
-[ui]
-conflict-marker-style = "git"
-```
-
-## Configuration
-
-User config location: `jj config path --user`
-
-Useful settings:
-
-```toml
-[user]
-name = "Your Name"
-email = "your@email.com"
-
-[ui]
-editor = "hx"                    # preferred editor
-default-command = ["log"]        # run on bare `jj`
-conflict-marker-style = "diff"   # default; or "snapshot", "git"
-```
-
-Per-repo config: `jj config edit --repo` (stored in `.jj/repo/config.toml`).
-
-## Best practices
+## jj best practices
 
 - Use `jj describe` to write meaningful change descriptions in imperative mood
 - Use `jj new` to start fresh changes rather than accumulating edits
@@ -336,3 +241,51 @@ Per-repo config: `jj config edit --repo` (stored in `.jj/repo/config.toml`).
   will fail in non-interactive environments. Instead of `jj split --interactive`,
   use `jj new @-` then `jj restore --from <change>` to manually move files
   between changes
+
+---
+
+# Git
+
+Use git when a repo has no `.jj` directory. The goal is a clean, linear history.
+
+## Rules
+
+- **Always rebase, never merge.** Only merge when genuinely unavoidable (e.g.
+  integrating a long-lived divergent branch where rebase would lose meaningful
+  context), and ask for confirmation first.
+- **Always `git pull --rebase`**, never plain `git pull`.
+- **Stage specific files** by name, not `git add .` or `git add -A`.
+- **Use `--force-with-lease`** when force-pushing after a rebase, never bare
+  `--force`.
+- **Write concise commit messages** in imperative mood ("add feature", not
+  "added feature").
+- **Make small, focused commits** that each do one thing.
+- **Don't commit** generated files, build artefacts, or secrets.
+- **Clean up feature branches** after merging.
+- **Avoid interactive flags** (`-i`) --- they require a TTY and will fail in
+  non-interactive environments.
+
+## Syncing with upstream
+
+```
+git fetch origin
+git rebase origin/main             # rebase current branch onto main
+git pull --rebase                  # shorthand: fetch + rebase
+git push --force-with-lease        # force push safely after rebase
+```
+
+## Undoing things
+
+```
+git commit --amend                 # amend the last commit
+git reset HEAD~1                   # undo last commit, keep changes staged
+git reset --mixed HEAD~1           # undo last commit, unstage changes
+git reflog                         # find lost commits
+```
+
+---
+
+# GitHub (gh CLI)
+
+Use `gh` for all GitHub API interactions regardless of whether the repo uses jj
+or git. Prefer `--rebase` when merging PRs via `gh pr merge`.
