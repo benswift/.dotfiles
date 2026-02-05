@@ -12,7 +12,6 @@ from mail_utils.studentdb import (
     Student,
     StudentDB,
     StudentDatabase,
-    load_from_file,
 )
 
 
@@ -191,12 +190,12 @@ class TestStudentDatabase:
         assert any("unknown panel member" in e for e in errors)
 
 
-class TestLoadFromFile:
+class TestFromFile:
     def test_loads_valid_file(self, tmp_path: Path):
         db_file = tmp_path / "db.json"
         db_file.write_text(json.dumps(VALID_DATABASE))
 
-        db = load_from_file(db_file)
+        db = StudentDB.from_file(db_file)
         assert len(db.students()) == 2
 
     def test_raises_on_invalid_json(self, tmp_path: Path):
@@ -204,7 +203,7 @@ class TestLoadFromFile:
         db_file.write_text("not valid json")
 
         with pytest.raises(ValueError) as exc_info:
-            load_from_file(db_file)
+            StudentDB.from_file(db_file)
         assert "invalid JSON" in str(exc_info.value)
 
     def test_raises_on_schema_validation_error(self, tmp_path: Path):
@@ -212,7 +211,7 @@ class TestLoadFromFile:
         db_file.write_text(json.dumps({"people": {}, "students": [{"bad": "data"}]}))
 
         with pytest.raises(ValueError) as exc_info:
-            load_from_file(db_file)
+            StudentDB.from_file(db_file)
         assert "schema validation failed" in str(exc_info.value)
 
     def test_raises_on_reference_validation_error(self, tmp_path: Path):
@@ -232,7 +231,7 @@ class TestLoadFromFile:
         db_file.write_text(json.dumps(data))
 
         with pytest.raises(ValueError) as exc_info:
-            load_from_file(db_file)
+            StudentDB.from_file(db_file)
         assert "reference validation failed" in str(exc_info.value)
 
 

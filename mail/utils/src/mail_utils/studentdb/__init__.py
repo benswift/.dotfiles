@@ -12,44 +12,9 @@ __all__ = [
     "Student",
     "Person",
     "DenormalisedStudent",
-    "load_from_nb",
-    "load_from_file",
 ]
 
 NB_NOTE_ID = "488"
-
-
-def get_nb_path(note_id: str) -> Path:
-    result = subprocess.run(
-        ["nb", "show", note_id, "--path"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return Path(result.stdout.strip())
-
-
-def load_from_file(path: Path) -> "StudentDB":
-    try:
-        data = json.loads(path.read_text())
-    except json.JSONDecodeError as e:
-        raise ValueError(f"invalid JSON in {path}: {e}") from e
-
-    try:
-        db = StudentDatabase.model_validate(data)
-    except ValidationError as e:
-        raise ValueError(f"schema validation failed for {path}: {e}") from e
-
-    errors = db.validate_references()
-    if errors:
-        raise ValueError(f"reference validation failed: {'; '.join(errors)}")
-
-    return StudentDB(db)
-
-
-def load_from_nb(note_id: str = NB_NOTE_ID) -> "StudentDB":
-    path = get_nb_path(note_id)
-    return load_from_file(path)
 
 
 class StudentDB:
@@ -57,12 +22,33 @@ class StudentDB:
         self._db = db
 
     @classmethod
-    def from_nb(cls, note_id: str = NB_NOTE_ID) -> "StudentDB":
-        return load_from_nb(note_id)
+    def from_file(cls, path: Path) -> "StudentDB":
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError as e:
+            raise ValueError(f"invalid JSON in {path}: {e}") from e
+
+        try:
+            db = StudentDatabase.model_validate(data)
+        except ValidationError as e:
+            raise ValueError(f"schema validation failed for {path}: {e}") from e
+
+        errors = db.validate_references()
+        if errors:
+            raise ValueError(f"reference validation failed: {'; '.join(errors)}")
+
+        return cls(db)
 
     @classmethod
-    def from_file(cls, path: Path) -> "StudentDB":
-        return load_from_file(path)
+    def from_nb(cls, note_id: str = NB_NOTE_ID) -> "StudentDB":
+        result = subprocess.run(
+            ["nb", "show", note_id, "--path"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        path = Path(result.stdout.strip())
+        return cls.from_file(path)
 
     def _get_person(self, person_id: str) -> Person:
         return self._db.people[person_id]
