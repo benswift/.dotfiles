@@ -96,18 +96,11 @@ def generate_filename(
     return f"{base}:2,{flags}"
 
 
-def get_all_message_files(maildir_path: Path) -> list[tuple[Path, Path]]:
-    """Get all message files in a maildir.
-
-    Returns list of (directory, file_path) tuples.
-    """
-    all_files = []
-    cur_dir = maildir_path / "cur"
-    new_dir = maildir_path / "new"
-
-    if cur_dir.exists():
-        all_files.extend([(cur_dir, f) for f in cur_dir.iterdir() if f.is_file()])
-    if new_dir.exists():
-        all_files.extend([(new_dir, f) for f in new_dir.iterdir() if f.is_file()])
-
-    return all_files
+def get_all_message_files(maildir_path: Path) -> list[Path]:
+    """Get all message files in a maildir's cur/ and new/ directories."""
+    files = []
+    for subdir in ("cur", "new"):
+        d = maildir_path / subdir
+        if d.exists():
+            files.extend(f for f in d.iterdir() if f.is_file())
+    return files

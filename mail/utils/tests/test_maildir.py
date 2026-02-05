@@ -138,8 +138,8 @@ class TestGetAllMessageFiles:
         files = get_all_message_files(populated_maildir)
         assert len(files) == 3
 
-    def test_returns_tuples_of_dir_and_path(self, populated_maildir: Path):
+    def test_returns_paths_to_existing_files(self, populated_maildir: Path):
         files = get_all_message_files(populated_maildir)
-        for directory, file_path in files:
-            assert directory.is_dir()
-            assert file_path.is_file()
+        for f in files:
+            assert f.is_file()
+            assert f.parent.name in ("cur", "new")
