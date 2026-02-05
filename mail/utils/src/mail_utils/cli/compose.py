@@ -1,10 +1,9 @@
 """Compose and send emails with template substitution support."""
 
 import json
-import re
 import sys
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from jinja2 import Environment, StrictUndefined
@@ -27,15 +26,6 @@ app = typer.Typer(
 )
 
 
-def parse_json_lenient(text: str) -> list[dict]:
-    """Parse JSON with trailing commas allowed."""
-    cleaned = re.sub(r",(\s*[}\]])", r"\1", text)
-    result = json.loads(cleaned)
-    if not isinstance(result, list):
-        raise ValueError("JSON must be an array")
-    return result
-
-
 JINJA_ENV = Environment(undefined=StrictUndefined)
 
 
@@ -44,58 +34,40 @@ def substitute_template(template: str, data: dict) -> str:
     return JINJA_ENV.from_string(template).render(data)
 
 
-def filter_records(records: list[dict], filter_expr: str | None) -> list[dict]:
-    """Filter records using a Python expression."""
-    if not filter_expr:
-        return records
-
-    results = []
-    for record in records:
-        try:
-            if eval(filter_expr, {"__builtins__": {}}, record):
-                results.append(record)
-        except Exception:
-            pass
-    return results
-
-
 @app.command()
 def main(
     account: Annotated[
         Account, typer.Option("--from", "-f", help="Account to send from")
     ],
     to: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(help="Recipient (supports {{field}} templates)"),
     ] = None,
     cc: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             "--cc", "-c", help="CC recipient (supports templates in batch mode)"
         ),
     ] = None,
     cc_all: Annotated[
-        Optional[str], typer.Option("--cc-all", help="CC recipient added to all emails")
+        str | None, typer.Option("--cc-all", help="CC recipient added to all emails")
     ] = None,
     subject: Annotated[
-        Optional[str], typer.Option("--subject", "-s", help="Subject line")
+        str | None, typer.Option("--subject", "-s", help="Subject line")
     ] = None,
     body: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--body", "-b", help="Body text (or '-' for stdin)"),
     ] = None,
     template: Annotated[
-        Optional[Path], typer.Option(help="Template file for body")
+        Path | None, typer.Option(help="Template file for body")
     ] = None,
     attach: Annotated[
-        Optional[list[Path]], typer.Option("--attach", "-a", help="Attachment")
+        list[Path] | None, typer.Option("--attach", "-a", help="Attachment")
     ] = None,
     data: Annotated[
-        Optional[Path],
-        typer.Option(help="JSON file for batch mode (use '-' for stdin)"),
-    ] = None,
-    filter_expr: Annotated[
-        Optional[str], typer.Option("--filter", help="Filter expression")
+        Path | None,
+        typer.Option(help="JSON array file for batch mode (use '-' for stdin)"),
     ] = None,
     send: Annotated[bool, typer.Option(help="Send directly without editor")] = False,
     dry_run: Annotated[bool, typer.Option(help="Preview without sending")] = False,
@@ -111,12 +83,16 @@ def main(
         # Direct send
         mail-compose -f anu --to colleague@example.com -s "Hello" -b "Body" --send
 
-        # Batch with template
-        mail-compose -f phdconvenor --data students.json --to 'u{{id}}@anu.edu.au' \\
-            --subject 'Hello {{preferred_name}}' --template body.md \\
-            --filter 'status == "active"' --send
+        # Batch with template (filter with jq before piping)
+        student-db students --status confirmed | \\
+            mail-compose -f phdconvenor --data - --to '{{email}}' \\
+            --subject 'Hello {{preferred_name}}' --template body.md --send
     """
     config = get_account_config(account)
+
+    if body == "-" and data and str(data) == "-":
+        console.print("[red]Cannot read both --body and --data from stdin[/red]")
+        raise typer.Exit(1)
 
     email_body = ""
     if template:
@@ -139,14 +115,14 @@ def main(
             data_text = data.read_text()
 
         try:
-            records = parse_json_lenient(data_text)
-        except ValueError as e:
-            console.print(f"[red]Invalid data file: {e}[/red]")
+            records = json.loads(data_text)
+        except json.JSONDecodeError as e:
+            console.print(f"[red]Invalid JSON: {e}[/red]")
             raise typer.Exit(1)
 
-        records = filter_records(records, filter_expr)
-        if filter_expr:
-            console.print(f"Filtered to {len(records)} record(s)")
+        if not isinstance(records, list):
+            console.print("[red]JSON data must be an array[/red]")
+            raise typer.Exit(1)
 
         if not records:
             console.print("No records to process")

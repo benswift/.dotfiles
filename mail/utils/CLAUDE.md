@@ -42,12 +42,12 @@ mail-compose -f anu --to colleague@example.com -s "Hello" -b "Body"
 # Send directly
 mail-compose -f anu --to colleague@example.com -s "Hello" -b "Body" --send
 
-# Batch send with template
-mail-compose -f phdconvenor --data students.json \
+# Batch send with template (filter with jq before piping)
+student-db students --status confirmed | \
+    mail-compose -f phdconvenor --data - \
     --to '{{email}}' \
     --subject 'Hello {{preferred_name}}' \
     --template body.md \
-    --filter 'status == "active"' \
     --send
 ```
 
