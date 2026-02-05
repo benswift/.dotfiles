@@ -103,6 +103,7 @@ autoload -Uz compinit
 compinit
 
 eval "$(mise activate zsh)"
+export LS_COLORS="$(vivid generate gruvbox-light)"
 eval "$(zoxide init zsh)"
 
 eval "$(starship init zsh)"
