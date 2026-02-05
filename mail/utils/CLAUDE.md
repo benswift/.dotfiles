@@ -11,7 +11,6 @@ uv run --directory ~/.dotfiles/mail/utils mail-copy-id --help
 uv run --directory ~/.dotfiles/mail/utils mail-compose --help
 uv run --directory ~/.dotfiles/mail/utils mail-dedupe --help
 uv run --directory ~/.dotfiles/mail/utils mail-analyze --help
-uv run --directory ~/.dotfiles/mail/utils mail-fix-timestamps --help
 ```
 
 Or if installed as a tool (`uv tool install -e ~/.dotfiles/mail/utils`):
@@ -29,7 +28,6 @@ mail-compose --help
 | `mail-compose` | Compose and send emails with Jinja2 templating |
 | `mail-dedupe` | Deduplicate messages by Message-ID |
 | `mail-analyze` | Analyze maildir format and identify issues |
-| `mail-fix-timestamps` | Fix maildir timestamps and convert to mbsync format |
 | `student-db` | Query the PhD student database (denormalises from nb) |
 | `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers |
 
@@ -78,10 +76,6 @@ mail-dedupe ~/Maildir/anu/INBOX  # actually delete duplicates
 # Analyze maildir format
 mail-analyze single ~/Maildir/anu/INBOX
 mail-analyze compare ~/Maildir/anu/INBOX ~/Maildir/personal/INBOX
-
-# Fix timestamps
-mail-fix-timestamps analyze ~/Maildir/imported
-mail-fix-timestamps fix ~/Maildir/imported --dry-run
 ```
 
 ## Library usage
