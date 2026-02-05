@@ -241,10 +241,11 @@ macro index ,t "<limit>~d <1w<enter>" "limit to this week"
 macro index ,y "<limit>~d <1d<enter>" "limit to today"
 
 # === URL and HTML handling ===
-macro index,pager ,p "<enter-command>unset pipe_decode<enter><pipe-message>uv run --directory ~/.dotfiles/mail/utils mail-copy-path<enter><enter-command>set pipe_decode<enter>" "copy file path to clipboard"
-macro index,pager \Ci "<enter-command>unset pipe_decode<enter><pipe-message>uv run --directory ~/.dotfiles/mail/utils mail-copy-id<enter><enter-command>set pipe_decode<enter>" "copy Message-ID to clipboard"
+macro index,pager ,p "<enter-command>unset pipe_decode<enter><pipe-message>mail-copy-path<enter><enter-command>set pipe_decode<enter>" "copy file path to clipboard"
+macro index,pager \Ci "<enter-command>unset pipe_decode<enter><pipe-message>mail-copy-id<enter><enter-command>set pipe_decode<enter>" "copy Message-ID to clipboard"
 macro index,pager ,b "<pipe-message>urlscan --dedupe<enter>" "extract URLs with urlscan"
 macro attach,compose ,b "<pipe-entry>urlscan --dedupe<enter>" "extract URLs with urlscan"
+macro attach Y "<enter-command>unset pipe_decode<enter><pipe-message>mail-copy-attachment-name<enter><enter-command>set pipe_decode<enter>" "copy attachment path to clipboard"
 macro index,pager ,o "<view-attachments><search>html<enter><pipe-entry>TERM=xterm-256color w3m -T text/html<enter><exit>" "view HTML in w3m"
 macro index,pager ,O "<enter-command>set pipe_decode=no<enter><pipe-message>cat > /tmp/neomutt-msg.eml && open /tmp/neomutt-msg.eml<enter><enter-command>set pipe_decode=yes<enter>" "open raw message in default app"
 
