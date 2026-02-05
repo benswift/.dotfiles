@@ -79,7 +79,7 @@ file-types = ["muttrc", { glob = "*muttrc" }]
 
 [[grammar]]
 name = "mutt-compose"
-source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "b2d406f082aa1944d2d39c65adf778cc790338a8" }
+source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "c0558cc601b8407fe84907f230a7595fdece1836" }
 
 [[grammar]]
 name = "muttrc"
