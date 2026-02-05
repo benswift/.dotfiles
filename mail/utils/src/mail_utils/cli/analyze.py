@@ -2,7 +2,7 @@
 
 import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -75,7 +75,7 @@ def analyze_maildir(maildir_path: Path) -> dict[str, Any]:
             try:
                 file_timestamp = extract_timestamp(key)
                 if file_timestamp:
-                    file_date = datetime.fromtimestamp(file_timestamp)
+                    file_date = datetime.fromtimestamp(file_timestamp, tz=UTC)
                     msg = mbox[key]
                     date_header = msg.get("Date")
                     if date_header:
