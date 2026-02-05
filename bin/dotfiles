@@ -39,13 +39,15 @@ check_core() {
         check_fail "zsh is not current shell (using $SHELL)"
     fi
 
-    # Homebrew
-    if command_exists brew; then
-        local brew_prefix
-        brew_prefix=$(brew --prefix)
-        check_pass "Homebrew installed at $brew_prefix"
-    else
-        check_fail "Homebrew not installed"
+    # Homebrew (macOS only)
+    if [[ "$OSTYPE" == darwin* ]]; then
+        if command_exists brew; then
+            local brew_prefix
+            brew_prefix=$(brew --prefix)
+            check_pass "Homebrew installed at $brew_prefix"
+        else
+            check_fail "Homebrew not installed"
+        fi
     fi
 
     # mise
