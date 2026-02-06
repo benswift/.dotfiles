@@ -5,5 +5,9 @@ pager = "less -FRX"
 [git]
 auto-local-bookmark = false
 
-[aliases]
-ship = ["util", "exec", "--", "bash", "-c", "jj bookmark set main -r @- && jj git push"]
+[revset-aliases]
+"trunk()" = "main@origin"
+
+[user]
+name = "Ben Swift"
+email = "ben@benswift.me"
