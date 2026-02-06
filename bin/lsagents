@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    echo "Usage: lsagents"
+    echo ""
+    echo "Monitor running AI coding agents (claude, codex, gemini)."
+    exit 0
+fi
+
+# gruvbox light palette (true colour)
+C_RESET=$'\033[0m'
+C_BOLD=$'\033[1m'
+C_DIM=$'\033[2m'
+C_BG4=$'\033[38;2;124;111;100m'     # grey — headers, dividers
+C_FG=$'\033[38;2;60;56;54m'         # fg0 — default text
+C_ORANGE=$'\033[38;2;175;58;3m'     # claude
+C_BLUE=$'\033[38;2;7;102;120m'      # codex
+C_PURPLE=$'\033[38;2;143;63;113m'   # gemini
+C_GREEN=$'\033[38;2;121;116;14m'    # counts
+C_AQUA=$'\033[38;2;66;123;88m'      # cwd paths
+C_YELLOW=$'\033[38;2;181;118;20m'   # time
+
+agent_colour() {
+    case $1 in
+        claude) printf '%s' "$C_ORANGE" ;;
+        codex)  printf '%s' "$C_BLUE" ;;
+        gemini) printf '%s' "$C_PURPLE" ;;
+    esac
+}
+
+get_cwd() {
+    local pid=$1
+    if [[ "$OSTYPE" == darwin* ]]; then
+        lsof -d cwd -a -p "$pid" -Fn 2>/dev/null | awk '/^n/{print substr($0,2); exit}'
+    else
+        readlink "/proc/$pid/cwd" 2>/dev/null || echo "?"
+    fi
+}
+
+fmt_elapsed() {
+    local raw=$1
+    local days=0 hours=0 mins=0
+    if [[ "$raw" == *-* ]]; then
+        days=$((10#${raw%%-*}))
+        raw="${raw#*-}"
+    fi
+    IFS=: read -r a b c <<< "$raw"
+    if [[ -n "${c:-}" ]]; then
+        hours=$((10#$a)) mins=$((10#$b))
+    else
+        hours=0 mins=$((10#$a))
+    fi
+    local out=""
+    ((days > 0)) && out+="${days}d"
+    ((hours > 0)) && out+="${hours}h"
+    out+="${mins}m"
+    printf '%s' "$out"
+}
+
+cleanup() {
+    tput cnorm 2>/dev/null
+    exit 0
+}
+trap cleanup INT TERM
+
+while true; do
+    clear
+    tput civis 2>/dev/null
+
+    printf "${C_BOLD}${C_FG}lsagents${C_RESET}  ${C_YELLOW}%s${C_RESET}\n\n" \
+        "$(date '+%H:%M:%S')"
+    printf "${C_BG4}%-8s  %6s  %5s  %5s  %9s  %s${C_RESET}\n" \
+        "AGENT" "PID" "%CPU" "%MEM" "ELAPSED" "CWD"
+    printf "${C_DIM}${C_BG4}%-8s  %6s  %5s  %5s  %9s  %s${C_RESET}\n" \
+        "-------" "-----" "-----" "-----" "--------" "---"
+
+    found=0
+
+    for agent in claude codex gemini; do
+        ac=$(agent_colour "$agent")
+        while IFS= read -r pid; do
+            [[ -z "$pid" ]] && continue
+
+            read -r cpu mem elapsed < <(
+                ps -p "$pid" -o pcpu=,pmem=,etime= 2>/dev/null
+            ) || continue
+
+            cwd=$(get_cwd "$pid")
+            cwd="${cwd/#$HOME/'~'}"
+
+            elapsed=$(fmt_elapsed "$elapsed")
+
+            printf "${ac}${C_BOLD}%-8s${C_RESET}  ${C_FG}%6s  %5s  %5s  %9s${C_RESET}  ${C_AQUA}%s${C_RESET}\n" \
+                "$agent" "$pid" "$cpu" "$mem" "$elapsed" "$cwd"
+            found=$((found + 1))
+        done < <(pgrep -x "$agent" 2>/dev/null || true)
+    done
+
+    if [[ $found -eq 0 ]]; then
+        printf "${C_DIM}(no agents running)${C_RESET}\n"
+    fi
+
+    printf "\n${C_GREEN}%d${C_RESET}${C_DIM} agent(s)  •  ctrl-c to quit${C_RESET}\n" \
+        "$found"
+    tput cnorm 2>/dev/null
+    sleep 10
+done
