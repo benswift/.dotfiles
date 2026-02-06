@@ -40,10 +40,10 @@ Student-specific data with references to people by ID:
 {
   "students": [
     {
-      "person_id": "ushini_attanayake",
-      "uid": "u5839004",
+      "person_id": "gertrude_smith",
+      "uid": "u7742001",
       "primary_supervisor_id": "ben_swift",
-      "panel_ids": ["geoff_hinchcliffe", "kim_blackmore"],
+      "panel_ids": ["harold_pemberton", "miriam_okonkwo"],
       "status": "confirmed",
       "commencement_date": "2021-02-15",
       "crp_chair_id": null
@@ -80,10 +80,10 @@ Output is JSON with fully resolved supervisor and panel details:
 
 ```json
 {
-  "name": "Ushini Attanayake",
-  "preferred_name": "Ushini",
-  "email": "ushini.attanayake@anu.edu.au",
-  "uid": "u5839004",
+  "name": "Gertrude Smith",
+  "preferred_name": "Gertrude",
+  "email": "gertrude.smith@anu.edu.au",
+  "uid": "u7742001",
   "status": "confirmed",
   "commencement_date": "2021-02-15",
   "supervisor": {
@@ -92,7 +92,7 @@ Output is JSON with fully resolved supervisor and panel details:
     "email": "ben.swift@anu.edu.au"
   },
   "panel": [
-    { "name": "Geoff Hinchcliffe", "email": "geoff.hinchcliffe@anu.edu.au" }
+    { "name": "Harold Pemberton", "email": "harold.pemberton@anu.edu.au" }
   ],
   "crp_chair": null
 }
@@ -104,13 +104,13 @@ Use jq for additional filtering after student-db:
 
 ```bash
 # Students supervised by a specific person
-student-db students | jq '[.[] | select(.supervisor.name == "Katherine Daniell")]'
+student-db students | jq '[.[] | select(.supervisor.name == "Eleanor Voss")]'
 
 # Students who commenced in 2024
 student-db students | jq '[.[] | select(.commencement_date | startswith("2024"))]'
 
 # Find a specific student
-student-db students | jq '.[] | select(.preferred_name == "Danny")'
+student-db students | jq '.[] | select(.preferred_name == "Rupert")'
 ```
 
 ## Sending batch emails

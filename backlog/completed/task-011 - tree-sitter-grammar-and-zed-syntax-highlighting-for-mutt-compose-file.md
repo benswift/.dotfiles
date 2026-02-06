@@ -16,7 +16,7 @@ email. Here's a real example of one (note the `ACTUAL REPLY GOES HERE` text):
 ```
 From: Ben Swift <ben.swift@anu.edu.au>
 To: SOCY – Admin <admin.cybernetics@anu.edu.au>
-Cc: Ushini Attanayake <ushini.attanayake@anu.edu.au>
+Cc: Gertrude Smith <gertrude.smith@anu.edu.au>
 Bcc:
 Subject: Re: PhD Final Presentation Booking
 Message-ID: <gwwxwdznyauzei4qhexk4q2ezqcu5dtw26ynxiur4ktfxvocli@lpoqflwncgek>
@@ -34,7 +34,7 @@ On Tue, 02 Sep 2025 at 04:24 PM +1000, SOCY – Admin wrote:
 >
 >Warm regards,
 >
->Danni Liu
+>Frances Nakamura
 >School Administrator
 >
 >Operational Excellence Team
@@ -49,7 +49,7 @@ On Tue, 02 Sep 2025 at 04:24 PM +1000, SOCY – Admin wrote:
 >
 >Admin.Cybernetics@anu.edu.au
 >
->Danni.Liu@anu.edu.au
+>Frances.Nakamura@anu.edu.au
 >
 > 
 >
@@ -61,13 +61,13 @@ On Tue, 02 Sep 2025 at 04:24 PM +1000, SOCY – Admin wrote:
 >From: Ben Swift <ben.swift@anu.edu.au>
 >Sent: Tuesday, September 2, 2025 16:06
 >To: SOCY – Admin <admin.cybernetics@anu.edu.au>
->Cc: Ushini Attanayake <ushini.attanayake@anu.edu.au>
+>Cc: Gertrude Smith <gertrude.smith@anu.edu.au>
 >Subject: Fwd: Re: PhD Final Presentation Booking
 >
 > 
 >
->Hey Danni,
->See below, my PhD student Ushini is trying to book the innovation space
+>Hey Frances,
+>See below, my PhD student Gertrude is trying to book the innovation space
 >for her PhD final presentation,
 >hasn't heard anything from the innovationspace.cecc@anu.edu.au address.
 >Do you know where
