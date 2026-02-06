@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PIN_FILE="/etc/apt/preferences.d/cuda-repository-pin-600"
+
+if ! [[ -f "$PIN_FILE" ]]; then
+  echo "Error: NVIDIA CUDA pin file not found at $PIN_FILE"
+  echo "Is the CUDA repo installed?"
+  exit 1
+fi
+
+if grep -q 'libnvidia-\*' "$PIN_FILE" 2>/dev/null; then
+  echo "Driver pin already present in $PIN_FILE, nothing to do."
+  exit 0
+fi
+
+echo "Appending driver pin rules to $PIN_FILE..."
+sudo tee -a "$PIN_FILE" >/dev/null <<'EOF'
+
+Package: libnvidia-* nvidia-* xserver-xorg-video-nvidia-*
+Pin: release o=Ubuntu
+Pin-Priority: -1
+EOF
+
+echo "Done. Verifying..."
+apt-cache policy nvidia-driver-575-open 2>/dev/null | head -8
