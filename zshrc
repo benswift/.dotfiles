@@ -32,7 +32,7 @@ sysup() {
   if [[ "$OSTYPE" == darwin* ]]; then
     brew upgrade
   else
-    sudo apt update && sudo apt upgrade
+    sudo apt update && sudo apt upgrade -y
   fi
   mise plugin update
   mise upgrade
