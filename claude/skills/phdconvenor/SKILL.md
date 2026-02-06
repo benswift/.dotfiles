@@ -244,6 +244,13 @@ mail-compose -f phdconvenor --to 'student@anu.edu.au' \
 
 This opens neomutt for editing and sending.
 
+## Writing email content
+
+When drafting email prose (templates, announcements, one-off messages), use the
+`/benswift-writer` skill to match Ben's voice and tone. This skill handles the
+operational side---database queries, mail-compose commands, recipient
+selection---while benswift-writer handles the writing itself.
+
 ## Best practices
 
 1. **Always use `--dry-run` first** to preview emails before sending
@@ -275,4 +282,4 @@ mail-compose -f phdconvenor --to 'enquirer@example.com' \
 
 - **email-manager skill**: for searching and reading emails in the phdconvenor mailbox
 - **nb**: student data is managed via nb (`nb edit student-db.json`)
-- **benswift-writer skill**: for drafting email content in Ben's voice
+- **benswift-writer skill**: for drafting email prose (see above)
