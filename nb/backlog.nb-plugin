@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+###############################################################################
+# backlog.nb-plugin
+#
+# Create and list project backlog tasks with backlog.md-compatible YAML
+# frontmatter. Useful for speccing out new projects that don't yet have
+# their own git repo.
+#
+# Tasks live in a backlog/ folder in the current notebook. The generated
+# files use backlog.md's exact frontmatter schema and section markers
+# (SECTION:*:BEGIN/END, AC:BEGIN/END), so when a project graduates to its
+# own repo you can copy the .md files straight into .backlog/tasks/.
+#
+# Installation:
+#   nb plugins install /path/to/backlog.nb-plugin
+# -or-
+#   cp backlog.nb-plugin ~/.nb/.plugins/
+###############################################################################
+
+_subcommands add "backlog"
+
+# nb uses _subcommands describe for help text; placed after the function
+# definition (see bottom of file).
+
+_backlog() {
+  local _notebook_path=
+  _notebook_path="$(_notebooks current --path)"
+
+  local _backlog_path="${_notebook_path}/backlog"
+
+  # Auto-create the backlog/ folder if it doesn't exist yet.
+  if [[ ! -d "${_backlog_path}" ]]; then
+    mkdir -p "${_backlog_path}"
+  fi
+
+  # Parse arguments ---------------------------------------------------------
+  local _title=""
+  local _priority=""
+  local _labels=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --priority)
+        _priority="${2:-}"
+        shift 2
+        ;;
+      --labels)
+        _labels="${2:-}"
+        shift 2
+        ;;
+      list)
+        # Explicit "list" is accepted but is also the default (no title).
+        shift
+        ;;
+      *)
+        if [[ -z "${_title}" ]]; then
+          _title="$1"
+        fi
+        shift
+        ;;
+    esac
+  done
+
+  # List mode (no title given) ----------------------------------------------
+  if [[ -z "${_title}" ]]; then
+    _list "backlog/"
+    return 0
+  fi
+
+  # Create mode (title given) -----------------------------------------------
+
+  local _created_date=
+  _created_date="$(date '+%Y-%m-%d %H:%M')"
+
+  # Slugify the title for the filename (lowercase, hyphens, no specials).
+  local _slug=
+  _slug="$(printf '%s' "${_title}" \
+    | tr '[:upper:]' '[:lower:]' \
+    | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//')"
+
+  # Build YAML list for labels (empty [] if none provided).
+  local _labels_yaml="[]"
+  if [[ -n "${_labels}" ]]; then
+    _labels_yaml=""
+    local IFS=','
+    for _l in ${_labels}; do
+      _labels_yaml="${_labels_yaml}
+  - ${_l}"
+    done
+  fi
+
+  # Priority is optional --- only include the field if set.
+  local _priority_line=""
+  if [[ -n "${_priority}" ]]; then
+    _priority_line=$'\n'"priority: ${_priority}"
+  fi
+
+  # Assemble backlog.md-compatible content: YAML frontmatter followed by
+  # the three most useful sections for early-stage project specs.
+  # Additional sections (Implementation Notes, Definition of Done, Final
+  # Summary) can be added by hand when needed.
+  local _content="---
+title: \"${_title}\"
+status: To Do
+assignee: []
+created_date: '${_created_date}'
+labels: ${_labels_yaml}
+dependencies: []${_priority_line}
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+
+<!-- AC:BEGIN -->
+- [ ] #1
+<!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+
+<!-- SECTION:PLAN:END -->"
+
+  _add "backlog/"                     \
+    --filename "${_slug}.md"          \
+    --content  "${_content}"
+}
+
+_subcommands describe "backlog" <<HEREDOC
+Usage:
+  nb backlog <title> [--priority <high|medium|low>] [--labels <l1,l2>]
+  nb backlog [list]
+
+Options:
+  --priority <level>    Set priority: high, medium, or low.
+  --labels <l1,l2>      Comma-separated labels.
+
+Description:
+  Create and list project backlog tasks with backlog.md-compatible YAML
+  frontmatter. Tasks are stored in the backlog/ folder of the current
+  notebook.
+
+  When called without arguments (or with \`list\`), lists all tasks in
+  the backlog/ folder.
+
+  When called with a title, creates a new task file with pre-filled
+  frontmatter and section scaffolding ready to fill in.
+
+  Generated files are compatible with backlog.md's task format. When a
+  project gets its own repo, copy the files into .backlog/tasks/ and
+  they'll work with the backlog CLI.
+
+Examples:
+  nb backlog "Build a widget service"
+  nb backlog "Redesign auth flow" --priority high --labels backend,security
+  nb backlog
+  nb backlog list
+
+HEREDOC

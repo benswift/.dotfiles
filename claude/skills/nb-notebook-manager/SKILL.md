@@ -171,6 +171,28 @@ nb todo do 3                            # Mark todo as done
 | Copy between notebooks | `nb copy <id> other:`     |
 | List todos             | `nb todos open`           |
 
+## Project backlog tasks
+
+The `nb backlog` plugin creates backlog.md-compatible task files in a `backlog/`
+folder. Use this for speccing out new projects that don't yet have their own git
+repo. The generated files use backlog.md's YAML frontmatter and section markers,
+so they can later be copied into a real `.backlog/tasks/` directory.
+
+```bash
+# Create a task
+nb backlog "Project title"
+nb backlog "Project title" --priority high --labels web,backend
+
+# List tasks
+nb backlog
+nb backlog list
+
+# View/edit tasks using standard nb commands
+nb show backlog/1 --print
+nb edit backlog/1
+nb search "query" backlog/
+```
+
 ## Error Prevention
 
 - Check if items exist: `nb show <id> 2>/dev/null || echo "Not found"`
