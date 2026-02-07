@@ -62,6 +62,22 @@ jship() {
   fi
   jj bookmark set main -r "$rev" && jj git push
 }
+jjw() {
+  local name="${1:?usage: jjw <name> [-r rev]}"
+  shift
+  local root="$(jj root)"
+  local dir="$(dirname "$root")/$(basename "$root")-$name"
+  jj workspace add --name "$name" "$dir" "$@"
+  cd "$dir"
+  claude
+}
+jjw-forget() {
+  local name="${1:?usage: jjw-forget <name>}"
+  local root="$(jj root)"
+  local dir="$(dirname "$root")/$(basename "$root")-$name"
+  jj workspace forget "$name"
+  rm -rf "$dir"
+}
 # zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
 alias za="zellij attach"
