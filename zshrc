@@ -69,7 +69,7 @@ jjw() {
   local dir="$(dirname "$root")/$(basename "$root")-$name"
   jj workspace add --name "$name" "$dir" "$@"
   cd "$dir"
-  claude
+  ayolo
 }
 jjw-forget() {
   local name="${1:?usage: jjw-forget <name>}"
