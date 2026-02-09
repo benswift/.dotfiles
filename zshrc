@@ -55,6 +55,7 @@ alias jQ="jj squash"
 alias je="jj edit"
 alias jb="jj bookmark"
 jm() { jj describe -m "$*"; }
+jp() { jj git fetch && jj rebase -d main@origin; }
 jship() {
   local rev="@"
   if [[ "$(jj log -r @ --no-graph -T 'empty')" == "true" ]]; then
