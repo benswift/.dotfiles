@@ -11,6 +11,7 @@ zoxide = "latest"
 helix = "latest"
 "core:elixir" = "1.18.4-otp-27"
 vivid = "latest"
+gemini = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["[]"]
