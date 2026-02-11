@@ -35,3 +35,7 @@ v = ":write"
 # y = "yank_to_clipboard"
 # p = "paste_clipboard_after"
 # P = "paste_clipboard_before"
+
+[keys.normal.g]
+o = "jump_forward"
+O = "jump_backward"
