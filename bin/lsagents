@@ -4,7 +4,7 @@ set -euo pipefail
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     echo "Usage: lsagents"
     echo ""
-    echo "Monitor running AI coding agents (claude, codex, gemini)."
+    echo "Monitor running AI coding agents and dev servers."
     exit 0
 fi
 
@@ -20,6 +20,7 @@ C_PURPLE=$'\033[38;2;143;63;113m'   # gemini
 C_GREEN=$'\033[38;2;121;116;14m'    # counts
 C_AQUA=$'\033[38;2;66;123;88m'      # cwd paths
 C_YELLOW=$'\033[38;2;181;118;20m'   # time
+C_RED=$'\033[38;2;157;0;6m'        # dev servers
 
 agent_colour() {
     case $1 in
@@ -98,11 +99,43 @@ while true; do
     done
 
     if [[ $found -eq 0 ]]; then
-        printf "${C_DIM}(no agents running)${C_RESET}\n"
+        printf '%s\n' "${C_DIM}(no agents running)${C_RESET}"
     fi
 
-    printf "\n${C_GREEN}%d${C_RESET}${C_DIM} agent(s)  •  ctrl-c to quit${C_RESET}\n" \
-        "$found"
+    printf "\n"
+    printf "${C_BG4}%-12s  %6s  %5s  %5s  %5s  %9s  %s${C_RESET}\n" \
+        "SERVER" "PID" "PORT" "%CPU" "%MEM" "ELAPSED" "CWD"
+    printf "${C_DIM}${C_BG4}%-12s  %6s  %5s  %5s  %5s  %9s  %s${C_RESET}\n" \
+        "-----------" "-----" "-----" "-----" "-----" "--------" "---"
+
+    dev_found=0
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+
+        cmd=$(awk '{print $1}' <<< "$line")
+        pid=$(awk '{print $2}' <<< "$line")
+        port=$(awk '{print $(NF-1)}' <<< "$line" | awk -F: '{print $NF}')
+
+        read -r cpu mem elapsed < <(
+            ps -p "$pid" -o pcpu=,pmem=,etime= 2>/dev/null
+        ) || continue
+
+        cwd=$(get_cwd "$pid")
+        cwd="${cwd/#$HOME/'~'}"
+        elapsed=$(fmt_elapsed "$elapsed")
+
+        printf "${C_RED}${C_BOLD}%-12s${C_RESET}  ${C_FG}%6s  %5s  %5s  %5s  %9s${C_RESET}  ${C_AQUA}%s${C_RESET}\n" \
+            "${cmd:0:12}" "$pid" "$port" "$cpu" "$mem" "$elapsed" "$cwd"
+        dev_found=$((dev_found + 1))
+    done < <(lsof -iTCP:3000-9999 -sTCP:LISTEN -nP 2>/dev/null | awk 'NR>1 && !seen[$2]++')
+
+    if [[ $dev_found -eq 0 ]]; then
+        printf '%s\n' "${C_DIM}(no dev servers running)${C_RESET}"
+    fi
+
+    printf "\n${C_GREEN}%d${C_RESET}${C_DIM} agent(s), ${C_RESET}${C_GREEN}%d${C_RESET}${C_DIM} server(s)  •  q or ctrl-c to quit${C_RESET}\n" \
+        "$found" "$dev_found"
     tput cnorm 2>/dev/null
-    sleep 10
+    read -rsn1 -t10 key 2>/dev/null || true
+    [[ "${key:-}" == "q" ]] && break
 done
