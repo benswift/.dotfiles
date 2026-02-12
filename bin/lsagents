@@ -129,30 +129,18 @@ def get_strays() -> list[dict]:
 
 
 def get_servers() -> list[dict]:
-    seen_pids: set[int] = set()
     servers = []
-    try:
-        connections = psutil.net_connections(kind="tcp")
-    except psutil.AccessDenied:
-        return servers
-
-    for conn in connections:
-        if conn.status != "LISTEN":
-            continue
-        port = conn.laddr.port
-        if not (3000 <= port <= 9999):
-            continue
-        pid = conn.pid
-        if pid is None or pid in seen_pids:
-            continue
-        seen_pids.add(pid)
+    for p in psutil.process_iter(["pid"]):
         try:
-            p = psutil.Process(pid)
+            conns = p.net_connections(kind="tcp")
+            ports = [c.laddr.port for c in conns if c.status == "LISTEN" and 3000 <= c.laddr.port <= 9999]
+            if not ports:
+                continue
             with p.oneshot():
                 servers.append({
                     "cmd": (cmd_basename(p) or p.name())[:12],
-                    "pid": str(pid),
-                    "port": str(port),
+                    "pid": str(p.pid),
+                    "port": str(ports[0]),
                     "cpu": f"{p.cpu_percent():.1f}",
                     "mem": f"{p.memory_percent():.1f}",
                     "elapsed": fmt_elapsed(p.create_time()),
