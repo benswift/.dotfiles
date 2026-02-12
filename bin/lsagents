@@ -1,141 +1,309 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["psutil", "rich"]
+# ///
 
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-    echo "Usage: lsagents"
-    echo ""
-    echo "Monitor running AI coding agents and dev servers."
-    exit 0
-fi
+import os
+import re
+import select
+import sys
+import termios
+import time
+import tty
+from datetime import datetime
 
-# gruvbox light palette (true colour)
-C_RESET=$'\033[0m'
-C_BOLD=$'\033[1m'
-C_DIM=$'\033[2m'
-C_BG4=$'\033[38;2;124;111;100m'     # grey — headers, dividers
-C_FG=$'\033[38;2;60;56;54m'         # fg0 — default text
-C_ORANGE=$'\033[38;2;175;58;3m'     # claude
-C_BLUE=$'\033[38;2;7;102;120m'      # codex
-C_PURPLE=$'\033[38;2;143;63;113m'   # gemini
-C_GREEN=$'\033[38;2;121;116;14m'    # counts
-C_AQUA=$'\033[38;2;66;123;88m'      # cwd paths
-C_YELLOW=$'\033[38;2;181;118;20m'   # time
-C_RED=$'\033[38;2;157;0;6m'        # dev servers
+import psutil
+from rich.console import Console, Group
+from rich.live import Live
+from rich.style import Style
+from rich.table import Table
+from rich.text import Text
 
-agent_colour() {
-    case $1 in
-        claude) printf '%s' "$C_ORANGE" ;;
-        codex)  printf '%s' "$C_BLUE" ;;
-        gemini) printf '%s' "$C_PURPLE" ;;
-    esac
+GRUVBOX = {
+    "fg": Style(color="#3c3836"),
+    "bg4": Style(color="#7c6f64"),
+    "bg4_dim": Style(color="#7c6f64", dim=True),
+    "orange": Style(color="#af3a03", bold=True),
+    "blue": Style(color="#076678", bold=True),
+    "purple": Style(color="#8f3f71", bold=True),
+    "green": Style(color="#79740e"),
+    "aqua": Style(color="#427b58"),
+    "yellow": Style(color="#b57614"),
+    "yellow_bold": Style(color="#b57614", bold=True),
+    "red": Style(color="#9d0006", bold=True),
+    "dim": Style(dim=True),
 }
 
-get_cwd() {
-    local pid=$1
-    if [[ "$OSTYPE" == darwin* ]]; then
-        lsof -d cwd -a -p "$pid" -Fn 2>/dev/null | awk '/^n/{print substr($0,2); exit}'
-    else
-        readlink "/proc/$pid/cwd" 2>/dev/null || echo "?"
-    fi
+AGENT_STYLES = {
+    "claude": GRUVBOX["orange"],
+    "codex": GRUVBOX["blue"],
+    "gemini": GRUVBOX["purple"],
 }
 
-fmt_elapsed() {
-    local raw=$1
-    local days=0 hours=0 mins=0
-    if [[ "$raw" == *-* ]]; then
-        days=$((10#${raw%%-*}))
-        raw="${raw#*-}"
-    fi
-    IFS=: read -r a b c <<< "$raw"
-    if [[ -n "${c:-}" ]]; then
-        hours=$((10#$a)) mins=$((10#$b))
-    else
-        hours=0 mins=$((10#$a))
-    fi
-    local out=""
-    ((days > 0)) && out+="${days}d"
-    ((hours > 0)) && out+="${hours}h"
-    out+="${mins}m"
-    printf '%s' "$out"
-}
+STRAY_PATTERNS = [
+    ("chrome-hl", r"chrome-headless-shell"),
+    ("agent-browser", r"agent-browser/.*daemon"),
+    ("chromedriver", r"chromedriver"),
+    ("playwright", r"playwright.*run-server"),
+]
 
-cleanup() {
-    tput cnorm 2>/dev/null
-    exit 0
-}
-trap cleanup INT TERM
+HOME = os.path.expanduser("~")
 
-while true; do
-    clear
-    tput civis 2>/dev/null
 
-    printf "${C_BOLD}${C_FG}lsagents${C_RESET}  ${C_YELLOW}%s${C_RESET}\n\n" \
-        "$(date '+%H:%M:%S')"
-    printf "${C_BG4}%-8s  %6s  %5s  %5s  %9s  %s${C_RESET}\n" \
-        "AGENT" "PID" "%CPU" "%MEM" "ELAPSED" "CWD"
-    printf "${C_DIM}${C_BG4}%-8s  %6s  %5s  %5s  %9s  %s${C_RESET}\n" \
-        "-------" "-----" "-----" "-----" "--------" "---"
+def fmt_elapsed(create_time: float) -> str:
+    elapsed = int(time.time() - create_time)
+    if elapsed < 0:
+        elapsed = 0
+    days, remainder = divmod(elapsed, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    mins = remainder // 60
+    out = ""
+    if days > 0:
+        out += f"{days}d"
+    if hours > 0:
+        out += f"{hours}h"
+    out += f"{mins}m"
+    return out
 
-    found=0
 
-    for agent in claude codex gemini; do
-        ac=$(agent_colour "$agent")
-        while IFS= read -r pid; do
-            [[ -z "$pid" ]] && continue
+def shorten_path(path: str) -> str:
+    if path.startswith(HOME):
+        return "~" + path[len(HOME):]
+    return path
 
-            read -r cpu mem elapsed < <(
-                ps -p "$pid" -o pcpu=,pmem=,etime= 2>/dev/null
-            ) || continue
 
-            cwd=$(get_cwd "$pid")
-            cwd="${cwd/#$HOME/'~'}"
+def cmd_basename(p: psutil.Process) -> str:
+    try:
+        cmdline = p.cmdline()
+        if cmdline:
+            return os.path.basename(cmdline[0])
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        pass
+    return ""
 
-            elapsed=$(fmt_elapsed "$elapsed")
 
-            printf "${ac}${C_BOLD}%-8s${C_RESET}  ${C_FG}%6s  %5s  %5s  %9s${C_RESET}  ${C_AQUA}%s${C_RESET}\n" \
-                "$agent" "$pid" "$cpu" "$mem" "$elapsed" "$cwd"
-            found=$((found + 1))
-        done < <(pgrep -x "$agent" 2>/dev/null || true)
-    done
+def get_agents() -> list[dict]:
+    agents = []
+    for p in psutil.process_iter(["pid"]):
+        try:
+            name = cmd_basename(p)
+            if name in AGENT_STYLES:
+                with p.oneshot():
+                    agents.append({
+                        "agent": name,
+                        "pid": str(p.pid),
+                        "cpu": f"{p.cpu_percent():.1f}",
+                        "mem": f"{p.memory_percent():.1f}",
+                        "elapsed": fmt_elapsed(p.create_time()),
+                        "cwd": shorten_path(p.cwd()),
+                    })
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    return agents
 
-    if [[ $found -eq 0 ]]; then
-        printf '%s\n' "${C_DIM}(no agents running)${C_RESET}"
-    fi
 
-    printf "\n"
-    printf "${C_BG4}%-12s  %6s  %5s  %5s  %5s  %9s  %s${C_RESET}\n" \
-        "SERVER" "PID" "PORT" "%CPU" "%MEM" "ELAPSED" "CWD"
-    printf "${C_DIM}${C_BG4}%-12s  %6s  %5s  %5s  %5s  %9s  %s${C_RESET}\n" \
-        "-----------" "-----" "-----" "-----" "-----" "--------" "---"
+def get_strays() -> list[dict]:
+    strays = []
+    for p in psutil.process_iter(["pid", "ppid"]):
+        try:
+            cmdline = " ".join(p.cmdline())
+            if not cmdline:
+                continue
+            for label, pattern in STRAY_PATTERNS:
+                if re.search(pattern, cmdline):
+                    with p.oneshot():
+                        ppid = p.ppid()
+                        strays.append({
+                            "label": label,
+                            "pid": str(p.pid),
+                            "cpu": f"{p.cpu_percent():.1f}",
+                            "mem": f"{p.memory_percent():.1f}",
+                            "elapsed": fmt_elapsed(p.create_time()),
+                            "status": "orphaned" if ppid == 1 else f"ppid={ppid}",
+                        })
+                    break
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    return strays
 
-    dev_found=0
-    while IFS= read -r line; do
-        [[ -z "$line" ]] && continue
 
-        cmd=$(awk '{print $1}' <<< "$line")
-        pid=$(awk '{print $2}' <<< "$line")
-        port=$(awk '{print $(NF-1)}' <<< "$line" | awk -F: '{print $NF}')
+def get_servers() -> list[dict]:
+    seen_pids: set[int] = set()
+    servers = []
+    try:
+        connections = psutil.net_connections(kind="tcp")
+    except psutil.AccessDenied:
+        return servers
 
-        read -r cpu mem elapsed < <(
-            ps -p "$pid" -o pcpu=,pmem=,etime= 2>/dev/null
-        ) || continue
+    for conn in connections:
+        if conn.status != "LISTEN":
+            continue
+        port = conn.laddr.port
+        if not (3000 <= port <= 9999):
+            continue
+        pid = conn.pid
+        if pid is None or pid in seen_pids:
+            continue
+        seen_pids.add(pid)
+        try:
+            p = psutil.Process(pid)
+            with p.oneshot():
+                servers.append({
+                    "cmd": (cmd_basename(p) or p.name())[:12],
+                    "pid": str(pid),
+                    "port": str(port),
+                    "cpu": f"{p.cpu_percent():.1f}",
+                    "mem": f"{p.memory_percent():.1f}",
+                    "elapsed": fmt_elapsed(p.create_time()),
+                    "cwd": shorten_path(p.cwd()),
+                })
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    return servers
 
-        cwd=$(get_cwd "$pid")
-        cwd="${cwd/#$HOME/'~'}"
-        elapsed=$(fmt_elapsed "$elapsed")
 
-        printf "${C_RED}${C_BOLD}%-12s${C_RESET}  ${C_FG}%6s  %5s  %5s  %5s  %9s${C_RESET}  ${C_AQUA}%s${C_RESET}\n" \
-            "${cmd:0:12}" "$pid" "$port" "$cpu" "$mem" "$elapsed" "$cwd"
-        dev_found=$((dev_found + 1))
-    done < <(lsof -iTCP:3000-9999 -sTCP:LISTEN -nP 2>/dev/null | awk 'NR>1 && !seen[$2]++')
+def build_display() -> Group:
+    now = datetime.now().strftime("%H:%M:%S")
+    header = Text()
+    header.append("lsagents", style=Style(color="#3c3836", bold=True))
+    header.append("  ")
+    header.append(now, style=GRUVBOX["yellow"])
+    header.append("\n")
 
-    if [[ $dev_found -eq 0 ]]; then
-        printf '%s\n' "${C_DIM}(no dev servers running)${C_RESET}"
-    fi
+    agents = get_agents()
+    agent_table = Table(
+        show_header=True,
+        show_edge=False,
+        show_lines=False,
+        box=None,
+        padding=(0, 1),
+        header_style=GRUVBOX["bg4"],
+    )
+    agent_table.add_column("AGENT", min_width=8, style=GRUVBOX["fg"])
+    agent_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
+    agent_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
+    agent_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
+    agent_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
+    agent_table.add_column("CWD", style=GRUVBOX["aqua"])
 
-    printf "\n${C_GREEN}%d${C_RESET}${C_DIM} agent(s), ${C_RESET}${C_GREEN}%d${C_RESET}${C_DIM} server(s)  •  q or ctrl-c to quit${C_RESET}\n" \
-        "$found" "$dev_found"
-    tput cnorm 2>/dev/null
-    read -rsn1 -t10 key 2>/dev/null || true
-    [[ "${key:-}" == "q" ]] && break
-done
+    for a in agents:
+        style = AGENT_STYLES[a["agent"]]
+        agent_table.add_row(
+            Text(a["agent"], style=style),
+            a["pid"], a["cpu"], a["mem"], a["elapsed"], a["cwd"],
+        )
+    if not agents:
+        agent_table.add_row(
+            Text("(no agents running)", style=GRUVBOX["dim"]),
+            "", "", "", "", "",
+        )
+
+    strays = get_strays()
+    stray_table = Table(
+        show_header=True,
+        show_edge=False,
+        show_lines=False,
+        box=None,
+        padding=(0, 1),
+        header_style=GRUVBOX["bg4"],
+    )
+    stray_table.add_column("STRAY", min_width=16, style=GRUVBOX["fg"])
+    stray_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
+    stray_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
+    stray_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
+    stray_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
+    stray_table.add_column("STATUS", style=GRUVBOX["dim"])
+
+    for s in strays:
+        stray_table.add_row(
+            Text(s["label"], style=GRUVBOX["yellow_bold"]),
+            s["pid"], s["cpu"], s["mem"], s["elapsed"], s["status"],
+        )
+    if not strays:
+        stray_table.add_row(
+            Text("(no stray processes)", style=GRUVBOX["dim"]),
+            "", "", "", "", "",
+        )
+
+    servers = get_servers()
+    server_table = Table(
+        show_header=True,
+        show_edge=False,
+        show_lines=False,
+        box=None,
+        padding=(0, 1),
+        header_style=GRUVBOX["bg4"],
+    )
+    server_table.add_column("SERVER", min_width=12, style=GRUVBOX["fg"])
+    server_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
+    server_table.add_column("PORT", justify="right", min_width=5, style=GRUVBOX["fg"])
+    server_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
+    server_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
+    server_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
+    server_table.add_column("CWD", style=GRUVBOX["aqua"])
+
+    for s in servers:
+        server_table.add_row(
+            Text(s["cmd"], style=GRUVBOX["red"]),
+            s["pid"], s["port"], s["cpu"], s["mem"], s["elapsed"], s["cwd"],
+        )
+    if not servers:
+        server_table.add_row(
+            Text("(no dev servers running)", style=GRUVBOX["dim"]),
+            "", "", "", "", "", "",
+        )
+
+    footer = Text()
+    stray_count_style = GRUVBOX["yellow"] if strays else GRUVBOX["green"]
+    footer.append(str(len(agents)), style=GRUVBOX["green"])
+    footer.append(" agent(s), ", style=GRUVBOX["dim"])
+    footer.append(str(len(servers)), style=GRUVBOX["green"])
+    footer.append(" server(s), ", style=GRUVBOX["dim"])
+    footer.append(str(len(strays)), style=stray_count_style)
+    footer.append(" stray(s)", style=GRUVBOX["dim"])
+    footer.append("  \u2022  q or ctrl-c to quit", style=GRUVBOX["dim"])
+
+    return Group(header, agent_table, Text(), stray_table, Text(), server_table, Text(), footer)
+
+
+def main() -> None:
+    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help"):
+        print("Usage: lsagents")
+        print()
+        print("Monitor running AI coding agents and dev servers.")
+        sys.exit(0)
+
+    console = Console()
+
+    if not sys.stdin.isatty():
+        console.print(build_display())
+        return
+
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+
+    try:
+        tty.setcbreak(fd)
+        with Live(
+            build_display(),
+            console=console,
+            auto_refresh=False,
+            screen=True,
+        ) as live:
+            while True:
+                live.update(build_display())
+                live.refresh()
+                ready, _, _ = select.select([sys.stdin], [], [], 10)
+                if ready:
+                    key = sys.stdin.read(1)
+                    if key in ("q", "\x03"):
+                        break
+    except KeyboardInterrupt:
+        pass
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+
+if __name__ == "__main__":
+    main()
