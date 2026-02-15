@@ -5,11 +5,12 @@
     "DISABLE_TELEMETRY": "1"
   },
   "includeCoAuthoredBy": false,
-  "alwaysThinkingEnabled": true,
-  "feedbackSurveyState": {
-    "lastShownTime": 1754026648340
-  },
   "enabledPlugins": {
     "rust-analyzer-lsp@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
+  "feedbackSurveyState": {
+    "lastShownTime": 1754026648340
   }
 }
