@@ -1,6 +1,6 @@
 [ui]
 default-command = "log"
-pager = "less -FRX"
+pager = ["delta"]
 
 [git]
 auto-local-bookmark = false
