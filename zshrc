@@ -124,4 +124,25 @@ eval "$(mise activate zsh)"
 export LS_COLORS="$(vivid generate gruvbox-light)"
 eval "$(zoxide init zsh)"
 
-eval "$(starship init zsh)"
+# Pure zsh prompt (replaces starship). Uses jj-starship for VCS status.
+# Shows: time, cwd, jj/git status, hostname (only if not daysy), separator line.
+_prompt_precmd() {
+  local exit_status=$?
+  local sep_color='%F{#d5c4a1}'
+  local time_color='%F{#7c6f64}'
+  local host_color='%F{#af3a03}'
+  local dir_color='%F{#076678}'
+  local vcs_color='%F{#8f3f71}'
+
+  print -P "${sep_color}${(l:$COLUMNS::─:)}%f"
+
+  local vcs
+  vcs=$(jj-starship prompt --no-color 2>/dev/null)
+
+  local host=""
+  [[ "$(hostname -s)" != "daysy" ]] && host="%B${host_color}%m%f%b "
+
+  PROMPT="${time_color}%T%f ${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{#79740e}.%F{#9d0006})❯%f "
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _prompt_precmd
