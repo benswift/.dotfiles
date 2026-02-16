@@ -6,6 +6,7 @@ auto-save = true
 bufferline = "multiple"
 color-modes = true
 true-color = true
+gutters = ["diagnostics", "diff", "spacer"]
 
 [editor.cursor-shape]
 insert = "bar"
