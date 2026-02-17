@@ -82,7 +82,7 @@ jjw-forget() {
 # zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
 alias za="zellij attach"
-alias zl="zellij list-sessions"
+zl() { local out; out=$(zellij list-sessions); echo "$out" | grep -v EXITED; echo; echo "$out" | grep EXITED; }
 alias zr="zellij run --"
 alias zk="zellij kill-session"
 alias prettify-md='prettier --prose-wrap always --write "**/*.md"'
