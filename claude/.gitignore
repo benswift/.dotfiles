@@ -8,3 +8,5 @@
 !skills/
 !skills/*/
 !skills/*/*.md
+!skills/*/*/
+!skills/*/*/*.md
