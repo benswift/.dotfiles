@@ -21,17 +21,17 @@ from rich.table import Table
 from rich.text import Text
 
 GRUVBOX = {
-    "fg": Style(color="#3c3836"),
-    "bg4": Style(color="#7c6f64"),
-    "bg4_dim": Style(color="#7c6f64", dim=True),
-    "orange": Style(color="#af3a03", bold=True),
-    "blue": Style(color="#076678", bold=True),
-    "purple": Style(color="#8f3f71", bold=True),
-    "green": Style(color="#79740e"),
-    "aqua": Style(color="#427b58"),
-    "yellow": Style(color="#b57614"),
-    "yellow_bold": Style(color="#b57614", bold=True),
-    "red": Style(color="#9d0006", bold=True),
+    "fg": Style(color="#ebdbb2"),
+    "bg4": Style(color="#a89984"),
+    "bg4_dim": Style(color="#a89984", dim=True),
+    "orange": Style(color="#fe8019", bold=True),
+    "blue": Style(color="#83a598", bold=True),
+    "purple": Style(color="#d3869b", bold=True),
+    "green": Style(color="#b8bb26"),
+    "aqua": Style(color="#8ec07c"),
+    "yellow": Style(color="#fabd2f"),
+    "yellow_bold": Style(color="#fabd2f", bold=True),
+    "red": Style(color="#fb4934", bold=True),
     "dim": Style(dim=True),
 }
 
@@ -154,7 +154,7 @@ def get_servers() -> list[dict]:
 def build_display() -> Group:
     now = datetime.now().strftime("%H:%M:%S")
     header = Text()
-    header.append("lsagents", style=Style(color="#3c3836", bold=True))
+    header.append("lsagents", style=Style(color="#ebdbb2", bold=True))
     header.append("  ")
     header.append(now, style=GRUVBOX["yellow"])
     header.append("\n")

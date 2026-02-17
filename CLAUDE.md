@@ -40,7 +40,7 @@ Shell config stuff is in the top-level. I mostly use zsh (on macOS), so I have
 ### Prompt (starship)
 
 The shell prompt is configured via @starship.toml, symlinked to
-`~/.config/starship.toml`. Uses gruvbox light colours to match the helix theme.
+`~/.config/starship.toml`. Uses gruvbox dark colours to match the helix theme.
 
 ## Version control (jj)
 

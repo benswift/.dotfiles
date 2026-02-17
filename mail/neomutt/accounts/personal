@@ -22,8 +22,8 @@ set signature = ~/.config/neomutt/signature
 # Personal account specific settings
 set status_format = "[PERSONAL] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 
-# Account-specific colours (gruvbox light — orange)
-color status #fbf1c7 #af3a03
+# Account-specific colours (gruvbox dark — orange)
+color status #282828 #fe8019
 
 # Account-specific search (restricted to this account)
 macro index / "<shell-escape>~/.config/neomutt/scripts/mu-search.sh /personal/<enter><change-folder-readonly>~/.mu/results<enter>" "search personal"

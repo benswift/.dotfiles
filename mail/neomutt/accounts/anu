@@ -22,8 +22,8 @@ set signature = ~/.config/neomutt/signature-anu
 # ANU account specific settings
 set status_format = "[ANU] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
 
-# Account-specific colours (gruvbox light — purple)
-color status #fbf1c7 #8f3f71
+# Account-specific colours (gruvbox dark — purple)
+color status #282828 #d3869b
 
 # Account-specific search (restricted to this account)
 macro index / "<shell-escape>~/.config/neomutt/scripts/mu-search.sh /anu/<enter><change-folder-readonly>~/.mu/results<enter>" "search anu"

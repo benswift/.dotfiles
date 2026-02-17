@@ -1,9 +1,9 @@
-# Starship prompt with gruvbox light colours
+# Starship prompt with gruvbox dark colours
 
-# Gruvbox light palette:
-# fg: #3c3836, bg: #fbf1c7
-# red: #9d0006, green: #79740e, yellow: #b57614
-# blue: #076678, purple: #8f3f71, aqua: #427b58, orange: #af3a03
+# Gruvbox dark palette:
+# fg: #ebdbb2, bg: #282828
+# red: #fb4934, green: #b8bb26, yellow: #fabd2f
+# blue: #83a598, purple: #d3869b, aqua: #8ec07c, orange: #fe8019
 
 format = """
 $time\
@@ -18,46 +18,46 @@ $cmd_duration\
 $character"""
 
 [directory]
-style = "bold #076678"
+style = "bold #83a598"
 truncation_length = 3
 
 [custom.jj]
 when = "jj-starship detect"
 shell = ["jj-starship", "--no-color"]
-style = "bold #8f3f71"
+style = "bold #d3869b"
 format = "[$output]($style) "
 
 [python]
-style = "#b57614"
+style = "#fabd2f"
 format = "[py $version]($style) "
 
 [elixir]
 disabled = true
 
 [nodejs]
-style = "#79740e"
+style = "#b8bb26"
 format = "[node $version]($style) "
 
 [rust]
-style = "#af3a03"
+style = "#fe8019"
 format = "[rs $version]($style) "
 
 [time]
 disabled = false
-style = "#7c6f64"
+style = "#a89984"
 format = "[$time]($style) "
 time_format = "%H:%M"
 
 [hostname]
 ssh_only = true
-style = "bold #af3a03"
+style = "bold #fe8019"
 format = "[$hostname]($style) "
 
 [cmd_duration]
 min_time = 2000
-style = "#b57614"
+style = "#fabd2f"
 format = "[took $duration]($style) "
 
 [character]
-success_symbol = "[❯](bold #79740e)"
-error_symbol = "[❯](bold #9d0006)"
+success_symbol = "[❯](bold #b8bb26)"
+error_symbol = "[❯](bold #fb4934)"
