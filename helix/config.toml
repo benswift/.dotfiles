@@ -23,6 +23,9 @@ wrap-at-text-width = true
 
 [keys.normal]
 D = ["extend_to_line_end", "delete_selection"]
+
+[keys.normal.space]
+v = ":write"
 # y = "yank_to_clipboard"
 # p = "paste_clipboard_after"
 # P = "paste_clipboard_before"
