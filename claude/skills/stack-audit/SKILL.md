@@ -19,7 +19,7 @@ Scan the project root for these markers to determine which stacks are in use:
 |---|---|
 | `pyproject.toml`, `*.py` | Python |
 | `mix.exs` | Elixir |
-| `package.json` | Frontend |
+| `package.json` | Web |
 | `.jj/`, `.git/` | VCS |
 
 A project may use multiple stacks. Detect all that apply. VCS is always
