@@ -48,6 +48,8 @@ STRAY_PATTERNS = [
     ("playwright", r"playwright.*run-server"),
 ]
 
+LISTENER_NAMES = {"extempore"}
+
 HOME = os.path.expanduser("~")
 
 
@@ -132,13 +134,17 @@ def get_servers() -> list[dict]:
     servers = []
     for p in psutil.process_iter(["pid"]):
         try:
+            display_name = cmd_basename(p) or p.name()
             conns = p.net_connections(kind="tcp")
-            ports = [c.laddr.port for c in conns if c.status == "LISTEN" and 3000 <= c.laddr.port <= 9999]
+            if display_name.lower() in LISTENER_NAMES:
+                ports = [c.laddr.port for c in conns if c.status == "LISTEN"]
+            else:
+                ports = [c.laddr.port for c in conns if c.status == "LISTEN" and 3000 <= c.laddr.port <= 9999]
             if not ports:
                 continue
             with p.oneshot():
                 servers.append({
-                    "cmd": (cmd_basename(p) or p.name())[:12],
+                    "cmd": display_name[:12],
                     "pid": str(p.pid),
                     "port": str(ports[0]),
                     "cpu": f"{p.cpu_percent():.1f}",
