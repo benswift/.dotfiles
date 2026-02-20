@@ -3,20 +3,23 @@
 # requires-python = ">=3.11,<3.14"
 # dependencies = ["replicate", "httpx", "typer"]
 # ///
-"""Generate an image using Google's Nano Banana Pro model via Replicate API.
+"""Generate styled images using various models via Replicate API.
 
 Environment:
     REPLICATE_API_KEY: Your Replicate API token (required)
 
+Supported models:
+    banana  - Google Nano Banana Pro (default): style transfer, up to 14 ref images, 4K
+    qwen    - Qwen Image: quality/speed toggle, 1 input image only
+    imagen  - Google Imagen 4 Ultra: text-to-image only, max 2K
+    flux    - FLUX 2 Max: up to 8 ref images, resolution in MP
+
 Provide a single prompt. Optionally include one or more input images with
---input-image (repeatable) to transform or use as reference (model supports up
-to 14). Use --preset to include predefined reference images from a preset.
+--input-image (repeatable) to transform or use as reference. Use --preset to
+include predefined reference images from a preset.
 
 Generated images will be saved to:
     <output-dir>/<iso-timestamp>/<slugified-image-prompt>.avif
-
-By default, images are converted to AVIF for better compression. Use --jpg to
-keep the original JPG format.
 """
 
 import datetime
@@ -24,32 +27,28 @@ import os
 import re
 import subprocess
 import sys
+from contextlib import ExitStack
 from pathlib import Path
-from typing import Annotated, NoReturn
+from typing import Annotated, Any, NoReturn
 
 import httpx
 import replicate
 import typer
 from replicate.exceptions import ReplicateError
 
-MODEL_ID = "google/nano-banana-pro"
-PRESETS_DIR = Path(__file__).parent / "nano_banana_presets"
+MODELS: dict[str, str] = {
+    "banana": "google/nano-banana-pro",
+    "qwen": "qwen/qwen-image",
+    "imagen": "google/imagen-4-ultra",
+    "flux": "black-forest-labs/flux-2-max",
+}
+
+PRESETS_DIR = Path(__file__).parent / "styled_image_gen_presets"
 
 app = typer.Typer()
 
 
 def get_preset_images(preset_name: str) -> list[Path]:
-    """Get all image files from a preset directory.
-
-    Args:
-        preset_name: Name of the preset (subdirectory of presets dir)
-
-    Returns:
-        List of image paths sorted alphabetically
-
-    Raises:
-        FileNotFoundError: If preset directory doesn't exist
-    """
     preset_dir = PRESETS_DIR / preset_name
     if not preset_dir.is_dir():
         available = [d.name for d in PRESETS_DIR.iterdir() if d.is_dir()]
@@ -64,20 +63,11 @@ def get_preset_images(preset_name: str) -> list[Path]:
 
 
 def error_exit(message: str) -> NoReturn:
-    """Print error message and exit with status 1."""
     print(f"Error: {message}", file=sys.stderr)
     sys.exit(1)
 
 
 def get_api_token() -> str:
-    """Get Replicate API token from environment.
-
-    Returns:
-        API token string
-
-    Raises:
-        KeyError: If REPLICATE_API_KEY is not set
-    """
     try:
         return os.environ["REPLICATE_API_KEY"]
     except KeyError:
@@ -88,43 +78,15 @@ def get_api_token() -> str:
 
 
 def slugify(text: str, max_words: int = 6) -> str:
-    """Convert text to slug, taking only first max_words words.
-
-    Args:
-        text: Text to slugify
-        max_words: Maximum number of words to include (default: 6)
-
-    Returns:
-        Slugified string (e.g., "Hello World Example" -> "hello-world-example")
-    """
-    # Convert to lowercase and split into words
-    words = text.lower().split()
-
-    # Take first max_words
-    words = words[:max_words]
-
-    # Join and clean: keep only alphanumeric and hyphens
+    words = text.lower().split()[:max_words]
     slug = "-".join(words)
     slug = re.sub(r"[^a-z0-9-]", "-", slug)
-
-    # Remove multiple consecutive hyphens and strip leading/trailing hyphens
     slug = re.sub(r"-+", "-", slug)
     slug = slug.strip("-")
-
     return slug if slug else "untitled"
 
 
 def download_image(url: str, output_path: Path) -> None:
-    """Download image from URL and save to file.
-
-    Args:
-        url: URL to download from
-        output_path: Path where the image should be saved
-
-    Raises:
-        httpx.HTTPError: If download fails
-        OSError: If file cannot be written
-    """
     response = httpx.get(url, timeout=60.0, follow_redirects=True)
     response.raise_for_status()
     output_path.write_bytes(response.content)
@@ -134,16 +96,6 @@ AVIF_QUALITY = 60
 
 
 def convert_to_avif(jpg_path: Path, avif_path: Path) -> None:
-    """Convert JPG to AVIF and delete the original.
-
-    Args:
-        jpg_path: Path to the source JPG file
-        avif_path: Path where the AVIF should be saved
-
-    Raises:
-        subprocess.CalledProcessError: If avifenc fails
-        FileNotFoundError: If avifenc is not installed
-    """
     subprocess.run(
         ["avifenc", "-q", str(AVIF_QUALITY), str(jpg_path), str(avif_path)],
         check=True,
@@ -152,7 +104,86 @@ def convert_to_avif(jpg_path: Path, avif_path: Path) -> None:
     jpg_path.unlink()
 
 
+def warn(message: str) -> None:
+    print(f"Warning: {message}", file=sys.stderr)
+
+
+def build_model_input(
+    model: str,
+    prompt: str,
+    aspect_ratio: str,
+    resolution: str,
+    output_format: str,
+    safety_filter_level: str,
+    image_paths: list[Path],
+    stack: ExitStack,
+) -> dict[str, Any]:
+    params: dict[str, Any] = {
+        "prompt": prompt,
+        "aspect_ratio": aspect_ratio,
+        "output_format": output_format,
+    }
+
+    if model == "banana":
+        params["resolution"] = resolution
+        params["safety_filter_level"] = safety_filter_level
+        if image_paths:
+            params["image_input"] = [
+                stack.enter_context(open(p, "rb")) for p in image_paths
+            ]
+
+    elif model == "qwen":
+        if resolution in ("2K", "4K"):
+            params["image_size"] = "optimize_for_quality"
+        else:
+            params["image_size"] = "optimize_for_speed"
+        if safety_filter_level == "block_only_high":
+            params["disable_safety_checker"] = True
+        else:
+            params["disable_safety_checker"] = False
+        if image_paths:
+            if len(image_paths) > 1:
+                warn("qwen model supports only 1 input image; using the first")
+            params["image"] = stack.enter_context(open(image_paths[0], "rb"))
+
+    elif model == "imagen":
+        if resolution == "4K":
+            warn("imagen model caps at 2K; using 2K instead")
+            params["image_size"] = "2K"
+        else:
+            params["image_size"] = resolution
+        params["safety_filter_level"] = safety_filter_level
+        if image_paths:
+            warn("imagen model does not support image input; ignoring input images")
+
+    elif model == "flux":
+        mp_map = {"1K": "1 MP", "2K": "2 MP", "4K": "4 MP"}
+        params["resolution"] = mp_map.get(resolution, "4 MP")
+        tolerance_map = {
+            "block_low_and_above": 1,
+            "block_medium_and_above": 3,
+            "block_only_high": 5,
+        }
+        params["safety_tolerance"] = tolerance_map.get(safety_filter_level, 5)
+        if image_paths:
+            if len(image_paths) > 8:
+                warn("flux model supports up to 8 input images; using first 8")
+                image_paths = image_paths[:8]
+            params["input_images"] = [
+                stack.enter_context(open(p, "rb")) for p in image_paths
+            ]
+
+    return params
+
+
+def extract_output(model: str, output: Any) -> str:
+    if model == "qwen":
+        return str(output[0])
+    return str(output)
+
+
 def generate_image(
+    model: str,
     prompt: str,
     output_path: Path,
     client: replicate.Client,
@@ -162,45 +193,42 @@ def generate_image(
     safety_filter_level: str,
     input_image_paths: list[Path] | None = None,
 ) -> None:
-    """Generate image using Nano Banana Pro via Replicate API."""
-    model_input: dict[str, str | list] = {
-        "prompt": prompt,
-        "output_format": output_format,
-        "aspect_ratio": aspect_ratio,
-        "resolution": resolution,
-        "safety_filter_level": safety_filter_level,
-    }
-
-    if input_image_paths:
-        from contextlib import ExitStack
-
-        with ExitStack() as stack:
-            image_files = [
-                stack.enter_context(open(path, "rb")) for path in input_image_paths
-            ]
-            model_input["image_input"] = image_files
-            output = client.run(MODEL_ID, input=model_input)
-    else:
-        output = client.run(MODEL_ID, input=model_input)
+    image_paths = input_image_paths or []
+    with ExitStack() as stack:
+        model_input = build_model_input(
+            model,
+            prompt,
+            aspect_ratio,
+            resolution,
+            output_format,
+            safety_filter_level,
+            image_paths,
+            stack,
+        )
+        output = client.run(MODELS[model], input=model_input)
 
     if not output:
         raise ValueError("Model returned empty output")
 
-    image_url = str(output)
+    image_url = extract_output(model, output)
     download_image(image_url, output_path)
 
 
 @app.command()
 def _main_impl(
     prompt: Annotated[str, typer.Argument(help="Image prompt")],
+    model: Annotated[
+        str,
+        typer.Option(help="Model to use: banana, qwen, imagen, flux"),
+    ] = "banana",
     output_dir: Annotated[Path, typer.Option(help="Output directory")] = Path(
-        "nano_banana_output"
+        "styled_image_gen_output"
     ),
     input_image: Annotated[
         list[Path],
         typer.Option(
             "--input-image",
-            help="Optional input image(s) to transform or use as reference (repeat to supply multiple)",
+            help="Input image(s) for reference (repeat for multiple)",
             exists=True,
             dir_okay=False,
         ),
@@ -208,7 +236,7 @@ def _main_impl(
     preset: Annotated[
         str | None,
         typer.Option(
-            help="Load reference images from a preset (images added before --input-image)"
+            help="Load reference images from a preset (added before --input-image)"
         ),
     ] = None,
     aspect_ratio: Annotated[
@@ -218,7 +246,7 @@ def _main_impl(
     resolution: Annotated[
         str,
         typer.Option(help="Resolution: 1K, 2K, or 4K"),
-    ] = "2K",
+    ] = "4K",
     jpg: Annotated[
         bool,
         typer.Option("--jpg", help="Keep original JPG instead of converting to AVIF"),
@@ -232,21 +260,23 @@ def _main_impl(
     safety_filter_level: Annotated[
         str,
         typer.Option(
-            help=(
-                "Safety filter setting "
-                "(block_low_and_above, block_medium_and_above, block_only_high)"
-            )
+            help="Safety filter: block_low_and_above, block_medium_and_above, block_only_high"
         ),
     ] = "block_only_high",
 ) -> None:
-    """Generate a single image using Google's Nano Banana Pro model via Replicate API.
+    """Generate a styled image using Replicate models.
 
     Examples:
 
-      nano_banana "sunrise over a misty valley" --resolution 2K --aspect-ratio 4:3
+      styled_image_gen.py "sunrise over a misty valley" --resolution 2K
 
-      nano_banana "studio portrait" --input-image headshot.jpg --resolution 1K --jpg
+      styled_image_gen.py "studio portrait" --model flux --input-image ref.jpg
+
+      styled_image_gen.py "abstract pattern" --preset anu --model banana
     """
+    if model not in MODELS:
+        error_exit(f"Unknown model '{model}'. Choose from: {', '.join(MODELS)}")
+
     all_input_images: list[Path] = []
     if preset:
         all_input_images.extend(get_preset_images(preset))
@@ -254,8 +284,6 @@ def _main_impl(
 
     api_token = get_api_token()
 
-    # Create output directory structure
-    # If output_filename is specified, use output_dir directly; otherwise create timestamped subdir
     if output_filename:
         target_dir = output_dir
     else:
@@ -265,13 +293,12 @@ def _main_impl(
         target_dir = output_dir / timestamp
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create Replicate client once
     client = replicate.Client(api_token=api_token)
 
     output_format = "jpg" if jpg else "avif"
     filename = output_filename if output_filename else slugify(prompt)
 
-    print(f"Model: {MODEL_ID}")
+    print(f"Model: {MODELS[model]} ({model})")
     print(f"Aspect ratio: {aspect_ratio}")
     print(f"Resolution: {resolution}")
     print(f"Format: {output_format}")
@@ -291,6 +318,7 @@ def _main_impl(
     print(f"Output: {final_path}")
 
     generate_image(
+        model,
         prompt,
         jpg_path,
         client,
