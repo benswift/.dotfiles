@@ -387,7 +387,7 @@ send_queued_mail() {   # <-- mail id
       RC=$?                          # take msmtp exit code
       log "mail [ $2 ] [ $1 ] from queue ; send failed ; msmtp rc = $RC" # bad news ...
     fi
-    return $RC                       # func returns exit code
+    return 0
   else                               # corresponding MSF file not found
     log "preparing to send .mail file [ $1 ] [ ${FQP}.mail ] but"\
         "  corresponding .msmtp file [ ${FQP}.msmtp ] was not found in queue"\
@@ -613,7 +613,7 @@ send_mail() {    # <-- all mail args ; mail text via TMP
   if "$MSMTP" "$@" < "${FQP}.mail" > /dev/null ; then      # send mail using queue .mail fil
     log "mail for [ $* ] : send was successful"          # log it
     'rm' -f "${FQP}".*               # remove all queue mail files .mail & .msmtp file
-    run_queue 'sm'                   # run/flush any other mails in queue
+    run_queue 'sm' || true           # run/flush any other mails in queue
   else                               # send failed - the mail stays in the queue
     log "mail for [ $* ] : send was unsuccessful ; msmtp exit code was $?"\
         "enqueued mail as : [ $ID ] ( $* )"    # (queue .mail file is already there)

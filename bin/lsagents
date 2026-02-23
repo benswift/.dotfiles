@@ -130,6 +130,24 @@ def get_strays() -> list[dict]:
     return strays
 
 
+def get_mail_clients() -> list[dict]:
+    clients = []
+    for p in psutil.process_iter(["pid"]):
+        try:
+            if cmd_basename(p) == "neomutt":
+                with p.oneshot():
+                    clients.append({
+                        "pid": str(p.pid),
+                        "cpu": f"{p.cpu_percent():.1f}",
+                        "mem": f"{p.memory_percent():.1f}",
+                        "elapsed": fmt_elapsed(p.create_time()),
+                        "cwd": shorten_path(p.cwd()),
+                    })
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    return clients
+
+
 def get_servers() -> list[dict]:
     servers = []
     for p in psutil.process_iter(["pid"]):
@@ -220,6 +238,33 @@ def build_display() -> Group:
             "", "", "", "", "",
         )
 
+    mail_clients = get_mail_clients()
+    mail_table = Table(
+        show_header=True,
+        show_edge=False,
+        show_lines=False,
+        box=None,
+        padding=(0, 1),
+        header_style=GRUVBOX["bg4"],
+    )
+    mail_table.add_column("MAIL", min_width=8, style=GRUVBOX["fg"])
+    mail_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
+    mail_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
+    mail_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
+    mail_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
+    mail_table.add_column("CWD", style=GRUVBOX["aqua"])
+
+    for m in mail_clients:
+        mail_table.add_row(
+            Text("neomutt", style=GRUVBOX["green"]),
+            m["pid"], m["cpu"], m["mem"], m["elapsed"], m["cwd"],
+        )
+    if not mail_clients:
+        mail_table.add_row(
+            Text("(no mail clients)", style=GRUVBOX["dim"]),
+            "", "", "", "", "",
+        )
+
     servers = get_servers()
     server_table = Table(
         show_header=True,
@@ -252,13 +297,15 @@ def build_display() -> Group:
     stray_count_style = GRUVBOX["yellow"] if strays else GRUVBOX["green"]
     footer.append(str(len(agents)), style=GRUVBOX["green"])
     footer.append(" agent(s), ", style=GRUVBOX["dim"])
+    footer.append(str(len(mail_clients)), style=GRUVBOX["green"])
+    footer.append(" mail, ", style=GRUVBOX["dim"])
     footer.append(str(len(servers)), style=GRUVBOX["green"])
     footer.append(" server(s), ", style=GRUVBOX["dim"])
     footer.append(str(len(strays)), style=stray_count_style)
     footer.append(" stray(s)", style=GRUVBOX["dim"])
     footer.append("  \u2022  q or ctrl-c to quit", style=GRUVBOX["dim"])
 
-    return Group(header, agent_table, Text(), stray_table, Text(), server_table, Text(), footer)
+    return Group(header, agent_table, Text(), mail_table, Text(), stray_table, Text(), server_table, Text(), footer)
 
 
 def main() -> None:
