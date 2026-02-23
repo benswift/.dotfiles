@@ -23,6 +23,7 @@ wrap-at-text-width = true
 
 [keys.normal]
 D = ["extend_to_line_end", "delete_selection"]
+C-ret = ":pipe-to xtm-send"
 
 [keys.normal.space]
 v = ":write"
