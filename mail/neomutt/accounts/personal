@@ -12,7 +12,7 @@ set record = +"Sent Items"
 set trash = +Trash
 
 # Sending mail via msmtpq (with queue support)
-set sendmail = "/Users/ben/.dotfiles/bin/msmtpq-send -a personal"
+set sendmail = "/Users/ben/.dotfiles/bin/msmtpq-send"
 set use_from = yes
 set envelope_from = yes
 
