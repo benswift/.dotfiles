@@ -77,6 +77,18 @@ name = "muttrc"
 scope = "source.muttrc"
 file-types = ["muttrc", { glob = "*muttrc" }]
 
+[[language]]
+name = "extempore"
+scope = "source.extempore"
+file-types = ["xtm"]
+comment-token = ";"
+block-comment-tokens = { start = "#|", end = "|#" }
+indent = { tab-width = 2, unit = "  " }
+
+[[grammar]]
+name = "extempore"
+source = { git = "https://github.com/extemporelang/tree-sitter-extempore", rev = "91c8946ae8886e5798bfe9c4beae2b6c69fde7b5" }
+
 [[grammar]]
 name = "mutt-compose"
 source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "c0558cc601b8407fe84907f230a7595fdece1836" }
