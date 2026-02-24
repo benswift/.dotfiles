@@ -47,20 +47,12 @@ _anu-pdf() {
     _exit_1 printf "Error: pandoc is not installed. Please install pandoc to use this plugin.\\n"
   fi
 
-  # Create a temporary directory for the conversion
-  local _temp_dir
-  _temp_dir="$(mktemp -d)"
-
-  if [[ ! -d "${_temp_dir}" ]]; then
-    _exit_1 printf "Error: Failed to create temporary directory.\\n"
-  fi
-
   # Get the base filename without extension
   local _basename
   _basename="$(basename "${_path}" ".${_file_ext}")"
 
-  local _temp_typ="${_temp_dir}/${_basename}.typ"
-  local _temp_pdf="${_temp_dir}/${_basename}.pdf"
+  local _temp_typ="/tmp/${_basename}.typ"
+  local _temp_pdf="/tmp/${_basename}.pdf"
 
   printf "Converting %s to PDF...\\n" "${_basename}.${_file_ext}"
 
@@ -77,20 +69,17 @@ _anu-pdf() {
           --from markdown \
           --to typst \
           --output "${_temp_typ}"; then
-        rm -rf "${_temp_dir}"
         _exit_1 printf "Error: Failed to convert markdown to typst.\\n"
       fi
     fi
 
     # Compile typst to PDF
     if ! typst compile "${_temp_typ}" "${_temp_pdf}"; then
-      rm -rf "${_temp_dir}"
       _exit_1 printf "Error: Failed to compile typst to PDF.\\n"
     fi
   elif [[ "${_file_ext}" == "typ" ]]; then
     # Compile typst directly to PDF
     if ! typst compile "${_path}" "${_temp_pdf}"; then
-      rm -rf "${_temp_dir}"
       _exit_1 printf "Error: Failed to compile typst to PDF.\\n"
     fi
   fi
@@ -105,7 +94,6 @@ _anu-pdf() {
     _exit_1 printf "Error: Could not find a suitable command to open the PDF.\\n"
   fi
 
-  # Keep the PDF in the temp directory instead of deleting it
   printf "PDF saved to: %s\\n" "${_temp_pdf}"
   printf "Done.\\n"
 }
