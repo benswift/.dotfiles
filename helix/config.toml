@@ -26,7 +26,8 @@ D = ["extend_to_line_end", "delete_selection"]
 C-ret = ":pipe-to xtm-send"
 
 [keys.normal.space]
-v = ":write"
+f = ":write"
+v = "file_picker"
 # y = "yank_to_clipboard"
 # p = "paste_clipboard_after"
 # P = "paste_clipboard_before"
