@@ -16,11 +16,12 @@ Usage:
   echo "(println 42)" | xtm-send
   xtm-send --stop       kill the background relay
 
-In Helix, select a top-level form (e.g. mam) then:
-  :pipe-to xtm-send
+In Helix, select a top-level form with maf then:
+  C-ret  (or :pipe-to xtm-send)
 """
 
 import os
+import re
 import signal
 import socket
 import subprocess
@@ -153,4 +154,5 @@ if __name__ == "__main__":
     else:
         expr = sys.stdin.read()
         if expr.strip():
-            send(expr)
+            forms = [f for f in re.split(r"\n(?=\()", expr.strip()) if f.strip()]
+            send("\r\n".join(forms))
