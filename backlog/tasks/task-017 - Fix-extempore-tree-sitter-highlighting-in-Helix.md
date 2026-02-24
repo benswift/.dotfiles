@@ -1,10 +1,10 @@
 ---
 id: TASK-017
 title: Fix extempore tree-sitter highlighting in Helix
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-02-24 16:00'
-updated_date: '2026-02-24 03:50'
+updated_date: '2026-02-24 07:10'
 labels:
   - helix
   - tree-sitter
@@ -121,11 +121,11 @@ the rev in languages.toml.
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 <!-- SECTION:ACCEPTANCE_CRITERIA:BEGIN -->
-- [ ] #1 `bind-func`, `define`, `lambda` highlighted as keywords (red) in Helix
-- [ ] #2 Function names after `bind-func` highlighted as functions (green) in Helix
-- [ ] #3 Type annotations highlighted as types (yellow) in Helix
-- [ ] #4 All capture names in highlights.scm verified against Helix theme hierarchy
-- [ ] #5 Grammar commit pushed to GitHub and rev updated in languages.toml
+- [x] #1 `bind-func`, `define`, `lambda` highlighted as keywords (red) in Helix
+- [x] #2 Function names after `bind-func` highlighted as functions (green) in Helix
+- [x] #3 Type annotations highlighted as types (yellow) in Helix
+- [x] #4 All capture names in highlights.scm verified against Helix theme hierarchy
+- [x] #5 Grammar commit pushed to GitHub and rev updated in languages.toml
 <!-- SECTION:ACCEPTANCE_CRITERIA:END -->
 <!-- AC:END -->
 
@@ -192,3 +192,24 @@ Minimal reproduction:
 5. Change query to use `(_)` instead of `(symbol)` → highlight appears
 6. Compare with `tree-sitter query` using same grammar and query → matches correctly
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+## Root cause
+
+tree-house (Helix's tree-sitter engine) concatenates `highlights.scm` + `locals.scm` into a single query. Captures from `locals.scm` (`@_keyword`, `@local.definition` without trailing dot) leaked into the highlight query and were not disabled by tree-house's filtering logic. The "prefer last pattern" rule then removed existing highlights for affected symbols.
+
+## Fix
+
+- Emptied `locals.scm` to avoid the tree-house concatenation bug
+- Rewrote `highlights.scm` with correct capture names for gruvbox theme (`@constant.numeric`, `@variable.parameter`, etc.)
+- Split `typed_identifier` from a leaf external token into a grammar rule with `(symbol)` + `(type_annotation)` children, enabling independent highlighting of name and type parts
+- Extended the external scanner to recognise simple type annotations (i1, i8, i16, i32, i64, f, f32, f64, d, float, double, void) in addition to bracket types
+- Excluded digit/sign-start names from typed identifier matching to avoid conflicts with typed number literals
+
+## Changes pushed
+
+- **tree-sitter-extempore** (extemporelang/tree-sitter-extempore): commits `34c03d1` and `8a8a878` — grammar rule split, scanner extensions, 170/170 tests passing
+- **dotfiles**: updated highlights.scm, emptied locals.scm, updated grammar rev in languages.toml to `8a8a878`
+<!-- SECTION:FINAL_SUMMARY:END -->
