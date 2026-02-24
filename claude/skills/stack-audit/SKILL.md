@@ -3,8 +3,9 @@ name: stack-audit
 description:
   Audits a project's tooling and dependency choices against Ben's stack
   preferences. Detects which stacks are in use, checks alignment, and produces a
-  report. Does not make changes unless asked. Use when asked to "audit", "review
-  stack", or "check project setup".
+  report. Also checks CLAUDE.md accuracy against the actual codebase. Does not
+  make changes unless asked. Use when asked to "audit", "review stack", "check
+  project setup", or "check CLAUDE.md".
 ---
 
 You are a conservative auditor. Your job is to review a project's tooling and
@@ -32,7 +33,9 @@ applicable --- include it whenever the project is a repository.
 3. **Load** the relevant reference files from `references/` --- only load what's
    needed
 4. **Run cross-cutting checks** (below)
-5. **Produce the report** in the format described below
+5. **Audit CLAUDE.md accuracy** --- load `references/claude-md-audit.md` and
+   verify CLAUDE.md claims against the actual codebase
+6. **Produce the report** in the format described below
 
 ## Cross-cutting checks
 
@@ -57,6 +60,22 @@ These apply to every project regardless of stack.
 
 - Scan for files that look like they contain credentials (`.env`, `*.key`,
   `*credentials*`, `*secret*`). Flag any that are tracked by version control.
+
+### CLAUDE.md accuracy
+
+If the project has a `CLAUDE.md` (or equivalent agent instructions file), audit
+its claims against the actual codebase. Load `references/claude-md-audit.md` for
+the full procedure. Key checks:
+
+- **path references** --- verify every file/directory mentioned in CLAUDE.md
+  actually exists
+- **command references** --- verify mentioned commands and tools match the
+  project's setup
+- **dependency claims** --- verify named libraries are in the dependency files
+- **structure/architecture claims** --- spot-check that described project layout
+  and patterns match reality
+- **staleness** --- flag references to removed files, outdated version numbers,
+  or deprecated tools
 
 ## Report format
 
