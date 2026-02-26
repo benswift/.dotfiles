@@ -31,7 +31,7 @@ HEADERS=$(sed -n '1,/^$/p' "$DRAFT_FILE")
 
 printf 'Generating reply...\n' >/dev/tty
 
-PROMPT=$(printf 'You are drafting an email reply on behalf of Ben Swift. Read the original email at: %s\n\nInstructions: %s\n\nWrite only the email body — no headers, no signature block. Professional but friendly tone, concise. Australian English spelling.' "$SOURCE_EMAIL" "$INSTRUCTIONS")
+PROMPT=$(printf 'You are drafting an email reply on behalf of Ben Swift. Read the original email at: %s\n\nInstructions: %s\n\nWrite only the email body — no headers, no signature block, no meta-commentary. Output the reply text and nothing else. Professional but friendly tone, concise. Australian English spelling.' "$SOURCE_EMAIL" "$INSTRUCTIONS")
 
 if BODY=$(claude --dangerously-skip-permissions -p "$PROMPT" 2>/dev/null); then
     printf '%s\n%s\n' "$HEADERS" "$BODY" >"$DRAFT_FILE"
