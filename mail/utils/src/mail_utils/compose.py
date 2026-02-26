@@ -76,7 +76,7 @@ def send_email(
         return True, f"Would send via msmtp account '{config.msmtp}'"
 
     result = subprocess.run(
-        ["msmtpq", "-t", "-a", config.msmtp],
+        ["msmtp", "-t", "-a", config.msmtp],
         input=msg.as_bytes(),
         capture_output=True,
     )

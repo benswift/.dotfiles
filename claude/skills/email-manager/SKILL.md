@@ -106,8 +106,7 @@ Trash/"Deleted Items", "Junk Mail"/"Junk E-Mail".
 ### Email sync and sending
 
 - **mbsync** syncs IMAP mail to local Maildir
-- **msmtpq** queues outgoing mail (automatically flushes when online via launchd
-  agent)
+- **msmtp** sends outgoing mail
 - OAuth2 tokens for Office365 accounts are stored in macOS Keychain
 - If OAuth expires, user can run `~/.dotfiles/mail/reauth-anu-oauth.sh`
 

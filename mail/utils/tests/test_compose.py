@@ -137,7 +137,7 @@ class TestSendEmail:
         assert success is True
         assert "Would send" in message
 
-    def test_calls_msmtpq_with_correct_args(self):
+    def test_calls_msmtp_with_correct_args(self):
         msg = build_email(
             from_addr="sender@example.com",
             to="recipient@example.com",
@@ -155,7 +155,7 @@ class TestSendEmail:
             assert success is True
             mock_run.assert_called_once()
             args = mock_run.call_args[0][0]
-            assert args[0] == "msmtpq"
+            assert args[0] == "msmtp"
             assert "-t" in args
             assert "-a" in args
             assert "personal" in args

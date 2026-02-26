@@ -28,7 +28,7 @@ set reverse_alias = yes
 set text_flowed = yes
 # Tab completion for addresses in compose mode
 bind editor <Tab> complete-query
-# Wait for sendmail to complete so we see errors (msmtpq queues if offline)
+# Wait for sendmail to complete so we see errors inline
 set sendmail_wait = 0
 
 # === General behaviour ===

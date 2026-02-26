@@ -11,8 +11,8 @@ set postponed = +Drafts
 set record = +"Sent Items"
 set trash = +Trash
 
-# Sending mail via msmtpq (with queue support)
-set sendmail = "/Users/ben/.dotfiles/bin/msmtpq-send"
+# Sending mail via msmtp
+set sendmail = "msmtp"
 set use_from = yes
 set envelope_from = yes
 

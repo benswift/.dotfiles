@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-export EMAIL_CONN_TEST=x
-exec /Users/ben/.dotfiles/bin/msmtpq "$@"
