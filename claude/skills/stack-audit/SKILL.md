@@ -21,7 +21,7 @@ Scan the project root for these markers to determine which stacks are in use:
 | `pyproject.toml`, `*.py` | Python |
 | `mix.exs` | Elixir |
 | `package.json` | Web |
-| `.jj/`, `.git/` | VCS |
+| `.git/` | VCS |
 
 A project may use multiple stacks. Detect all that apply. VCS is always
 applicable --- include it whenever the project is a repository.
@@ -51,8 +51,6 @@ These apply to every project regardless of stack.
 
 ### Version control
 
-- **jj preferred**: if `.jj/` exists, good. If only `.git/` exists, note that
-  jj colocated mode is preferred.
 - **`.gitignore` hygiene**: check for common secret patterns (`.env`,
   `.envrc`, `*.pem`, credentials files) in the ignore file.
 

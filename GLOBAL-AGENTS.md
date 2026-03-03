@@ -85,9 +85,8 @@ directly.
   Grid/Flexbox, modern ES6+ with functional patterns, Playwright for testing
 - **Writing**: conversational academic voice (Australian English, em dashes,
   self-aware, direct openings)
-- **Version control**: prefer `jj` when a `.jj` directory exists in the repo,
-  otherwise use `git`. Use `gh` CLI for GitHub API operations (PRs, issues,
-  history investigation)
+- **Version control**: use `git`. Use `gh` CLI for GitHub API operations (PRs,
+  issues, history investigation)
 - **Tasks**: use `backlog` MCP server
 - **Notes**: use `nb` CLI, get paths with `nb show <id> --path` before editing
 
@@ -122,10 +121,9 @@ formatting. Fall back to sed/awk only for non-structural edits.
 
 ### Version control workflow
 
-Write concise, imperative-mood commit/change descriptions. Prefer small, focused
-changes. Always rebase, never merge (unless it's the only way, then ask for
-confirmation). In jj repos, use `jj describe` for change descriptions and
-`jj new` to start new changes.
+Write concise, imperative-mood commit messages. Prefer small, focused commits.
+Always rebase, never merge (unless it's the only way, then ask for
+confirmation).
 
 ### Security
 

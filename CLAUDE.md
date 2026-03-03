@@ -42,28 +42,12 @@ Shell config stuff is in the top-level. I mostly use zsh (on macOS), so I have
 The shell prompt is configured via @starship.toml, symlinked to
 `~/.config/starship.toml`. Uses gruvbox dark colours to match the helix theme.
 
-## Version control (jj)
+## Version control (git)
 
-This repo uses [jj](https://jj-vcs.github.io/jj/) (Jujutsu) as a colocated
-repo (both `.jj/` and `.git/` exist). **Always use `jj` for version control
-operations, never raw `git` commands.** The `gh` CLI is still fine for GitHub API
-operations (PRs, issues, etc.).
+This repo uses plain git. Use `gh` CLI for GitHub API operations (PRs, issues,
+etc.).
 
-Key jj commands:
-
-- `jj st` --- show status
-- `jj diff` --- show working copy changes
-- `jj log` --- show history
-- `jj describe -m "message"` --- set description on working copy change
-- `jj new` --- start a new change (like creating a fresh commit to work on)
-- `jj squash` --- squash working copy into parent
-- `jj bookmark set <name>` --- set a bookmark (like a git branch pointer)
-- `jj git push` --- push to remote
-- `jj git fetch` --- fetch from remote
-- `jj rebase -d <destination>` --- rebase current change
-
-Git configuration files (still needed for the colocated git backend) are in the
-top-level:
+Git configuration files are in the top-level:
 
 - @gitconfig - global git configuration
 - @gitignore - global gitignore patterns

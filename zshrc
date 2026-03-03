@@ -46,39 +46,13 @@ alias daily="nb daily"
 alias latest="nb --limit 10"
 # alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
-# jj shortcuts
-alias js="jj st"
-alias jd="jj diff"
-alias jl="jj log"
-alias jn="jj new"
-alias jQ="jj squash"
-alias je="jj edit"
-alias jb="jj bookmark"
-jm() { jj describe -m "$*"; }
-jp() { jj git fetch && jj rebase -d main@origin; }
-jship() {
-  local rev="@"
-  if [[ "$(jj log -r @ --no-graph -T 'empty')" == "true" ]]; then
-    rev="@-"
-  fi
-  jj bookmark set main -r "$rev" && jj git push
-}
-jjw() {
-  local name="${1:?usage: jjw <name> [-r rev]}"
-  shift
-  local root="$(jj root)"
-  local dir="$(dirname "$root")/$(basename "$root")-$name"
-  jj workspace add --name "$name" "$dir" "$@"
-  cd "$dir"
-  ayolo
-}
-jjw-forget() {
-  local name="${1:?usage: jjw-forget <name>}"
-  local root="$(jj root)"
-  local dir="$(dirname "$root")/$(basename "$root")-$name"
-  jj workspace forget "$name"
-  rm -rf "$dir"
-}
+# git shortcuts
+alias gs="git status"
+alias gd="git diff"
+alias gl="git log --oneline"
+alias gb="git branch"
+gp() { git pull --rebase; }
+gship() { git push; }
 # zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
 alias za="zellij attach"
@@ -124,8 +98,6 @@ eval "$(mise activate zsh)"
 export LS_COLORS="$(vivid generate gruvbox-dark)"
 eval "$(zoxide init zsh)"
 
-# Pure zsh prompt (replaces starship). Uses jj-starship for VCS status.
-# Shows: time, cwd, jj/git status, hostname (only if not daysy), separator line.
 _prompt_precmd() {
   local exit_status=$?
   local sep_color='%F{#504945}'
@@ -137,7 +109,7 @@ _prompt_precmd() {
   print -P "${sep_color}${(l:$COLUMNS::─:)}%f"
 
   local vcs
-  vcs=$(jj-starship prompt --no-color 2>/dev/null)
+  vcs=$(git branch --show-current 2>/dev/null)
 
   local host=""
   [[ "$(hostname -s)" != "daysy" ]] && host="%B${host_color}%m%f%b "
