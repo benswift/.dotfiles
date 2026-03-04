@@ -39,6 +39,7 @@ command = "nb-lsp"
 name = "markdown"
 language-servers = ["marksman", "nb-lsp"]
 auto-format = true
+file-types = ["md", "markdown", "mdx", "mkd", "mkdn", "mdwn", "mdown", "markdn", "mdtxt", "mdtext", "workbook", { glob = "PULLREQ_EDITMSG" }, { glob = "*.deck.svelte" }]
 formatter = { command = "prettier", args = ["--prose-wrap", "always", "--stdin-filepath", "file.md"] }
 
 [[language]]
