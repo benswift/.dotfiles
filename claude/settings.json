@@ -5,6 +5,9 @@
     "DISABLE_TELEMETRY": "1"
   },
   "includeCoAuthoredBy": false,
+  "permissions": {
+    "defaultMode": "default"
+  },
   "enabledPlugins": {
     "rust-analyzer-lsp@claude-plugins-official": true
   },
