@@ -2,13 +2,9 @@
 
 set -euo pipefail
 
-# Find repo root (prefer jj, fall back to git)
-if repo_root=$(jj root 2>/dev/null); then
-    :
-elif repo_root=$(git rev-parse --show-toplevel 2>/dev/null); then
-    :
-else
-    echo "Error: not in a jj or git repository"
+# Find repo root
+if ! repo_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+    echo "Error: not in a git repository"
     exit 1
 fi
 

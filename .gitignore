@@ -9,8 +9,5 @@ helix/runtime/grammars/
 # Python bytecode
 __pycache__/
 
-# jj working directory
-.jj/
-
 # Claude Code project-local directory (machine-specific)
 .claude/
