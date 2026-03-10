@@ -77,7 +77,7 @@ When a tool can be installed multiple ways, prefer this order:
 2. **Platform package manager** (brew on macOS, apt/dnf on Linux) --- for system
    utilities (curl, git, jq) and tools needing OS integration. Fast, prebuilt
    binaries.
-3. **Language package managers** (`uv tool`, `pnpm add -g`, `cargo install`)
+3. **Language package managers** (`uv tool`, `bun add -g`, `cargo install`)
    --- only when the tool's documentation explicitly recommends this method, or
    mise doesn't support the tool.
 
