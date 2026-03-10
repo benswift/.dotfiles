@@ -92,6 +92,11 @@ install_claude() {
     curl -fsSL https://claude.ai/install.sh | bash
 }
 
+install_agent_skills() {
+    info "Installing agent-browser skill..."
+    npx -y skills add vercel-labs/agent-browser
+}
+
 main() {
     echo ""
     echo "╔═══════════════════════════════════════╗"
@@ -127,6 +132,7 @@ main() {
     setup_symlinks
     install_mise_tools
     install_claude
+    install_agent_skills
 
     echo ""
     info "Bootstrap complete!"
