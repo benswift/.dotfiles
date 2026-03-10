@@ -93,6 +93,9 @@ install_claude() {
 }
 
 install_agent_skills() {
+    mkdir -p "$HOME/.agents"
+    ln -sfn "$HOME/.agents" "$DOTFILES_DIR/.agents"
+
     info "Installing agent-browser skill..."
     bunx skills add vercel-labs/agent-browser
 }
