@@ -10,3 +10,4 @@
 !skills/*/*.md
 !skills/*/*/
 !skills/*/*/*.md
+!skills/*/*/*.sh
