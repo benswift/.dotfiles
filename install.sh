@@ -94,7 +94,7 @@ install_claude() {
 
 install_agent_skills() {
     info "Installing agent-browser skill..."
-    npx -y skills add vercel-labs/agent-browser
+    bunx skills add vercel-labs/agent-browser
 }
 
 main() {
