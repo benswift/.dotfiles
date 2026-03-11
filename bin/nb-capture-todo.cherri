@@ -1,0 +1,52 @@
+#define name NB Capture Todo
+#define color orange
+#define glyph checklist
+#define from quickactions
+
+#include 'actions/text'
+#include 'actions/scripting'
+#include 'actions/sharing'
+#include 'actions/media'
+#include 'actions/crypto'
+#include 'actions/network'
+#include 'actions/web'
+#include 'actions/calendar'
+
+const sshHost = "weddle"
+const sshUser = "ben"
+const sshPort = "22"
+const scriptPath = "/home/ben/.dotfiles/bin/nb-capture-todo.py"
+
+@title = prompt("Todo title")
+@encodedTitle = urlEncode(title)
+
+@clipRaw = getClipboard()
+@clipContent = "{clipRaw}"
+@urlFlag = ""
+if clipContent beginsWith "http" {
+    @encodedUrl = urlEncode(clipContent)
+    @urlFlag = " --url '{encodedUrl}'"
+}
+
+@envSetup = "eval \"$(~/.local/bin/mise activate zsh)\";"
+
+menu "Body input" {
+    item "Text":
+        @body = prompt("Todo body")
+        @encodedBody = urlEncode(body)
+        @cmd = "{envSetup} nohup {scriptPath} --title '{encodedTitle}' --body '{encodedBody}'{urlFlag} > /dev/null 2>&1 &"
+        runSSHScript(cmd, nil, sshHost, sshPort, sshUser, "SSH Key", "")
+    item "Voice":
+        @recording = recordAudio()
+        @audioB64 = base64Encode(recording)
+        @today = CurrentDate
+        @timestamp = formatDate(today, 'None', 'yyyyMMdd-HHmmss')
+        @audioFile = "/tmp/nb-capture-{timestamp}.m4a"
+        @cmd = "{envSetup} base64 -d > {audioFile} && nohup {scriptPath} --title '{encodedTitle}' --audio '{audioFile}'{urlFlag} > /dev/null 2>&1 &"
+        runSSHScript(cmd, audioB64, sshHost, sshPort, sshUser, "SSH Key", "")
+    item "Skip":
+        @cmd = "{envSetup} nohup {scriptPath} --title '{encodedTitle}'{urlFlag} > /dev/null 2>&1 &"
+        runSSHScript(cmd, nil, sshHost, sshPort, sshUser, "SSH Key", "")
+}
+
+showNotification("Todo captured", "NB Capture")
