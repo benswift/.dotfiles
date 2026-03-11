@@ -1,28 +1,24 @@
 #!/usr/bin/env bash
 ###############################################################################
-# anu-pdf.nb-plugin
+# pdf.nb-plugin
 #
-# Convert markdown or typst notes to PDF and open them
-#
-# Add this file to your `nb` notebook or to the plugins directory to enable
-# the `nb anu-pdf` subcommand.
+# Convert notes to PDF and open them
 #
 # Installation:
-#   nb plugins install /path/to/anu-pdf.nb-plugin
+#   nb plugins install /path/to/pdf.nb-plugin
 # -or-
-#   cp anu-pdf.nb-plugin ~/.nb/.plugins/
+#   cp pdf.nb-plugin ~/.nb/.plugins/
 ###############################################################################
 
-_subcommands add "anu-pdf"
+_subcommands add "pdf"
 
-_anu-pdf() {
+_pdf() {
   local _selector="${1:-}"
 
   if [[ -z "${_selector}" ]]; then
-    _exit_1 printf "Usage: nb anu-pdf <selector>\\n"
+    _exit_1 printf "Usage: nb pdf <selector>\\n"
   fi
 
-  # Get the full path of the selected note
   local _path
   _path="$(_show "${_selector}" --path 2>/dev/null)"
 
@@ -30,24 +26,20 @@ _anu-pdf() {
     _exit_1 printf "Error: Note not found: %s\\n" "${_selector}"
   fi
 
-  # Determine file type
   local _file_ext="${_path##*.}"
 
   if [[ ! "${_file_ext}" =~ ^(md|typ)$ ]]; then
     _exit_1 printf "Error: Only markdown (.md) or typst (.typ) files can be converted to PDF.\\nSelected file: %s\\n" "${_path}"
   fi
 
-  # Check if typst is installed (required for both file types)
   if ! command -v typst &> /dev/null; then
-    _exit_1 printf "Error: typst is not installed. Please install typst to use this plugin.\\n"
+    _exit_1 printf "Error: typst is not installed.\\n"
   fi
 
-  # Check if pandoc is installed (only required for markdown files)
   if [[ "${_file_ext}" == "md" ]] && ! command -v pandoc &> /dev/null; then
-    _exit_1 printf "Error: pandoc is not installed. Please install pandoc to use this plugin.\\n"
+    _exit_1 printf "Error: pandoc is not installed.\\n"
   fi
 
-  # Get the base filename without extension
   local _basename
   _basename="$(basename "${_path}" ".${_file_ext}")"
 
@@ -57,14 +49,12 @@ _anu-pdf() {
   printf "Converting %s to PDF...\\n" "${_basename}.${_file_ext}"
 
   if [[ "${_file_ext}" == "md" ]]; then
-    # Convert markdown to typst
     if ! pandoc "${_path}" \
         --from markdown \
         --to typst \
         --template anu \
         --output "${_temp_typ}" 2>/dev/null; then
 
-      # If the template is not found, try without it
       if ! pandoc "${_path}" \
           --from markdown \
           --to typst \
@@ -73,18 +63,15 @@ _anu-pdf() {
       fi
     fi
 
-    # Compile typst to PDF
     if ! typst compile "${_temp_typ}" "${_temp_pdf}"; then
       _exit_1 printf "Error: Failed to compile typst to PDF.\\n"
     fi
   elif [[ "${_file_ext}" == "typ" ]]; then
-    # Compile typst directly to PDF
     if ! typst compile "${_path}" "${_temp_pdf}"; then
       _exit_1 printf "Error: Failed to compile typst to PDF.\\n"
     fi
   fi
 
-  # Open the PDF
   printf "Opening PDF...\\n"
   if command -v open &> /dev/null; then
     open "${_temp_pdf}"
@@ -94,29 +81,27 @@ _anu-pdf() {
     _exit_1 printf "Error: Could not find a suitable command to open the PDF.\\n"
   fi
 
-  printf "PDF saved to: %s\\n" "${_temp_pdf}"
-  printf "Done.\\n"
+  printf "%s\\n" "${_temp_pdf}"
 }
 
-_subcommands describe "anu-pdf" <<HEREDOC
+_subcommands describe "pdf" <<HEREDOC
 Usage:
-  nb anu-pdf <selector>
+  nb pdf <selector>
 
 Description:
-  Convert a markdown or typst note to PDF and open it using the system's default PDF viewer.
+  Convert a note to PDF and open it.
 
-  The note must be either a markdown (.md) or typst (.typ) file.
-  - For markdown files: converts to typst using pandoc, then compiles to PDF
-  - For typst files: compiles directly to PDF using typst
+  - markdown (.md): converts to typst via pandoc (with anu template if available), then compiles to PDF
+  - typst (.typ): compiles directly to PDF
 
   Requires:
     - typst (always)
     - pandoc (only for markdown files)
 
 Examples:
-  nb anu-pdf 107
-  nb anu-pdf example.md
-  nb anu-pdf document.typ
-  nb anu-pdf notebook:42
+  nb pdf 107
+  nb pdf example.md
+  nb pdf document.typ
+  nb pdf notebook:42
 
 HEREDOC
