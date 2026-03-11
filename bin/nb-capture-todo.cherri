@@ -1,3 +1,26 @@
+// nb-capture-todo --- iOS shortcut for quick todo capture to nb
+//
+// Two-part system:
+//   1. This file (cherri) compiles to an iOS Shortcut
+//   2. nb-capture-todo.py runs on weddle (server-side processing)
+//
+// Flow: prompt for title (keyboard), choose body input (text/voice/skip),
+// check clipboard for URLs, then SSH to weddle to create the todo. Voice
+// input is base64-encoded and piped via SSH stdin; weddle transcribes it
+// with Whisper large-v3 on GPU. After the SSH command is dispatched, the
+// shortcut is done (fire-and-forget).
+//
+// Building:
+//   cherri nb-capture-todo.cherri
+//
+// This produces "NB Capture Todo.shortcut". AirDrop or open it on an
+// iPhone to import into the Shortcuts app.
+//
+// Requirements:
+//   - Cherri compiler (brew install cherri)
+//   - Secure ShellFish on iOS with "weddle" SSH key configured
+//   - weddle must be reachable (same tailnet)
+
 #define name NB Capture Todo
 #define color orange
 #define glyph checklist
