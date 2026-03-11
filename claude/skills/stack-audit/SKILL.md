@@ -59,6 +59,19 @@ These apply to every project regardless of stack.
 - Scan for files that look like they contain credentials (`.env`, `*.key`,
   `*credentials*`, `*secret*`). Flag any that are tracked by version control.
 
+### GitHub Actions
+
+- If `.github/workflows/` exists, check each workflow file for outdated actions.
+- For every `uses:` reference, check whether the pinned version (tag or SHA) is
+  the latest available. Use `gh api` to query the latest release of each action
+  repository.
+- Flag actions pinned to old major versions (e.g. `actions/checkout@v3` when
+  `v4` exists).
+- Flag actions pinned to specific SHAs without a version comment --- these are
+  hard to audit and update.
+- Note any actions using `@master` or `@main` --- these are unstable and should
+  be pinned to a release tag.
+
 ### CLAUDE.md accuracy
 
 If the project has a `CLAUDE.md` (or equivalent agent instructions file), audit
