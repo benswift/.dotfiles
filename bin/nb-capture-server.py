@@ -45,7 +45,7 @@ class CaptureHandler(BaseHTTPRequestHandler):
         url = params.get("url", [""])[0]
 
         content_length = int(self.headers.get("Content-Length", 0))
-        body = json.loads(self.rfile.read(content_length))
+        body = json.loads(self.rfile.read(content_length)) if content_length else {}
 
         audio_b64 = body.get("audio", "")
         timestamp = body.get("timestamp", "unknown")

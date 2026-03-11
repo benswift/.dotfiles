@@ -1,4 +1,4 @@
-// nb-capture-todo --- iOS shortcut for quick todo capture to nb
+// nb-capture-todo v0.2 --- iOS shortcut for quick todo capture to nb
 //
 // Two-part system:
 //   1. This file (cherri) compiles to an iOS Shortcut
@@ -22,7 +22,7 @@
 //   - nb-capture-server.py running on weddle (port 8765)
 //   - weddle must be reachable (same tailnet)
 
-#define name NB Capture Todo
+#define name NB Capture Todo v0.2
 #define color orange
 #define glyph checklist
 #define from quickactions
