@@ -49,6 +49,7 @@ class CaptureHandler(BaseHTTPRequestHandler):
 
         audio_b64 = body.get("audio", "")
         timestamp = body.get("timestamp", "unknown")
+        timestamp = "".join(c for c in timestamp if c.isalnum() or c == "-")
 
         audio_path = Path(f"/tmp/nb-capture-{timestamp}.m4a")
         audio_path.write_bytes(base64.b64decode(audio_b64))
