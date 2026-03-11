@@ -14,13 +14,13 @@ requirements, explore first---do not jump straight to implementation.
 
 Delegate to specialized agents when their expertise matches the task. Use
 language-specific agents for substantial work, github-explorer for git history,
-project-manager-backlog for task management, benswift-writer for prose, and
-nb-notebook-manager for notes. Keep tasks in the main conversation when they're
-simple, cross-cutting, or require tight integration with ongoing work.
+project-manager-backlog for task management, benswift-writer for prose, and pkb
+for notes. Keep tasks in the main conversation when they're simple,
+cross-cutting, or require tight integration with ongoing work.
 
 ### Error recovery
 
-Read and analyze error messages completely. If blocked after 2-3 attempts,
+Read and analyse error messages completely. If blocked after 2-3 attempts,
 explain the situation and ask for guidance rather than continuing to guess.
 
 ## Communication and progress
@@ -64,18 +64,23 @@ actual headings, not bold text as a substitute.
 When multiple independent operations are needed, execute them in parallel within
 a single message. Do not execute dependent operations in parallel.
 
-### Tool selection
+### Reading and searching
 
 Choose the right tool: Read for files, Glob for patterns, Grep for content
-search, Bash for system commands. For code modifications: prefer ast-grep (sg)
-for structural operations, then sed/awk for text edits, then Edit tool for
-manual replacements. Never use bash echo to communicate with me---output text
-directly.
+search, Bash for system commands. For large files or broad exploration, delegate
+to subagents to protect context.
+
+### Code modification
+
+Prefer ast-grep (sg) for structural operations (functions, classes, method calls,
+imports)---it understands language semantics and preserves formatting. Fall back
+to sed/awk for non-structural text edits, then the Edit tool for manual
+replacements. Never use bash echo to communicate with me---output text directly.
 
 ## Language and framework preferences
 
-- **mise** if a project has a `mise.toml` file then use `mise` to manage
-  dependencies and environments (prefixing commands with `mise exec --`)
+- **mise**: always available via global config (`~/.config/mise/config.toml`).
+  When a project has its own `mise.toml`, prefix commands with `mise exec --`
 - **Python**: _always_ use `uv`, Python 3.12+ with type hints, prefer polars
   over pandas, pydantic for validation, httpx over requests, pytest with
   parallel execution
@@ -85,8 +90,8 @@ directly.
   Grid/Flexbox, modern ES6+ with functional patterns, Playwright for testing
 - **Writing**: conversational academic voice (Australian English, em dashes,
   self-aware, direct openings)
-- **Version control**: use `git`. Use `gh` CLI for GitHub API operations (PRs,
-  issues, history investigation)
+- **Version control**: see version control workflow below. Use `gh` CLI for
+  GitHub API operations (PRs, issues, history investigation)
 - **Tasks**: use `backlog` MCP server
 - **Notes**: use `nb` CLI, get paths with `nb show <id> --path` before editing
 
@@ -107,17 +112,11 @@ premature optimisation.
 
 Tests must cover the functionality being implemented. Prefer integration tests
 over unit tests when both provide similar confidence. Test behaviour and
-outcomes, not implementation details. Consider writing tests first (TDD).
-Pristine output means zero failures, errors, warnings, and backtraces. When
-tests fail, read the complete error output and identify the root cause before
-attempting a fix. Never ignore test output or mark tests as skip unless
-instructed.
-
-### Code search and modification
-
-When working with code structure (functions, classes, method calls, imports),
-reach for ast-grep (sg) first. It understands language semantics and preserves
-formatting. Fall back to sed/awk only for non-structural edits.
+outcomes, not implementation details. Write tests first when adding new
+behaviour. Pristine output means zero failures, errors, warnings, and
+backtraces. When tests fail, read the complete error output and identify the root
+cause before attempting a fix. Never ignore test output or mark tests as skip
+unless instructed.
 
 ### Version control workflow
 
