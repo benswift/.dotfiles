@@ -5,10 +5,10 @@
 //   2. nb-capture-todo.py runs on weddle (server-side processing)
 //
 // Flow: prompt for title (keyboard), choose body input (text/voice/skip),
-// check clipboard for URLs, then SSH to weddle to create the todo. Voice
-// input is base64-encoded and piped via SSH stdin; weddle transcribes it
-// with Whisper large-v3 on GPU. After the SSH command is dispatched, the
-// shortcut is done (fire-and-forget).
+// check clipboard for URLs, then dispatch to weddle to create the todo.
+// Text/skip use SSH; voice uses HTTP POST to nb-capture-server.py (the
+// Shortcuts SSH action truncates large stdin payloads). Weddle transcribes
+// voice with Whisper large-v3 on GPU.
 //
 // Building:
 //   cherri nb-capture-todo.cherri
@@ -18,7 +18,8 @@
 //
 // Requirements:
 //   - Cherri compiler (brew install cherri)
-//   - Secure ShellFish on iOS with "weddle" SSH key configured
+//   - Shortcuts SSH key added to weddle's authorized_keys
+//   - nb-capture-server.py running on weddle (port 8765)
 //   - weddle must be reachable (same tailnet)
 
 #define name NB Capture Todo
@@ -46,9 +47,11 @@ const scriptPath = "/home/ben/.dotfiles/bin/nb-capture-todo.py"
 @clipRaw = getClipboard()
 @clipContent = "{clipRaw}"
 @urlFlag = ""
+@urlParam = ""
 if clipContent beginsWith "http" {
     @encodedUrl = urlEncode(clipContent)
     @urlFlag = " --url '{encodedUrl}'"
+    @urlParam = "&url={encodedUrl}"
 }
 
 @envSetup = "eval \"$(~/.local/bin/mise activate zsh)\";"
@@ -62,11 +65,10 @@ menu "Body input" {
     item "Voice":
         @recording = recordAudio()
         @audioB64 = base64Encode(recording)
-        @today = CurrentDate
-        @timestamp = formatDate(today, 'None', 'yyyyMMdd-HHmmss')
-        @audioFile = "/tmp/nb-capture-{timestamp}.m4a"
-        @cmd = "{envSetup} base64 -d > {audioFile} && nohup {scriptPath} --title '{encodedTitle}' --audio '{audioFile}'{urlFlag} > /dev/null 2>&1 &"
-        runSSHScript(cmd, audioB64, sshHost, sshPort, sshUser, "SSH Key", "")
+        @today = currentDate()
+        @timestamp = formatDate(today, 'Custom', 'yyyyMMdd-HHmmss')
+        @captureUrl = "http://{sshHost}:8765/capture?title={encodedTitle}{urlParam}"
+        jsonRequest(captureUrl, 'POST', {"audio": "{audioB64}", "timestamp": "{timestamp}"})
     item "Skip":
         @cmd = "{envSetup} nohup {scriptPath} --title '{encodedTitle}'{urlFlag} > /dev/null 2>&1 &"
         runSSHScript(cmd, nil, sshHost, sshPort, sshUser, "SSH Key", "")

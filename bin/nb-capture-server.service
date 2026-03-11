@@ -1,0 +1,14 @@
+[Unit]
+Description=nb-capture-server (HTTP endpoint for iOS Shortcut audio uploads)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ben
+ExecStart=/home/ben/.local/bin/mise exec -- uv run /home/ben/.dotfiles/bin/nb-capture-server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
