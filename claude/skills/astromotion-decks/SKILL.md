@@ -218,6 +218,54 @@ node node_modules/astromotion/scripts/deck-pdf.mjs <slug> output.pdf
 
 Builds the site, starts a preview server, and uses decktape to capture slides.
 
+## Generating background images
+
+Use `styled_image_gen.py` (the `styled-image-gen` skill) to generate background
+images for slides. Output images directly into the deck's `assets/` directory.
+
+```bash
+styled_image_gen.py "abstract geometric network" \
+  --preset anu \
+  --aspect-ratio 16:9 \
+  --output-dir src/decks/<slug>/assets \
+  --output-filename slide-01
+```
+
+- Use `--output-filename` to get predictable filenames without timestamp
+  subdirectories
+- Use `--aspect-ratio 16:9` for full-bleed backgrounds (`![bg]`)
+- Use `--aspect-ratio 3:4` or `9:16` for split layouts (`![bg left:50%]`,
+  `![bg right:50%]`) --- taller images fill the split panel better
+- Use `--resolution 4K` (the default) --- high-res images look sharp on large screens
+- Default AVIF output is ideal for decks (small file size, good quality)
+- Use `--preset anu` for ANU-branded geometric/generative visuals
+
+### Style prompts
+
+Sites and decks can specify default prompt fragments that get appended to every
+image generation prompt, ensuring a consistent aesthetic.
+
+- **Site-wide**: add an `## Image generation style` section to the project's
+  `CLAUDE.md` with the default prompt fragment (e.g. "watercolour illustration
+  with muted earth tones and soft edges")
+- **Per-deck**: create an `image-style.txt` file in the deck directory
+  (`src/decks/<slug>/image-style.txt`) containing the prompt fragment
+
+When generating images, concatenate: `<slide-specific prompt>, <deck style>, <site style>`. Per-deck style overrides site-wide if both exist, or they can
+be combined if complementary.
+
+Then reference the generated image in a slide:
+
+```markdown
+![bg](./assets/slide-01.avif)
+
+# Slide title
+```
+
+For batch generation across multiple slides, run multiple commands with different
+prompts and `--output-filename` values, all targeting the same `assets/`
+directory.
+
 ## Key constraints
 
 - No SSR --- decks render client-side only (`client:only="svelte"`)
