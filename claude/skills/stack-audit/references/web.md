@@ -28,5 +28,6 @@
 | JavaScript | ES6+ (arrow functions, destructuring, async/await) | `var`, callbacks, CommonJS `require` |
 | Module system | ES modules (`import`/`export`, `type="module"`) | CommonJS, global scripts |
 | Code style | functional (map, filter, reduce, pure functions) | imperative loops, mutation-heavy |
+| Ecosystem hygiene | `@e18e/eslint-plugin` (works with oxlint and ESLint) | no dependency weight linting |
 | Unit testing | Vitest | Jest |
 | Progressive enhancement | works without JS where possible | JS-required for basic content |
