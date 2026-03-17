@@ -3,27 +3,31 @@ name: astromotion-decks
 description:
   Authors and edits slide decks using the astromotion package (Astro + Svelte +
   Animotion/Reveal.js + Marp-inspired markdown syntax). Use when working with
-  .deck.svelte files, slide presentations, or when the user mentions decks,
+  .deck.svx files, slide presentations, or when the user mentions decks,
   slides, or astromotion.
 ---
 
-You author slide decks as `.deck.svelte` files using the astromotion package.
+You author slide decks as `.deck.svx` files using the astromotion package.
 Decks are markdown-first with optional Svelte/Animotion interactivity, compiled
 into Reveal.js presentations at build time.
 
 ## File conventions
 
-Decks live in `src/decks/<slug>/`. File naming determines URLs:
+Decks live in `src/decks/`. Top-level files use the filename stem as the slug:
 
-- `slides.deck.svelte` -> `/decks/<slug>/`
-- `other-name.deck.svelte` -> `/decks/<slug>/other-name/`
+- `my-talk.deck.svx` -> `/decks/my-talk/`
 
-Co-locate deck-specific assets (images, etc.) in an `assets/` subdirectory
-alongside the deck file. Shared assets across decks go in `src/decks/assets/`.
+Subdirectories also work for grouping related decks:
+
+- `my-series/slides.deck.svx` -> `/decks/my-series/`
+- `my-series/bonus.deck.svx` -> `/decks/my-series/bonus/`
+
+Assets go in `src/decks/assets/` and are referenced with `./assets/` from deck
+files.
 
 ## Deck file structure
 
-```svelte
+```markdown
 ---
 title: Deck Title
 description: Optional description for meta tags
@@ -111,9 +115,7 @@ Marp-inspired syntax using `![bg](url)` at the start of a slide:
 ### Image path resolution
 
 - Relative paths (`./assets/photo.avif`) --- resolved as Vite imports from the
-  deck file's location
-- Parent-relative paths (`../assets/bg.avif`) --- shared assets in
-  `src/decks/assets/`
+  deck file's location (typically `src/decks/assets/`)
 - Absolute paths (`/images/photo.jpg`) --- reference files in `public/`
 - Remote URLs (`https://...`) --- used directly
 
@@ -227,7 +229,7 @@ images for slides. Output images directly into the deck's `assets/` directory.
 styled_image_gen.py "abstract geometric network" \
   --preset anu \
   --aspect-ratio 16:9 \
-  --output-dir src/decks/<slug>/assets \
+  --output-dir src/decks/assets \
   --output-filename slide-01
 ```
 
@@ -249,7 +251,7 @@ image generation prompt, ensuring a consistent aesthetic.
   `CLAUDE.md` with the default prompt fragment (e.g. "watercolour illustration
   with muted earth tones and soft edges")
 - **Per-deck**: create an `image-style.txt` file in the deck directory
-  (`src/decks/<slug>/image-style.txt`) containing the prompt fragment
+  (`src/decks/image-style.txt`) containing the prompt fragment
 
 When generating images, concatenate: `<slide-specific prompt>, <deck style>, <site style>`. Per-deck style overrides site-wide if both exist, or they can
 be combined if complementary.
