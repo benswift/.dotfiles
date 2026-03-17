@@ -6,6 +6,9 @@ zed/extensions/**/*.wasm
 # Helix compiled tree-sitter grammars
 helix/runtime/grammars/
 
+# Compiled Apple Shortcuts (built from .cherri sources)
+*.shortcut
+
 # Python bytecode
 __pycache__/
 
