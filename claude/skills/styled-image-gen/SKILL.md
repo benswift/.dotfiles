@@ -25,12 +25,12 @@ Requires `REPLICATE_API_KEY` environment variable.
 
 ## Models
 
-| Model | `--model` | Best for | Image input | Max resolution |
-|---|---|---|---|---|
-| Google Nano Banana Pro | `banana` (default) | Style transfer with reference images | Up to 14 | 4K |
-| Qwen Image | `qwen` | Single-image transformation | 1 only | quality/speed toggle |
-| Google Imagen 4 Ultra | `imagen` | Text-to-image (no image input) | None | 2K |
-| FLUX 2 Max | `flux` | Multi-reference generation | Up to 8 | 4 MP |
+| Model                  | `--model`          | Best for                             | Image input | Max resolution       |
+| ---------------------- | ------------------ | ------------------------------------ | ----------- | -------------------- |
+| Google Nano Banana Pro | `banana` (default) | Style transfer with reference images | Up to 14    | 4K                   |
+| Qwen Image             | `qwen`             | Single-image transformation          | 1 only      | quality/speed toggle |
+| Google Imagen 4 Ultra  | `imagen`           | Text-to-image (no image input)       | None        | 2K                   |
+| FLUX 2 Max             | `flux`             | Multi-reference generation           | Up to 8     | 4 MP                 |
 
 ### Model trade-offs
 
@@ -42,7 +42,8 @@ Requires `REPLICATE_API_KEY` environment variable.
 - **imagen** --- highest quality text-to-image but no image input at all. Use
   for prompts that don't need reference images. Caps at 2K.
 - **flux** --- good multi-reference support (up to 8 images) with resolution in
-  megapixels. Alternative to banana when you need different style characteristics.
+  megapixels. Alternative to banana when you need different style
+  characteristics.
 
 ## Common options
 
@@ -93,10 +94,10 @@ When generating background images for Marp presentations:
 
 ### Aspect ratios for common slide sizes
 
-| Slide size | Aspect ratio |
-|---|---|
+| Slide size     | Aspect ratio          |
+| -------------- | --------------------- |
 | 16:9 (default) | `--aspect-ratio 16:9` |
-| 4:3 | `--aspect-ratio 4:3` |
+| 4:3            | `--aspect-ratio 4:3`  |
 
 ### Using generated images as Marp backgrounds
 

@@ -1,9 +1,9 @@
 ---
 name: vcs
 description:
-  Version control using Git. Covers daily workflow, branching, rebasing, conflict
-  resolution, and GitHub integration via gh CLI. Use when working with version
-  control, git, or GitHub.
+  Version control using Git. Covers daily workflow, branching, rebasing,
+  conflict resolution, and GitHub integration via gh CLI. Use when working with
+  version control, git, or GitHub.
 ---
 
 You are an expert in version control. Use `git` for all version control

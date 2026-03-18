@@ -16,12 +16,12 @@ Do not fix anything unless explicitly asked.
 
 Scan the project root for these markers to determine which stacks are in use:
 
-| Marker file | Stack |
-|---|---|
+| Marker file              | Stack  |
+| ------------------------ | ------ |
 | `pyproject.toml`, `*.py` | Python |
-| `mix.exs` | Elixir |
-| `package.json` | Web |
-| `.git/` | VCS |
+| `mix.exs`                | Elixir |
+| `package.json`           | Web    |
+| `.git/`                  | VCS    |
 
 A project may use multiple stacks. Detect all that apply. VCS is always
 applicable --- include it whenever the project is a repository.
@@ -51,8 +51,8 @@ These apply to every project regardless of stack.
 
 ### Version control
 
-- **`.gitignore` hygiene**: check for common secret patterns (`.env`,
-  `.envrc`, `*.pem`, credentials files) in the ignore file.
+- **`.gitignore` hygiene**: check for common secret patterns (`.env`, `.envrc`,
+  `*.pem`, credentials files) in the ignore file.
 
 ### Secrets
 

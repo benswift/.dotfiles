@@ -85,4 +85,5 @@ Use neomutt only when interactive browsing or sending is needed. Default to
 - OAuth2 tokens for Office365 in macOS Keychain
 - If OAuth expires: `~/.dotfiles/mail/reauth-anu-oauth.sh`
 - For complex maildir operations (bulk processing, deduplication): write a
-  Python script using `uv` and `mailbox.Maildir` --- see `~/.dotfiles/mail/utils/`
+  Python script using `uv` and `mailbox.Maildir` --- see
+  `~/.dotfiles/mail/utils/`

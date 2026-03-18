@@ -73,4 +73,3 @@ To sync Office365 email with mbsync using OAuth2 authentication:
 
 See `reauth-oauth.sh`, `keychain-store.sh`, and `mutt_oauth2.py` in this
 directory for working examples.
-

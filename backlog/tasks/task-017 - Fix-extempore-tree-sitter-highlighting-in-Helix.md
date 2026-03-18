@@ -3,8 +3,8 @@ id: TASK-017
 title: Fix extempore tree-sitter highlighting in Helix
 status: Done
 assignee: []
-created_date: '2026-02-24 16:00'
-updated_date: '2026-02-24 07:10'
+created_date: "2026-02-24 16:00"
+updated_date: "2026-02-24 07:10"
 labels:
   - helix
   - tree-sitter
@@ -16,6 +16,7 @@ priority: medium
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+
 Extempore `.xtm` files get partial syntax highlighting in Helix --- some symbols
 (e.g. `println`, `a`) are highlighted correctly, but others (`bind-func`,
 `define`, `lambda`) appear in the default text colour despite matching identical
@@ -25,9 +26,10 @@ query patterns.
 
 Helix 25.07.1 replaced its tree-sitter Rust bindings with
 [tree-house](https://github.com/helix-editor/tree-house), a from-scratch
-rewrite. The extempore grammar loads (ABI 14/15 both accepted), and `hx --health
-extempore` reports highlight queries OK. However, tree-house's query matching
-behaves differently from the standard tree-sitter CLI for certain `symbol` nodes.
+rewrite. The extempore grammar loads (ABI 14/15 both accepted), and
+`hx --health extempore` reports highlight queries OK. However, tree-house's
+query matching behaves differently from the standard tree-sitter CLI for certain
+`symbol` nodes.
 
 ### What works
 
@@ -54,6 +56,7 @@ behaves differently from the standard tree-sitter CLI for certain `symbol` nodes
 ### Diagnosis so far
 
 The issue is NOT:
+
 - Pattern priority ordering (tested with single-pattern highlights.scm)
 - `#match?` predicates (tested without any predicates)
 - `.` anchor semantics (tested without anchor)
@@ -63,8 +66,9 @@ The issue is NOT:
 - Stale grammar binary (rebuilt multiple times)
 
 The issue IS:
-- tree-house's query engine not matching `(symbol)` for certain symbol nodes that
-  the standard tree-sitter CLI matches correctly
+
+- tree-house's query engine not matching `(symbol)` for certain symbol nodes
+  that the standard tree-sitter CLI matches correctly
 - Possibly a bug in tree-house, or a subtle ABI/node-type-table interpretation
   difference
 
@@ -75,19 +79,19 @@ doesn't work --- must use `@constant.numeric`. The production highlights.scm
 needs a full audit of capture names against Helix's capture hierarchy. Known
 mappings for gruvbox:
 
-| Capture             | Colour         |
-|---------------------|----------------|
-| `@keyword`          | red            |
-| `@function`         | green          |
-| `@function.builtin` | yellow         |
-| `@type`             | yellow         |
-| `@string`           | green          |
-| `@comment`          | gray italic    |
-| `@constant.numeric` | purple         |
-| `@constant.builtin` | purple         |
-| `@punctuation`      | orange         |
-| `@operator`         | purple         |
-| `@variable`         | base/default!  |
+| Capture             | Colour        |
+| ------------------- | ------------- |
+| `@keyword`          | red           |
+| `@function`         | green         |
+| `@function.builtin` | yellow        |
+| `@type`             | yellow        |
+| `@string`           | green         |
+| `@comment`          | gray italic   |
+| `@constant.numeric` | purple        |
+| `@constant.builtin` | purple        |
+| `@punctuation`      | orange        |
+| `@operator`         | purple        |
+| `@variable`         | base/default! |
 
 Note: `@variable.definition` resolves to `@variable` which is the base
 foreground colour --- effectively invisible. Need a different capture for
@@ -96,8 +100,10 @@ definition names.
 ## Relevant paths
 
 - Grammar repo: `/Users/ben/Code/extemporelang/tree-sitter-extempore/`
-- Grammar repo (GitHub): `https://github.com/extemporelang/tree-sitter-extempore`
-- Helix query files (user override): `~/.config/helix/runtime/queries/extempore/`
+- Grammar repo (GitHub):
+  `https://github.com/extemporelang/tree-sitter-extempore`
+- Helix query files (user override):
+  `~/.config/helix/runtime/queries/extempore/`
 - Helix grammar sources: `~/.config/helix/runtime/grammars/sources/extempore/`
 - Helix grammar binary: `~/.config/helix/runtime/grammars/extempore.so`
 - Helix languages.toml: `~/.config/helix/languages.toml`
@@ -119,19 +125,24 @@ the rev in languages.toml.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
+
 <!-- AC:BEGIN -->
 <!-- SECTION:ACCEPTANCE_CRITERIA:BEGIN -->
+
 - [x] #1 `bind-func`, `define`, `lambda` highlighted as keywords (red) in Helix
-- [x] #2 Function names after `bind-func` highlighted as functions (green) in Helix
+- [x] #2 Function names after `bind-func` highlighted as functions (green) in
+      Helix
 - [x] #3 Type annotations highlighted as types (yellow) in Helix
-- [x] #4 All capture names in highlights.scm verified against Helix theme hierarchy
+- [x] #4 All capture names in highlights.scm verified against Helix theme
+      hierarchy
 - [x] #5 Grammar commit pushed to GitHub and rev updated in languages.toml
-<!-- SECTION:ACCEPTANCE_CRITERIA:END -->
-<!-- AC:END -->
+  <!-- SECTION:ACCEPTANCE_CRITERIA:END -->
+  <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
+
 ## Investigation summary
 
 ### Workaround applied
@@ -142,6 +153,7 @@ matching multiple possible node types. All `(symbol) @capture (#match? ...)`
 patterns replaced with `(_) @capture (#match? ...)`.
 
 Additional fixes in the rewrite:
+
 - `@number` → `@constant.numeric` (gruvbox compatibility)
 - `@variable.definition` → `@label` (avoid invisible base colour)
 - Pattern ordering: catch-all `@function.call` first (lowest priority), specific
@@ -152,6 +164,7 @@ Tree-sitter CLI confirms all captures are correct with the new queries.
 ### Root cause analysis
 
 The issue is a discrepancy between tree-sitter C library versions:
+
 - **tree-house-bindings 0.2.3** vendors tree-sitter C library from the **0.25.x
   era** (api.h deprecates functions "to be removed in 0.26")
 - **tree-sitter CLI** uses version **0.26.5**
@@ -166,7 +179,9 @@ The C++ highlighting regression in Helix issue #14139 (also 25.07.1) is
 potentially related --- same tree-house version.
 
 ### Verified facts
-- `bind-func` IS a `(symbol)` node (confirmed via `:tree-sitter-subtree` in Helix)
+
+- `bind-func` IS a `(symbol)` node (confirmed via `:tree-sitter-subtree` in
+  Helix)
 - External scanner returns `false` for plain symbols (no `:` or `{`), so parser
   falls back to internal lexer which produces `(symbol)`
 - `ts_symbol_map` is an identity mapping (no aliasing)
@@ -185,31 +200,48 @@ terminal.
 ### For tree-house bug report
 
 Minimal reproduction:
+
 1. Install extempore grammar: `hx --grammar build` (or use existing)
-2. Create test query with `(list . (symbol) @keyword (#match? @keyword "^bind-func$"))`
+2. Create test query with
+   `(list . (symbol) @keyword (#match? @keyword "^bind-func$"))`
 3. Open test file with `(bind-func foo 42)`
 4. Run `:tree-sitter-highlight-name` on `bind-func` → no highlight
 5. Change query to use `(_)` instead of `(symbol)` → highlight appears
-6. Compare with `tree-sitter query` using same grammar and query → matches correctly
+6. Compare with `tree-sitter query` using same grammar and query → matches
+correctly
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
+
 ## Root cause
 
-tree-house (Helix's tree-sitter engine) concatenates `highlights.scm` + `locals.scm` into a single query. Captures from `locals.scm` (`@_keyword`, `@local.definition` without trailing dot) leaked into the highlight query and were not disabled by tree-house's filtering logic. The "prefer last pattern" rule then removed existing highlights for affected symbols.
+tree-house (Helix's tree-sitter engine) concatenates `highlights.scm` +
+`locals.scm` into a single query. Captures from `locals.scm` (`@_keyword`,
+`@local.definition` without trailing dot) leaked into the highlight query and
+were not disabled by tree-house's filtering logic. The "prefer last pattern"
+rule then removed existing highlights for affected symbols.
 
 ## Fix
 
 - Emptied `locals.scm` to avoid the tree-house concatenation bug
-- Rewrote `highlights.scm` with correct capture names for gruvbox theme (`@constant.numeric`, `@variable.parameter`, etc.)
-- Split `typed_identifier` from a leaf external token into a grammar rule with `(symbol)` + `(type_annotation)` children, enabling independent highlighting of name and type parts
-- Extended the external scanner to recognise simple type annotations (i1, i8, i16, i32, i64, f, f32, f64, d, float, double, void) in addition to bracket types
-- Excluded digit/sign-start names from typed identifier matching to avoid conflicts with typed number literals
+- Rewrote `highlights.scm` with correct capture names for gruvbox theme
+  (`@constant.numeric`, `@variable.parameter`, etc.)
+- Split `typed_identifier` from a leaf external token into a grammar rule with
+  `(symbol)` + `(type_annotation)` children, enabling independent highlighting
+  of name and type parts
+- Extended the external scanner to recognise simple type annotations (i1, i8,
+  i16, i32, i64, f, f32, f64, d, float, double, void) in addition to bracket
+  types
+- Excluded digit/sign-start names from typed identifier matching to avoid
+  conflicts with typed number literals
 
 ## Changes pushed
 
-- **tree-sitter-extempore** (extemporelang/tree-sitter-extempore): commits `34c03d1` and `8a8a878` — grammar rule split, scanner extensions, 170/170 tests passing
-- **dotfiles**: updated highlights.scm, emptied locals.scm, updated grammar rev in languages.toml to `8a8a878`
+- **tree-sitter-extempore** (extemporelang/tree-sitter-extempore): commits
+  `34c03d1` and `8a8a878` — grammar rule split, scanner extensions, 170/170
+  tests passing
+- **dotfiles**: updated highlights.scm, emptied locals.scm, updated grammar rev
+in languages.toml to `8a8a878`
 <!-- SECTION:FINAL_SUMMARY:END -->

@@ -8,8 +8,8 @@ instructions and causes agents to make wrong assumptions.
 
 ### File and path references
 
-Scan CLAUDE.md for any file paths, directory references, or glob patterns. Verify
-each one exists on disk. Common patterns to look for:
+Scan CLAUDE.md for any file paths, directory references, or glob patterns.
+Verify each one exists on disk. Common patterns to look for:
 
 - explicit paths (`src/api/`, `config/database.yml`, `lib/my_app/`)
 - at-prefixed paths used in dotfiles repos (`@zshrc`, `@helix/config.toml`)
@@ -53,7 +53,8 @@ architectural patterns, spot-check key claims:
 When CLAUDE.md references specific configuration:
 
 - database engine, cache backend, queue system --- verify against config files
-- environment variable names --- verify they appear in the code or `.env.example`
+- environment variable names --- verify they appear in the code or
+  `.env.example`
 - CI/CD setup --- verify against actual workflow files
 
 ### Staleness signals

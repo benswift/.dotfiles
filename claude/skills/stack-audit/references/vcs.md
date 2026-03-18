@@ -4,16 +4,16 @@ For detailed git workflows, see the **vcs** skill.
 
 ## Structural
 
-| Check | Preference | Anti-pattern |
-|---|---|---|
-| VCS tool | git | - |
-| GitHub operations | `gh` CLI | manual browser workflows, raw API calls |
+| Check             | Preference | Anti-pattern                            |
+| ----------------- | ---------- | --------------------------------------- |
+| VCS tool          | git        | -                                       |
+| GitHub operations | `gh` CLI   | manual browser workflows, raw API calls |
 
 ## Soft
 
-| Check | Preference | Anti-pattern |
-|---|---|---|
-| History style | linear (rebase, never merge) | merge commits for routine integration |
-| Commit messages | concise, imperative mood | past tense, verbose descriptions |
-| Change size | small, focused commits | large multi-concern changes |
-| Force push | `--force-with-lease` | bare `--force` |
+| Check           | Preference                   | Anti-pattern                          |
+| --------------- | ---------------------------- | ------------------------------------- |
+| History style   | linear (rebase, never merge) | merge commits for routine integration |
+| Commit messages | concise, imperative mood     | past tense, verbose descriptions      |
+| Change size     | small, focused commits       | large multi-concern changes           |
+| Force push      | `--force-with-lease`         | bare `--force`                        |

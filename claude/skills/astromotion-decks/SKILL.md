@@ -3,13 +3,13 @@ name: astromotion-decks
 description:
   Authors and edits slide decks using the astromotion package (Astro + Svelte +
   Animotion/Reveal.js + Marp-inspired markdown syntax). Use when working with
-  .deck.svx files, slide presentations, or when the user mentions decks,
-  slides, or astromotion.
+  .deck.svx files, slide presentations, or when the user mentions decks, slides,
+  or astromotion.
 ---
 
-You author slide decks as `.deck.svx` files using the astromotion package.
-Decks are markdown-first with optional Svelte/Animotion interactivity, compiled
-into Reveal.js presentations at build time.
+You author slide decks as `.deck.svx` files using the astromotion package. Decks
+are markdown-first with optional Svelte/Animotion interactivity, compiled into
+Reveal.js presentations at build time.
 
 ## File conventions
 
@@ -53,9 +53,7 @@ More content
 
 <h2>Interactive slide</h2>
 
-<Action do={() => cx.to(300)}>
-  Animate
-</Action>
+<Action do={() => cx.to(300)}> Animate </Action>
 ```
 
 ### Frontmatter
@@ -143,7 +141,7 @@ use (`Presentation`, `Slide`, `Action`, `Code`, `Notes`, `Transition`,
 Common imports for interactive slides:
 
 ```ts
-import { tween } from "@animotion/motion";  // animated values
+import { tween } from "@animotion/motion"; // animated values
 ```
 
 ### Code component
@@ -208,9 +206,10 @@ Structural classes (set by the preprocessor, available for theme overrides):
 ## Theme
 
 Decks use their own theme CSS, independent of the site's `global.css`. The theme
-is configured in `astro.config.mjs` via `astromotion({ theme: "./path/to/theme.css" })`.
-The theme file typically imports Tailwind (scoped to deck files only) and
-animotion's base theme, then adds Reveal.js CSS variables and slide class styles.
+is configured in `astro.config.mjs` via
+`astromotion({ theme: "./path/to/theme.css" })`. The theme file typically
+imports Tailwind (scoped to deck files only) and animotion's base theme, then
+adds Reveal.js CSS variables and slide class styles.
 
 ## PDF export
 
@@ -238,7 +237,8 @@ styled_image_gen.py "abstract geometric network" \
 - Use `--aspect-ratio 16:9` for full-bleed backgrounds (`![bg]`)
 - Use `--aspect-ratio 3:4` or `9:16` for split layouts (`![bg left:50%]`,
   `![bg right:50%]`) --- taller images fill the split panel better
-- Use `--resolution 4K` (the default) --- high-res images look sharp on large screens
+- Use `--resolution 4K` (the default) --- high-res images look sharp on large
+  screens
 - Default AVIF output is ideal for decks (small file size, good quality)
 - Use `--preset anu` for ANU-branded geometric/generative visuals
 
@@ -253,8 +253,9 @@ image generation prompt, ensuring a consistent aesthetic.
 - **Per-deck**: create an `image-style.txt` file in the deck directory
   (`src/decks/image-style.txt`) containing the prompt fragment
 
-When generating images, concatenate: `<slide-specific prompt>, <deck style>, <site style>`. Per-deck style overrides site-wide if both exist, or they can
-be combined if complementary.
+When generating images, concatenate:
+`<slide-specific prompt>, <deck style>, <site style>`. Per-deck style overrides
+site-wide if both exist, or they can be combined if complementary.
 
 Then reference the generated image in a slide:
 
@@ -264,9 +265,9 @@ Then reference the generated image in a slide:
 # Slide title
 ```
 
-For batch generation across multiple slides, run multiple commands with different
-prompts and `--output-filename` values, all targeting the same `assets/`
-directory.
+For batch generation across multiple slides, run multiple commands with
+different prompts and `--output-filename` values, all targeting the same
+`assets/` directory.
 
 ## Key constraints
 

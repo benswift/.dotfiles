@@ -72,10 +72,11 @@ to subagents to protect context.
 
 ### Code modification
 
-Prefer ast-grep (sg) for structural operations (functions, classes, method calls,
-imports)---it understands language semantics and preserves formatting. Fall back
-to sed/awk for non-structural text edits, then the Edit tool for manual
-replacements. Never use bash echo to communicate with me---output text directly.
+Prefer ast-grep (sg) for structural operations (functions, classes, method
+calls, imports)---it understands language semantics and preserves formatting.
+Fall back to sed/awk for non-structural text edits, then the Edit tool for
+manual replacements. Never use bash echo to communicate with me---output text
+directly.
 
 ## Language and framework preferences
 
@@ -114,9 +115,9 @@ Tests must cover the functionality being implemented. Prefer integration tests
 over unit tests when both provide similar confidence. Test behaviour and
 outcomes, not implementation details. Write tests first when adding new
 behaviour. Pristine output means zero failures, errors, warnings, and
-backtraces. When tests fail, read the complete error output and identify the root
-cause before attempting a fix. Never ignore test output or mark tests as skip
-unless instructed.
+backtraces. When tests fail, read the complete error output and identify the
+root cause before attempting a fix. Never ignore test output or mark tests as
+skip unless instructed.
 
 ### Version control workflow
 

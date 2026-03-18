@@ -1,8 +1,8 @@
 ---
 name: phdconvenor
 description:
-  Manages PhD student administration for the School of Cybernetics at ANU.
-  Sends personalised batch emails to students, queries student data, and handles
+  Manages PhD student administration for the School of Cybernetics at ANU. Sends
+  personalised batch emails to students, queries student data, and handles
   convenor communications. Use when working with PhD students, sending student
   emails, or managing the phdconvenor account.
 ---
@@ -171,9 +171,7 @@ This is a reminder about {{student.name}}, who is currently in
 
 Please ensure their confirmation process is progressing.
 
-Best regards,
-Ben Swift
-PhD Convenor
+Best regards, Ben Swift PhD Convenor
 ```
 
 ### Email all panel members for selected students
@@ -197,18 +195,18 @@ student-db students --status pre-confirmation | \
 
 ## mail-compose options
 
-| Option | Description |
-|--------|-------------|
-| `-f phdconvenor` | Send from the phdconvenor account (required) |
-| `--data FILE` | JSON file with recipient records (use `-` for stdin) |
-| `--to TEMPLATE` | Recipient address (supports `{{field}}` templates) |
-| `--cc TEMPLATE` | CC address per-email (supports templates) |
-| `--cc-all ADDR` | CC address added to all emails |
-| `--subject TEMPLATE` | Subject line (supports templates) |
-| `--template FILE` | Markdown file for email body |
-| `--body TEXT` | Inline body text (or `-` for stdin) |
-| `--send` | Send directly (required for batch mode) |
-| `--dry-run` | Preview emails without sending |
+| Option               | Description                                          |
+| -------------------- | ---------------------------------------------------- |
+| `-f phdconvenor`     | Send from the phdconvenor account (required)         |
+| `--data FILE`        | JSON file with recipient records (use `-` for stdin) |
+| `--to TEMPLATE`      | Recipient address (supports `{{field}}` templates)   |
+| `--cc TEMPLATE`      | CC address per-email (supports templates)            |
+| `--cc-all ADDR`      | CC address added to all emails                       |
+| `--subject TEMPLATE` | Subject line (supports templates)                    |
+| `--template FILE`    | Markdown file for email body                         |
+| `--body TEXT`        | Inline body text (or `-` for stdin)                  |
+| `--send`             | Send directly (required for batch mode)              |
+| `--dry-run`          | Preview emails without sending                       |
 
 ## Template variables
 
@@ -280,6 +278,7 @@ mail-compose -f phdconvenor --to 'enquirer@example.com' \
 
 ## Related tools
 
-- **email-manager skill**: for searching and reading emails in the phdconvenor mailbox
+- **email-manager skill**: for searching and reading emails in the phdconvenor
+  mailbox
 - **nb**: student data is managed via nb (`nb edit student-db.json`)
 - **benswift-writer skill**: for drafting email prose (see above)

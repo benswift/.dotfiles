@@ -18,15 +18,15 @@ uv run --directory ~/.dotfiles/mail/utils mail-dedupe --help
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `mail-copy-id` | Copy Message-ID to clipboard (reads email from stdin) |
-| `mail-copy-path` | Copy message file path to clipboard (uses mu to find) |
-| `mail-compose` | Compose and send emails with Jinja2 templating |
-| `mail-dedupe` | Deduplicate messages by Message-ID |
-| `mail-analyze` | Analyze maildir format and identify issues |
-| `student-db` | Query the PhD student database (denormalises from nb) |
-| `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers |
+| Command            | Description                                           |
+| ------------------ | ----------------------------------------------------- |
+| `mail-copy-id`     | Copy Message-ID to clipboard (reads email from stdin) |
+| `mail-copy-path`   | Copy message file path to clipboard (uses mu to find) |
+| `mail-compose`     | Compose and send emails with Jinja2 templating        |
+| `mail-dedupe`      | Deduplicate messages by Message-ID                    |
+| `mail-analyze`     | Analyze maildir format and identify issues            |
+| `student-db`       | Query the PhD student database (denormalises from nb) |
+| `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers      |
 
 ## Library usage
 

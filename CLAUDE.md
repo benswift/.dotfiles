@@ -59,7 +59,8 @@ etc.). Key scripts:
 
 - `dotfiles` --- main management command (doctor, update, edit)
 - `mailsync` --- sync all email accounts
-- `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI agents
+- `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI
+  agents
 
 ## Tool management (mise)
 
@@ -77,9 +78,9 @@ When a tool can be installed multiple ways, prefer this order:
 2. **Platform package manager** (brew on macOS, apt/dnf on Linux) --- for system
    utilities (curl, git, jq) and tools needing OS integration. Fast, prebuilt
    binaries.
-3. **Language package managers** (`uv tool`, `bun add -g`, `cargo install`)
-   --- only when the tool's documentation explicitly recommends this method, or
-   mise doesn't support the tool.
+3. **Language package managers** (`uv tool`, `bun add -g`, `cargo install`) ---
+   only when the tool's documentation explicitly recommends this method, or mise
+   doesn't support the tool.
 
 Avoid `cargo install` for tools available via mise or brew---it compiles from
 source, which is slow and resource-intensive. Use it only when the tool's docs
