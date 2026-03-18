@@ -1,3 +1,12 @@
+---
+name: styled-image-gen
+description:
+  Generates styled images using Replicate models (Banana, Qwen, Imagen, FLUX).
+  Supports style transfer with reference images, presets, and multiple output
+  formats. Use when working with image generation, slide backgrounds, or styled
+  visuals.
+---
+
 # Styled image generation
 
 Generate styled images using Replicate models. Useful for creating hero images,
