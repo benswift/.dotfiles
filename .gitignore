@@ -14,3 +14,6 @@ __pycache__/
 
 # Claude Code project-local directory (machine-specific)
 .claude/
+
+# System-provided Claude Code skills (managed by Claude Code, not us)
+claude/skills/.system/
