@@ -23,6 +23,7 @@
 | CSS layout | CSS Grid (primary) and Flexbox (1D) | float-based layouts, excessive breakpoint classes |
 | Responsive design | fluid layouts, container queries | breakpoint-only responsive design |
 | CSS theming | custom properties | inline styles, hardcoded values |
+| CSS linter | Stylelint | no CSS linting |
 | CSS animations | CSS transitions/animations over JS | jQuery animations, JS where CSS suffices |
 | JS animations | Motion library (when CSS can't handle it) | GSAP, anime.js, jQuery |
 | JavaScript | ES6+ (arrow functions, destructuring, async/await) | `var`, callbacks, CommonJS `require` |
