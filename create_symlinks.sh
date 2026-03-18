@@ -118,18 +118,9 @@ main() {
 
     # Agent config files
     echo -e "\nLinking agent config files..."
-
-    # Global agent instructions for all projects
-    create_symlink "$DOTFILES_DIR/GLOBAL-AGENTS.md" "$HOME/.claude/CLAUDE.md"
+    create_symlink "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
     create_symlink "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
-
-    # Create codex config directory and symlink
-    if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${YELLOW}[DRY RUN] Would create directory: $HOME/.codex${NC}"
-    else
-        mkdir -p "$HOME/.codex"
-    fi
-    create_symlink "$DOTFILES_DIR/GLOBAL-AGENTS.md" "$HOME/.codex/instructions.md"
+    create_symlink "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.codex/instructions.md"
 
     # Tool config files
     echo -e "\nLinking tool config files..."

@@ -114,36 +114,39 @@ My Zellij config is in the @zellij/ folder. This includes:
 
 All three AI coding agents (Claude Code, Codex CLI, Gemini CLI) are configured
 to read `CLAUDE.md` as the project-level instructions file. This means a single
-file works across all tools with no symlinks needed.
+file works across all tools with no symlinks needed. Global instructions and
+per-tool configuration (e.g. `~/.codex/config.toml`, `~/.gemini/settings.json`)
+are managed per-machine, not tracked here.
 
 ### Claude Code
 
 Two directories are involved --- note the difference:
 
-- `claude/` (no dot) --- tracked config source, symlinked to `~/.claude/` on
-  each machine. Contains `settings.json`, `skills/`, and a `.gitignore`
-  whitelist.
+- `claude/` (no dot) --- tracked config source. Individual files are symlinked
+  into `~/.claude/`: `CLAUDE.md` (global instructions), `settings.json`, and
+  `skills/`.
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Fully gitignored (both globally and in this repo). Contains
   machine-specific state like `settings.local.json`, plans, and session data.
 
 The @claude/ folder includes:
 
+- @claude/CLAUDE.md - global agent instructions (symlinked to both
+  `~/.claude/CLAUDE.md` and `~/.codex/instructions.md`)
 - @claude/settings.json - Claude Code settings
 - @claude/skills/ - skills that Claude loads dynamically based on task context
 
 ### Codex CLI
 
-Codex CLI uses @~/.codex/instructions.md for global instructions (symlinked to
-@GLOBAL-AGENTS.md). Project-level instructions are read from `CLAUDE.md` via the
-`project_doc_fallback_filenames` setting in @~/.codex/config.toml. Skills are
-shared with Claude Code via a symlink from @~/.codex/skills to the same
-@claude/skills/ directory.
+Codex CLI uses `~/.codex/instructions.md` for global instructions (symlinked to
+@claude/CLAUDE.md). Project-level instructions are read from `CLAUDE.md` via its
+`project_doc_fallback_filenames` setting. Skills are shared with Claude Code via
+a symlink from `~/.codex/skills` to the same @claude/skills/ directory.
 
 ### Gemini CLI
 
-Gemini CLI is configured via @~/.gemini/settings.json to use `CLAUDE.md` as a
-context file (in addition to the default `GEMINI.md`).
+Gemini CLI is configured per-machine to use `CLAUDE.md` as a context file (in
+addition to the default `GEMINI.md`).
 
 ## Email
 
