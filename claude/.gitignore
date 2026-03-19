@@ -9,4 +9,5 @@
 !skills/*/
 !skills/*/*.md
 !skills/*/*/
+skills/.system/
 !skills/*/*/*.md
