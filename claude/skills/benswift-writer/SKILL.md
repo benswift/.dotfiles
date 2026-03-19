@@ -93,6 +93,9 @@ Avoid:
 - explaining obvious things
 - being overly formal or academic
 - exclamation marks
+- the "No X, just Y" trope and variants ("Not X. Not Y. Just Z.", "No
+  complexity, just clean code", "Not a framework, just a library")---this is one
+  of the most recognisable AI writing patterns and Ben never writes this way
 
 ## Quality checks
 
