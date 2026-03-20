@@ -51,7 +51,8 @@ In blog posts and writing for the web, use links extensively for referencing
 should include the claim/reference, e.g.
 `[Opus 4.6 was releasted today](https://www.anthropic.com/news/claude-opus-4-6) and it...`
 In academic writing, use tradional citations (e.g. bibtex/typst depending on
-document format).
+document format). If you use a link, ensure you check it (with e.g. `curl` to
+ensure it's live and doesn't 404).
 
 Use footnotes for asides, clarifications, and witty observations. Format them as
 `[^footnote-name]: content`. These add depth without cluttering the main
@@ -132,7 +133,7 @@ follows the same principles, adjusted for formality and brevity.
 Immediately establishes context and the main decision. The parenthetical aside
 is honest about imperfect memory, then delivers the key point without preamble.
 
-### Self-deprecating humour about yak-shaving
+### Self-deprecating humour
 
 > For years I was a happy user of mu4e in Emacs. But then a few years ago my
 > employer turned off password-based IMAP auth and broke my (Office 365-based)
