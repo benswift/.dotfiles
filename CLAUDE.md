@@ -47,6 +47,15 @@ The shell prompt is configured via @starship.toml, symlinked to
 This repo uses plain git. Use `gh` CLI for GitHub API operations (PRs, issues,
 etc.).
 
+For GitLab, use `glab` CLI. Two instances are configured:
+
+- `gitlab.comp.anu.edu.au` --- teaching repos (comp2300, comp1720, lucy, etc.)
+- `gitlab.anu.edu.au` --- jekyll-anu websites and other ANU projects
+
+Set `GITLAB_HOST` to target a specific instance when not inside a repo (e.g.
+`GITLAB_HOST=gitlab.comp.anu.edu.au glab repo list`). Inside a cloned repo,
+`glab` picks the host from the `origin` remote automatically.
+
 Git configuration files are in the top-level:
 
 - @gitconfig - global git configuration
