@@ -16,8 +16,10 @@ cmake-build/
 
 # secrets
 
+.env
 .envrc
 mise.local.toml
+*.pem
 
 # compressed files
 
