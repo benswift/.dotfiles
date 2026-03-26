@@ -51,13 +51,14 @@ These apply to every project regardless of stack.
 
 ### Version control
 
-- **`.gitignore` hygiene**: check for common secret patterns (`.env`, `.envrc`,
+- **`.gitignore` hygiene**: check for common secret patterns (`mise.local.toml`,
   `*.pem`, credentials files) in the ignore file.
 
 ### Secrets
 
-- Scan for files that look like they contain credentials (`.env`, `*.key`,
-  `*credentials*`, `*secret*`). Flag any that are tracked by version control.
+- Scan for files that look like they contain credentials (`mise.local.toml`,
+  `*.key`, `*credentials*`, `*secret*`). Flag any that are tracked by version
+  control.
 
 ### GitHub Actions
 
