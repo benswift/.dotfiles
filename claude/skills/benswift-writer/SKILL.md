@@ -61,11 +61,18 @@ narrative.
 It's ok to start sections with conjunctions for natural flow: "But", "So",
 "Well", "However". This creates a conversational rhythm.
 
+Use headings sparingly in blog posts and longer prose. Narrative flow should
+come from strong topic sentences and natural transitions, not from subdividing
+everything into sections. A heading is fine when the topic genuinely shifts, but
+most of the time the prose itself should carry the reader forward.
+
 Employ rhetorical questions to transition between ideas: "So is this a big
 deal?" "What does this mean in practice?"
 
-Mix sentence lengths deliberately---short punchy statements followed by longer
-technical expositions. This creates engaging rhythm.
+Vary sentence length naturally, but prefer flowing prose over multiple short,
+sharp sentences in a row. Commas and joining clauses are fine---let ideas
+connect within sentences rather than chopping them apart. Staccato fragments
+feel artificial.
 
 ## Technical content guidelines
 
@@ -89,6 +96,8 @@ Always use Australian English spelling:
 
 Avoid:
 
+- fancy words where plain ones will do ("utilise" → "use", "subsequently" →
+  "then", "facilitate" → "help")
 - marketing speak or buzzwords
 - unnecessary adjectives and flowery language
 - explaining obvious things
