@@ -49,17 +49,6 @@ These apply to every project regardless of stack.
 - **CLAUDE.md**: project should have a `CLAUDE.md` (or `AGENTS.md`) with agent
   instructions.
 
-### Version control
-
-- **`.gitignore` hygiene**: check for common secret patterns (`mise.local.toml`,
-  `*.pem`, credentials files) in the ignore file.
-
-### Secrets
-
-- Scan for files that look like they contain credentials (`mise.local.toml`,
-  `*.key`, `*credentials*`, `*secret*`). Flag any that are tracked by version
-  control.
-
 ### GitHub Actions
 
 - If `.github/workflows/` exists, check each workflow file for outdated actions.
