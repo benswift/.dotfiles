@@ -1,7 +1,7 @@
 ---
 id: TASK-019
 title: Switch from prettier to oxfmt for markdown formatting
-status: To Do
+status: Done
 assignee: []
 created_date: "2026-03-03 22:26"
 labels:

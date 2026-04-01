@@ -59,7 +59,7 @@ alias za="zellij attach"
 zl() { local out; out=$(zellij list-sessions); echo "$out" | grep -v EXITED; echo; echo "$out" | grep EXITED; }
 alias zr="zellij run --"
 alias zk="zellij kill-session"
-alias prettify-md='prettier --prose-wrap always --write "**/*.md"'
+alias prettify-md='oxfmt -c ~/.dotfiles/oxfmtrc.json "**/*.md"'
 alias neomutt='TERM=xterm-direct neomutt'
 alias nm='neomutt'
 # macOS-only aliases

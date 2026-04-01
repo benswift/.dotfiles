@@ -7,7 +7,7 @@
 | Package manager       | pnpm                                            | npm, yarn                            |
 | Type checker          | tsgo (`@typescript/native-preview`)             | JS-based `tsc`                       |
 | Linter                | oxlint                                          | ESLint                               |
-| Formatter             | oxfmt (Prettier still fine for non-JS/TS files) | Prettier for JS/TS formatting        |
+| Formatter             | oxfmt                                           | Prettier                             |
 | App bundler           | Vite                                            | webpack, parcel, rollup (standalone) |
 | App bundler (Phoenix) | esbuild (Phoenix default)                       | webpack in Phoenix projects          |
 | Library bundler       | tsdown                                          | tsup, rollup, unbuild                |

@@ -40,7 +40,7 @@ name = "markdown"
 language-servers = ["marksman", "nb-lsp"]
 auto-format = true
 file-types = ["md", "markdown", "mdx", "mkd", "mkdn", "mdwn", "mdown", "markdn", "mdtxt", "mdtext", "workbook", { glob = "PULLREQ_EDITMSG" }, { glob = "*.deck.svx" }]
-formatter = { command = "prettier", args = ["--prose-wrap", "always", "--stdin-filepath", "file.md"] }
+formatter = { command = "oxfmt", args = ["-c", "/Users/ben/.dotfiles/oxfmtrc.json", "--stdin-filepath", "file.md"] }
 
 [[language]]
 name = "latex"
