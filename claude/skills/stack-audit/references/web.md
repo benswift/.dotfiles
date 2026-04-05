@@ -7,6 +7,15 @@
 | Package manager       | pnpm                                            | npm, yarn                            |
 | Type checker          | tsgo (`@typescript/native-preview`)             | JS-based `tsc`                       |
 | Linter                | oxlint                                          | ESLint                               |
+
+**Notes:**
+
+- **tsgo**: Astro and Svelte tooling don't support tsgo yet, so `tsc` via
+  `astro check` / `svelte-check` is acceptable in those projects. Don't flag
+  this as a divergence when the project uses Astro or Svelte.
+- **oxlint jsPlugins**: oxlint can consume ESLint plugin packages via its
+  `jsPlugins` config field. ESLint plugin packages in `devDependencies` are
+  expected when listed in `jsPlugins` --- don't flag them as vestigial.
 | Formatter             | oxfmt                                           | Prettier                             |
 | App bundler           | Vite                                            | webpack, parcel, rollup (standalone) |
 | App bundler (Phoenix) | esbuild (Phoenix default)                       | webpack in Phoenix projects          |
