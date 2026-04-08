@@ -25,52 +25,10 @@ mail-analyze --help
 | `student-db`       | Query the PhD student database (denormalises from nb) |
 | `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers      |
 
-## Common usage
+## Usage
 
-### Composing emails
-
-```bash
-# Interactive compose (opens neomutt)
-mail-compose -f anu --to colleague@example.com -s "Hello" -b "Body"
-
-# Send directly
-mail-compose -f anu --to colleague@example.com -s "Hello" -b "Body" --send
-
-# Batch send with template (filter with jq before piping)
-student-db students --status confirmed | \
-    mail-compose -f phdconvenor --data - \
-    --to '{{email}}' \
-    --subject 'Hello {{preferred_name}}' \
-    --template body.md \
-    --send
-```
-
-### Student database queries
-
-```bash
-# List all students (denormalised with supervisor/panel details)
-student-db students
-
-# Filter by status
-student-db students --status confirmed
-
-# Pipe to jq for further filtering, then to mail-compose
-student-db students --status pre-confirmation | \
-  jq '[.[] | . as $s | {recipient: .supervisor, student: $s}]' | \
-  mail-compose -f phdconvenor --data - --to '{{recipient.email}}' ...
-```
-
-### Maildir operations
-
-```bash
-# Deduplicate a maildir
-mail-dedupe ~/Maildir/anu/INBOX --dry-run
-mail-dedupe ~/Maildir/anu/INBOX  # actually delete duplicates
-
-# Analyze maildir format
-mail-analyze single ~/Maildir/anu/INBOX
-mail-analyze compare ~/Maildir/anu/INBOX ~/Maildir/personal/INBOX
-```
+Each command has detailed examples in its `--help` output. Run
+`<command> --help` for full options, flags, and usage patterns.
 
 ## Library usage
 

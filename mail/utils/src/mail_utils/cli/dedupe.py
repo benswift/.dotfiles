@@ -165,7 +165,21 @@ def dedupe_command(
         False, "--verbose", "-v", help="Show detailed information about duplicates"
     ),
 ):
-    """Deduplicate email messages in a maildir folder based on Message-ID headers."""
+    """Deduplicate email messages in a maildir folder based on Message-ID headers.
+
+    Keeps the first copy (by maildir key sort order) and removes the rest.
+
+    Examples:
+
+        # Preview what would be deleted
+        mail-dedupe ~/Maildir/anu/INBOX --dry-run
+
+        # Actually delete duplicates
+        mail-dedupe ~/Maildir/anu/INBOX
+
+        # Show which specific messages are duplicates
+        mail-dedupe ~/Maildir/anu/INBOX --dry-run --verbose
+    """
     try:
         if not is_maildir(maildir_path):
             console.print(

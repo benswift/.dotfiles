@@ -12,7 +12,27 @@ from mail_utils.studentdb import StudentDB
 
 console = Console()
 app = typer.Typer(
-    help="Query the PhD student database.",
+    help="""Query the PhD student database.
+
+    Outputs JSON to stdout, designed to pipe into jq or mail-compose.
+
+    Examples:
+
+        # List all confirmed students
+        student-db students --status confirmed
+
+        # Pipe to mail-compose for batch emails
+        student-db students --status confirmed | \\
+            mail-compose -f phdconvenor --data - --to '{{email}}' \\
+            --subject 'Hello {{preferred_name}}' --template body.md --send
+
+        # Filter with jq before emailing
+        student-db students | jq '[.[] | select(.supervisor.name == "Ben Swift")]' | \\
+            mail-compose -f phdconvenor --data - --to '{{email}}' ...
+
+        # List all people (supervisors, panel members, contacts)
+        student-db people
+    """,
     add_completion=False,
     no_args_is_help=True,
 )
