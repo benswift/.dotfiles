@@ -63,9 +63,29 @@ mu init --maildir ~/Maildir               # first-time init
 
 Always check `mu info` before searching to ensure the database is current.
 
-## neomutt --- interactive email and sending
+## mail-compose --- sending email
 
-Use the headless-terminal MCP for interactive email when needed:
+Prefer `mail-compose` for sending (available on PATH via uv tool):
+
+```bash
+# Direct send
+mail-compose -f anu --to "Name <email>" -s "Subject" -b "Body" --send
+
+# Dry run first
+mail-compose -f anu --to "Name <email>" -s "Subject" -b "Body" --dry-run
+
+# Batch send with template
+student-db students --status confirmed | \
+    mail-compose -f phdconvenor --data - --to '{{email}}' \
+    --subject 'Hello {{preferred_name}}' --template body.md --send
+```
+
+See `~/.dotfiles/mail/utils/CLAUDE.md` for full CLI reference.
+
+## neomutt --- interactive email
+
+Use the headless-terminal MCP for interactive email only when needed (browsing
+folders, complex compose workflows):
 
 1. Create session: `mcp__headless-terminal__ht_create_session` with
    `{"command": ["bash"], "enableWebServer": true}`

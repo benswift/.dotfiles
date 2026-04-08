@@ -4,19 +4,13 @@ A Python package for working with maildir folders and email.
 
 ## Quick reference
 
-Get help for any command:
-
-```bash
-uv run --directory ~/.dotfiles/mail/utils mail-copy-id --help
-uv run --directory ~/.dotfiles/mail/utils mail-compose --help
-uv run --directory ~/.dotfiles/mail/utils mail-dedupe --help
-uv run --directory ~/.dotfiles/mail/utils mail-analyze --help
-```
-
-Or if installed as a tool (`uv tool install -e ~/.dotfiles/mail/utils`):
+Commands are available on PATH via `uv tool install -e ~/.dotfiles/mail/utils`:
 
 ```bash
 mail-compose --help
+mail-copy-id --help
+mail-dedupe --help
+mail-analyze --help
 ```
 
 ## Commands
