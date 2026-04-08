@@ -1,5 +1,6 @@
 """Email composition and sending utilities."""
 
+import email
 import os
 import re
 import subprocess
@@ -13,6 +14,36 @@ from socket import gethostname
 from mail_utils.accounts import Account, get_account_config
 
 
+def parse_reply_info(message_path: Path) -> dict:
+    """Extract threading and recipient info from an email file.
+
+    Returns a dict with keys: message_id, references, from_, to, cc, subject.
+    """
+    with open(message_path, "rb") as f:
+        msg = email.message_from_binary_file(f)
+
+    message_id = msg["Message-ID"]
+    existing_refs = msg.get("References", "")
+    if existing_refs:
+        references = f"{existing_refs} {message_id}"
+    else:
+        in_reply_to = msg.get("In-Reply-To", "")
+        references = f"{in_reply_to} {message_id}".strip() if in_reply_to else message_id
+
+    subject = msg.get("Subject", "")
+    if not subject.lower().startswith("re:"):
+        subject = f"Re: {subject}"
+
+    return {
+        "message_id": message_id,
+        "references": references,
+        "from_": msg["From"],
+        "to": msg["To"],
+        "cc": msg.get("Cc"),
+        "subject": subject,
+    }
+
+
 def build_email(
     from_addr: str,
     to: str,
@@ -20,6 +51,7 @@ def build_email(
     body: str,
     cc: str | None = None,
     attachments: list[Path] | None = None,
+    reply_to: Path | None = None,
 ) -> EmailMessage:
     """Build an email message with proper headers."""
     msg = EmailMessage()
@@ -28,6 +60,11 @@ def build_email(
     msg["Subject"] = subject
     msg["Date"] = formatdate(localtime=True)
     msg["Message-ID"] = make_msgid()
+
+    if reply_to:
+        info = parse_reply_info(reply_to)
+        msg["In-Reply-To"] = info["message_id"]
+        msg["References"] = info["references"]
 
     if cc:
         msg["Cc"] = cc

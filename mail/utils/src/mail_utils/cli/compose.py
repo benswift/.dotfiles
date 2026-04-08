@@ -14,6 +14,7 @@ from mail_utils.compose import (
     build_email,
     combine_cc,
     open_neomutt_compose,
+    parse_reply_info,
     send_email,
     strip_frontmatter,
 )
@@ -65,6 +66,10 @@ def main(
     attach: Annotated[
         list[Path] | None, typer.Option("--attach", "-a", help="Attachment")
     ] = None,
+    reply_to: Annotated[
+        Path | None,
+        typer.Option("--reply-to", help="Maildir message file to reply to"),
+    ] = None,
     data: Annotated[
         Path | None,
         typer.Option(help="JSON array file for batch mode (use '-' for stdin)"),
@@ -104,6 +109,19 @@ def main(
         email_body = sys.stdin.read()
     elif body:
         email_body = body
+
+    reply_info = None
+    if reply_to:
+        if not reply_to.exists():
+            console.print(f"[red]Reply-to message not found: {reply_to}[/red]")
+            raise typer.Exit(1)
+        reply_info = parse_reply_info(reply_to)
+        if not to:
+            to = reply_info["to"]
+        if not subject:
+            subject = reply_info["subject"]
+        if not cc and reply_info["cc"]:
+            cc = reply_info["cc"]
 
     if data:
         if str(data) == "-":
@@ -181,6 +199,7 @@ def main(
                 email_body,
                 combine_cc(cc, cc_all),
                 attach,
+                reply_to,
             )
 
             success, message = send_email(msg, account, dry_run)

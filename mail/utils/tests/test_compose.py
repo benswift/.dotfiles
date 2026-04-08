@@ -11,6 +11,7 @@ from mail_utils.cli.compose import app
 from mail_utils.compose import (
     build_email,
     combine_cc,
+    parse_reply_info,
     send_email,
     strip_frontmatter,
 )
@@ -258,3 +259,161 @@ class TestComposeCLI:
         assert "sup@example.com" in result.stdout
         assert "Re: Student One" in result.stdout
         assert "Dear Sup" in result.stdout
+
+
+def _write_eml(path: Path, **headers: str) -> Path:
+    """Write a minimal .eml file with given headers."""
+    lines = [f"{k}: {v}" for k, v in headers.items()]
+    lines.append("")
+    lines.append("Original body.")
+    path.write_text("\n".join(lines))
+    return path
+
+
+class TestParseReplyInfo:
+    def test_extracts_message_id_and_subject(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Subject="Hello",
+            **{"Message-ID": "<abc123@example.com>"},
+        )
+        info = parse_reply_info(eml)
+        assert info["message_id"] == "<abc123@example.com>"
+        assert info["subject"] == "Re: Hello"
+        assert info["to"] == "Bob <bob@example.com>"
+        assert info["from_"] == "Alice <alice@example.com>"
+
+    def test_preserves_existing_re_prefix(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Subject="Re: Hello",
+            **{"Message-ID": "<abc123@example.com>"},
+        )
+        info = parse_reply_info(eml)
+        assert info["subject"] == "Re: Hello"
+
+    def test_builds_references_from_existing_chain(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Subject="Re: Hello",
+            References="<first@example.com> <second@example.com>",
+            **{
+                "Message-ID": "<third@example.com>",
+                "In-Reply-To": "<second@example.com>",
+            },
+        )
+        info = parse_reply_info(eml)
+        assert info["references"] == "<first@example.com> <second@example.com> <third@example.com>"
+
+    def test_builds_references_from_in_reply_to_when_no_references(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Subject="Hello",
+            **{
+                "Message-ID": "<second@example.com>",
+                "In-Reply-To": "<first@example.com>",
+            },
+        )
+        info = parse_reply_info(eml)
+        assert info["references"] == "<first@example.com> <second@example.com>"
+
+    def test_extracts_cc(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Cc="Carol <carol@example.com>",
+            Subject="Hello",
+            **{"Message-ID": "<abc@example.com>"},
+        )
+        info = parse_reply_info(eml)
+        assert info["cc"] == "Carol <carol@example.com>"
+
+
+class TestBuildEmailReply:
+    def test_sets_threading_headers(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Subject="Hello",
+            **{"Message-ID": "<orig@example.com>"},
+        )
+        msg = build_email(
+            from_addr="bob@example.com",
+            to="alice@example.com",
+            subject="Re: Hello",
+            body="Reply body",
+            reply_to=eml,
+        )
+        assert msg["In-Reply-To"] == "<orig@example.com>"
+        assert "<orig@example.com>" in msg["References"]
+
+    def test_no_threading_headers_without_reply_to(self):
+        msg = build_email(
+            from_addr="bob@example.com",
+            to="alice@example.com",
+            subject="Hello",
+            body="Body",
+        )
+        assert msg["In-Reply-To"] is None
+        assert msg["References"] is None
+
+
+class TestComposeCLIReplyTo:
+    runner = CliRunner()
+
+    def test_reply_to_auto_populates_subject(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Subject="Meeting",
+            **{"Message-ID": "<orig@example.com>"},
+        )
+        result = self.runner.invoke(
+            app,
+            ["-f", "personal", "--reply-to", str(eml), "--to", "alice@example.com", "-b", "Sounds good", "--dry-run"],
+        )
+        assert result.exit_code == 0
+        assert "Re: Meeting" in result.stdout
+        assert "In-Reply-To: <orig@example.com>" in result.stdout
+        assert "References:" in result.stdout
+
+    def test_reply_to_auto_populates_to(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Subject="Meeting",
+            **{"Message-ID": "<orig@example.com>"},
+        )
+        result = self.runner.invoke(
+            app,
+            ["-f", "personal", "--reply-to", str(eml), "-b", "Sounds good", "--dry-run"],
+        )
+        assert result.exit_code == 0
+        assert "Bob <bob@example.com>" in result.stdout
+
+    def test_explicit_to_overrides_reply_to(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Subject="Meeting",
+            **{"Message-ID": "<orig@example.com>"},
+        )
+        result = self.runner.invoke(
+            app,
+            ["-f", "personal", "--reply-to", str(eml), "--to", "someone-else@example.com", "-b", "Hi", "--dry-run"],
+        )
+        assert result.exit_code == 0
+        assert "someone-else@example.com" in result.stdout
