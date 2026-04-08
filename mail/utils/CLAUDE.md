@@ -8,7 +8,6 @@ Commands are available on PATH via `uv tool install -e ~/.dotfiles/mail/utils`:
 
 ```bash
 mail-compose --help
-mail-copy-id --help
 mail-dedupe --help
 mail-analyze --help
 ```
@@ -17,7 +16,6 @@ mail-analyze --help
 
 | Command            | Description                                           |
 | ------------------ | ----------------------------------------------------- |
-| `mail-copy-id`     | Copy Message-ID to clipboard (reads email from stdin) |
 | `mail-copy-path`   | Copy message file path to clipboard (uses mu to find) |
 | `mail-compose`     | Compose and send emails with Jinja2 templating        |
 | `mail-dedupe`      | Deduplicate messages by Message-ID                    |
@@ -52,7 +50,6 @@ uv run --group dev pytest -x      # stop on first failure
 
 The following neomutt macros use this package:
 
-- `Ctrl+i` - copy Message-ID to clipboard
 - `,p` - copy file path to clipboard
 
 ## Compose LSP

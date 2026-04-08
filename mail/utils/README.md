@@ -20,7 +20,6 @@ uv run --directory ~/.dotfiles/mail/utils mail-dedupe --help
 
 | Command            | Description                                           |
 | ------------------ | ----------------------------------------------------- |
-| `mail-copy-id`     | Copy Message-ID to clipboard (reads email from stdin) |
 | `mail-copy-path`   | Copy message file path to clipboard (uses mu to find) |
 | `mail-compose`     | Compose and send emails with Jinja2 templating        |
 | `mail-dedupe`      | Deduplicate messages by Message-ID                    |
