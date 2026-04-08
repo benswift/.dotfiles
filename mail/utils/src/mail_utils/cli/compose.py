@@ -88,6 +88,10 @@ def main(
         # Direct send
         mail-compose -f anu --to colleague@example.com -s "Hello" -b "Body" --send
 
+        # Reply to an existing message (auto-fills to/cc/subject)
+        msg=$(mu find --fields=l "from:chris subject:Meeting" | head -1)
+        mail-compose -f anu --reply-to "$msg" -b "Sounds good" --send
+
         # Batch with template (filter with jq before piping)
         student-db students --status confirmed | \\
             mail-compose -f phdconvenor --data - --to '{{email}}' \\

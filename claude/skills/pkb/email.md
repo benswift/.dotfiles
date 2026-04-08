@@ -65,22 +65,16 @@ Always check `mu info` before searching to ensure the database is current.
 
 ## mail-compose --- sending email
 
-Prefer `mail-compose` for sending (available on PATH via uv tool):
+Prefer `mail-compose` for sending (available on PATH via uv tool). Run
+`mail-compose --help` for full options and examples, including direct send,
+reply-to threading, batch templating, and dry-run mode.
 
-```bash
-# Direct send
-mail-compose -f anu --to "Name <email>" -s "Subject" -b "Body" --send
+Key points:
 
-# Dry run first
-mail-compose -f anu --to "Name <email>" -s "Subject" -b "Body" --dry-run
-
-# Batch send with template
-student-db students --status confirmed | \
-    mail-compose -f phdconvenor --data - --to '{{email}}' \
-    --subject 'Hello {{preferred_name}}' --template body.md --send
-```
-
-See `~/.dotfiles/mail/utils/CLAUDE.md` for full CLI reference.
+- use `--reply-to <maildir-file-path>` when replying to an existing message ---
+  it sets proper threading headers and auto-fills to/cc/subject
+- always `--dry-run` first when unsure
+- see `~/.dotfiles/mail/utils/CLAUDE.md` for the full CLI reference
 
 ## neomutt --- interactive email
 
