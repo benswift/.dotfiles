@@ -100,6 +100,26 @@ install_agent_skills() {
     bunx skills add vercel-labs/agent-browser
 }
 
+# Clone (or pull) the private ben Claude Code plugin. Non-fatal: on a fresh
+# machine without SSH set up, this warns and lets the rest of bootstrap
+# continue. Re-run 'dotfiles update' once SSH auth works.
+install_personal_plugin() {
+    local plugin_repo="git@github.com:benswift/claude-plugin-personal.git"
+    local plugin_dir="$DOTFILES_DIR/claude-plugins/ben"
+
+    if [[ -d "$plugin_dir/.git" ]]; then
+        info "Updating ben plugin..."
+        git -C "$plugin_dir" pull --rebase --autostash || warn "Could not pull ben plugin (offline?)"
+    else
+        info "Cloning ben plugin..."
+        mkdir -p "$(dirname "$plugin_dir")"
+        if ! git clone "$plugin_repo" "$plugin_dir"; then
+            warn "Could not clone ben plugin --- check SSH auth to GitHub"
+            warn "Re-run 'dotfiles update' after setting up SSH"
+        fi
+    fi
+}
+
 main() {
     echo ""
     echo "╔═══════════════════════════════════════╗"
@@ -132,6 +152,7 @@ main() {
     fi
     install_mise
     clone_dotfiles
+    install_personal_plugin
     setup_symlinks
     install_mise_tools
     install_claude

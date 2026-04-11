@@ -15,5 +15,5 @@ __pycache__/
 # Claude Code project-local directory (machine-specific)
 .claude/
 
-# System-provided Claude Code skills (managed by Claude Code, not us)
-claude/skills/.system/
+# Private Claude Code plugins (cloned separately by install.sh / dotfiles update)
+claude-plugins/

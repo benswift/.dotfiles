@@ -130,11 +130,17 @@ are managed per-machine, not tracked here.
 
 ### Claude Code
 
-Two directories are involved --- note the difference:
+Three directories are involved --- note the differences:
 
-- `claude/` (no dot) --- tracked config source. Individual files are symlinked
-  into `~/.claude/`: `CLAUDE.md` (global instructions), `settings.json`, and
-  `skills/`.
+- `claude/` (no dot) --- tracked config source in this public repo. `CLAUDE.md`
+  (global instructions) and `settings.json` are symlinked into `~/.claude/`.
+- `claude-plugins/ben/` --- the `ben` Claude Code plugin, containing the
+  personal skills library. Gitignored in this public repo; the actual content
+  lives in a separate **private** repo (`benswift/claude-plugin-personal`)
+  cloned in by `install.sh` and kept current by `dotfiles update`. Claude Code
+  loads it via the `--plugin-dir` flag injected by the `claude()` shell
+  function in @zshrc. Skills from this plugin appear to the model as
+  `ben:<skill-name>` (e.g. `ben:github-explorer`).
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Fully gitignored (both globally and in this repo). Contains
   machine-specific state like `settings.local.json`, plans, and session data.
@@ -144,14 +150,19 @@ The @claude/ folder includes:
 - @claude/CLAUDE.md - global agent instructions (symlinked to both
   `~/.claude/CLAUDE.md` and `~/.codex/instructions.md`)
 - @claude/settings.json - Claude Code settings
-- @claude/skills/ - skills that Claude loads dynamically based on task context
+
+Skills live in the ben plugin at `claude-plugins/ben/skills/<name>/SKILL.md`
+and are namespaced as `ben:<name>` when the model loads them through Claude
+Code's plugin mechanism.
 
 ### Codex CLI
 
 Codex CLI uses `~/.codex/instructions.md` for global instructions (symlinked to
 @claude/CLAUDE.md). Project-level instructions are read from `CLAUDE.md` via its
-`project_doc_fallback_filenames` setting. Skills are shared with Claude Code via
-a symlink from `~/.codex/skills` to the same @claude/skills/ directory.
+`project_doc_fallback_filenames` setting. Codex doesn't understand Claude
+Code's plugin mechanism, but it reads the raw skill directories fine via a
+symlink from `~/.codex/skills` to `claude-plugins/ben/skills/` (created by
+@create_symlinks.sh).
 
 ### Gemini CLI
 

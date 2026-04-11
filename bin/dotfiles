@@ -209,9 +209,26 @@ doctor() {
     fi
 }
 
+update_personal_plugin() {
+    local plugin_repo="git@github.com:benswift/claude-plugin-personal.git"
+    local plugin_dir="$DOTFILES_DIR/claude-plugins/ben"
+
+    if [[ -d "$plugin_dir/.git" ]]; then
+        echo "Updating ben plugin..."
+        git -C "$plugin_dir" pull --rebase --autostash || echo -e "${YELLOW}⚠ Could not pull ben plugin (offline?)${NC}"
+    else
+        echo "Cloning ben plugin..."
+        mkdir -p "$(dirname "$plugin_dir")"
+        if ! git clone "$plugin_repo" "$plugin_dir"; then
+            echo -e "${YELLOW}⚠ Could not clone ben plugin --- check SSH auth to GitHub${NC}"
+        fi
+    fi
+}
+
 update() {
     echo "Updating dotfiles..."
     git -C "$DOTFILES_DIR" pull --rebase
+    update_personal_plugin
     "$DOTFILES_DIR/create_symlinks.sh"
     echo "Done!"
 }

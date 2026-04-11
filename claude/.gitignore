@@ -1,13 +1,5 @@
-# Ignore everything
+# Ignore everything in this directory except the tracked config files
 *
-
-# except these config files
-!*.md
-!settings.json
 !.gitignore
-!skills/
-!skills/*/
-!skills/*/*.md
-!skills/*/*/
-skills/.system/
-!skills/*/*/*.md
+!CLAUDE.md
+!settings.json
