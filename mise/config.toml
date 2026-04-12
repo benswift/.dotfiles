@@ -12,6 +12,7 @@ helix = "latest"
 vivid = "latest"
 gemini = "latest"
 glab = "latest"
+typst = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["[]"]
