@@ -26,16 +26,23 @@
     "hookify@claude-plugins-official": true,
     "remember@claude-plugins-official": true,
     "mcp-server-dev@claude-plugins-official": true,
-    "agent-browser@agent-browser": true
+    "agent-browser@agent-browser": true,
+    "ben@ben": true
   },
-  "alwaysThinkingEnabled": true,
-  "skipDangerousModePermissionPrompt": true,
   "extraKnownMarketplaces": {
     "agent-browser": {
       "source": {
         "source": "github",
         "repo": "vercel-labs/agent-browser"
       }
+    },
+    "ben": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/ben/.dotfiles/claude-plugins/ben"
+      }
     }
-  }
+  },
+  "alwaysThinkingEnabled": true,
+  "skipDangerousModePermissionPrompt": true
 }

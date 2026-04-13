@@ -28,8 +28,6 @@ alias zp="zed-preview"
 alias ayolo="claude --dangerously-skip-permissions"
 alias oyolo="codex --dangerously-bypass-approvals-and-sandbox"
 alias gyolo="gemini --yolo"
-# Load the private ben Claude Code plugin (cloned separately by install.sh)
-claude() { command claude --plugin-dir "$HOME/.dotfiles/claude-plugins/ben" "$@"; }
 sysup() {
   if [[ "$OSTYPE" == darwin* ]]; then
     brew upgrade

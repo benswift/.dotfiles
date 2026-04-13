@@ -138,9 +138,10 @@ Three directories are involved --- note the differences:
   personal skills library. Gitignored in this public repo; the actual content
   lives in a separate **private** repo (`benswift/claude-plugin-personal`)
   cloned in by `install.sh` and kept current by `dotfiles update`. Claude Code
-  loads it via the `--plugin-dir` flag injected by the `claude()` shell
-  function in @zshrc. Skills from this plugin appear to the model as
-  `ben:<skill-name>` (e.g. `ben:github-explorer`).
+  loads it via `extraKnownMarketplaces` (as a local `directory` source) plus
+  `enabledPlugins: {"ben@ben": true}` in @claude/settings.json. Skills from
+  this plugin appear to the model as `ben:<skill-name>` (e.g.
+  `ben:github-explorer`).
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Fully gitignored (both globally and in this repo). Contains
   machine-specific state like `settings.local.json`, plans, and session data.
