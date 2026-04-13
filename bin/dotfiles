@@ -225,8 +225,11 @@ update_personal_plugin() {
     fi
 
     # Ensure Claude Code's copy of the ben plugin is installed and current.
-    # Idempotent: install is a no-op if already installed; update fetches latest.
+    # Settings.json declares the marketplace but claude plugin subcommands
+    # don't auto-register it --- needs an explicit `marketplace add` first.
+    # All three commands are idempotent.
     if command -v claude &>/dev/null; then
+        claude plugin marketplace add benswift/claude-plugin-personal 2>/dev/null || true
         claude plugin install ben@ben 2>/dev/null || true
         claude plugin update ben@ben 2>/dev/null || true
     fi

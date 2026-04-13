@@ -121,8 +121,11 @@ install_personal_plugin() {
 
     # Claude Code clones its own copy of the ben plugin separately from the
     # dev checkout above (the github marketplace source handles this). Trigger
-    # install here so the plugin is ready on first claude launch.
+    # marketplace registration + install here so the plugin is ready on first
+    # claude launch. The `marketplace add` step is needed because claude
+    # plugin subcommands don't auto-register marketplaces from settings.json.
     if command -v claude &>/dev/null; then
+        claude plugin marketplace add benswift/claude-plugin-personal 2>/dev/null || true
         claude plugin install ben@ben 2>/dev/null || true
     fi
 }
