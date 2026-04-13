@@ -10,6 +10,7 @@ from mail_utils.accounts import Account, get_account_config
 from mail_utils.cli.compose import app
 from mail_utils.compose import (
     build_email,
+    choose_reply_target,
     combine_cc,
     parse_reply_info,
     send_email,
@@ -337,6 +338,77 @@ class TestParseReplyInfo:
         info = parse_reply_info(eml)
         assert info["cc"] == "Carol <carol@example.com>"
 
+    def test_unfolds_multiline_headers(self, tmp_path: Path):
+        """Folded headers (RFC 5322 line folding) must be unfolded so the
+        resulting values can be used as outgoing header values without
+        tripping EmailMessage's no-linefeed check."""
+        path = tmp_path / "folded.eml"
+        path.write_text(
+            "From: Alice <alice@example.com>\n"
+            "To: =?utf-8?Q?Bob?=\n"
+            "\t<bob@example.com>\n"
+            "Subject: Hello\n"
+            "Message-ID: <third@example.com>\n"
+            "References: <first@example.com>\n"
+            " <second@example.com>\n"
+            "\n"
+            "Body.\n"
+        )
+        info = parse_reply_info(path)
+        for key in ("message_id", "references", "from_", "to", "subject"):
+            assert "\n" not in info[key], f"{key} contains newline: {info[key]!r}"
+        assert info["references"] == (
+            "<first@example.com> <second@example.com> <third@example.com>"
+        )
+        # And the result should be usable as an outgoing header value.
+        msg = build_email(
+            from_addr="sender@example.com",
+            to="recipient@example.com",
+            subject="Test",
+            body="Body",
+            reply_to=path,
+        )
+        assert msg["References"] == info["references"]
+
+
+class TestChooseReplyTarget:
+    def test_incoming_mail_targets_from(self):
+        info = {
+            "from_": "Alice <alice@example.com>",
+            "to": "Bob <bob@example.com>",
+            "reply_to_header": None,
+        }
+        assert choose_reply_target(info, "Bob <bob@example.com>") == "Alice <alice@example.com>"
+
+    def test_own_sent_mail_continues_thread(self):
+        """Replying to our own sent message should go to its original To,
+        so nudges thread correctly to the same recipient."""
+        info = {
+            "from_": "Bob <bob@example.com>",
+            "to": "Alice <alice@example.com>",
+            "reply_to_header": None,
+        }
+        assert choose_reply_target(info, "Bob <bob@example.com>") == "Alice <alice@example.com>"
+
+    def test_reply_to_header_overrides_from(self):
+        info = {
+            "from_": "Alice <alice@example.com>",
+            "to": "Bob <bob@example.com>",
+            "reply_to_header": "Alice Team <team@example.com>",
+        }
+        assert (
+            choose_reply_target(info, "Bob <bob@example.com>")
+            == "Alice Team <team@example.com>"
+        )
+
+    def test_self_match_is_case_insensitive(self):
+        info = {
+            "from_": "Bob <BOB@example.com>",
+            "to": "Alice <alice@example.com>",
+            "reply_to_header": None,
+        }
+        assert choose_reply_target(info, "Bob <bob@example.com>") == "Alice <alice@example.com>"
+
 
 class TestBuildEmailReply:
     def test_sets_threading_headers(self, tmp_path: Path):
@@ -388,7 +460,8 @@ class TestComposeCLIReplyTo:
         assert "In-Reply-To: <orig@example.com>" in result.stdout
         assert "References:" in result.stdout
 
-    def test_reply_to_auto_populates_to(self, tmp_path: Path):
+    def test_reply_to_auto_populates_to_from_sender(self, tmp_path: Path):
+        """Incoming mail: To defaults to the original sender (From)."""
         eml = _write_eml(
             tmp_path / "orig.eml",
             From="Alice <alice@example.com>",
@@ -401,7 +474,27 @@ class TestComposeCLIReplyTo:
             ["-f", "personal", "--reply-to", str(eml), "-b", "Sounds good", "--dry-run"],
         )
         assert result.exit_code == 0
-        assert "Bob <bob@example.com>" in result.stdout
+        assert "alice@example.com" in result.stdout
+
+    def test_reply_to_own_sent_mail_continues_thread(self, tmp_path: Path):
+        """Replying to our own sent mail: To defaults to original To
+        (so nudges thread to the same recipient)."""
+        from mail_utils.accounts import get_account_config
+
+        self_addr = get_account_config("personal").from_addr
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From=self_addr,
+            To="Alice <alice@example.com>",
+            Subject="Following up",
+            **{"Message-ID": "<orig@example.com>"},
+        )
+        result = self.runner.invoke(
+            app,
+            ["-f", "personal", "--reply-to", str(eml), "-b", "Just a nudge", "--dry-run"],
+        )
+        assert result.exit_code == 0
+        assert "alice@example.com" in result.stdout
 
     def test_explicit_to_overrides_reply_to(self, tmp_path: Path):
         eml = _write_eml(

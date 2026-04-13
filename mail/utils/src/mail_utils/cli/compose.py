@@ -12,6 +12,7 @@ from rich.console import Console
 from mail_utils.accounts import Account, get_account_config
 from mail_utils.compose import (
     build_email,
+    choose_reply_target,
     combine_cc,
     open_neomutt_compose,
     parse_reply_info,
@@ -121,7 +122,7 @@ def main(
             raise typer.Exit(1)
         reply_info = parse_reply_info(reply_to)
         if not to:
-            to = reply_info["to"]
+            to = choose_reply_target(reply_info, config.from_addr)
         if not subject:
             subject = reply_info["subject"]
         if not cc and reply_info["cc"]:

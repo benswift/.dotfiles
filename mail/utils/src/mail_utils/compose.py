@@ -14,6 +14,13 @@ from socket import gethostname
 from mail_utils.accounts import Account, get_account_config
 
 
+def _unfold(value: str | None) -> str | None:
+    """Collapse folded header whitespace (CR/LF + leading WSP) into single spaces."""
+    if value is None:
+        return None
+    return re.sub(r"\s+", " ", value).strip()
+
+
 def parse_reply_info(message_path: Path) -> dict:
     """Extract threading and recipient info from an email file.
 
@@ -22,26 +29,47 @@ def parse_reply_info(message_path: Path) -> dict:
     with open(message_path, "rb") as f:
         msg = email.message_from_binary_file(f)
 
-    message_id = msg["Message-ID"]
-    existing_refs = msg.get("References", "")
+    message_id = _unfold(msg["Message-ID"])
+    existing_refs = _unfold(msg.get("References", "")) or ""
     if existing_refs:
         references = f"{existing_refs} {message_id}"
     else:
-        in_reply_to = msg.get("In-Reply-To", "")
+        in_reply_to = _unfold(msg.get("In-Reply-To", "")) or ""
         references = f"{in_reply_to} {message_id}".strip() if in_reply_to else message_id
 
-    subject = msg.get("Subject", "")
+    subject = _unfold(msg.get("Subject", "")) or ""
     if not subject.lower().startswith("re:"):
         subject = f"Re: {subject}"
 
     return {
         "message_id": message_id,
         "references": references,
-        "from_": msg["From"],
-        "to": msg["To"],
-        "cc": msg.get("Cc"),
+        "from_": _unfold(msg["From"]),
+        "to": _unfold(msg["To"]),
+        "cc": _unfold(msg.get("Cc")),
+        "reply_to_header": _unfold(msg.get("Reply-To")),
         "subject": subject,
     }
+
+
+def choose_reply_target(reply_info: dict, self_from_addr: str) -> str | None:
+    """Pick the To: address for a reply.
+
+    If the source message was sent by us (From matches our account), return
+    the original To so the thread continues to the same recipient (e.g.
+    nudging someone we already emailed). Otherwise honour Reply-To if set,
+    else From.
+    """
+    from email.utils import getaddresses, parseaddr
+
+    def _addr(header: str | None) -> str:
+        return (parseaddr(header or "")[1] or "").lower()
+
+    self_addr = _addr(self_from_addr)
+    from_addrs = {addr.lower() for _, addr in getaddresses([reply_info["from_"] or ""]) if addr}
+    if self_addr and self_addr in from_addrs:
+        return reply_info["to"]
+    return reply_info.get("reply_to_header") or reply_info["from_"]
 
 
 def build_email(
