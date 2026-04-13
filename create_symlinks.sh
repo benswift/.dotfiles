@@ -129,10 +129,9 @@ main() {
 
     # Directory symlinks
     echo -e "\nLinking directories..."
-    # Claude Code loads skills via the ben plugin (--plugin-dir in zshrc wrapper),
-    # so no ~/.claude/skills symlink. Codex CLI still needs raw access to the
-    # skill directories, so symlink ~/.codex/skills at the plugin's skills/ subdir.
-    link_directory "$DOTFILES_DIR/claude-plugins/ben/skills" "$HOME/.codex/skills"
+    # ~/.codex/skills is symlinked at ben plugin bootstrap time (in install.sh
+    # and 'dotfiles update'), pointing at Claude Code's marketplace clone ---
+    # can't do it here because the clone doesn't exist until claude has run.
     link_directory "$DOTFILES_DIR/ghostty" "$HOME/.config/ghostty"
     link_directory "$DOTFILES_DIR/helix" "$HOME/.config/helix"
     link_directory "$DOTFILES_DIR/mail/neomutt" "$HOME/.config/neomutt"

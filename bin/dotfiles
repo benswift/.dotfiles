@@ -209,36 +209,32 @@ doctor() {
     fi
 }
 
-update_personal_plugin() {
-    local plugin_repo="git@github.com:benswift/claude-plugin-personal.git"
-    local plugin_dir="$DOTFILES_DIR/claude-plugins/ben"
-
-    if [[ -d "$plugin_dir/.git" ]]; then
-        echo "Updating ben plugin..."
-        git -C "$plugin_dir" pull --rebase --autostash || echo -e "${YELLOW}⚠ Could not pull ben plugin (offline?)${NC}"
-    else
-        echo "Cloning ben plugin..."
-        mkdir -p "$(dirname "$plugin_dir")"
-        if ! git clone "$plugin_repo" "$plugin_dir"; then
-            echo -e "${YELLOW}⚠ Could not clone ben plugin --- check SSH auth to GitHub${NC}"
-        fi
+update_ben_plugin() {
+    # Claude Code owns the ben plugin clone at ~/.claude/plugins/marketplaces/ben/.
+    # All three commands are idempotent. marketplace add is needed because claude
+    # plugin subcommands don't auto-register marketplaces from settings.json.
+    if ! command -v claude &>/dev/null; then
+        return
     fi
+    echo "Updating ben plugin..."
+    claude plugin marketplace add benswift/claude-plugin-personal 2>/dev/null || true
+    claude plugin install --scope user ben@ben 2>/dev/null || true
+    claude plugin update --scope user ben@ben 2>/dev/null || true
 
-    # Ensure Claude Code's copy of the ben plugin is installed and current.
-    # Settings.json declares the marketplace but claude plugin subcommands
-    # don't auto-register it --- needs an explicit `marketplace add` first.
-    # All three commands are idempotent.
-    if command -v claude &>/dev/null; then
-        claude plugin marketplace add benswift/claude-plugin-personal 2>/dev/null || true
-        claude plugin install --scope user ben@ben 2>/dev/null || true
-        claude plugin update --scope user ben@ben 2>/dev/null || true
+    # Ensure codex symlink points at the marketplace clone (first-run safety
+    # net; create_symlinks.sh can't do this because the target isn't created
+    # until the marketplace clone exists).
+    local codex_skills_target="$HOME/.claude/plugins/marketplaces/ben/skills"
+    if [[ -d "$codex_skills_target" && ! -L "$HOME/.codex/skills" ]]; then
+        mkdir -p "$HOME/.codex"
+        ln -sfn "$codex_skills_target" "$HOME/.codex/skills"
     fi
 }
 
 update() {
     echo "Updating dotfiles..."
     git -C "$DOTFILES_DIR" pull --rebase
-    update_personal_plugin
+    update_ben_plugin
     "$DOTFILES_DIR/create_symlinks.sh"
     echo "Done!"
 }

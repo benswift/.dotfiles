@@ -66,6 +66,29 @@ agents, allowing them to share the same instruction files:
 
 The `create_symlinks.sh` script sets up all necessary symlinks and directories.
 
+### Personal skills plugin (`ben`)
+
+My personal Claude Code skills library (pkb, benswift-writer, github-explorer,
+etc.) lives in a separate **private** repo,
+[`benswift/claude-plugin-personal`](https://github.com/benswift/claude-plugin-personal),
+loaded as a Claude Code plugin. The setup:
+
+- **Registered in `claude/settings.json`** via `extraKnownMarketplaces` (github
+  source) and enabled via `enabledPlugins: {"ben@ben": true}` --- portable
+  across machines, no hardcoded paths.
+- **Claude Code clones it** to `~/.claude/plugins/marketplaces/ben/` on first
+  use. That directory is the single source of truth --- edit skills there,
+  commit and push from there.
+- **Codex reads from the same directory** via a `~/.codex/skills` symlink (set
+  up by `install.sh` and `dotfiles update` since the target doesn't exist
+  until Claude Code has cloned the marketplace).
+- **Skills appear to the model** as `ben:<skill-name>` (e.g.
+  `ben:github-explorer`).
+
+To propagate changes across machines: push from the marketplace clone, then
+run `dotfiles update` elsewhere (which runs `claude plugin update --scope
+user ben@ben`). Requires SSH auth to GitHub (the repo is private).
+
 ### Elixir projects tip
 
 The [Usage Rules](https://hexdocs.pm/usage_rules/) package is excellent for
