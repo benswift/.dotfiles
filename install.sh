@@ -118,6 +118,13 @@ install_personal_plugin() {
             warn "Re-run 'dotfiles update' after setting up SSH"
         fi
     fi
+
+    # Claude Code clones its own copy of the ben plugin separately from the
+    # dev checkout above (the github marketplace source handles this). Trigger
+    # install here so the plugin is ready on first claude launch.
+    if command -v claude &>/dev/null; then
+        claude plugin install ben@ben 2>/dev/null || true
+    fi
 }
 
 main() {

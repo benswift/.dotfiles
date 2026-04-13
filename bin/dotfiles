@@ -223,6 +223,13 @@ update_personal_plugin() {
             echo -e "${YELLOW}⚠ Could not clone ben plugin --- check SSH auth to GitHub${NC}"
         fi
     fi
+
+    # Ensure Claude Code's copy of the ben plugin is installed and current.
+    # Idempotent: install is a no-op if already installed; update fetches latest.
+    if command -v claude &>/dev/null; then
+        claude plugin install ben@ben 2>/dev/null || true
+        claude plugin update ben@ben 2>/dev/null || true
+    fi
 }
 
 update() {

@@ -38,8 +38,8 @@
     },
     "ben": {
       "source": {
-        "source": "directory",
-        "path": "/Users/ben/.dotfiles/claude-plugins/ben"
+        "source": "github",
+        "repo": "benswift/claude-plugin-personal"
       }
     }
   },
