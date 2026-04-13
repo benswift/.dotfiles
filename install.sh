@@ -100,29 +100,37 @@ install_agent_skills() {
     bunx skills add vercel-labs/agent-browser
 }
 
-# Bootstrap the private ben Claude Code plugin. Claude Code clones the repo
-# to ~/.claude/plugins/marketplaces/ben/ --- that's the single source of
-# truth (codex also symlinks into it). Non-fatal: on a fresh machine without
-# SSH set up, this warns and lets the rest of bootstrap continue. Re-run
+# Claude Code plugins declared in claude/settings.json. Each entry is
+# "github-repo plugin-id". The marketplace declaration in settings.json is
+# necessary but not sufficient --- claude plugin subcommands don't auto-register
+# from it, so we run add/install here. Non-fatal: on a fresh machine without
+# SSH set up, these warn and let the rest of bootstrap continue. Re-run
 # 'dotfiles update' once SSH auth works.
-bootstrap_ben_plugin() {
+CLAUDE_PLUGINS=(
+    "benswift/claude-plugin-personal ben@ben"
+    "pbakaus/impeccable impeccable@impeccable"
+)
+
+bootstrap_claude_plugins() {
     if ! command -v claude &>/dev/null; then
-        warn "claude not installed --- skipping ben plugin bootstrap"
+        warn "claude not installed --- skipping claude plugin bootstrap"
         warn "Re-run 'dotfiles update' after installing claude"
         return
     fi
 
-    info "Setting up ben plugin..."
-    # marketplace add is needed because claude plugin subcommands don't
-    # auto-register marketplaces declared in settings.json.
-    claude plugin marketplace add benswift/claude-plugin-personal 2>/dev/null \
-        || warn "Could not add ben marketplace --- check SSH auth to GitHub"
-    claude plugin install --scope user ben@ben 2>/dev/null \
-        || warn "Could not install ben@ben (marketplace may not be available yet)"
+    info "Setting up claude plugins..."
+    local entry repo plugin_id
+    for entry in "${CLAUDE_PLUGINS[@]}"; do
+        read -r repo plugin_id <<<"$entry"
+        claude plugin marketplace add "$repo" 2>/dev/null \
+            || warn "Could not add marketplace $repo --- check SSH auth to GitHub"
+        claude plugin install --scope user "$plugin_id" 2>/dev/null \
+            || warn "Could not install $plugin_id (marketplace may not be available yet)"
+    done
 
-    # Point codex at claude's marketplace clone so both tools read the same
-    # directory. Doing it here (not in create_symlinks.sh) because the
-    # target doesn't exist until the marketplace has been cloned.
+    # ben-plugin-specific: point codex at claude's marketplace clone so both
+    # tools read the same directory. Doing it here (not in create_symlinks.sh)
+    # because the target doesn't exist until the marketplace has been cloned.
     local codex_skills_target="$HOME/.claude/plugins/marketplaces/ben/skills"
     local codex_skills_link="$HOME/.codex/skills"
     if [[ -d "$codex_skills_target" ]]; then
@@ -164,7 +172,7 @@ main() {
     fi
     install_mise
     clone_dotfiles
-    bootstrap_ben_plugin
+    bootstrap_claude_plugins
     setup_symlinks
     install_mise_tools
     install_claude

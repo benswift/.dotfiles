@@ -209,21 +209,31 @@ doctor() {
     fi
 }
 
-update_ben_plugin() {
-    # Claude Code owns the ben plugin clone at ~/.claude/plugins/marketplaces/ben/.
-    # All three commands are idempotent. marketplace add is needed because claude
-    # plugin subcommands don't auto-register marketplaces from settings.json.
+# Claude Code plugins declared in claude/settings.json. Each entry is
+# "github-repo plugin-id". The marketplace declaration in settings.json is
+# necessary but not sufficient --- claude plugin subcommands don't auto-register
+# from it, so we run add/install/update idempotently on every 'dotfiles update'.
+CLAUDE_PLUGINS=(
+    "benswift/claude-plugin-personal ben@ben"
+    "pbakaus/impeccable impeccable@impeccable"
+)
+
+update_claude_plugins() {
     if ! command -v claude &>/dev/null; then
         return
     fi
-    echo "Updating ben plugin..."
-    claude plugin marketplace add benswift/claude-plugin-personal 2>/dev/null || true
-    claude plugin install --scope user ben@ben 2>/dev/null || true
-    claude plugin update --scope user ben@ben 2>/dev/null || true
+    echo "Updating claude plugins..."
+    local entry repo plugin_id
+    for entry in "${CLAUDE_PLUGINS[@]}"; do
+        read -r repo plugin_id <<<"$entry"
+        claude plugin marketplace add "$repo" 2>/dev/null || true
+        claude plugin install --scope user "$plugin_id" 2>/dev/null || true
+        claude plugin update --scope user "$plugin_id" 2>/dev/null || true
+    done
 
-    # Ensure codex symlink points at the marketplace clone (first-run safety
-    # net; create_symlinks.sh can't do this because the target isn't created
-    # until the marketplace clone exists).
+    # ben-plugin-specific: point ~/.codex/skills at claude's marketplace clone
+    # so codex reads the same directory. Can't live in create_symlinks.sh
+    # because the target doesn't exist until the marketplace has been cloned.
     local codex_skills_target="$HOME/.claude/plugins/marketplaces/ben/skills"
     if [[ -d "$codex_skills_target" && ! -L "$HOME/.codex/skills" ]]; then
         mkdir -p "$HOME/.codex"
@@ -234,7 +244,7 @@ update_ben_plugin() {
 update() {
     echo "Updating dotfiles..."
     git -C "$DOTFILES_DIR" pull --rebase
-    update_ben_plugin
+    update_claude_plugins
     "$DOTFILES_DIR/create_symlinks.sh"
     echo "Done!"
 }

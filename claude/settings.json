@@ -27,7 +27,8 @@
     "remember@claude-plugins-official": true,
     "mcp-server-dev@claude-plugins-official": true,
     "agent-browser@agent-browser": true,
-    "ben@ben": true
+    "ben@ben": true,
+    "impeccable@impeccable": true
   },
   "extraKnownMarketplaces": {
     "agent-browser": {
@@ -40,6 +41,12 @@
       "source": {
         "source": "github",
         "repo": "benswift/claude-plugin-personal"
+      }
+    },
+    "impeccable": {
+      "source": {
+        "source": "github",
+        "repo": "pbakaus/impeccable"
       }
     }
   },
