@@ -1,0 +1,54 @@
+#!/usr/bin/env zsh
+# terminal-fda --- manage Full Disk Access for Terminal.app
+#
+# Terminal is used (instead of Ghostty) for work that needs access to
+# TCC-protected paths like ~/Library/Safari or ~/Library/Mail. Keeping FDA
+# off Ghostty means AI agents run there cannot silently read those paths.
+#
+# macOS protects granting FDA behind GUI consent (by design), so this script
+# only automates what it can:
+#
+#   status  probe whether FDA is currently effective
+#   grant   open System Settings to the FDA pane (you flick the toggle)
+#   revoke  remove FDA via tccutil (no GUI needed)
+#
+# After grant or revoke, Terminal must be restarted for the change to take
+# full effect in its shell sessions.
+
+set -euo pipefail
+
+BUNDLE_ID="com.apple.Terminal"
+PROBE="$HOME/Library/Safari/History.db"
+
+usage() {
+  print -u2 "Usage: $(basename "$0") {status|grant|revoke}"
+  exit 1
+}
+
+probe_fda() {
+  # A read attempt is the only reliable signal --- TCC.db itself is protected.
+  head -c 1 "$PROBE" >/dev/null 2>&1
+}
+
+case "${1:-status}" in
+  status)
+    if probe_fda; then
+      print "FDA: granted (probe can read ~/Library/Safari/History.db)"
+    else
+      print "FDA: not granted (probe cannot read ~/Library/Safari/History.db)"
+    fi
+    ;;
+  grant)
+    print "Opening System Settings --- Privacy & Security --- Full Disk Access."
+    print "Toggle Terminal on (add via + if not listed), then restart Terminal."
+    open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
+    ;;
+  revoke)
+    print "Revoking FDA for $BUNDLE_ID..."
+    tccutil reset SystemPolicyAllFiles "$BUNDLE_ID"
+    print "Done. Restart Terminal so running shells pick up the change."
+    ;;
+  *)
+    usage
+    ;;
+esac

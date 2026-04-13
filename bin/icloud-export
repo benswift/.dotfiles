@@ -1,0 +1,507 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#   "typer",
+#   "pyobjc-core",
+#   "pyobjc-framework-EventKit",
+# ]
+# ///
+# icloud-export --- dump iCloud-synced personal data to JSONL.
+#
+# Sources (each written to its own JSONL file, one record per line):
+#   safari     --- browsing history from ~/Library/Safari/History.db
+#   messages   --- iMessage/SMS from ~/Library/Messages/chat.db
+#   calendar   --- events via EventKit (recurrences expanded)
+#
+# Must be run from a shell whose host app has Full Disk Access (e.g. Terminal
+# after `terminal-fda grant`). Calendar also requires a separate Calendar
+# permission grant the first time (macOS will prompt).
+#
+# Usage:
+#   icloud-export safari [--output safari.jsonl] [--since 2025-01-01]
+#   icloud-export messages [--output messages.jsonl] [--since 2025-01-01]
+#   icloud-export calendar [--output calendar.jsonl] [--since 2025-01-01] [--until 2027-01-01]
+#   icloud-export all [--output-dir ./] [--since 2025-01-01]
+
+from __future__ import annotations
+
+import json
+import re
+import shutil
+import sqlite3
+import tempfile
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any
+
+import typer
+
+app = typer.Typer(add_completion=False, no_args_is_help=True)
+
+MAC_EPOCH_OFFSET = 978307200  # seconds from Unix epoch to Mac absolute time epoch
+SAFARI_DB = Path.home() / "Library" / "Safari" / "History.db"
+MESSAGES_DB = Path.home() / "Library" / "Messages" / "chat.db"
+
+
+class FDAError(RuntimeError):
+    pass
+
+
+def copy_protected_db(source: Path) -> Path:
+    tmp = Path(tempfile.mkdtemp(prefix="icloud-export-"))
+    dest = tmp / source.name
+    try:
+        shutil.copy2(source, dest)
+    except PermissionError as e:
+        raise FDAError(
+            f"Cannot read {source} --- this shell's host app lacks Full Disk Access.\n"
+            f"Run from Terminal.app after `terminal-fda grant`."
+        ) from e
+    for suffix in ("-wal", "-shm"):
+        src = source.with_name(source.name + suffix)
+        if src.exists():
+            shutil.copy2(src, dest.with_name(dest.name + suffix))
+    return dest
+
+
+def mac_seconds_to_utc(mac_seconds: float) -> datetime:
+    return datetime.fromtimestamp(mac_seconds + MAC_EPOCH_OFFSET, tz=timezone.utc)
+
+
+def mac_date_column_to_utc(raw: int | float | None) -> datetime | None:
+    if not raw:
+        return None
+    # iOS 13+/macOS 10.15+ stores nanoseconds; older rows store seconds. The
+    # boundary between values is several orders of magnitude, so a threshold is
+    # reliable.
+    seconds = raw / 1_000_000_000 if raw > 10**13 else raw
+    return mac_seconds_to_utc(seconds)
+
+
+def write_jsonl(records: list[dict[str, Any]], output: Path) -> None:
+    with output.open("w", encoding="utf-8") as f:
+        for rec in records:
+            f.write(json.dumps(rec, ensure_ascii=False, default=str))
+            f.write("\n")
+
+
+def report(name: str, records: list[dict[str, Any]], output: Path) -> None:
+    write_jsonl(records, output)
+    size = output.stat().st_size
+    typer.echo(f"{name}: wrote {len(records):,} records to {output} ({size:,} bytes).")
+
+
+# ---------------------------------------------------------------- Safari -----
+
+
+def extract_safari(since: datetime | None) -> list[dict[str, Any]]:
+    db_path = copy_protected_db(SAFARI_DB)
+    query = """
+        SELECT hv.id AS visit_id,
+               hi.id AS item_id,
+               hi.url,
+               hi.domain_expansion AS domain,
+               hi.visit_count AS item_visit_count,
+               hv.visit_time,
+               hv.title,
+               hv.load_successful,
+               hv.origin,
+               hv.redirect_source,
+               hv.redirect_destination
+        FROM history_visits hv
+        JOIN history_items hi ON hi.id = hv.history_item
+        ORDER BY hv.visit_time DESC
+    """
+    since_utc = since.astimezone(timezone.utc) if since else None
+    records: list[dict[str, Any]] = []
+    with sqlite3.connect(f"file:{db_path}?mode=ro", uri=True) as conn:
+        conn.row_factory = sqlite3.Row
+        for r in conn.execute(query):
+            visit_time = mac_seconds_to_utc(r["visit_time"])
+            if since_utc and visit_time < since_utc:
+                continue
+            records.append(
+                {
+                    "visit_id": r["visit_id"],
+                    "item_id": r["item_id"],
+                    "url": r["url"],
+                    "domain": r["domain"],
+                    "title": r["title"],
+                    "visit_time": visit_time.isoformat(),
+                    "origin": r["origin"],
+                    "item_visit_count": r["item_visit_count"],
+                    "load_successful": r["load_successful"],
+                    "redirect_source": r["redirect_source"],
+                    "redirect_destination": r["redirect_destination"],
+                }
+            )
+    return records
+
+
+# -------------------------------------------------------------- Messages -----
+
+# Typedstream encodes NSAttributedString as a binary blob. The actual string
+# sits after an "NSString" class marker, preceded by a variable-length integer
+# length prefix (0x2B sigil = "+"). A fully correct parser is ~200 lines; this
+# is a pragmatic extractor that handles the common case (message bodies) and
+# falls back to scanning for the longest non-class UTF-8 run.
+
+_TYPEDSTREAM_TOKENS = frozenset(
+    {
+        "NSString",
+        "NSMutableString",
+        "NSAttributedString",
+        "NSMutableAttributedString",
+        "NSDictionary",
+        "NSMutableDictionary",
+        "NSArray",
+        "NSMutableArray",
+        "NSObject",
+        "NSNumber",
+        "NSData",
+        "NSValue",
+        "NSDate",
+        "NSNull",
+        "streamtyped",
+        "__kIMMessagePartAttributeName",
+        "__kIMFileTransferGUIDAttributeName",
+        "__kIMLinkAttributeName",
+        "__kIMMentionConfirmedMention",
+        "__kIMBaseWritingDirectionAttributeName",
+        "iI",
+    }
+)
+
+_UTF8_RUN = re.compile(rb"[\x20-\x7e\t\n\r](?:[\x09\x0a\x0d\x20-\x7e]|[\xc2-\xf4][\x80-\xbf]+){2,}")
+
+
+def _decode_length_prefixed_string(data: bytes, idx: int) -> str | None:
+    """After 'NSString' at idx, advance past the class header and decode the
+    length-prefixed UTF-8 string. Returns None if the pattern doesn't match."""
+    # Typical layout: NSString \x01 \x94 \x84 \x01 + <len> <utf8...>
+    # The sigil '+' (0x2B) indicates a variable-length integer follows.
+    plus = data.find(b"+", idx, idx + 32)
+    if plus == -1 or plus + 2 > len(data):
+        return None
+    # Variable-length length: one byte if < 0x80, else 0x81 + 2 bytes (little-endian),
+    # 0x82 + 4 bytes, etc. In practice message bodies fit in one or two bytes.
+    b = data[plus + 1]
+    if b < 0x80:
+        length = b
+        start = plus + 2
+    elif b == 0x81 and plus + 4 <= len(data):
+        length = int.from_bytes(data[plus + 2 : plus + 4], "little")
+        start = plus + 4
+    elif b == 0x82 and plus + 6 <= len(data):
+        length = int.from_bytes(data[plus + 2 : plus + 6], "little")
+        start = plus + 6
+    else:
+        return None
+    end = start + length
+    if end > len(data):
+        return None
+    try:
+        s = data[start:end].decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    return s if s and s not in _TYPEDSTREAM_TOKENS else None
+
+
+def naive_attributed_body_text(blob: bytes | memoryview | None) -> str | None:
+    if not blob:
+        return None
+    data = bytes(blob)
+    marker = data.find(b"NSString")
+    if marker != -1:
+        # Try the length-prefixed decode starting at the marker (body usually
+        # follows the first NSString occurrence).
+        decoded = _decode_length_prefixed_string(data, marker + len(b"NSString"))
+        if decoded:
+            return decoded
+
+    # Fallback: scan for UTF-8 runs, skipping known typedstream class names.
+    best = ""
+    for m in _UTF8_RUN.finditer(data):
+        try:
+            s = m.group(0).decode("utf-8")
+        except UnicodeDecodeError:
+            continue
+        if s in _TYPEDSTREAM_TOKENS:
+            continue
+        if len(s) > len(best):
+            best = s
+    return best or None
+
+
+def extract_messages(since: datetime | None) -> list[dict[str, Any]]:
+    db_path = copy_protected_db(MESSAGES_DB)
+    query = """
+        SELECT m.ROWID AS message_id,
+               m.guid,
+               c.ROWID AS chat_id,
+               c.display_name AS chat_display_name,
+               c.chat_identifier,
+               h.id AS sender,
+               m.is_from_me,
+               m.text,
+               m.attributedBody,
+               m.service,
+               m.date,
+               m.date_delivered,
+               m.date_read,
+               m.associated_message_guid,
+               m.associated_message_type,
+               m.cache_has_attachments
+        FROM message m
+        LEFT JOIN handle h ON h.ROWID = m.handle_id
+        LEFT JOIN chat_message_join cmj ON cmj.message_id = m.ROWID
+        LEFT JOIN chat c ON c.ROWID = cmj.chat_id
+        ORDER BY m.date DESC
+    """
+    since_utc = since.astimezone(timezone.utc) if since else None
+    records: list[dict[str, Any]] = []
+    with sqlite3.connect(f"file:{db_path}?mode=ro", uri=True) as conn:
+        conn.row_factory = sqlite3.Row
+        for r in conn.execute(query):
+            sent_at = mac_date_column_to_utc(r["date"])
+            if since_utc and sent_at and sent_at < since_utc:
+                continue
+            text: str | None = r["text"]
+            if not text:
+                text = naive_attributed_body_text(r["attributedBody"])
+            delivered = mac_date_column_to_utc(r["date_delivered"])
+            read = mac_date_column_to_utc(r["date_read"])
+            records.append(
+                {
+                    "message_id": r["message_id"],
+                    "guid": r["guid"],
+                    "chat_id": r["chat_id"],
+                    "chat_name": r["chat_display_name"] or r["chat_identifier"],
+                    "sender": r["sender"],
+                    "is_from_me": bool(r["is_from_me"]),
+                    "text": text,
+                    "service": r["service"],
+                    "sent_at": sent_at.isoformat() if sent_at else None,
+                    "delivered_at": delivered.isoformat() if delivered else None,
+                    "read_at": read.isoformat() if read else None,
+                    "is_reaction": bool(r["associated_message_type"]),
+                    "reaction_target_guid": r["associated_message_guid"] or None,
+                    "associated_message_type": r["associated_message_type"] or None,
+                    "has_attachments": bool(r["cache_has_attachments"]),
+                }
+            )
+    return records
+
+
+# -------------------------------------------------------------- Calendar -----
+
+
+def _request_calendar_access(store: Any) -> bool:
+    """Ask the OS for Calendar access, blocking up to 10s for the user prompt."""
+    from Foundation import NSDate, NSRunLoop  # ty: ignore[unresolved-import]
+
+    result = {"granted": False, "done": False}
+
+    def handler(granted: bool, error: Any) -> None:
+        result["granted"] = bool(granted)
+        result["done"] = True
+
+    # macOS 14+ prefers requestFullAccessToEventsWithCompletion:
+    if hasattr(store, "requestFullAccessToEventsWithCompletion_"):
+        store.requestFullAccessToEventsWithCompletion_(handler)
+    else:
+        from EventKit import EKEntityTypeEvent  # ty: ignore[unresolved-import]
+
+        store.requestAccessToEntityType_completion_(EKEntityTypeEvent, handler)
+
+    deadline = NSDate.dateWithTimeIntervalSinceNow_(10.0)
+    while not result["done"]:
+        NSRunLoop.currentRunLoop().runUntilDate_(
+            NSDate.dateWithTimeIntervalSinceNow_(0.1)
+        )
+        if NSDate.date().compare_(deadline) >= 0:
+            break
+    return bool(result["granted"])
+
+
+def _nsdate_to_iso(d: Any) -> str | None:
+    if d is None:
+        return None
+    return datetime.fromtimestamp(d.timeIntervalSince1970(), tz=timezone.utc).isoformat()
+
+
+def extract_calendar(
+    since: datetime | None, until: datetime | None
+) -> list[dict[str, Any]]:
+    try:
+        from EventKit import EKEventStore  # ty: ignore[unresolved-import]
+        from Foundation import NSDate  # ty: ignore[unresolved-import]
+    except ImportError as e:
+        raise RuntimeError(
+            "EventKit / PyObjC not available. Install via `uv run` with the "
+            "inline dependencies declared in this script."
+        ) from e
+
+    store = EKEventStore.alloc().init()
+    if not _request_calendar_access(store):
+        raise RuntimeError(
+            "Calendar access was not granted. Approve in System Settings --- "
+            "Privacy & Security --- Calendars and re-run."
+        )
+
+    start = since or datetime(1990, 1, 1, tzinfo=timezone.utc)
+    end = until or datetime.now(timezone.utc) + timedelta(days=365 * 5)
+    ns_start = NSDate.dateWithTimeIntervalSince1970_(start.timestamp())
+    ns_end = NSDate.dateWithTimeIntervalSince1970_(end.timestamp())
+
+    # EventKit caps single-predicate queries at ~4 years. Chunk by year to be safe.
+    records: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    chunk_start = ns_start
+    year = timedelta(days=365)
+    while chunk_start.timeIntervalSince1970() < ns_end.timeIntervalSince1970():
+        chunk_end_dt = datetime.fromtimestamp(
+            chunk_start.timeIntervalSince1970(), tz=timezone.utc
+        ) + year
+        chunk_end_ts = min(chunk_end_dt.timestamp(), ns_end.timeIntervalSince1970())
+        chunk_end = NSDate.dateWithTimeIntervalSince1970_(chunk_end_ts)
+        predicate = store.predicateForEventsWithStartDate_endDate_calendars_(
+            chunk_start, chunk_end, None
+        )
+        for ev in store.eventsMatchingPredicate_(predicate) or []:
+            ident = str(ev.eventIdentifier()) if ev.eventIdentifier() else None
+            # Deduplicate recurring-event rows that span chunk boundaries; EventKit
+            # returns one instance per occurrence so include a start-date suffix.
+            start_iso = _nsdate_to_iso(ev.startDate())
+            key = f"{ident}|{start_iso}"
+            if key in seen_ids:
+                continue
+            seen_ids.add(key)
+            records.append(_event_to_dict(ev))
+        chunk_start = chunk_end
+
+    records.sort(key=lambda r: r.get("start") or "")
+    return records
+
+
+def _event_to_dict(ev: Any) -> dict[str, Any]:
+    lat: float | None = None
+    lon: float | None = None
+    structured = None
+    try:
+        structured = ev.structuredLocation()
+    except Exception:
+        pass
+    if structured is not None:
+        try:
+            geo = structured.geoLocation()
+            if geo is not None:
+                coord = geo.coordinate()
+                lat = float(coord.latitude)
+                lon = float(coord.longitude)
+        except Exception:
+            pass
+
+    attendees: list[dict[str, str | None]] = []
+    try:
+        raw_attendees = ev.attendees() or []
+    except Exception:
+        raw_attendees = []
+    for a in raw_attendees:
+        name = str(a.name()) if a.name() else None
+        email: str | None = None
+        try:
+            url = a.URL()
+            if url is not None:
+                s = str(url)
+                if s.startswith("mailto:"):
+                    email = s[len("mailto:") :]
+        except Exception:
+            pass
+        attendees.append({"name": name, "email": email})
+
+    organizer_name: str | None = None
+    try:
+        organizer = ev.organizer()
+        if organizer is not None and organizer.name():
+            organizer_name = str(organizer.name())
+    except Exception:
+        pass
+
+    cal = ev.calendar()
+    url_obj = ev.URL() if hasattr(ev, "URL") else None
+    return {
+        "event_id": str(ev.eventIdentifier()) if ev.eventIdentifier() else None,
+        "calendar": str(cal.title()) if cal else None,
+        "calendar_type": int(cal.type()) if cal else None,
+        "title": str(ev.title()) if ev.title() else None,
+        "notes": str(ev.notes()) if ev.notes() else None,
+        "location": str(ev.location()) if ev.location() else None,
+        "lat": lat,
+        "lon": lon,
+        "start": _nsdate_to_iso(ev.startDate()),
+        "end": _nsdate_to_iso(ev.endDate()),
+        "all_day": bool(ev.isAllDay()),
+        "status": int(ev.status()) if ev.status() is not None else None,
+        "url": str(url_obj) if url_obj else None,
+        "attendees": attendees,
+        "organizer": organizer_name,
+        "has_recurrence": bool(ev.hasRecurrenceRules()),
+        "has_alarms": bool(ev.hasAlarms()),
+    }
+
+
+# ------------------------------------------------------------------- CLI -----
+
+
+@app.command()
+def safari(
+    output: Path = typer.Option(Path("safari.jsonl"), "--output", "-o"),
+    since: datetime | None = typer.Option(
+        None, "--since", formats=["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S"]
+    ),
+) -> None:
+    """Export Safari browsing history."""
+    report("safari", extract_safari(since), output)
+
+
+@app.command()
+def messages(
+    output: Path = typer.Option(Path("messages.jsonl"), "--output", "-o"),
+    since: datetime | None = typer.Option(
+        None, "--since", formats=["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S"]
+    ),
+) -> None:
+    """Export iMessage / SMS history."""
+    report("messages", extract_messages(since), output)
+
+
+@app.command()
+def calendar(
+    output: Path = typer.Option(Path("calendar.jsonl"), "--output", "-o"),
+    since: datetime | None = typer.Option(
+        None, "--since", formats=["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S"]
+    ),
+    until: datetime | None = typer.Option(
+        None, "--until", formats=["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S"]
+    ),
+) -> None:
+    """Export Calendar events via EventKit (recurrences expanded)."""
+    report("calendar", extract_calendar(since, until), output)
+
+
+@app.command(name="all")
+def all_sources(
+    output_dir: Path = typer.Option(Path("."), "--output-dir", "-d"),
+    since: datetime | None = typer.Option(None, "--since", formats=["%Y-%m-%d"]),
+) -> None:
+    """Export Safari, Messages and Calendar."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    report("safari", extract_safari(since), output_dir / "safari.jsonl")
+    report("messages", extract_messages(since), output_dir / "messages.jsonl")
+    report("calendar", extract_calendar(since, None), output_dir / "calendar.jsonl")
+
+
+if __name__ == "__main__":
+    app()
