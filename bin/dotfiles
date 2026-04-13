@@ -230,8 +230,8 @@ update_personal_plugin() {
     # All three commands are idempotent.
     if command -v claude &>/dev/null; then
         claude plugin marketplace add benswift/claude-plugin-personal 2>/dev/null || true
-        claude plugin install ben@ben 2>/dev/null || true
-        claude plugin update ben@ben 2>/dev/null || true
+        claude plugin install --scope user ben@ben 2>/dev/null || true
+        claude plugin update --scope user ben@ben 2>/dev/null || true
     fi
 }
 
