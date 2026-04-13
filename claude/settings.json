@@ -29,5 +29,13 @@
     "agent-browser@agent-browser": true
   },
   "alwaysThinkingEnabled": true,
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "extraKnownMarketplaces": {
+    "agent-browser": {
+      "source": {
+        "source": "github",
+        "repo": "vercel-labs/agent-browser"
+      }
+    }
+  }
 }
