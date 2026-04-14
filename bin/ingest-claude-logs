@@ -1,0 +1,152 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""Walk ~/claude-logs/<host>/<project>/<uuid>.jsonl and land a summary row per
+session in analytics.db. Idempotent: re-running updates existing rows."""
+
+from __future__ import annotations
+
+import json
+import re
+import sqlite3
+from pathlib import Path
+from typing import Any
+
+LOGS = Path.home() / "claude-logs"
+DB = LOGS / "analytics.db"
+
+# Strips /Users/<user> and /home/<user> to ~ so the same repo worked on from
+# macOS and Linux hosts collapses to a single canonical project key.
+HOME_PREFIX_RE = re.compile(r"^/(Users|home)/[^/]+")
+
+# Rebuilt from scratch on every run --- the JSONL files on disk are the source
+# of truth, so dropping-and-recreating is cheaper than schema migrations.
+SCHEMA = """
+DROP TABLE IF EXISTS sessions;
+CREATE TABLE sessions (
+    session_uuid      TEXT PRIMARY KEY,
+    host              TEXT NOT NULL,
+    project_dir       TEXT NOT NULL,
+    project_canonical TEXT,
+    cwd               TEXT,
+    git_branch        TEXT,
+    claude_version    TEXT,
+    started_at        TEXT,
+    ended_at          TEXT,
+    message_count     INTEGER NOT NULL,
+    file_size         INTEGER NOT NULL,
+    ingested_at       TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX sessions_host ON sessions(host);
+CREATE INDEX sessions_project ON sessions(project_dir);
+CREATE INDEX sessions_canonical ON sessions(project_canonical);
+CREATE INDEX sessions_started ON sessions(started_at);
+"""
+
+
+def canonicalise(cwd: str | None) -> str | None:
+    if not cwd:
+        return None
+    return HOME_PREFIX_RE.sub("~", cwd)
+
+
+def summarise(path: Path) -> dict[str, Any] | None:
+    try:
+        text = path.read_text()
+    except OSError:
+        return None
+
+    lines = text.splitlines()
+    if not lines:
+        return None
+
+    started_at: str | None = None
+    ended_at: str | None = None
+    cwd: str | None = None
+    git_branch: str | None = None
+    version: str | None = None
+
+    for line in lines:
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(entry, dict):
+            continue
+
+        ts = entry.get("timestamp")
+        if isinstance(ts, str) and ts:
+            if started_at is None:
+                started_at = ts
+            ended_at = ts
+        if cwd is None:
+            candidate = entry.get("cwd")
+            if isinstance(candidate, str) and candidate:
+                cwd = candidate
+        if git_branch is None:
+            candidate = entry.get("gitBranch")
+            if isinstance(candidate, str) and candidate:
+                git_branch = candidate
+        if version is None:
+            candidate = entry.get("version")
+            if isinstance(candidate, str) and candidate:
+                version = candidate
+
+    try:
+        size = path.stat().st_size
+    except OSError:
+        size = 0
+
+    return {
+        "session_uuid": path.stem,
+        "host": path.parent.parent.name,
+        "project_dir": path.parent.name,
+        "project_canonical": canonicalise(cwd),
+        "cwd": cwd,
+        "git_branch": git_branch,
+        "claude_version": version,
+        "started_at": started_at,
+        "ended_at": ended_at,
+        "message_count": len(lines),
+        "file_size": size,
+    }
+
+
+def main() -> None:
+    if not LOGS.is_dir():
+        raise SystemExit(f"No logs directory at {LOGS}")
+
+    conn = sqlite3.connect(DB)
+    try:
+        conn.executescript(SCHEMA)
+
+        rows: list[dict[str, Any]] = []
+        for path in LOGS.glob("*/*/*.jsonl"):
+            row = summarise(path)
+            if row is not None:
+                rows.append(row)
+
+        conn.executemany(
+            """
+            INSERT INTO sessions (
+                session_uuid, host, project_dir, project_canonical, cwd,
+                git_branch, claude_version, started_at, ended_at,
+                message_count, file_size, ingested_at
+            ) VALUES (
+                :session_uuid, :host, :project_dir, :project_canonical, :cwd,
+                :git_branch, :claude_version, :started_at, :ended_at,
+                :message_count, :file_size, CURRENT_TIMESTAMP
+            )
+            """,
+            rows,
+        )
+        conn.commit()
+        print(f"Ingested {len(rows)} sessions -> {DB}")
+    finally:
+        conn.close()
+
+
+if __name__ == "__main__":
+    main()

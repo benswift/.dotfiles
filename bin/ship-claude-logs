@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# Ship ~/.claude/projects to weddle:claude-logs/<hostname>/
+#
+# Uses rclone copy (never --delete) so weddle retains sessions that Claude Code
+# has rotated out locally. On weddle itself, does a local rsync to the same
+# layout so the ingester can treat every host uniformly.
+
+set -euo pipefail
+
+REMOTE="${CLAUDE_LOGS_REMOTE:-weddle}"
+SOURCE_DIR="${CLAUDE_LOGS_SOURCE:-$HOME/.claude/projects}"
+DRY_RUN="${DRY_RUN:-false}"
+HOST="$(hostname -s)"
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Ship Claude Code session logs to weddle.
+
+Options:
+  -n, --dry-run    Show what would be transferred without making changes
+  -h, --help       Show this help message
+
+Environment variables:
+  CLAUDE_LOGS_REMOTE   rclone remote name (default: weddle)
+  CLAUDE_LOGS_SOURCE   source directory (default: ~/.claude/projects)
+  DRY_RUN              Set to 'true' for dry run mode
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -n|--dry-run) DRY_RUN=true; shift ;;
+    -h|--help)    usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
+  esac
+done
+
+if [[ ! -d "$SOURCE_DIR" ]]; then
+  echo "No source directory at $SOURCE_DIR --- nothing to ship." >&2
+  exit 0
+fi
+
+# On weddle, skip the network hop --- rsync locally into the same layout.
+if [[ "$HOST" == "weddle" ]]; then
+  DEST="$HOME/claude-logs/$HOST"
+  mkdir -p "$DEST"
+  RSYNC_ARGS=(-a)
+  [[ "$DRY_RUN" == "true" ]] && RSYNC_ARGS+=(--dry-run)
+  echo "Local copy: $SOURCE_DIR/ -> $DEST/"
+  rsync "${RSYNC_ARGS[@]}" "$SOURCE_DIR/" "$DEST/"
+  exit 0
+fi
+
+RCLONE_ARGS=(copy --progress)
+[[ "$DRY_RUN" == "true" ]] && RCLONE_ARGS+=(--dry-run)
+
+echo "Shipping: $SOURCE_DIR -> $REMOTE:claude-logs/$HOST"
+rclone "${RCLONE_ARGS[@]}" "$SOURCE_DIR" "$REMOTE:claude-logs/$HOST"
