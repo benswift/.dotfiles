@@ -39,6 +39,12 @@ sysup() {
   uv tool upgrade --all
   bun update -g
   cargo install-update -a
+  if command -v claude &>/dev/null; then
+    claude plugin marketplace update
+    claude plugin list --json 2>/dev/null | jq -r '.[].id' | while read -r id; do
+      claude plugin update "$id"
+    done
+  fi
 }
 alias task="backlog task"
 alias todo="nb todo undone"
