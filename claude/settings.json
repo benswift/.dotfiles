@@ -29,6 +29,20 @@
     "ben@ben": true,
     "impeccable@impeccable": true
   },
+  "extraKnownMarketplaces": {
+    "ben": {
+      "source": {
+        "source": "github",
+        "repo": "benswift/claude-plugin-personal"
+      }
+    },
+    "impeccable": {
+      "source": {
+        "source": "github",
+        "repo": "pbakaus/impeccable"
+      }
+    }
+  },
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true
 }
