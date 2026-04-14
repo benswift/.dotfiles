@@ -7,6 +7,8 @@
 import os
 import re
 import select
+import shutil
+import subprocess
 import sys
 import termios
 import time
@@ -49,6 +51,8 @@ STRAY_PATTERNS = [
 ]
 
 LISTENER_NAMES = {"extempore"}
+
+ZELLIJ_VERSION_RE = re.compile(r"/zellij/([^/]+)/zellij$")
 
 HOME = os.path.expanduser("~")
 
@@ -128,6 +132,53 @@ def get_strays() -> list[dict]:
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
     return strays
+
+
+def canonical_zellij() -> str | None:
+    try:
+        result = subprocess.run(
+            ["mise", "which", "zellij"],
+            capture_output=True, text=True, timeout=2,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return os.path.realpath(result.stdout.strip())
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+    path = shutil.which("zellij")
+    return os.path.realpath(path) if path else None
+
+
+def get_stale_zellij() -> list[dict]:
+    canonical = canonical_zellij()
+    if not canonical:
+        return []
+
+    stale = []
+    for p in psutil.process_iter(["pid"]):
+        try:
+            cmdline = p.cmdline()
+            if len(cmdline) < 3:
+                continue
+            if os.path.basename(cmdline[0]) != "zellij" or cmdline[1] != "--server":
+                continue
+            exe_path = os.path.realpath(cmdline[0])
+            if exe_path == canonical:
+                continue
+            session = os.path.basename(cmdline[2])
+            m = ZELLIJ_VERSION_RE.search(exe_path)
+            version = m.group(1) if m else "?"
+            with p.oneshot():
+                stale.append({
+                    "session": session,
+                    "version": version,
+                    "pid": str(p.pid),
+                    "cpu": f"{p.cpu_percent():.1f}",
+                    "mem": f"{p.memory_percent():.1f}",
+                    "elapsed": fmt_elapsed(p.create_time()),
+                })
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    return stale
 
 
 def get_mail_clients() -> list[dict]:
@@ -238,6 +289,33 @@ def build_display() -> Group:
             "", "", "", "", "",
         )
 
+    stale_zellij = get_stale_zellij()
+    stale_table = Table(
+        show_header=True,
+        show_edge=False,
+        show_lines=False,
+        box=None,
+        padding=(0, 1),
+        header_style=GRUVBOX["bg4"],
+    )
+    stale_table.add_column("STALE ZELLIJ", min_width=16, style=GRUVBOX["fg"])
+    stale_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
+    stale_table.add_column("VERSION", min_width=8, style=GRUVBOX["fg"])
+    stale_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
+    stale_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
+    stale_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
+
+    for z in stale_zellij:
+        stale_table.add_row(
+            Text(z["session"], style=GRUVBOX["red"]),
+            z["pid"], z["version"], z["cpu"], z["mem"], z["elapsed"],
+        )
+    if not stale_zellij:
+        stale_table.add_row(
+            Text("(no stale zellij servers)", style=GRUVBOX["dim"]),
+            "", "", "", "", "",
+        )
+
     mail_clients = get_mail_clients()
     mail_table = Table(
         show_header=True,
@@ -295,6 +373,7 @@ def build_display() -> Group:
 
     footer = Text()
     stray_count_style = GRUVBOX["yellow"] if strays else GRUVBOX["green"]
+    stale_count_style = GRUVBOX["red"] if stale_zellij else GRUVBOX["green"]
     footer.append(str(len(agents)), style=GRUVBOX["green"])
     footer.append(" agent(s), ", style=GRUVBOX["dim"])
     footer.append(str(len(mail_clients)), style=GRUVBOX["green"])
@@ -302,10 +381,12 @@ def build_display() -> Group:
     footer.append(str(len(servers)), style=GRUVBOX["green"])
     footer.append(" server(s), ", style=GRUVBOX["dim"])
     footer.append(str(len(strays)), style=stray_count_style)
-    footer.append(" stray(s)", style=GRUVBOX["dim"])
+    footer.append(" stray(s), ", style=GRUVBOX["dim"])
+    footer.append(str(len(stale_zellij)), style=stale_count_style)
+    footer.append(" stale zellij", style=GRUVBOX["dim"])
     footer.append("  \u2022  q or ctrl-c to quit", style=GRUVBOX["dim"])
 
-    return Group(header, agent_table, Text(), mail_table, Text(), stray_table, Text(), server_table, Text(), footer)
+    return Group(header, agent_table, Text(), mail_table, Text(), stray_table, Text(), stale_table, Text(), server_table, Text(), footer)
 
 
 def main() -> None:
