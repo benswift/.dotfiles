@@ -16,8 +16,7 @@ Supported models:
     gpt       - OpenAI GPT Image 1.5: all-round text-to-image + editing (limited aspect ratios)
 
 Provide a single prompt. Optionally include one or more input images with
---input-image (repeatable) to transform or use as reference. Use --preset to
-include predefined reference images from a preset.
+--input-image (repeatable) to transform or use as reference.
 
 Generated images will be saved to:
     <output-dir>/<iso-timestamp>/<slugified-image-prompt>.avif
@@ -46,23 +45,7 @@ MODELS: dict[str, str] = {
     "gpt": "openai/gpt-image-1.5",
 }
 
-PRESETS_DIR = Path(__file__).parent / "styled_image_gen_presets"
-
 app = typer.Typer()
-
-
-def get_preset_images(preset_name: str) -> list[Path]:
-    preset_dir = PRESETS_DIR / preset_name
-    if not preset_dir.is_dir():
-        available = [d.name for d in PRESETS_DIR.iterdir() if d.is_dir()]
-        raise FileNotFoundError(
-            f"Preset '{preset_name}' not found. Available: {', '.join(available) or 'none'}"
-        )
-    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-    images = [
-        p for p in preset_dir.iterdir() if p.suffix.lower() in image_extensions
-    ]
-    return sorted(images)
 
 
 def error_exit(message: str) -> NoReturn:
@@ -264,12 +247,6 @@ def _main_impl(
             dir_okay=False,
         ),
     ] = [],
-    preset: Annotated[
-        str | None,
-        typer.Option(
-            help="Load reference images from a preset (added before --input-image)"
-        ),
-    ] = None,
     aspect_ratio: Annotated[
         str,
         typer.Option(help="Aspect ratio for generated images"),
@@ -303,15 +280,12 @@ def _main_impl(
 
       styled_image_gen.py "studio portrait" --model flux --input-image ref.jpg
 
-      styled_image_gen.py "abstract pattern" --preset anu --model banana
+      styled_image_gen.py "abstract pattern" --input-image refs/a.jpg --input-image refs/b.jpg
     """
     if model not in MODELS:
         error_exit(f"Unknown model '{model}'. Choose from: {', '.join(MODELS)}")
 
-    all_input_images: list[Path] = []
-    if preset:
-        all_input_images.extend(get_preset_images(preset))
-    all_input_images.extend(input_image)
+    all_input_images: list[Path] = list(input_image)
 
     api_token = get_api_token()
 
@@ -334,8 +308,6 @@ def _main_impl(
     print(f"Resolution: {resolution}")
     print(f"Format: {output_format}")
     print(f"Safety filter: {safety_filter_level}")
-    if preset:
-        print(f"Preset: {preset}")
     if all_input_images:
         print(f"Input images: {', '.join(str(p) for p in all_input_images)}")
     print(f"Output directory: {target_dir}")
