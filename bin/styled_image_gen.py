@@ -9,10 +9,11 @@ Environment:
     REPLICATE_API_KEY: Your Replicate API token (required)
 
 Supported models:
-    banana  - Google Nano Banana Pro (default): style transfer, up to 14 ref images, 4K
-    qwen    - Qwen Image: quality/speed toggle, 1 input image only
-    imagen  - Google Imagen 4 Ultra: text-to-image only, max 2K
-    flux    - FLUX 2 Max: up to 8 ref images, resolution in MP
+    banana    - Google Nano Banana Pro (default): style transfer, up to 14 ref images, 4K
+    qwen      - Qwen Image 2 Pro: single reference image, strong text rendering, native 2K
+    flux      - FLUX 2 Max: up to 8 ref images, resolution in MP
+    seedream  - ByteDance Seedream 4.5: cinematic aesthetics, up to 14 ref images, 2K/4K
+    gpt       - OpenAI GPT Image 1.5: all-round text-to-image + editing (limited aspect ratios)
 
 Provide a single prompt. Optionally include one or more input images with
 --input-image (repeatable) to transform or use as reference. Use --preset to
@@ -35,12 +36,14 @@ import httpx
 import replicate
 import typer
 from replicate.exceptions import ReplicateError
+from urllib.parse import urlparse
 
 MODELS: dict[str, str] = {
     "banana": "google/nano-banana-pro",
-    "qwen": "qwen/qwen-image",
-    "imagen": "google/imagen-4-ultra",
+    "qwen": "qwen/qwen-image-2-pro",
     "flux": "black-forest-labs/flux-2-max",
+    "seedream": "bytedance/seedream-4.5",
+    "gpt": "openai/gpt-image-1.5",
 }
 
 PRESETS_DIR = Path(__file__).parent / "styled_image_gen_presets"
@@ -86,10 +89,15 @@ def slugify(text: str, max_words: int = 6) -> str:
     return slug if slug else "untitled"
 
 
-def download_image(url: str, output_path: Path) -> None:
+def download_image(url: str, target_dir: Path, base_name: str) -> Path:
+    ext = Path(urlparse(url).path).suffix.lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".webp"):
+        ext = ".jpg"
+    target_path = target_dir / f"{base_name}{ext}"
     response = httpx.get(url, timeout=60.0, follow_redirects=True)
     response.raise_for_status()
-    output_path.write_bytes(response.content)
+    target_path.write_bytes(response.content)
+    return target_path
 
 
 AVIF_QUALITY = 60
@@ -133,28 +141,11 @@ def build_model_input(
             ]
 
     elif model == "qwen":
-        if resolution in ("2K", "4K"):
-            params["image_size"] = "optimize_for_quality"
-        else:
-            params["image_size"] = "optimize_for_speed"
-        if safety_filter_level == "block_only_high":
-            params["disable_safety_checker"] = True
-        else:
-            params["disable_safety_checker"] = False
+        params.pop("output_format", None)
         if image_paths:
             if len(image_paths) > 1:
                 warn("qwen model supports only 1 input image; using the first")
             params["image"] = stack.enter_context(open(image_paths[0], "rb"))
-
-    elif model == "imagen":
-        if resolution == "4K":
-            warn("imagen model caps at 2K; using 2K instead")
-            params["image_size"] = "2K"
-        else:
-            params["image_size"] = resolution
-        params["safety_filter_level"] = safety_filter_level
-        if image_paths:
-            warn("imagen model does not support image input; ignoring input images")
 
     elif model == "flux":
         mp_map = {"1K": "1 MP", "2K": "2 MP", "4K": "4 MP"}
@@ -173,11 +164,50 @@ def build_model_input(
                 stack.enter_context(open(p, "rb")) for p in image_paths
             ]
 
+    elif model == "seedream":
+        params.pop("output_format", None)
+        if resolution == "1K":
+            warn("seedream does not support 1K; using 2K instead")
+            params["size"] = "2K"
+        else:
+            params["size"] = resolution
+        params["disable_safety_checker"] = safety_filter_level == "block_only_high"
+        if image_paths:
+            if len(image_paths) > 14:
+                warn("seedream supports up to 14 input images; using first 14")
+                image_paths = image_paths[:14]
+            params["image_input"] = [
+                stack.enter_context(open(p, "rb")) for p in image_paths
+            ]
+
+    elif model == "gpt":
+        gpt_ratio_map = {
+            "1:1": "1:1",
+            "3:2": "3:2",
+            "2:3": "2:3",
+            "16:9": "3:2",
+            "4:3": "3:2",
+            "9:16": "2:3",
+            "3:4": "2:3",
+        }
+        mapped = gpt_ratio_map.get(aspect_ratio, "1:1")
+        if mapped != aspect_ratio:
+            warn(f"gpt model does not support aspect ratio {aspect_ratio}; using {mapped}")
+        params["aspect_ratio"] = mapped
+        params["output_format"] = "jpeg" if output_format == "jpg" else output_format
+        quality_map = {"1K": "medium", "2K": "high", "4K": "high"}
+        params["quality"] = quality_map.get(resolution, "high")
+        params["moderation"] = "low" if safety_filter_level == "block_only_high" else "auto"
+        if image_paths:
+            params["input_images"] = [
+                stack.enter_context(open(p, "rb")) for p in image_paths
+            ]
+
     return params
 
 
-def extract_output(model: str, output: Any) -> str:
-    if model == "qwen":
+def extract_output(output: Any) -> str:
+    if isinstance(output, list):
         return str(output[0])
     return str(output)
 
@@ -185,14 +215,15 @@ def extract_output(model: str, output: Any) -> str:
 def generate_image(
     model: str,
     prompt: str,
-    output_path: Path,
+    target_dir: Path,
+    base_name: str,
     client: replicate.Client,
     aspect_ratio: str,
     resolution: str,
     output_format: str,
     safety_filter_level: str,
     input_image_paths: list[Path] | None = None,
-) -> None:
+) -> Path:
     image_paths = input_image_paths or []
     with ExitStack() as stack:
         model_input = build_model_input(
@@ -210,8 +241,8 @@ def generate_image(
     if not output:
         raise ValueError("Model returned empty output")
 
-    image_url = extract_output(model, output)
-    download_image(image_url, output_path)
+    image_url = extract_output(output)
+    return download_image(image_url, target_dir, base_name)
 
 
 @app.command()
@@ -219,7 +250,7 @@ def _main_impl(
     prompt: Annotated[str, typer.Argument(help="Image prompt")],
     model: Annotated[
         str,
-        typer.Option(help="Model to use: banana, qwen, imagen, flux"),
+        typer.Option(help="Model to use: banana, qwen, flux, seedream, gpt"),
     ] = "banana",
     output_dir: Annotated[Path, typer.Option(help="Output directory")] = Path(
         "styled_image_gen_output"
@@ -311,16 +342,13 @@ def _main_impl(
     print("Generating 1 image...")
     print()
 
-    jpg_path = target_dir / f"{filename}.jpg"
-    final_path = target_dir / f"{filename}.{output_format}"
-
     print(f"Prompt: {prompt}")
-    print(f"Output: {final_path}")
 
-    generate_image(
+    downloaded_path = generate_image(
         model,
         prompt,
-        jpg_path,
+        target_dir,
+        filename,
         client,
         aspect_ratio,
         resolution,
@@ -329,12 +357,18 @@ def _main_impl(
         all_input_images if all_input_images else None,
     )
 
+    final_path = downloaded_path
     if not jpg:
-        print("Converting to AVIF...")
-        convert_to_avif(jpg_path, final_path)
+        if downloaded_path.suffix.lower() in (".jpg", ".jpeg", ".png"):
+            avif_path = target_dir / f"{filename}.avif"
+            print("Converting to AVIF...")
+            convert_to_avif(downloaded_path, avif_path)
+            final_path = avif_path
+        else:
+            warn(f"Cannot convert {downloaded_path.suffix} to AVIF; keeping as downloaded")
 
     print()
-    print("Image generated successfully")
+    print(f"Image generated: {final_path}")
 
 
 if __name__ == "__main__":
