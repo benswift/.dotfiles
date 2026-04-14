@@ -100,15 +100,17 @@ install_agent_skills() {
     bunx skills add vercel-labs/agent-browser
 }
 
-# Claude Code plugins declared in claude/settings.json. Each entry is
-# "github-repo plugin-id". The marketplace declaration in settings.json is
-# necessary but not sufficient --- claude plugin subcommands don't auto-register
-# from it, so we run add/install here. Non-fatal: on a fresh machine without
-# SSH set up, these warn and let the rest of bootstrap continue. Re-run
-# 'dotfiles update' once SSH auth works.
+# Claude Code plugins not shipped by the official marketplace. Each entry is
+# "github-repo plugin-id". We register marketplaces and install plugins via
+# the claude CLI here rather than declaring them in claude/settings.json ---
+# the CLI path persists state to Claude Code's own plugin config and avoids
+# duplicating marketplace sources across two files. Non-fatal: on a fresh
+# machine without SSH set up, these warn and let the rest of bootstrap
+# continue. Re-run 'dotfiles update' once SSH auth works.
 CLAUDE_PLUGINS=(
     "benswift/claude-plugin-personal ben@ben"
     "pbakaus/impeccable impeccable@impeccable"
+    "vercel-labs/agent-browser agent-browser@agent-browser"
 )
 
 bootstrap_claude_plugins() {

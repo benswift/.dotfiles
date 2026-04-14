@@ -135,16 +135,17 @@ Three directories are involved --- note the differences:
 - `claude/` (no dot) --- tracked config source in this public repo. `CLAUDE.md`
   (global instructions) and `settings.json` are symlinked into `~/.claude/`.
 - The `ben` Claude Code plugin (personal skills library) lives in the
-  **private** `benswift/claude-plugin-personal` repo. Claude Code loads it
-  via `extraKnownMarketplaces` (github source) plus
-  `enabledPlugins: {"ben@ben": true}` in @claude/settings.json, and
+  **private** `benswift/claude-plugin-personal` repo. `install.sh` and
+  `dotfiles update` register the marketplace and install the plugin via the
+  `claude` CLI (`claude plugin marketplace add benswift/claude-plugin-personal`
+  + `claude plugin install --scope user ben@ben`); @claude/settings.json
+  then enables it via `enabledPlugins: {"ben@ben": true}`. Claude Code
   maintains its own clone at `~/.claude/plugins/marketplaces/ben/`. That
   clone is the **single source of truth** --- edit skills there, commit and
   push from there. `~/.codex/skills` is symlinked into the same directory so
-  codex sees the same content. `install.sh` and `dotfiles update` wire this
-  up via `claude plugin marketplace add` + `claude plugin install --scope
-  user ben@ben`. Skills appear to the model as `ben:<skill-name>` (e.g.
-  `ben:github-explorer`).
+  codex sees the same content. Skills appear to the model as
+  `ben:<skill-name>` (e.g. `ben:github-explorer`). The same bootstrap
+  pattern handles the `impeccable` and `agent-browser` plugins.
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Fully gitignored (both globally and in this repo). Contains
   machine-specific state like `settings.local.json`, plans, and session data.

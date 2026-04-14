@@ -73,9 +73,11 @@ etc.) lives in a separate **private** repo,
 [`benswift/claude-plugin-personal`](https://github.com/benswift/claude-plugin-personal),
 loaded as a Claude Code plugin. The setup:
 
-- **Registered in `claude/settings.json`** via `extraKnownMarketplaces` (github
-  source) and enabled via `enabledPlugins: {"ben@ben": true}` --- portable
-  across machines, no hardcoded paths.
+- **Registered via `install.sh` / `dotfiles update`** using `claude plugin
+  marketplace add benswift/claude-plugin-personal` and `claude plugin install
+  --scope user ben@ben`, then enabled in `claude/settings.json` via
+  `enabledPlugins: {"ben@ben": true}` --- portable across machines, no
+  hardcoded paths.
 - **Claude Code clones it** to `~/.claude/plugins/marketplaces/ben/` on first
   use. That directory is the single source of truth --- edit skills there,
   commit and push from there.
