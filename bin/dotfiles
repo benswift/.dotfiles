@@ -223,13 +223,22 @@ update_claude_plugins() {
         return
     fi
     echo "Updating claude plugins..."
+    # Bootstrap: ensure the extras (not shipped by the official marketplace)
+    # are registered and installed. Idempotent on every run.
     local entry repo plugin_id
     for entry in "${CLAUDE_PLUGINS[@]}"; do
         read -r repo plugin_id <<<"$entry"
         claude plugin marketplace add "$repo" 2>/dev/null || true
         claude plugin install --scope user "$plugin_id" 2>/dev/null || true
-        claude plugin update --scope user "$plugin_id" 2>/dev/null || true
     done
+
+    # Refresh all marketplace metadata and update every installed plugin.
+    claude plugin marketplace update 2>/dev/null || true
+    if command -v jq &>/dev/null; then
+        claude plugin list --json 2>/dev/null | jq -r '.[].id' | while read -r id; do
+            claude plugin update "$id" 2>/dev/null || true
+        done
+    fi
 
     # ben-plugin-specific: point ~/.codex/skills at claude's marketplace clone
     # so codex reads the same directory. Can't live in create_symlinks.sh
