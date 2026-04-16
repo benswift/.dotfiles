@@ -74,6 +74,23 @@ class TestCheckViewbox:
         assert "viewbox" in result.message.lower()
 
 
+check_no_script = mod.check_no_script
+
+
+class TestCheckNoScript:
+    def test_no_script_passes(self):
+        root, _ = parse_svg(VALID_SVG)
+        result = check_no_script(root)
+        assert result.level == "ok"
+
+    def test_script_element_errors(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><script>alert(1)</script></svg>'
+        root, _ = parse_svg(svg)
+        result = check_no_script(root)
+        assert result.level == "err"
+        assert "script" in result.message.lower()
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

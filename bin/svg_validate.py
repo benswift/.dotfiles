@@ -62,6 +62,13 @@ def check_viewbox(root: etree._Element) -> CheckResult:
     return CheckResult("ok", "viewbox", f'viewBox="{vb}"')
 
 
+def check_no_script(root: etree._Element) -> CheckResult:
+    scripts = root.xpath('.//*[local-name()="script"]')
+    if scripts:
+        return CheckResult("err", "script", f"{len(scripts)} <script> element(s) present")
+    return CheckResult("ok", "script", "no <script> elements")
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -73,7 +80,7 @@ def main(path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)]) -> 
     if root is None:
         raise typer.Exit(1)
 
-    results = [check_root_svg(root), check_viewbox(root)]
+    results = [check_root_svg(root), check_viewbox(root), check_no_script(root)]
     for r in results:
         _print_result(r)
 
