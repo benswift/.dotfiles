@@ -1,0 +1,38 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["pytest", "pytest-xdist", "lxml>=5.0", "typer>=0.12"]
+# ///
+
+import importlib.machinery
+import importlib.util
+import sys
+from pathlib import Path
+
+_script_path = str(Path(__file__).parent.parent / "bin" / "svg_validate.py")
+_loader = importlib.machinery.SourceFileLoader("svg_validate", _script_path)
+spec = importlib.util.spec_from_loader("svg_validate", _loader, origin=_script_path)
+mod = importlib.util.module_from_spec(spec)
+sys.modules["svg_validate"] = mod
+spec.loader.exec_module(mod)
+
+parse_svg = mod.parse_svg
+CheckResult = mod.CheckResult
+
+
+VALID_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path d="M10,50 C30,10 70,10 90,50" fill="#b58900" stroke="none"/>
+</svg>"""
+
+
+class TestParseSvg:
+    def test_valid_svg_parses(self):
+        root, result = parse_svg(VALID_SVG)
+        assert root is not None
+        assert result.level == "ok"
+        assert result.check == "xml"
+
+
+if __name__ == "__main__":
+    import pytest
+    sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))
