@@ -135,6 +135,23 @@ class TestCheckExternalHrefs:
         assert result.level == "ok"
 
 
+check_embedded_raster = mod.check_embedded_raster
+
+
+class TestCheckEmbeddedRaster:
+    def test_no_image_passes(self):
+        root, _ = parse_svg(VALID_SVG)
+        result = check_embedded_raster(root)
+        assert result.level == "ok"
+
+    def test_image_element_warns(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><image href="data:image/png;base64,iVBORw0KGgo=" width="10" height="10"/></svg>'
+        root, _ = parse_svg(svg)
+        result = check_embedded_raster(root)
+        assert result.level == "warn"
+        assert "image" in result.message.lower()
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

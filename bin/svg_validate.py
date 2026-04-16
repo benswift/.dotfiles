@@ -111,6 +111,13 @@ def check_external_hrefs(root: etree._Element) -> CheckResult:
     return CheckResult("ok", "external-href", "no external href values")
 
 
+def check_embedded_raster(root: etree._Element) -> CheckResult:
+    images = root.xpath('.//*[local-name()="image"]')
+    if images:
+        return CheckResult("warn", "raster", f"{len(images)} embedded <image> element(s)")
+    return CheckResult("ok", "raster", "no embedded raster images")
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -122,7 +129,7 @@ def main(path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)]) -> 
     if root is None:
         raise typer.Exit(1)
 
-    results = [check_root_svg(root), check_viewbox(root), check_no_script(root), check_dangerous_hrefs(root), check_external_hrefs(root)]
+    results = [check_root_svg(root), check_viewbox(root), check_no_script(root), check_dangerous_hrefs(root), check_external_hrefs(root), check_embedded_raster(root)]
     for r in results:
         _print_result(r)
 
