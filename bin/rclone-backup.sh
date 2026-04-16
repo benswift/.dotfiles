@@ -3,9 +3,8 @@
 set -euo pipefail
 
 # Configuration
-SOURCE_DIR="${RCLONE_SOURCE:-$HOME/Documents}"
 REMOTE="${RCLONE_REMOTE:-weddle}"
-REMOTE_PATH="${RCLONE_REMOTE_PATH:-backup/mitch/Documents}"
+REMOTE_BASE="${RCLONE_REMOTE_BASE:-backup/mitch}"
 DRY_RUN="${DRY_RUN:-false}"
 
 # Exclude patterns for build artifacts and regeneratable content
@@ -35,7 +34,7 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Sync ~/Documents to remote storage using rclone.
+Sync ~/Documents and ~/Maildir to remote storage using rclone.
 
 Options:
   -n, --dry-run    Show what would be transferred without making changes
@@ -43,15 +42,9 @@ Options:
   -h, --help       Show this help message
 
 Environment variables:
-  RCLONE_SOURCE       Source directory (default: ~/Documents)
   RCLONE_REMOTE       Remote name (default: weddle)
-  RCLONE_REMOTE_PATH  Remote path (default: backup/mitch/Documents)
+  RCLONE_REMOTE_BASE  Remote base path (default: backup/mitch)
   DRY_RUN             Set to 'true' for dry run mode
-
-Excludes:
-  .git/, node_modules/, .venv/, venv/, _build/, deps/, .elixir_ls/, .expert/,
-  .tox/, target/, build/, llvm/, __pycache__/, .pytest_cache/, *.egg-info/,
-  .DS_Store, .cache/, CLAUDE.md, codex.md
 EOF
 }
 
@@ -78,26 +71,26 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Build exclude arguments
+# Build exclude arguments for Documents
 EXCLUDE_ARGS=()
 for pattern in "${EXCLUDES[@]}"; do
   EXCLUDE_ARGS+=(--exclude "$pattern")
 done
 
-# Build rclone command
-RCLONE_ARGS=(
-  sync
-  --progress
-  "${EXCLUDE_ARGS[@]}"
-)
-
+BASE_ARGS=(sync --progress)
 if [[ "$DRY_RUN" == "true" ]]; then
-  RCLONE_ARGS+=(--dry-run)
+  BASE_ARGS+=(--dry-run)
   echo "DRY RUN MODE - no changes will be made"
 fi
 
-echo "Syncing $SOURCE_DIR to $REMOTE:$REMOTE_PATH"
+echo "=== Documents ==="
+echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
 echo "Excluding: ${EXCLUDES[*]}"
 echo
+rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
 
-rclone "${RCLONE_ARGS[@]}" "$SOURCE_DIR" "$REMOTE:$REMOTE_PATH"
+echo
+echo "=== Maildir ==="
+echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
+echo
+rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" "$HOME/Maildir" "$REMOTE:Maildir"
