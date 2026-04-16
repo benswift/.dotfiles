@@ -57,6 +57,23 @@ class TestCheckRootSvg:
         assert "html" in result.message.lower()
 
 
+check_viewbox = mod.check_viewbox
+
+
+class TestCheckViewbox:
+    def test_present_viewbox_passes(self):
+        root, _ = parse_svg(VALID_SVG)
+        result = check_viewbox(root)
+        assert result.level == "ok"
+        assert "0 0 100 100" in result.message
+
+    def test_missing_viewbox_errors(self):
+        root, _ = parse_svg('<svg xmlns="http://www.w3.org/2000/svg"/>')
+        result = check_viewbox(root)
+        assert result.level == "err"
+        assert "viewbox" in result.message.lower()
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

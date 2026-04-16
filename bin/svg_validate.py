@@ -55,6 +55,13 @@ def check_root_svg(root: etree._Element) -> CheckResult:
     return CheckResult("ok", "root", f"root is <svg>")
 
 
+def check_viewbox(root: etree._Element) -> CheckResult:
+    vb = root.get("viewBox")
+    if not vb:
+        return CheckResult("err", "viewbox", "<svg> has no viewBox attribute")
+    return CheckResult("ok", "viewbox", f'viewBox="{vb}"')
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -66,7 +73,7 @@ def main(path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)]) -> 
     if root is None:
         raise typer.Exit(1)
 
-    results = [check_root_svg(root)]
+    results = [check_root_svg(root), check_viewbox(root)]
     for r in results:
         _print_result(r)
 
