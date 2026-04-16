@@ -94,6 +94,23 @@ def check_dangerous_hrefs(root: etree._Element) -> CheckResult:
     return CheckResult("ok", "href", "no dangerous href values")
 
 
+EXTERNAL_HREF_PREFIXES = ("http://", "https://", "file://", "ftp://")
+
+
+def check_external_hrefs(root: etree._Element) -> CheckResult:
+    external: list[str] = []
+    for _el, value in _iter_href_values(root):
+        lowered = value.strip().lower()
+        for prefix in EXTERNAL_HREF_PREFIXES:
+            if lowered.startswith(prefix):
+                external.append(value[:60])
+                break
+    if external:
+        joined = "; ".join(external)
+        return CheckResult("warn", "external-href", f"external href(s): {joined}")
+    return CheckResult("ok", "external-href", "no external href values")
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -105,7 +122,7 @@ def main(path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)]) -> 
     if root is None:
         raise typer.Exit(1)
 
-    results = [check_root_svg(root), check_viewbox(root), check_no_script(root), check_dangerous_hrefs(root)]
+    results = [check_root_svg(root), check_viewbox(root), check_no_script(root), check_dangerous_hrefs(root), check_external_hrefs(root)]
     for r in results:
         _print_result(r)
 

@@ -113,6 +113,28 @@ class TestCheckDangerousHrefs:
         assert result.level == "err"
 
 
+check_external_hrefs = mod.check_external_hrefs
+
+
+class TestCheckExternalHrefs:
+    def test_no_external_hrefs_passes(self):
+        root, _ = parse_svg(VALID_SVG)
+        result = check_external_hrefs(root)
+        assert result.level == "ok"
+
+    def test_https_href_warns(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><image href="https://example.com/x.png" width="10" height="10"/></svg>'
+        root, _ = parse_svg(svg)
+        result = check_external_hrefs(root)
+        assert result.level == "warn"
+
+    def test_internal_fragment_passes(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><defs><linearGradient id="g"/></defs><rect fill="url(#g)"/></svg>'
+        root, _ = parse_svg(svg)
+        result = check_external_hrefs(root)
+        assert result.level == "ok"
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))
