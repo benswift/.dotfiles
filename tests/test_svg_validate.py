@@ -115,6 +115,12 @@ class TestCheckDangerousHrefs:
         result = check_dangerous_hrefs(root)
         assert result.level == "err"
 
+    def test_data_application_javascript_errors(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><use href="data:application/javascript,alert(1)"/></svg>'
+        root, _ = parse_svg(svg)
+        result = check_dangerous_hrefs(root)
+        assert result.level == "err"
+
 
 check_external_hrefs = mod.check_external_hrefs
 
@@ -298,6 +304,41 @@ class TestPrettyPrint:
         assert not out.startswith("<?xml")
 
 
+run_checks = mod.run_checks
+
+
+class TestRunChecks:
+    def test_returns_list_of_check_results(self):
+        results = run_checks(VALID_SVG)
+        assert isinstance(results, list)
+        assert all(isinstance(r, CheckResult) for r in results)
+        # First result is the XML parse check.
+        assert results[0].check == "xml"
+        assert results[0].level == "ok"
+
+    def test_includes_all_invariant_checks_on_clean_svg(self):
+        results = run_checks(VALID_SVG)
+        checks = {r.check for r in results}
+        expected = {"xml", "root", "viewbox", "script", "href", "external-href", "raster", "nodes", "duplicates", "palette"}
+        assert expected.issubset(checks)
+
+    def test_malformed_returns_only_xml_error(self):
+        results = run_checks("<svg><unclosed>")
+        assert len(results) == 1
+        assert results[0].level == "err"
+        assert results[0].check == "xml"
+
+    def test_palette_argument_is_honoured(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect fill="#00ff00" width="10" height="10"/></svg>'
+        results_no_palette = run_checks(svg)
+        palette_result = next(r for r in results_no_palette if r.check == "palette")
+        assert palette_result.level == "ok"  # no palette → skipped → ok
+
+        results_with_palette = run_checks(svg, palette_rgb=[(181, 137, 0)])
+        palette_result = next(r for r in results_with_palette if r.check == "palette")
+        assert palette_result.level == "warn"
+
+
 class TestStrictFlag:
     def test_strict_promotes_warning_to_exit_1(self, tmp_path: Path):
         p = tmp_path / "dup.svg"
@@ -311,6 +352,32 @@ class TestStrictFlag:
         # --strict exits 1.
         r2 = subprocess.run([str(SCRIPT), str(p), "--strict"], capture_output=True)
         assert r2.returncode == 1
+
+
+class TestOutputStreams:
+    def test_ok_results_on_stdout_warnings_and_errors_on_stderr(self, tmp_path: Path):
+        # SVG with one warning (embedded raster) and otherwise clean.
+        p = tmp_path / "warn.svg"
+        p.write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+            '<image href="data:image/png;base64,iVBORw0KGgo=" width="10" height="10"/></svg>'
+        )
+        r = subprocess.run([str(SCRIPT), str(p)], capture_output=True, text=True)
+        assert r.returncode == 0
+        # OK lines on stdout:
+        assert "✓ xml" in r.stdout
+        assert "✓ viewbox" in r.stdout
+        # Warning goes to stderr, not stdout:
+        assert "⚠ raster" in r.stderr
+        assert "⚠ raster" not in r.stdout
+
+    def test_error_on_stderr(self, tmp_path: Path):
+        p = tmp_path / "err.svg"
+        p.write_text("<html/>")
+        r = subprocess.run([str(SCRIPT), str(p)], capture_output=True, text=True)
+        assert r.returncode == 1
+        assert "✗" in r.stderr
+        assert "✗" not in r.stdout
 
 
 if __name__ == "__main__":

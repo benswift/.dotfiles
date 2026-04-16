@@ -114,7 +114,13 @@ def check_no_script(root: etree._Element) -> CheckResult:
     return CheckResult("ok", "script", "no <script> elements")
 
 
-DANGEROUS_HREF_PREFIXES = ("javascript:", "data:text/html", "data:text/javascript", "vbscript:")
+DANGEROUS_HREF_PREFIXES = (
+    "javascript:",
+    "data:text/html",
+    "data:text/javascript",
+    "data:application/javascript",
+    "vbscript:",
+)
 
 
 def _iter_href_values(root: etree._Element):
@@ -241,6 +247,35 @@ def pretty_print(root: etree._Element) -> str:
     return etree.tostring(tree, pretty_print=True, encoding="unicode")
 
 
+def _checks_on_root(
+    root: etree._Element,
+    palette_rgb: list[tuple[int, int, int]] | None,
+    max_nodes: int,
+) -> list[CheckResult]:
+    return [
+        check_root_svg(root),
+        check_viewbox(root),
+        check_no_script(root),
+        check_dangerous_hrefs(root),
+        check_external_hrefs(root),
+        check_embedded_raster(root),
+        check_node_count(root, max_nodes),
+        check_duplicate_paths(root),
+        check_palette(root, palette_rgb or []),
+    ]
+
+
+def run_checks(
+    text: str,
+    palette_rgb: list[tuple[int, int, int]] | None = None,
+    max_nodes: int = 500,
+) -> list[CheckResult]:
+    root, parse_result = parse_svg(text)
+    if root is None:
+        return [parse_result]
+    return [parse_result] + _checks_on_root(root, palette_rgb, max_nodes)
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -253,10 +288,6 @@ def main(
     strict: Annotated[bool, typer.Option("--strict", help="Treat warnings as errors")] = False,
 ) -> None:
     text = path.read_text(encoding="utf-8")
-    root, result = parse_svg(text)
-    _print_result(result)
-    if root is None:
-        raise typer.Exit(1)
 
     palette_rgb: list[tuple[int, int, int]] = []
     if palette.strip():
@@ -267,18 +298,13 @@ def main(
             else:
                 palette_rgb.append(rgb)
 
-    results = [
-        check_root_svg(root),
-        check_viewbox(root),
-        check_no_script(root),
-        check_dangerous_hrefs(root),
-        check_external_hrefs(root),
-        check_embedded_raster(root),
-        check_node_count(root, max_nodes),
-        check_duplicate_paths(root),
-        check_palette(root, palette_rgb),
-    ]
-    for r in results:
+    root, parse_result = parse_svg(text)
+    _print_result(parse_result)
+    if root is None:
+        raise typer.Exit(1)
+
+    results = [parse_result] + _checks_on_root(root, palette_rgb, max_nodes)
+    for r in results[1:]:
         _print_result(r)
 
     if fix:
@@ -293,7 +319,8 @@ def main(
 
 def _print_result(r: CheckResult) -> None:
     glyph = {"ok": "✓", "warn": "⚠", "err": "✗"}[r.level]
-    print(f"{glyph} {r.check}: {r.message}")
+    stream = sys.stdout if r.level == "ok" else sys.stderr
+    print(f"{glyph} {r.check}: {r.message}", file=stream)
 
 
 if __name__ == "__main__":
