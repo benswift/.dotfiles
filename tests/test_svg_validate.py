@@ -229,6 +229,50 @@ class TestPaletteHelpers:
         assert delta_e_76(c1, c2) > 30.0
 
 
+check_palette = mod.check_palette
+
+
+SOLARIZED_WARM = [(181, 137, 0), (203, 75, 22), (220, 50, 47)]  # #b58900 #cb4b16 #dc322f
+
+
+class TestCheckPalette:
+    def test_empty_palette_passes(self):
+        root, _ = parse_svg(VALID_SVG)
+        result = check_palette(root, [])
+        assert result.level == "ok"
+        assert "no palette" in result.message.lower()
+
+    def test_colours_in_palette_pass(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0,0" fill="#b58900"/><path d="M1,1" stroke="#cb4b16"/></svg>'
+        root, _ = parse_svg(svg)
+        result = check_palette(root, SOLARIZED_WARM)
+        assert result.level == "ok"
+
+    def test_off_palette_colour_warns(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0,0" fill="#00ff00"/></svg>'
+        root, _ = parse_svg(svg)
+        result = check_palette(root, SOLARIZED_WARM)
+        assert result.level == "warn"
+        assert "#00ff00" in result.message.lower() or "off-palette" in result.message.lower()
+
+    def test_none_and_currentcolor_pass(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path fill="none" stroke="currentColor"/></svg>'
+        root, _ = parse_svg(svg)
+        result = check_palette(root, SOLARIZED_WARM)
+        assert result.level == "ok"
+
+    def test_url_gradient_ref_pass_but_stops_checked(self):
+        svg = (
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+            '<defs><linearGradient id="g"><stop offset="0" stop-color="#b58900"/>'
+            '<stop offset="1" stop-color="#cb4b16"/></linearGradient></defs>'
+            '<rect width="10" height="10" fill="url(#g)"/></svg>'
+        )
+        root, _ = parse_svg(svg)
+        result = check_palette(root, SOLARIZED_WARM)
+        assert result.level == "ok"
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

@@ -188,19 +188,70 @@ def check_duplicate_paths(root: etree._Element) -> CheckResult:
     return CheckResult("ok", "duplicates", "no duplicate <path> elements")
 
 
+_COLOUR_ATTRS = ("fill", "stroke", "stop-color", "flood-color", "lighting-color")
+
+
+def _iter_colour_values(root: etree._Element):
+    for el in root.iter():
+        for attr in _COLOUR_ATTRS:
+            v = el.get(attr)
+            if v:
+                yield el, attr, v
+
+
+DELTA_E_THRESHOLD = 3.0
+
+
+def check_palette(root: etree._Element, palette_rgb: list[tuple[int, int, int]]) -> CheckResult:
+    if not palette_rgb:
+        return CheckResult("ok", "palette", "no palette declared; skipping")
+
+    palette_lab = [srgb_to_lab(c) for c in palette_rgb]
+    off: list[str] = []
+    for _el, _attr, raw in _iter_colour_values(root):
+        v = raw.strip().lower()
+        if v in ("none", "currentcolor", "inherit", "transparent"):
+            continue
+        if v.startswith("url(") or v.startswith("var("):
+            continue
+        rgb = parse_hex(v)
+        if rgb is None:
+            # Named colours / rgb()/hsl() left unchecked for now.
+            continue
+        lab = srgb_to_lab(rgb)
+        if not any(delta_e_76(lab, p) <= DELTA_E_THRESHOLD for p in palette_lab):
+            off.append(v)
+
+    uniq_off = sorted(set(off))
+    if uniq_off:
+        joined = ", ".join(uniq_off[:5]) + (", …" if len(uniq_off) > 5 else "")
+        return CheckResult("warn", "palette", f"off-palette colour(s): {joined}")
+    return CheckResult("ok", "palette", f"all colours within {len(palette_rgb)}-colour palette")
+
+
 app = typer.Typer(add_completion=False)
 
 
 @app.command()
 def main(
     path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
-    max_nodes: Annotated[int, typer.Option("--max-nodes", help="Warn above this element count")] = 500,
+    max_nodes: Annotated[int, typer.Option("--max-nodes")] = 500,
+    palette: Annotated[str, typer.Option("--palette", help="Comma- or space-separated hex colours")] = "",
 ) -> None:
     text = path.read_text(encoding="utf-8")
     root, result = parse_svg(text)
     _print_result(result)
     if root is None:
         raise typer.Exit(1)
+
+    palette_rgb: list[tuple[int, int, int]] = []
+    if palette.strip():
+        for token in re.split(r"[,\s]+", palette.strip()):
+            rgb = parse_hex(token)
+            if rgb is None:
+                print(f"warning: ignoring unparseable palette token: {token}", file=sys.stderr)
+            else:
+                palette_rgb.append(rgb)
 
     results = [
         check_root_svg(root),
@@ -211,6 +262,7 @@ def main(
         check_embedded_raster(root),
         check_node_count(root, max_nodes),
         check_duplicate_paths(root),
+        check_palette(root, palette_rgb),
     ]
     for r in results:
         _print_result(r)
