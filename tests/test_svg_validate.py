@@ -40,6 +40,23 @@ class TestParseSvg:
         assert "not well-formed" in result.message
 
 
+check_root_svg = mod.check_root_svg
+
+
+class TestCheckRootSvg:
+    def test_svg_root_passes(self):
+        root, _ = parse_svg(VALID_SVG)
+        result = check_root_svg(root)
+        assert result.level == "ok"
+        assert result.check == "root"
+
+    def test_non_svg_root_errors(self):
+        root, _ = parse_svg('<html><body/></html>')
+        result = check_root_svg(root)
+        assert result.level == "err"
+        assert "html" in result.message.lower()
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

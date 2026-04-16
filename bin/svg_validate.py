@@ -41,6 +41,20 @@ def parse_svg(text: str) -> tuple[etree._Element | None, CheckResult]:
     return root, CheckResult("ok", "xml", "well-formed XML")
 
 
+def _local_name(element: etree._Element) -> str:
+    tag = element.tag
+    if isinstance(tag, str) and "}" in tag:
+        return tag.split("}", 1)[1]
+    return str(tag)
+
+
+def check_root_svg(root: etree._Element) -> CheckResult:
+    name = _local_name(root)
+    if name != "svg":
+        return CheckResult("err", "root", f"root element is <{name}>, not <svg>")
+    return CheckResult("ok", "root", f"root is <svg>")
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -49,8 +63,15 @@ def main(path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)]) -> 
     text = path.read_text(encoding="utf-8")
     root, result = parse_svg(text)
     _print_result(result)
-    if result.level == "err":
+    if root is None:
         raise typer.Exit(1)
+
+    results = [check_root_svg(root)]
+    for r in results:
+        _print_result(r)
+
+    exit_code = 1 if any(r.level == "err" for r in results) else 0
+    raise typer.Exit(exit_code)
 
 
 def _print_result(r: CheckResult) -> None:
