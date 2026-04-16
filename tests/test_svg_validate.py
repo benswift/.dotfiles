@@ -32,6 +32,13 @@ class TestParseSvg:
         assert result.level == "ok"
         assert result.check == "xml"
 
+    def test_malformed_xml_errors(self):
+        root, result = parse_svg("<svg><unclosed>")
+        assert root is None
+        assert result.level == "err"
+        assert result.check == "xml"
+        assert "not well-formed" in result.message
+
 
 if __name__ == "__main__":
     import pytest
