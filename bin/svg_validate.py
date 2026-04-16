@@ -229,6 +229,18 @@ def check_palette(root: etree._Element, palette_rgb: list[tuple[int, int, int]])
     return CheckResult("ok", "palette", f"all colours within {len(palette_rgb)}-colour palette")
 
 
+def pretty_print(root: etree._Element) -> str:
+    tree = etree.ElementTree(root)
+    # Strip then re-apply whitespace so lxml re-indents cleanly.
+    for el in root.iter():
+        if el.text is not None and not el.text.strip():
+            el.text = None
+        if el.tail is not None and not el.tail.strip():
+            el.tail = None
+    etree.indent(tree, space="  ")
+    return etree.tostring(tree, pretty_print=True, encoding="unicode")
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -237,6 +249,7 @@ def main(
     path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
     max_nodes: Annotated[int, typer.Option("--max-nodes")] = 500,
     palette: Annotated[str, typer.Option("--palette", help="Comma- or space-separated hex colours")] = "",
+    fix: Annotated[bool, typer.Option("--fix", help="Pretty-print the file in place")] = False,
 ) -> None:
     text = path.read_text(encoding="utf-8")
     root, result = parse_svg(text)
@@ -266,6 +279,11 @@ def main(
     ]
     for r in results:
         _print_result(r)
+
+    if fix:
+        path.write_text(pretty_print(root), encoding="utf-8")
+        print("formatted: 2-space indent")
+
     exit_code = 1 if any(r.level == "err" for r in results) else 0
     raise typer.Exit(exit_code)
 

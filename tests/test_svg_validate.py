@@ -273,6 +273,28 @@ class TestCheckPalette:
         assert result.level == "ok"
 
 
+pretty_print = mod.pretty_print
+
+
+class TestPrettyPrint:
+    def test_uses_2_space_indent(self):
+        root, _ = parse_svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><g><rect width="1" height="1"/></g></svg>')
+        out = pretty_print(root)
+        # Root is unindented; first child is 2 spaces; grandchild is 4.
+        assert "\n  <g" in out
+        assert "\n    <rect" in out
+
+    def test_round_trip_preserves_viewbox(self):
+        root, _ = parse_svg(VALID_SVG)
+        out = pretty_print(root)
+        assert 'viewBox="0 0 100 100"' in out
+
+    def test_no_xml_declaration(self):
+        root, _ = parse_svg(VALID_SVG)
+        out = pretty_print(root)
+        assert not out.startswith("<?xml")
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))
