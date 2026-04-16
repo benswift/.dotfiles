@@ -189,6 +189,46 @@ class TestCheckDuplicatePaths:
         assert "duplicate" in result.message.lower()
 
 
+parse_hex = mod.parse_hex
+srgb_to_lab = mod.srgb_to_lab
+delta_e_76 = mod.delta_e_76
+
+
+class TestPaletteHelpers:
+    def test_parse_hex_long_form(self):
+        assert parse_hex("#b58900") == (0xb5, 0x89, 0x00)
+
+    def test_parse_hex_short_form(self):
+        assert parse_hex("#abc") == (0xaa, 0xbb, 0xcc)
+
+    def test_parse_hex_no_hash(self):
+        assert parse_hex("b58900") == (0xb5, 0x89, 0x00)
+
+    def test_parse_hex_invalid_returns_none(self):
+        assert parse_hex("not-a-colour") is None
+        assert parse_hex("red") is None  # named colours unsupported here
+
+    def test_lab_identity(self):
+        l1, a1, b1 = srgb_to_lab((255, 0, 0))
+        l2, a2, b2 = srgb_to_lab((255, 0, 0))
+        assert (l1, a1, b1) == (l2, a2, b2)
+
+    def test_delta_e_identical_is_zero(self):
+        c = srgb_to_lab((181, 137, 0))
+        assert delta_e_76(c, c) == 0.0
+
+    def test_delta_e_similar_small(self):
+        # Two near-identical solarized yellows.
+        c1 = srgb_to_lab((181, 137, 0))     # #b58900
+        c2 = srgb_to_lab((183, 138, 2))
+        assert delta_e_76(c1, c2) < 3.0
+
+    def test_delta_e_distant_large(self):
+        c1 = srgb_to_lab((181, 137, 0))
+        c2 = srgb_to_lab((38, 139, 210))    # #268bd2 (blue)
+        assert delta_e_76(c1, c2) > 30.0
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

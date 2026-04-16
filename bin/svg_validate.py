@@ -10,6 +10,8 @@ Pretty-prints with `--fix`. Designed for the ben:svg-gen skill.
 
 from __future__ import annotations
 
+import math
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,6 +28,49 @@ class CheckResult:
     level: Level
     check: str
     message: str
+
+
+_HEX_RE = re.compile(r"^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
+
+
+def parse_hex(s: str) -> tuple[int, int, int] | None:
+    m = _HEX_RE.match(s.strip())
+    if not m:
+        return None
+    hx = m.group(1)
+    if len(hx) == 3:
+        r, g, b = (int(c * 2, 16) for c in hx)
+    else:
+        r, g, b = (int(hx[i : i + 2], 16) for i in (0, 2, 4))
+    return (r, g, b)
+
+
+def _srgb_to_linear(c: float) -> float:
+    c = c / 255.0
+    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+
+def _f_lab(t: float) -> float:
+    return t ** (1 / 3) if t > 0.008856 else (7.787 * t + 16 / 116)
+
+
+def srgb_to_lab(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
+    r, g, b = (_srgb_to_linear(v) for v in rgb)
+    # sRGB D65 -> XYZ
+    x = 0.4124564 * r + 0.3575761 * g + 0.1804375 * b
+    y = 0.2126729 * r + 0.7151522 * g + 0.0721750 * b
+    z = 0.0193339 * r + 0.1191920 * g + 0.9503041 * b
+    # Normalise to D65 reference white
+    xr, yr, zr = x / 0.95047, y / 1.0, z / 1.08883
+    fx, fy, fz = _f_lab(xr), _f_lab(yr), _f_lab(zr)
+    L = 116 * fy - 16
+    a = 500 * (fx - fy)
+    b_ = 200 * (fy - fz)
+    return (L, a, b_)
+
+
+def delta_e_76(lab1: tuple[float, float, float], lab2: tuple[float, float, float]) -> float:
+    return math.sqrt(sum((a - b) ** 2 for a, b in zip(lab1, lab2)))
 
 
 SVG_NS = "http://www.w3.org/2000/svg"
