@@ -170,6 +170,25 @@ class TestCheckNodeCount:
         assert result.level == "warn"
 
 
+check_duplicate_paths = mod.check_duplicate_paths
+
+
+class TestCheckDuplicatePaths:
+    def test_unique_paths_pass(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0,0 L1,1" fill="#aaa"/><path d="M2,2 L3,3" fill="#bbb"/></svg>'
+        root, _ = parse_svg(svg)
+        result = check_duplicate_paths(root)
+        assert result.level == "ok"
+
+    def test_duplicate_paths_warn(self):
+        p = '<path d="M0,0 L1,1" fill="#aaa" stroke="none"/>'
+        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">{p}{p}{p}</svg>'
+        root, _ = parse_svg(svg)
+        result = check_duplicate_paths(root)
+        assert result.level == "warn"
+        assert "duplicate" in result.message.lower()
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

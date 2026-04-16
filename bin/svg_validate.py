@@ -126,6 +126,23 @@ def check_node_count(root: etree._Element, limit: int) -> CheckResult:
     return CheckResult("ok", "nodes", msg)
 
 
+def check_duplicate_paths(root: etree._Element) -> CheckResult:
+    paths = root.xpath('.//*[local-name()="path"]')
+    seen: dict[tuple, int] = {}
+    for p in paths:
+        key = (
+            p.get("d") or "",
+            p.get("fill") or "",
+            p.get("stroke") or "",
+            p.get("stroke-width") or "",
+        )
+        seen[key] = seen.get(key, 0) + 1
+    duplicates = sum(count - 1 for count in seen.values() if count > 1)
+    if duplicates:
+        return CheckResult("warn", "duplicates", f"{duplicates} duplicate <path> element(s)")
+    return CheckResult("ok", "duplicates", "no duplicate <path> elements")
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -148,6 +165,7 @@ def main(
         check_external_hrefs(root),
         check_embedded_raster(root),
         check_node_count(root, max_nodes),
+        check_duplicate_paths(root),
     ]
     for r in results:
         _print_result(r)
