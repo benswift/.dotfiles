@@ -12,10 +12,11 @@ from pathlib import Path
 
 _script_path = str(Path(__file__).parent.parent / "bin" / "svg_validate.py")
 _loader = importlib.machinery.SourceFileLoader("svg_validate", _script_path)
-spec = importlib.util.spec_from_loader("svg_validate", _loader, origin=_script_path)
-mod = importlib.util.module_from_spec(spec)
+_spec = importlib.util.spec_from_loader("svg_validate", _loader, origin=_script_path)
+assert _spec is not None and _spec.loader is not None
+mod = importlib.util.module_from_spec(_spec)
 sys.modules["svg_validate"] = mod
-spec.loader.exec_module(mod)
+_spec.loader.exec_module(mod)
 
 parse_svg = mod.parse_svg
 CheckResult = mod.CheckResult
