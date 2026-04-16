@@ -152,6 +152,24 @@ class TestCheckEmbeddedRaster:
         assert "image" in result.message.lower()
 
 
+check_node_count = mod.check_node_count
+
+
+class TestCheckNodeCount:
+    def test_below_limit_passes(self):
+        root, _ = parse_svg(VALID_SVG)
+        result = check_node_count(root, limit=500)
+        assert result.level == "ok"
+        assert "limit 500" in result.message
+
+    def test_above_limit_warns(self):
+        paths = "".join(f'<rect x="{i}" y="0" width="1" height="1"/>' for i in range(50))
+        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 1">{paths}</svg>'
+        root, _ = parse_svg(svg)
+        result = check_node_count(root, limit=10)
+        assert result.level == "warn"
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

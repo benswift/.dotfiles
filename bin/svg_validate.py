@@ -118,21 +118,39 @@ def check_embedded_raster(root: etree._Element) -> CheckResult:
     return CheckResult("ok", "raster", "no embedded raster images")
 
 
+def check_node_count(root: etree._Element, limit: int) -> CheckResult:
+    count = sum(1 for _ in root.iter())
+    msg = f"{count} elements (limit {limit})"
+    if count > limit:
+        return CheckResult("warn", "nodes", msg)
+    return CheckResult("ok", "nodes", msg)
+
+
 app = typer.Typer(add_completion=False)
 
 
 @app.command()
-def main(path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)]) -> None:
+def main(
+    path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
+    max_nodes: Annotated[int, typer.Option("--max-nodes", help="Warn above this element count")] = 500,
+) -> None:
     text = path.read_text(encoding="utf-8")
     root, result = parse_svg(text)
     _print_result(result)
     if root is None:
         raise typer.Exit(1)
 
-    results = [check_root_svg(root), check_viewbox(root), check_no_script(root), check_dangerous_hrefs(root), check_external_hrefs(root), check_embedded_raster(root)]
+    results = [
+        check_root_svg(root),
+        check_viewbox(root),
+        check_no_script(root),
+        check_dangerous_hrefs(root),
+        check_external_hrefs(root),
+        check_embedded_raster(root),
+        check_node_count(root, max_nodes),
+    ]
     for r in results:
         _print_result(r)
-
     exit_code = 1 if any(r.level == "err" for r in results) else 0
     raise typer.Exit(exit_code)
 
