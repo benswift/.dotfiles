@@ -91,6 +91,28 @@ class TestCheckNoScript:
         assert "script" in result.message.lower()
 
 
+check_dangerous_hrefs = mod.check_dangerous_hrefs
+
+
+class TestCheckDangerousHrefs:
+    def test_clean_svg_passes(self):
+        root, _ = parse_svg(VALID_SVG)
+        result = check_dangerous_hrefs(root)
+        assert result.level == "ok"
+
+    def test_javascript_href_errors(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 10 10"><a xlink:href="javascript:alert(1)"><rect/></a></svg>'
+        root, _ = parse_svg(svg)
+        result = check_dangerous_hrefs(root)
+        assert result.level == "err"
+
+    def test_data_text_html_errors(self):
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><use href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="/></svg>'
+        root, _ = parse_svg(svg)
+        result = check_dangerous_hrefs(root)
+        assert result.level == "err"
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

@@ -69,6 +69,31 @@ def check_no_script(root: etree._Element) -> CheckResult:
     return CheckResult("ok", "script", "no <script> elements")
 
 
+DANGEROUS_HREF_PREFIXES = ("javascript:", "data:text/html", "data:text/javascript", "vbscript:")
+
+
+def _iter_href_values(root: etree._Element):
+    for el in root.iter():
+        for attr in ("href", f"{{{XLINK_NS}}}href"):
+            v = el.get(attr)
+            if v:
+                yield el, v
+
+
+def check_dangerous_hrefs(root: etree._Element) -> CheckResult:
+    bad: list[str] = []
+    for _el, value in _iter_href_values(root):
+        lowered = value.strip().lower()
+        for prefix in DANGEROUS_HREF_PREFIXES:
+            if lowered.startswith(prefix):
+                bad.append(value[:60])
+                break
+    if bad:
+        joined = "; ".join(bad)
+        return CheckResult("err", "href", f"dangerous href(s): {joined}")
+    return CheckResult("ok", "href", "no dangerous href values")
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -80,7 +105,7 @@ def main(path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)]) -> 
     if root is None:
         raise typer.Exit(1)
 
-    results = [check_root_svg(root), check_viewbox(root), check_no_script(root)]
+    results = [check_root_svg(root), check_viewbox(root), check_no_script(root), check_dangerous_hrefs(root)]
     for r in results:
         _print_result(r)
 
