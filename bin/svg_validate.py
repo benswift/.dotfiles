@@ -250,6 +250,7 @@ def main(
     max_nodes: Annotated[int, typer.Option("--max-nodes")] = 500,
     palette: Annotated[str, typer.Option("--palette", help="Comma- or space-separated hex colours")] = "",
     fix: Annotated[bool, typer.Option("--fix", help="Pretty-print the file in place")] = False,
+    strict: Annotated[bool, typer.Option("--strict", help="Treat warnings as errors")] = False,
 ) -> None:
     text = path.read_text(encoding="utf-8")
     root, result = parse_svg(text)
@@ -284,7 +285,9 @@ def main(
         path.write_text(pretty_print(root), encoding="utf-8")
         print("formatted: 2-space indent")
 
-    exit_code = 1 if any(r.level == "err" for r in results) else 0
+    has_err = any(r.level == "err" for r in results)
+    has_warn = any(r.level == "warn" for r in results)
+    exit_code = 1 if has_err or (strict and has_warn) else 0
     raise typer.Exit(exit_code)
 
 

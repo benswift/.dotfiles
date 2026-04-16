@@ -6,6 +6,7 @@
 
 import importlib.machinery
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 
@@ -19,6 +20,8 @@ spec.loader.exec_module(mod)
 parse_svg = mod.parse_svg
 CheckResult = mod.CheckResult
 
+
+SCRIPT = Path(__file__).parent.parent / "bin" / "svg_validate.py"
 
 VALID_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <path d="M10,50 C30,10 70,10 90,50" fill="#b58900" stroke="none"/>
@@ -293,6 +296,21 @@ class TestPrettyPrint:
         root, _ = parse_svg(VALID_SVG)
         out = pretty_print(root)
         assert not out.startswith("<?xml")
+
+
+class TestStrictFlag:
+    def test_strict_promotes_warning_to_exit_1(self, tmp_path: Path):
+        p = tmp_path / "dup.svg"
+        p.write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+            '<path d="M0,0" fill="#aaa"/><path d="M0,0" fill="#aaa"/></svg>'
+        )
+        # Default exits 0 despite warnings.
+        r1 = subprocess.run([str(SCRIPT), str(p)], capture_output=True)
+        assert r1.returncode == 0
+        # --strict exits 1.
+        r2 = subprocess.run([str(SCRIPT), str(p), "--strict"], capture_output=True)
+        assert r2.returncode == 1
 
 
 if __name__ == "__main__":
