@@ -70,6 +70,13 @@ check_core() {
     else
         check_fail "zoxide not installed"
     fi
+
+    # 1Password CLI (backend for fnox; brew/apt install, not mise)
+    if command_exists op; then
+        check_pass "op (1Password CLI) installed"
+    else
+        check_fail "op (1Password CLI) not installed"
+    fi
 }
 
 check_symlinks() {
@@ -82,6 +89,7 @@ check_symlinks() {
         "$HOME/.gitignore:$DOTFILES_DIR/gitignore"
         "$HOME/.tmux.conf:$DOTFILES_DIR/tmux.conf"
         "$HOME/.config/mise/config.toml:$DOTFILES_DIR/mise/config.toml"
+        "$HOME/.config/fnox/config.toml:$DOTFILES_DIR/fnox/config.toml"
         "$HOME/.claude/CLAUDE.md:$DOTFILES_DIR/GLOBAL-AGENTS.md"
         "$HOME/.claude/settings.json:$DOTFILES_DIR/claude/settings.json"
         "$HOME/.codex/instructions.md:$DOTFILES_DIR/GLOBAL-AGENTS.md"
@@ -185,6 +193,37 @@ check_directories() {
     done
 }
 
+check_secrets() {
+    section "Checking fnox secrets..."
+
+    # fnox is mise-managed, so it's not on PATH for a bash script unless mise
+    # has been activated. Resolve via 'mise which' so the check works whether
+    # or not the parent shell activated mise.
+    local fnox_bin
+    if command_exists fnox; then
+        fnox_bin="fnox"
+    elif command_exists mise && fnox_bin=$(mise which fnox 2>/dev/null); then
+        :
+    else
+        check_fail "fnox not installed (run 'mise install')"
+        return
+    fi
+
+    if ! command_exists op; then
+        check_fail "op (1Password CLI) not installed --- secrets won't resolve"
+        return
+    fi
+
+    # Run fnox check from the dotfiles dir so it picks up fnox.toml + the
+    # global ~/.config/fnox/config.toml. Resolves every op:// reference.
+    local output
+    if output=$(cd "$DOTFILES_DIR" && "$fnox_bin" check 2>&1); then
+        check_pass "all dotfiles secrets resolve"
+    else
+        check_fail "fnox check failed: $(echo "$output" | head -1)"
+    fi
+}
+
 doctor() {
     echo ""
     echo "╔═══════════════════════════════════════╗"
@@ -196,6 +235,7 @@ doctor() {
     check_tools
     check_mise_tools
     check_directories
+    check_secrets
 
     echo ""
     section "Summary"
