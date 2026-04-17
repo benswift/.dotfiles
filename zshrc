@@ -123,6 +123,7 @@ autoload -Uz compinit
 compinit
 
 eval "$(mise activate zsh)"
+command -v fnox &>/dev/null && eval "$(fnox activate zsh)"
 export LS_COLORS="$(vivid generate gruvbox-dark)"
 eval "$(zoxide init zsh)"
 

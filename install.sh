@@ -60,6 +60,27 @@ install_mise() {
     fi
 }
 
+# 1Password CLI is the secret backend for fnox (which is mise-managed and
+# resolves op:// references in fnox.toml). The desktop app integration
+# requires OS-level package signing, so we install via brew/apt rather than
+# mise. On Linux the official 1Password apt repo needs sudo + a signing key,
+# so we just point at the docs rather than running it silently.
+install_op() {
+    if command_exists op; then
+        info "1Password CLI already installed"
+        return
+    fi
+
+    if [[ "$platform" == "macos" ]]; then
+        info "Installing 1Password (desktop + CLI)..."
+        brew install --cask 1password 1password-cli
+    else
+        warn "1Password CLI not auto-installed on Linux."
+        warn "Follow https://developer.1password.com/docs/cli/get-started/#install"
+        warn "fnox-managed secrets won't resolve until 'op' is installed and signed in."
+    fi
+}
+
 clone_dotfiles() {
     if [[ -d "$DOTFILES_DIR" ]]; then
         info "Dotfiles already exist at $DOTFILES_DIR"
@@ -172,6 +193,7 @@ main() {
     if [[ "$platform" == "macos" ]]; then
         install_homebrew
     fi
+    install_op
     install_mise
     clone_dotfiles
     bootstrap_claude_plugins
