@@ -6,7 +6,7 @@
 """Generate styled images using various models via Replicate API.
 
 Environment:
-    REPLICATE_API_KEY: Your Replicate API token (required)
+    REPLICATE_API_TOKEN: Your Replicate API token (required)
 
 Supported models:
     banana    - Google Nano Banana Pro (default): style transfer, up to 14 ref images, 4K
@@ -55,10 +55,10 @@ def error_exit(message: str) -> NoReturn:
 
 def get_api_token() -> str:
     try:
-        return os.environ["REPLICATE_API_KEY"]
+        return os.environ["REPLICATE_API_TOKEN"]
     except KeyError:
         raise KeyError(
-            "REPLICATE_API_KEY environment variable not set. "
+            "REPLICATE_API_TOKEN environment variable not set. "
             "Get your token at https://replicate.com/account/api-tokens"
         )
 
