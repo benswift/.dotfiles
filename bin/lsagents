@@ -372,7 +372,7 @@ def main() -> None:
             while True:
                 live.update(build_display())
                 live.refresh()
-                ready, _, _ = select.select([sys.stdin], [], [], 10)
+                ready, _, _ = select.select([sys.stdin], [], [], 2)
                 if ready:
                     key = sys.stdin.read(1)
                     if key in ("q", "\x03"):
