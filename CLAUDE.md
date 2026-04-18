@@ -35,12 +35,8 @@ grouped into the following categories.
 ## Shell
 
 Shell config stuff is in the top-level. I mostly use zsh (on macOS), so I have
-@zshrc and @zshenv files.
-
-### Prompt (starship)
-
-The shell prompt is configured via @starship.toml, symlinked to
-`~/.config/starship.toml`. Uses catppuccin mocha colours to match the helix theme.
+@zshrc and @zshenv files. The prompt is a plain `PS1` --- no starship or
+equivalent.
 
 ## Version control (git)
 

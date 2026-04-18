@@ -126,7 +126,6 @@ main() {
     echo -e "\nLinking tool config files..."
     create_symlink "$DOTFILES_DIR/mise/config.toml" "$HOME/.config/mise/config.toml"
     create_symlink "$DOTFILES_DIR/fnox/config.toml" "$HOME/.config/fnox/config.toml"
-    create_symlink "$DOTFILES_DIR/starship.toml" "$HOME/.config/starship.toml"
 
     # Directory symlinks
     echo -e "\nLinking directories..."
