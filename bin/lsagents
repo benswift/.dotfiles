@@ -9,6 +9,8 @@
 import os
 import re
 import select
+import signal
+import subprocess
 import sys
 import termios
 import time
@@ -56,6 +58,10 @@ CPU_HOG_THRESHOLD = 5.0
 MAX_CPU_HOGS = 8
 
 HOME = os.path.expanduser("~")
+
+STATE_NORMAL = "normal"
+STATE_ENTERING = "entering"
+STATE_CONFIRMING = "confirming"
 
 _cpu_primed = False
 
@@ -191,7 +197,62 @@ def collect_processes() -> dict:
     }
 
 
-def build_display() -> Group:
+def lookup_pid(data: dict, pid_str: str) -> tuple[int, str] | None:
+    try:
+        pid = int(pid_str)
+    except ValueError:
+        return None
+    for item in data["agents"]:
+        if item["pid"] == pid_str:
+            return (pid, item["agent"])
+    for item in data["mail_clients"]:
+        if item["pid"] == pid_str:
+            return (pid, "neomutt")
+    for item in data["strays"]:
+        if item["pid"] == pid_str:
+            return (pid, item["label"])
+    for item in data["cpu_hogs"]:
+        if item["pid"] == pid_str:
+            return (pid, item["name"])
+    for item in data["servers"]:
+        if item["pid"] == pid_str:
+            return (pid, item["cmd"])
+    return None
+
+
+def kill_process(pid: int) -> str:
+    try:
+        cmdline = psutil.Process(pid).cmdline()
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        cmdline = []
+
+    if cmdline and os.path.basename(cmdline[0]) == "zellij" and "--server" in cmdline:
+        idx = cmdline.index("--server")
+        if idx + 1 < len(cmdline):
+            session_name = os.path.basename(cmdline[idx + 1])
+            try:
+                result = subprocess.run(
+                    ["zellij", "kill-session", session_name],
+                    capture_output=True, text=True, timeout=5,
+                )
+                if result.returncode == 0:
+                    return f"zellij kill-session {session_name}"
+                err = result.stderr.strip() or result.stdout.strip() or "unknown error"
+                return f"zellij kill-session failed: {err}"
+            except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+                return f"zellij kill-session error: {e}"
+
+    try:
+        os.kill(pid, signal.SIGTERM)
+        return f"sent SIGTERM to PID {pid}"
+    except ProcessLookupError:
+        return f"PID {pid} already gone"
+    except PermissionError:
+        return f"permission denied to kill PID {pid}"
+
+
+def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
+                  target: tuple[int, str] | None = None, message: str = "") -> Group:
     now = datetime.now().strftime("%H:%M:%S")
     header = Text()
     header.append("lsagents", style=Style(color="#cdd6f4", bold=True))
@@ -199,7 +260,6 @@ def build_display() -> Group:
     header.append(now, style=MOCHA["yellow"])
     header.append("\n")
 
-    data = collect_processes()
     agents = data["agents"]
     strays = data["strays"]
     cpu_hogs = data["cpu_hogs"]
@@ -352,7 +412,23 @@ def build_display() -> Group:
     footer.append(" stray(s), ", style=MOCHA["dim"])
     footer.append(str(len(cpu_hogs)), style=hog_count_style)
     footer.append(" cpu hog(s)", style=MOCHA["dim"])
-    footer.append("  \u2022  q or ctrl-c to quit", style=MOCHA["dim"])
+    footer.append("\n")
+
+    if state == STATE_ENTERING:
+        footer.append("kill PID: ", style=MOCHA["yellow_bold"])
+        footer.append(input_buf, style=MOCHA["fg"])
+        footer.append("\u258f", style=MOCHA["yellow"])
+        footer.append("    (enter=confirm, esc=cancel)", style=MOCHA["dim"])
+    elif state == STATE_CONFIRMING and target is not None:
+        pid, label = target
+        footer.append(f"kill {label} (PID {pid})? ", style=MOCHA["red"])
+        footer.append("[y/N]", style=MOCHA["yellow_bold"])
+    else:
+        footer.append("q quit  \u2022  k kill-by-pid", style=MOCHA["dim"])
+
+    if message:
+        footer.append("  \u2022  ", style=MOCHA["dim"])
+        footer.append(message, style=MOCHA["aqua"])
 
     return Group(header, agent_table, Text(), mail_table, Text(), stray_table, Text(), hog_table, Text(), server_table, Text(), footer)
 
@@ -366,34 +442,88 @@ def main() -> None:
         print()
         print("Options:")
         print("  -1, --once    Print once and exit (no live refresh)")
+        print()
+        print("Interactive keys:")
+        print("  q, ctrl-c     Quit")
+        print("  k             Kill a listed process by PID (zellij-aware)")
         sys.exit(0)
 
     once = any(a in ("-1", "--once") for a in args)
     console = Console()
 
     if once or not sys.stdin.isatty():
-        console.print(build_display())
+        console.print(build_display(collect_processes()))
         return
 
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
 
+    state = STATE_NORMAL
+    input_buf = ""
+    target: tuple[int, str] | None = None
+    message = ""
+    data = collect_processes()
+
     try:
         tty.setcbreak(fd)
         with Live(
-            build_display(),
+            build_display(data, state, input_buf, target, message),
             console=console,
             auto_refresh=False,
             screen=True,
         ) as live:
             while True:
-                live.update(build_display())
+                live.update(build_display(data, state, input_buf, target, message))
                 live.refresh()
                 ready, _, _ = select.select([sys.stdin], [], [], 2)
-                if ready:
-                    key = sys.stdin.read(1)
+
+                if not ready:
+                    data = collect_processes()
+                    if state == STATE_NORMAL:
+                        message = ""
+                    continue
+
+                key = sys.stdin.read(1)
+
+                if state == STATE_NORMAL:
                     if key in ("q", "\x03"):
                         break
+                    if key == "k":
+                        state = STATE_ENTERING
+                        input_buf = ""
+                        message = ""
+                elif state == STATE_ENTERING:
+                    if key == "\x03":
+                        break
+                    if key == "\x1b":
+                        state = STATE_NORMAL
+                        input_buf = ""
+                    elif key in ("\r", "\n"):
+                        result = lookup_pid(data, input_buf)
+                        if result:
+                            target = result
+                            state = STATE_CONFIRMING
+                            input_buf = ""
+                        else:
+                            message = f"no such PID in view: {input_buf}"
+                            state = STATE_NORMAL
+                            input_buf = ""
+                    elif key == "\x7f":
+                        input_buf = input_buf[:-1]
+                    elif key.isdigit():
+                        input_buf += key
+                elif state == STATE_CONFIRMING:
+                    if key == "\x03":
+                        break
+                    if key in ("y", "Y") and target is not None:
+                        pid, _ = target
+                        message = kill_process(pid)
+                        state = STATE_NORMAL
+                        target = None
+                        data = collect_processes()
+                    elif key in ("n", "N", "\x1b"):
+                        state = STATE_NORMAL
+                        target = None
     except KeyboardInterrupt:
         pass
     finally:
