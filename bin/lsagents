@@ -346,15 +346,20 @@ def build_display() -> Group:
 
 
 def main() -> None:
-    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help"):
-        print("Usage: lsagents")
+    args = sys.argv[1:]
+    if any(a in ("-h", "--help") for a in args):
+        print("Usage: lsagents [--once]")
         print()
         print("Monitor running AI coding agents and dev servers.")
+        print()
+        print("Options:")
+        print("  -1, --once    Print once and exit (no live refresh)")
         sys.exit(0)
 
+    once = any(a in ("-1", "--once") for a in args)
     console = Console()
 
-    if not sys.stdin.isatty():
+    if once or not sys.stdin.isatty():
         console.print(build_display())
         return
 
