@@ -70,3 +70,6 @@ Host extempore-win
   User azureuser
   Hostname 68.218.107.86
   IdentityFile ~/.ssh/extempore_windows_vm
+
+Host *
+  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
