@@ -4,11 +4,11 @@
 # dependencies = ["psutil", "rich"]
 # ///
 
+# ty: ignore[unresolved-import]
+
 import os
 import re
 import select
-import shutil
-import subprocess
 import sys
 import termios
 import time
@@ -52,7 +52,8 @@ STRAY_PATTERNS = [
 
 LISTENER_NAMES = {"extempore"}
 
-ZELLIJ_VERSION_RE = re.compile(r"/zellij/([^/]+)/zellij$")
+CPU_HOG_THRESHOLD = 5.0
+MAX_CPU_HOGS = 8
 
 HOME = os.path.expanduser("~")
 
@@ -134,51 +135,25 @@ def get_strays() -> list[dict]:
     return strays
 
 
-def canonical_zellij() -> str | None:
-    try:
-        result = subprocess.run(
-            ["mise", "which", "zellij"],
-            capture_output=True, text=True, timeout=2,
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            return os.path.realpath(result.stdout.strip())
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        pass
-    path = shutil.which("zellij")
-    return os.path.realpath(path) if path else None
-
-
-def get_stale_zellij() -> list[dict]:
-    canonical = canonical_zellij()
-    if not canonical:
-        return []
-
-    stale = []
+def get_cpu_hogs() -> list[dict]:
+    hogs = []
     for p in psutil.process_iter(["pid"]):
         try:
-            cmdline = p.cmdline()
-            if len(cmdline) < 3:
+            cpu = p.cpu_percent()
+            if cpu < CPU_HOG_THRESHOLD:
                 continue
-            if os.path.basename(cmdline[0]) != "zellij" or cmdline[1] != "--server":
-                continue
-            exe_path = os.path.realpath(cmdline[0])
-            if exe_path == canonical:
-                continue
-            session = os.path.basename(cmdline[2])
-            m = ZELLIJ_VERSION_RE.search(exe_path)
-            version = m.group(1) if m else "?"
             with p.oneshot():
-                stale.append({
-                    "session": session,
-                    "version": version,
+                hogs.append({
+                    "name": (cmd_basename(p) or p.name())[:20],
                     "pid": str(p.pid),
-                    "cpu": f"{p.cpu_percent():.1f}",
+                    "cpu": cpu,
                     "mem": f"{p.memory_percent():.1f}",
                     "elapsed": fmt_elapsed(p.create_time()),
                 })
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
-    return stale
+    hogs.sort(key=lambda h: h["cpu"], reverse=True)
+    return hogs[:MAX_CPU_HOGS]
 
 
 def get_mail_clients() -> list[dict]:
@@ -289,8 +264,8 @@ def build_display() -> Group:
             "", "", "", "", "",
         )
 
-    stale_zellij = get_stale_zellij()
-    stale_table = Table(
+    cpu_hogs = get_cpu_hogs()
+    hog_table = Table(
         show_header=True,
         show_edge=False,
         show_lines=False,
@@ -298,22 +273,22 @@ def build_display() -> Group:
         padding=(0, 1),
         header_style=MOCHA["bg4"],
     )
-    stale_table.add_column("STALE ZELLIJ", min_width=16, style=MOCHA["fg"])
-    stale_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
-    stale_table.add_column("VERSION", min_width=8, style=MOCHA["fg"])
-    stale_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
-    stale_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
-    stale_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
+    hog_table.add_column("CPU HOG", min_width=16, style=MOCHA["fg"])
+    hog_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
+    hog_table.add_column("%CPU", justify="right", min_width=6, style=MOCHA["fg"])
+    hog_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
+    hog_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
 
-    for z in stale_zellij:
-        stale_table.add_row(
-            Text(z["session"], style=MOCHA["red"]),
-            z["pid"], z["version"], z["cpu"], z["mem"], z["elapsed"],
+    for h in cpu_hogs:
+        cpu_style = MOCHA["red"] if h["cpu"] >= 50 else MOCHA["yellow_bold"]
+        hog_table.add_row(
+            Text(h["name"], style=cpu_style),
+            h["pid"], f"{h['cpu']:.1f}", h["mem"], h["elapsed"],
         )
-    if not stale_zellij:
-        stale_table.add_row(
-            Text("(no stale zellij servers)", style=MOCHA["dim"]),
-            "", "", "", "", "",
+    if not cpu_hogs:
+        hog_table.add_row(
+            Text("(no cpu hogs)", style=MOCHA["dim"]),
+            "", "", "", "",
         )
 
     mail_clients = get_mail_clients()
@@ -373,7 +348,7 @@ def build_display() -> Group:
 
     footer = Text()
     stray_count_style = MOCHA["yellow"] if strays else MOCHA["green"]
-    stale_count_style = MOCHA["red"] if stale_zellij else MOCHA["green"]
+    hog_count_style = MOCHA["red"] if cpu_hogs else MOCHA["green"]
     footer.append(str(len(agents)), style=MOCHA["green"])
     footer.append(" agent(s), ", style=MOCHA["dim"])
     footer.append(str(len(mail_clients)), style=MOCHA["green"])
@@ -382,11 +357,11 @@ def build_display() -> Group:
     footer.append(" server(s), ", style=MOCHA["dim"])
     footer.append(str(len(strays)), style=stray_count_style)
     footer.append(" stray(s), ", style=MOCHA["dim"])
-    footer.append(str(len(stale_zellij)), style=stale_count_style)
-    footer.append(" stale zellij", style=MOCHA["dim"])
+    footer.append(str(len(cpu_hogs)), style=hog_count_style)
+    footer.append(" cpu hog(s)", style=MOCHA["dim"])
     footer.append("  \u2022  q or ctrl-c to quit", style=MOCHA["dim"])
 
-    return Group(header, agent_table, Text(), mail_table, Text(), stray_table, Text(), stale_table, Text(), server_table, Text(), footer)
+    return Group(header, agent_table, Text(), mail_table, Text(), stray_table, Text(), hog_table, Text(), server_table, Text(), footer)
 
 
 def main() -> None:
