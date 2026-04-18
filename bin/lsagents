@@ -143,12 +143,17 @@ def get_cpu_hogs() -> list[dict]:
             if cpu < CPU_HOG_THRESHOLD:
                 continue
             with p.oneshot():
+                try:
+                    cwd = shorten_path(p.cwd())
+                except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
+                    cwd = ""
                 hogs.append({
                     "name": (cmd_basename(p) or p.name())[:20],
                     "pid": str(p.pid),
                     "cpu": cpu,
                     "mem": f"{p.memory_percent():.1f}",
                     "elapsed": fmt_elapsed(p.create_time()),
+                    "cwd": cwd,
                 })
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
@@ -278,17 +283,18 @@ def build_display() -> Group:
     hog_table.add_column("%CPU", justify="right", min_width=6, style=MOCHA["fg"])
     hog_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
     hog_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
+    hog_table.add_column("CWD", style=MOCHA["aqua"])
 
     for h in cpu_hogs:
         cpu_style = MOCHA["red"] if h["cpu"] >= 50 else MOCHA["yellow_bold"]
         hog_table.add_row(
             Text(h["name"], style=cpu_style),
-            h["pid"], f"{h['cpu']:.1f}", h["mem"], h["elapsed"],
+            h["pid"], f"{h['cpu']:.1f}", h["mem"], h["elapsed"], h["cwd"],
         )
     if not cpu_hogs:
         hog_table.add_row(
             Text("(no cpu hogs)", style=MOCHA["dim"]),
-            "", "", "", "",
+            "", "", "", "", "",
         )
 
     mail_clients = get_mail_clients()
