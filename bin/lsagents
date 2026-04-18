@@ -22,25 +22,25 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 
-GRUVBOX = {
-    "fg": Style(color="#ebdbb2"),
-    "bg4": Style(color="#a89984"),
-    "bg4_dim": Style(color="#a89984", dim=True),
-    "orange": Style(color="#fe8019", bold=True),
-    "blue": Style(color="#83a598", bold=True),
-    "purple": Style(color="#d3869b", bold=True),
-    "green": Style(color="#b8bb26"),
-    "aqua": Style(color="#8ec07c"),
-    "yellow": Style(color="#fabd2f"),
-    "yellow_bold": Style(color="#fabd2f", bold=True),
-    "red": Style(color="#fb4934", bold=True),
+MOCHA = {
+    "fg": Style(color="#cdd6f4"),
+    "bg4": Style(color="#a6adc8"),
+    "bg4_dim": Style(color="#a6adc8", dim=True),
+    "orange": Style(color="#fab387", bold=True),
+    "blue": Style(color="#89b4fa", bold=True),
+    "purple": Style(color="#cba6f7", bold=True),
+    "green": Style(color="#a6e3a1"),
+    "aqua": Style(color="#94e2d5"),
+    "yellow": Style(color="#f9e2af"),
+    "yellow_bold": Style(color="#f9e2af", bold=True),
+    "red": Style(color="#f38ba8", bold=True),
     "dim": Style(dim=True),
 }
 
 AGENT_STYLES = {
-    "claude": GRUVBOX["orange"],
-    "codex": GRUVBOX["blue"],
-    "gemini": GRUVBOX["purple"],
+    "claude": MOCHA["orange"],
+    "codex": MOCHA["blue"],
+    "gemini": MOCHA["purple"],
 }
 
 STRAY_PATTERNS = [
@@ -229,9 +229,9 @@ def get_servers() -> list[dict]:
 def build_display() -> Group:
     now = datetime.now().strftime("%H:%M:%S")
     header = Text()
-    header.append("lsagents", style=Style(color="#ebdbb2", bold=True))
+    header.append("lsagents", style=Style(color="#cdd6f4", bold=True))
     header.append("  ")
-    header.append(now, style=GRUVBOX["yellow"])
+    header.append(now, style=MOCHA["yellow"])
     header.append("\n")
 
     agents = get_agents()
@@ -241,14 +241,14 @@ def build_display() -> Group:
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=GRUVBOX["bg4"],
+        header_style=MOCHA["bg4"],
     )
-    agent_table.add_column("AGENT", min_width=8, style=GRUVBOX["fg"])
-    agent_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
-    agent_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
-    agent_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
-    agent_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
-    agent_table.add_column("CWD", style=GRUVBOX["aqua"])
+    agent_table.add_column("AGENT", min_width=8, style=MOCHA["fg"])
+    agent_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
+    agent_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
+    agent_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
+    agent_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
+    agent_table.add_column("CWD", style=MOCHA["aqua"])
 
     for a in agents:
         style = AGENT_STYLES[a["agent"]]
@@ -258,7 +258,7 @@ def build_display() -> Group:
         )
     if not agents:
         agent_table.add_row(
-            Text("(no agents running)", style=GRUVBOX["dim"]),
+            Text("(no agents running)", style=MOCHA["dim"]),
             "", "", "", "", "",
         )
 
@@ -269,23 +269,23 @@ def build_display() -> Group:
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=GRUVBOX["bg4"],
+        header_style=MOCHA["bg4"],
     )
-    stray_table.add_column("STRAY", min_width=16, style=GRUVBOX["fg"])
-    stray_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
-    stray_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
-    stray_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
-    stray_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
-    stray_table.add_column("STATUS", style=GRUVBOX["dim"])
+    stray_table.add_column("STRAY", min_width=16, style=MOCHA["fg"])
+    stray_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
+    stray_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
+    stray_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
+    stray_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
+    stray_table.add_column("STATUS", style=MOCHA["dim"])
 
     for s in strays:
         stray_table.add_row(
-            Text(s["label"], style=GRUVBOX["yellow_bold"]),
+            Text(s["label"], style=MOCHA["yellow_bold"]),
             s["pid"], s["cpu"], s["mem"], s["elapsed"], s["status"],
         )
     if not strays:
         stray_table.add_row(
-            Text("(no stray processes)", style=GRUVBOX["dim"]),
+            Text("(no stray processes)", style=MOCHA["dim"]),
             "", "", "", "", "",
         )
 
@@ -296,23 +296,23 @@ def build_display() -> Group:
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=GRUVBOX["bg4"],
+        header_style=MOCHA["bg4"],
     )
-    stale_table.add_column("STALE ZELLIJ", min_width=16, style=GRUVBOX["fg"])
-    stale_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
-    stale_table.add_column("VERSION", min_width=8, style=GRUVBOX["fg"])
-    stale_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
-    stale_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
-    stale_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
+    stale_table.add_column("STALE ZELLIJ", min_width=16, style=MOCHA["fg"])
+    stale_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
+    stale_table.add_column("VERSION", min_width=8, style=MOCHA["fg"])
+    stale_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
+    stale_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
+    stale_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
 
     for z in stale_zellij:
         stale_table.add_row(
-            Text(z["session"], style=GRUVBOX["red"]),
+            Text(z["session"], style=MOCHA["red"]),
             z["pid"], z["version"], z["cpu"], z["mem"], z["elapsed"],
         )
     if not stale_zellij:
         stale_table.add_row(
-            Text("(no stale zellij servers)", style=GRUVBOX["dim"]),
+            Text("(no stale zellij servers)", style=MOCHA["dim"]),
             "", "", "", "", "",
         )
 
@@ -323,23 +323,23 @@ def build_display() -> Group:
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=GRUVBOX["bg4"],
+        header_style=MOCHA["bg4"],
     )
-    mail_table.add_column("MAIL", min_width=8, style=GRUVBOX["fg"])
-    mail_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
-    mail_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
-    mail_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
-    mail_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
-    mail_table.add_column("CWD", style=GRUVBOX["aqua"])
+    mail_table.add_column("MAIL", min_width=8, style=MOCHA["fg"])
+    mail_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
+    mail_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
+    mail_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
+    mail_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
+    mail_table.add_column("CWD", style=MOCHA["aqua"])
 
     for m in mail_clients:
         mail_table.add_row(
-            Text("neomutt", style=GRUVBOX["green"]),
+            Text("neomutt", style=MOCHA["green"]),
             m["pid"], m["cpu"], m["mem"], m["elapsed"], m["cwd"],
         )
     if not mail_clients:
         mail_table.add_row(
-            Text("(no mail clients)", style=GRUVBOX["dim"]),
+            Text("(no mail clients)", style=MOCHA["dim"]),
             "", "", "", "", "",
         )
 
@@ -350,41 +350,41 @@ def build_display() -> Group:
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=GRUVBOX["bg4"],
+        header_style=MOCHA["bg4"],
     )
-    server_table.add_column("SERVER", min_width=12, style=GRUVBOX["fg"])
-    server_table.add_column("PID", justify="right", min_width=6, style=GRUVBOX["fg"])
-    server_table.add_column("PORT", justify="right", min_width=5, style=GRUVBOX["fg"])
-    server_table.add_column("%CPU", justify="right", min_width=5, style=GRUVBOX["fg"])
-    server_table.add_column("%MEM", justify="right", min_width=5, style=GRUVBOX["fg"])
-    server_table.add_column("ELAPSED", justify="right", min_width=9, style=GRUVBOX["fg"])
-    server_table.add_column("CWD", style=GRUVBOX["aqua"])
+    server_table.add_column("SERVER", min_width=12, style=MOCHA["fg"])
+    server_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
+    server_table.add_column("PORT", justify="right", min_width=5, style=MOCHA["fg"])
+    server_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
+    server_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
+    server_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
+    server_table.add_column("CWD", style=MOCHA["aqua"])
 
     for s in servers:
         server_table.add_row(
-            Text(s["cmd"], style=GRUVBOX["red"]),
+            Text(s["cmd"], style=MOCHA["red"]),
             s["pid"], s["port"], s["cpu"], s["mem"], s["elapsed"], s["cwd"],
         )
     if not servers:
         server_table.add_row(
-            Text("(no dev servers running)", style=GRUVBOX["dim"]),
+            Text("(no dev servers running)", style=MOCHA["dim"]),
             "", "", "", "", "", "",
         )
 
     footer = Text()
-    stray_count_style = GRUVBOX["yellow"] if strays else GRUVBOX["green"]
-    stale_count_style = GRUVBOX["red"] if stale_zellij else GRUVBOX["green"]
-    footer.append(str(len(agents)), style=GRUVBOX["green"])
-    footer.append(" agent(s), ", style=GRUVBOX["dim"])
-    footer.append(str(len(mail_clients)), style=GRUVBOX["green"])
-    footer.append(" mail, ", style=GRUVBOX["dim"])
-    footer.append(str(len(servers)), style=GRUVBOX["green"])
-    footer.append(" server(s), ", style=GRUVBOX["dim"])
+    stray_count_style = MOCHA["yellow"] if strays else MOCHA["green"]
+    stale_count_style = MOCHA["red"] if stale_zellij else MOCHA["green"]
+    footer.append(str(len(agents)), style=MOCHA["green"])
+    footer.append(" agent(s), ", style=MOCHA["dim"])
+    footer.append(str(len(mail_clients)), style=MOCHA["green"])
+    footer.append(" mail, ", style=MOCHA["dim"])
+    footer.append(str(len(servers)), style=MOCHA["green"])
+    footer.append(" server(s), ", style=MOCHA["dim"])
     footer.append(str(len(strays)), style=stray_count_style)
-    footer.append(" stray(s), ", style=GRUVBOX["dim"])
+    footer.append(" stray(s), ", style=MOCHA["dim"])
     footer.append(str(len(stale_zellij)), style=stale_count_style)
-    footer.append(" stale zellij", style=GRUVBOX["dim"])
-    footer.append("  \u2022  q or ctrl-c to quit", style=GRUVBOX["dim"])
+    footer.append(" stale zellij", style=MOCHA["dim"])
+    footer.append("  \u2022  q or ctrl-c to quit", style=MOCHA["dim"])
 
     return Group(header, agent_table, Text(), mail_table, Text(), stray_table, Text(), stale_table, Text(), server_table, Text(), footer)
 

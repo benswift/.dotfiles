@@ -124,16 +124,16 @@ compinit
 
 eval "$(mise activate zsh)"
 command -v fnox &>/dev/null && eval "$(fnox activate zsh)"
-export LS_COLORS="$(vivid generate gruvbox-dark)"
+export LS_COLORS="$(vivid generate catppuccin-mocha)"
 eval "$(zoxide init zsh)"
 
 _prompt_precmd() {
   local exit_status=$?
-  local sep_color='%F{#504945}'
-  local time_color='%F{#a89984}'
-  local host_color='%F{#fe8019}'
-  local dir_color='%F{#83a598}'
-  local vcs_color='%F{#d3869b}'
+  local sep_color='%F{#45475a}'
+  local time_color='%F{#a6adc8}'
+  local host_color='%F{#fab387}'
+  local dir_color='%F{#89b4fa}'
+  local vcs_color='%F{#cba6f7}'
 
   print -P "${sep_color}${(l:$COLUMNS::─:)}%f"
 
@@ -143,7 +143,7 @@ _prompt_precmd() {
   local host=""
   [[ "$(hostname -s)" != "daysy" ]] && host="%B${host_color}%m%f%b "
 
-  PROMPT="${time_color}%T%f ${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{#b8bb26}.%F{#fb4934})❯%f "
+  PROMPT="${time_color}%T%f ${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{#a6e3a1}.%F{#f38ba8})❯%f "
 }
 autoload -Uz add-zsh-hook
 add-zsh-hook precmd _prompt_precmd

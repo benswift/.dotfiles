@@ -1,9 +1,9 @@
-# Starship prompt with gruvbox dark colours
+# Starship prompt with catppuccin mocha colours
 
-# Gruvbox dark palette:
-# fg: #ebdbb2, bg: #282828
-# red: #fb4934, green: #b8bb26, yellow: #fabd2f
-# blue: #83a598, purple: #d3869b, aqua: #8ec07c, orange: #fe8019
+# Catppuccin mocha palette:
+# text: #cdd6f4, base: #1e1e2e
+# red: #f38ba8, green: #a6e3a1, yellow: #f9e2af
+# blue: #89b4fa, mauve: #cba6f7, teal: #94e2d5, peach: #fab387
 
 format = """
 $time\
@@ -18,44 +18,44 @@ $cmd_duration\
 $character"""
 
 [directory]
-style = "bold #83a598"
+style = "bold #89b4fa"
 truncation_length = 3
 
 [git_branch]
-style = "bold #d3869b"
+style = "bold #cba6f7"
 format = "[$branch]($style) "
 
 [python]
-style = "#fabd2f"
+style = "#f9e2af"
 format = "[py $version]($style) "
 
 [elixir]
 disabled = true
 
 [nodejs]
-style = "#b8bb26"
+style = "#a6e3a1"
 format = "[node $version]($style) "
 
 [rust]
-style = "#fe8019"
+style = "#fab387"
 format = "[rs $version]($style) "
 
 [time]
 disabled = false
-style = "#a89984"
+style = "#a6adc8"
 format = "[$time]($style) "
 time_format = "%H:%M"
 
 [hostname]
 ssh_only = true
-style = "bold #fe8019"
+style = "bold #fab387"
 format = "[$hostname]($style) "
 
 [cmd_duration]
 min_time = 2000
-style = "#fabd2f"
+style = "#f9e2af"
 format = "[took $duration]($style) "
 
 [character]
-success_symbol = "[❯](bold #b8bb26)"
-error_symbol = "[❯](bold #fb4934)"
+success_symbol = "[❯](bold #a6e3a1)"
+error_symbol = "[❯](bold #f38ba8)"
