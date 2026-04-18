@@ -90,120 +90,93 @@ def cmd_basename(p: psutil.Process) -> str:
     return ""
 
 
-def get_agents() -> list[dict]:
-    agents = []
-    for p in psutil.process_iter(["pid"]):
-        try:
-            name = cmd_basename(p)
-            if name in AGENT_STYLES:
-                with p.oneshot():
-                    agents.append({
-                        "agent": name,
-                        "pid": str(p.pid),
-                        "cpu": f"{p.cpu_percent():.1f}",
-                        "mem": f"{p.memory_percent():.1f}",
-                        "elapsed": fmt_elapsed(p.create_time()),
-                        "cwd": shorten_path(p.cwd()),
-                    })
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            continue
-    return agents
+def safe_cwd(p: psutil.Process) -> str:
+    try:
+        return shorten_path(p.cwd())
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        return ""
 
 
-def get_strays() -> list[dict]:
-    strays = []
+def collect_processes() -> dict:
+    agents: list[dict] = []
+    strays: list[dict] = []
+    cpu_hogs: list[dict] = []
+    mail_clients: list[dict] = []
+    servers: list[dict] = []
+
     for p in psutil.process_iter(["pid", "ppid"]):
         try:
-            cmdline = " ".join(p.cmdline())
-            if not cmdline:
-                continue
-            for label, pattern in STRAY_PATTERNS:
-                if re.search(pattern, cmdline):
-                    with p.oneshot():
-                        ppid = p.ppid()
-                        strays.append({
-                            "label": label,
-                            "pid": str(p.pid),
-                            "cpu": f"{p.cpu_percent():.1f}",
-                            "mem": f"{p.memory_percent():.1f}",
-                            "elapsed": fmt_elapsed(p.create_time()),
-                            "status": "orphaned" if ppid == 1 else f"ppid={ppid}",
-                        })
-                    break
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            continue
-    return strays
-
-
-def get_cpu_hogs() -> list[dict]:
-    hogs = []
-    for p in psutil.process_iter(["pid"]):
-        try:
-            cpu = p.cpu_percent()
-            if cpu < CPU_HOG_THRESHOLD:
-                continue
             with p.oneshot():
-                try:
-                    cwd = shorten_path(p.cwd())
-                except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
-                    cwd = ""
-                hogs.append({
-                    "name": (cmd_basename(p) or p.name())[:20],
-                    "pid": str(p.pid),
-                    "cpu": cpu,
-                    "mem": f"{p.memory_percent():.1f}",
-                    "elapsed": fmt_elapsed(p.create_time()),
-                    "cwd": cwd,
-                })
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            continue
-    hogs.sort(key=lambda h: h["cpu"], reverse=True)
-    return hogs[:MAX_CPU_HOGS]
+                name = cmd_basename(p)
+                display_name = name or p.name()
+                pid = str(p.pid)
+                cpu = p.cpu_percent()
+                cpu_str = f"{cpu:.1f}"
+                mem_str = f"{p.memory_percent():.1f}"
+                elapsed = fmt_elapsed(p.create_time())
 
-
-def get_mail_clients() -> list[dict]:
-    clients = []
-    for p in psutil.process_iter(["pid"]):
-        try:
-            if cmd_basename(p) == "neomutt":
-                with p.oneshot():
-                    clients.append({
-                        "pid": str(p.pid),
-                        "cpu": f"{p.cpu_percent():.1f}",
-                        "mem": f"{p.memory_percent():.1f}",
-                        "elapsed": fmt_elapsed(p.create_time()),
-                        "cwd": shorten_path(p.cwd()),
+                if name in AGENT_STYLES:
+                    agents.append({
+                        "agent": name, "pid": pid, "cpu": cpu_str,
+                        "mem": mem_str, "elapsed": elapsed, "cwd": safe_cwd(p),
                     })
+
+                if name == "neomutt":
+                    mail_clients.append({
+                        "pid": pid, "cpu": cpu_str, "mem": mem_str,
+                        "elapsed": elapsed, "cwd": safe_cwd(p),
+                    })
+
+                try:
+                    cmdline_str = " ".join(p.cmdline())
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    cmdline_str = ""
+                if cmdline_str:
+                    for label, pattern in STRAY_PATTERNS:
+                        if re.search(pattern, cmdline_str):
+                            ppid = p.ppid()
+                            strays.append({
+                                "label": label, "pid": pid,
+                                "cpu": cpu_str, "mem": mem_str,
+                                "elapsed": elapsed,
+                                "status": "orphaned" if ppid == 1 else f"ppid={ppid}",
+                            })
+                            break
+
+                if cpu >= CPU_HOG_THRESHOLD:
+                    cpu_hogs.append({
+                        "name": display_name[:20], "pid": pid,
+                        "cpu": cpu, "mem": mem_str, "elapsed": elapsed,
+                        "cwd": safe_cwd(p),
+                    })
+
+                try:
+                    conns = p.net_connections(kind="tcp")
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    conns = []
+                if conns:
+                    if display_name.lower() in LISTENER_NAMES:
+                        ports = [c.laddr.port for c in conns if c.status == "LISTEN"]
+                    else:
+                        ports = [c.laddr.port for c in conns if c.status == "LISTEN" and 3000 <= c.laddr.port <= 9999]
+                    if ports:
+                        servers.append({
+                            "cmd": display_name[:12], "pid": pid,
+                            "port": str(ports[0]), "cpu": cpu_str,
+                            "mem": mem_str, "elapsed": elapsed,
+                            "cwd": safe_cwd(p),
+                        })
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
-    return clients
 
-
-def get_servers() -> list[dict]:
-    servers = []
-    for p in psutil.process_iter(["pid"]):
-        try:
-            display_name = cmd_basename(p) or p.name()
-            conns = p.net_connections(kind="tcp")
-            if display_name.lower() in LISTENER_NAMES:
-                ports = [c.laddr.port for c in conns if c.status == "LISTEN"]
-            else:
-                ports = [c.laddr.port for c in conns if c.status == "LISTEN" and 3000 <= c.laddr.port <= 9999]
-            if not ports:
-                continue
-            with p.oneshot():
-                servers.append({
-                    "cmd": display_name[:12],
-                    "pid": str(p.pid),
-                    "port": str(ports[0]),
-                    "cpu": f"{p.cpu_percent():.1f}",
-                    "mem": f"{p.memory_percent():.1f}",
-                    "elapsed": fmt_elapsed(p.create_time()),
-                    "cwd": shorten_path(p.cwd()),
-                })
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            continue
-    return servers
+    cpu_hogs.sort(key=lambda h: h["cpu"], reverse=True)
+    return {
+        "agents": agents,
+        "strays": strays,
+        "cpu_hogs": cpu_hogs[:MAX_CPU_HOGS],
+        "mail_clients": mail_clients,
+        "servers": servers,
+    }
 
 
 def build_display() -> Group:
@@ -214,7 +187,13 @@ def build_display() -> Group:
     header.append(now, style=MOCHA["yellow"])
     header.append("\n")
 
-    agents = get_agents()
+    data = collect_processes()
+    agents = data["agents"]
+    strays = data["strays"]
+    cpu_hogs = data["cpu_hogs"]
+    mail_clients = data["mail_clients"]
+    servers = data["servers"]
+
     agent_table = Table(
         show_header=True,
         show_edge=False,
@@ -242,7 +221,6 @@ def build_display() -> Group:
             "", "", "", "", "",
         )
 
-    strays = get_strays()
     stray_table = Table(
         show_header=True,
         show_edge=False,
@@ -269,7 +247,6 @@ def build_display() -> Group:
             "", "", "", "", "",
         )
 
-    cpu_hogs = get_cpu_hogs()
     hog_table = Table(
         show_header=True,
         show_edge=False,
@@ -297,7 +274,6 @@ def build_display() -> Group:
             "", "", "", "", "",
         )
 
-    mail_clients = get_mail_clients()
     mail_table = Table(
         show_header=True,
         show_edge=False,
@@ -324,7 +300,6 @@ def build_display() -> Group:
             "", "", "", "", "",
         )
 
-    servers = get_servers()
     server_table = Table(
         show_header=True,
         show_edge=False,
