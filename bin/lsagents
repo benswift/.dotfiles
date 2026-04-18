@@ -57,6 +57,8 @@ MAX_CPU_HOGS = 8
 
 HOME = os.path.expanduser("~")
 
+_cpu_primed = False
+
 
 def fmt_elapsed(create_time: float) -> str:
     elapsed = int(time.time() - create_time)
@@ -98,6 +100,16 @@ def safe_cwd(p: psutil.Process) -> str:
 
 
 def collect_processes() -> dict:
+    global _cpu_primed
+    if not _cpu_primed:
+        for p in psutil.process_iter():
+            try:
+                p.cpu_percent()
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+        time.sleep(0.5)
+        _cpu_primed = True
+
     agents: list[dict] = []
     strays: list[dict] = []
     cpu_hogs: list[dict] = []
