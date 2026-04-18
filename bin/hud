@@ -255,7 +255,7 @@ def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
                   target: tuple[int, str] | None = None, message: str = "") -> Group:
     now = datetime.now().strftime("%H:%M:%S")
     header = Text()
-    header.append("lsagents", style=Style(color="#cdd6f4", bold=True))
+    header.append("hud", style=Style(color="#cdd6f4", bold=True))
     header.append("  ")
     header.append(now, style=MOCHA["yellow"])
     header.append("\n")
@@ -436,7 +436,7 @@ def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
 def main() -> None:
     args = sys.argv[1:]
     if any(a in ("-h", "--help") for a in args):
-        print("Usage: lsagents [--once]")
+        print("Usage: hud [--once]")
         print()
         print("Monitor running AI coding agents and dev servers.")
         print()
