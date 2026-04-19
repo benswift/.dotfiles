@@ -54,7 +54,7 @@ STRAY_PATTERNS = [
 
 LISTENER_NAMES = {"extempore"}
 
-CPU_HOG_THRESHOLD = 5.0
+CPU_HOG_THRESHOLD = 10.0
 MAX_CPU_HOGS = 8
 
 HOME = os.path.expanduser("~")
