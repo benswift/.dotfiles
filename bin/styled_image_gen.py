@@ -54,13 +54,26 @@ def error_exit(message: str) -> NoReturn:
 
 
 def get_api_token() -> str:
+    token = os.environ.get("REPLICATE_API_TOKEN")
+    if token:
+        return token
     try:
-        return os.environ["REPLICATE_API_TOKEN"]
-    except KeyError:
+        result = subprocess.run(
+            ["fnox", "-P", "lazy", "get", "REPLICATE_API_TOKEN"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
         raise KeyError(
-            "REPLICATE_API_TOKEN environment variable not set. "
+            "REPLICATE_API_TOKEN not set and fnox not installed. "
             "Get your token at https://replicate.com/account/api-tokens"
         )
+    except subprocess.CalledProcessError as e:
+        raise KeyError(
+            f"fnox could not resolve REPLICATE_API_TOKEN: {e.stderr.strip()}"
+        )
+    return result.stdout.strip()
 
 
 def slugify(text: str, max_words: int = 6) -> str:

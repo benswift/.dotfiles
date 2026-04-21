@@ -1,2 +1,9 @@
-[secrets]
-REPLICATE_API_TOKEN= { provider = "onepass", value = "op://Personal/Replicate/credential" }
+# Secrets under [profiles.<name>.secrets] are NOT auto-loaded by
+# `fnox activate` (which uses the default profile). They must be
+# fetched explicitly with `fnox -P <name> get <KEY>` or
+# `fnox -P <name> exec -- <cmd>`. Use this for secrets you want
+# available to specific scripts only, without prompting 1Password
+# on every new shell.
+
+[profiles.lazy.secrets]
+REPLICATE_API_TOKEN = { provider = "onepass", value = "op://Personal/Replicate/credential" }
