@@ -272,13 +272,10 @@ update_claude_plugins() {
         claude plugin install --scope user "$plugin_id" 2>/dev/null || true
     done
 
-    # Refresh all marketplace metadata and update every installed plugin.
+    # Refresh all marketplace metadata. For marketplace-hosted plugins (all of
+    # ours), the marketplace clone *is* the plugin source, so a git pull on the
+    # marketplace is sufficient --- no need to loop over individual plugins.
     claude plugin marketplace update 2>/dev/null || true
-    if command -v jq &>/dev/null; then
-        claude plugin list --json 2>/dev/null | jq -r '.[].id' | while read -r id; do
-            claude plugin update "$id" 2>/dev/null || true
-        done
-    fi
 
     # ben-plugin-specific: point ~/.codex/skills at claude's marketplace clone
     # so codex reads the same directory. Can't live in create_symlinks.sh
