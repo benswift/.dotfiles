@@ -25,7 +25,7 @@ setopt HIST_IGNORE_SPACE
 alias y="yazi"
 alias h="hx ."
 alias zp="zed-preview"
-alias ayolo="claude --dangerously-skip-permissions"
+alias ayolo="claude --dangerously-skip-permissions --effort max"
 alias oyolo="codex --dangerously-bypass-approvals-and-sandbox"
 alias gyolo="gemini --yolo"
 sysup() {
