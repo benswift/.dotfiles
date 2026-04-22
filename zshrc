@@ -42,8 +42,27 @@ sysup() {
   dotfiles update
 }
 alias task="backlog task"
-alias todo="nb todo undone"
-alias daily="nb daily"
+todo() {
+  if [[ "$1" == "add" && $# -eq 1 ]]; then
+    nb add --filename "$(date +%Y%m%d%H%M%S).todo.md" --content "# [ ] " --edit
+  elif [[ $# -eq 0 ]]; then
+    nb todo undone
+  else
+    nb todo "$@"
+  fi
+}
+daily() {
+  if [[ $# -eq 0 ]]; then
+    local filename="$(date +%Y%m%d).md"
+    local path="$HOME/.nb/home/$filename"
+    if [[ ! -f "$path" ]]; then
+      nb add --filename "$filename" --content "# Daily $(date +%Y-%m-%d)"$'\n' >/dev/null
+    fi
+    nb edit "$filename"
+  else
+    nb daily "$@"
+  fi
+}
 alias latest="nb --limit 10"
 # alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
