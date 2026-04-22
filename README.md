@@ -101,33 +101,6 @@ injecting project-specific rules into your `AGENTS.md` file:
 mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing
 ```
 
-## nb capture (iOS Shortcut)
-
-The `bin/` directory contains an iOS Shortcut for quick todo capture to
-[nb](https://xwmx.github.io/nb/), built with
-[Cherri](https://github.com/electrikmilk/cherri). It supports text, voice, and
-skip modes. Voice input is transcribed on weddle using Whisper large-v3 on GPU.
-
-- `bin/nb-capture-todo.cherri` --- Shortcut source (compile with `cherri`)
-- `bin/nb-capture-todo.py` --- server-side script that creates the todo
-- `bin/nb-capture-server.py` --- HTTP server for receiving voice audio uploads
-- `bin/nb-capture-server.service` --- systemd unit for the HTTP server
-
-### weddle setup
-
-The text/skip flows use SSH directly. The voice flow POSTs audio to an HTTP
-server on weddle (the Shortcuts SSH action truncates large stdin payloads).
-
-```bash
-# install the systemd service
-sudo cp ~/.dotfiles/bin/nb-capture-server.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now nb-capture-server
-```
-
-The Shortcuts-generated SSH key (separate from Secure ShellFish) must also be
-added to `~/.ssh/authorized_keys` on weddle.
-
 ## Email configuration
 
 All email-related configuration has been organized into the `mail/` directory.
