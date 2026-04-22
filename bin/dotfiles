@@ -249,33 +249,35 @@ doctor() {
     fi
 }
 
-# Claude Code plugins declared in claude/settings.json. Each entry is
-# "github-repo plugin-id". The marketplace declaration in settings.json is
-# necessary but not sufficient --- claude plugin subcommands don't auto-register
-# from it, so we run add/install/update idempotently on every 'dotfiles update'.
-CLAUDE_PLUGINS=(
-    "benswift/claude-plugin-personal ben@ben"
-    "pbakaus/impeccable impeccable@impeccable"
-)
-
 update_claude_plugins() {
     if ! command -v claude &>/dev/null; then
         return
     fi
+    if ! command -v jq &>/dev/null; then
+        echo "jq required for claude plugin updates --- skipping"
+        return
+    fi
     echo "Updating claude plugins..."
-    # Bootstrap: ensure the extras (not shipped by the official marketplace)
-    # are registered and installed. Idempotent on every run.
-    local entry repo plugin_id
-    for entry in "${CLAUDE_PLUGINS[@]}"; do
-        read -r repo plugin_id <<<"$entry"
-        claude plugin marketplace add "$repo" 2>/dev/null || true
-        claude plugin install --scope user "$plugin_id" 2>/dev/null || true
-    done
+    local settings="$DOTFILES_DIR/claude/settings.json"
 
-    # Refresh all marketplace metadata. For marketplace-hosted plugins (all of
-    # ours), the marketplace clone *is* the plugin source, so a git pull on the
-    # marketplace is sufficient --- no need to loop over individual plugins.
-    claude plugin marketplace update 2>/dev/null || true
+    # Bootstrap: register extra marketplaces and install enabled plugins.
+    # claude plugin subcommands don't auto-register from settings.json, so we
+    # run add/install idempotently --- sourced from settings.json itself to
+    # avoid keeping a second list in sync.
+    jq -r '.extraKnownMarketplaces // {} | to_entries[] | .value.source.repo' "$settings" \
+        | xargs -P 4 -I {} claude plugin marketplace add {} >/dev/null 2>&1
+    jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "$settings" \
+        | xargs -P 4 -I {} claude plugin install --scope user {} >/dev/null 2>&1
+
+    # Refresh marketplace metadata (git pulls on marketplace clones).
+    claude plugin marketplace update >/dev/null 2>&1 || true
+
+    # Re-index installed plugins. `marketplace update` pulls files but doesn't
+    # refresh already-installed plugins' registries --- `plugin update` does.
+    # Parallelised because serial takes ages with 15+ plugins.
+    claude plugin list --json 2>/dev/null \
+        | jq -r '.[] | select(.enabled) | "\(.id) \(.scope)"' \
+        | xargs -P 8 -L 1 sh -c 'claude plugin update --scope "$2" "$1" >/dev/null 2>&1' _
 
     # ben-plugin-specific: point ~/.codex/skills at claude's marketplace clone
     # so codex reads the same directory. Can't live in create_symlinks.sh
