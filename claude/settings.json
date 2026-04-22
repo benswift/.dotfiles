@@ -9,22 +9,15 @@
     "defaultMode": "default"
   },
   "enabledPlugins": {
-    "rust-analyzer-lsp@claude-plugins-official": false,
     "frontend-design@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
-    "feature-dev@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": true,
-    "hookify@claude-plugins-official": true,
-    "remember@claude-plugins-official": true,
-    "mcp-server-dev@claude-plugins-official": true,
     "agent-browser@agent-browser": true,
     "impeccable@impeccable": true,
     "ben@ben": true
