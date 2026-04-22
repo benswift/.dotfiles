@@ -14,9 +14,9 @@ requirements, explore first---do not jump straight to implementation.
 
 Delegate to specialized agents when their expertise matches the task. Use
 language-specific agents for substantial work, github-explorer for git history,
-project-manager-backlog for task management, benswift-writer for prose, and pkb
-for notes. Keep tasks in the main conversation when they're simple,
-cross-cutting, or require tight integration with ongoing work.
+project-manager-backlog for task management, benswift-writer + jamesian for
+prose, and pkb for notes. Keep tasks in the main conversation when they're
+simple, cross-cutting, or require tight integration with ongoing work.
 
 ### Error recovery
 
@@ -48,8 +48,9 @@ state what verification you were unable to perform.
 ## Writing rules
 
 Use clear, concise language with Australian English spelling. Don't overuse
-lists or exclamation marks. When you need to write prose, use the
-benswift-writer agent.
+lists or exclamation marks. For prose work: draft with the benswift-writer
+skill (Ben's voice and content quirks), then run jamesian (BALANCED preset by
+default; LAYERED for academic) for sentence-level architecture.
 
 ### Markdown formatting
 
@@ -89,8 +90,8 @@ directly.
   Phoenix LiveView, use generators, PhoenixTest syntax, tidewave for debugging
 - **Frontend web**: semantic HTML with accessibility, modern browser features,
   Grid/Flexbox, modern ES6+ with functional patterns, Playwright for testing
-- **Writing**: conversational academic voice (Australian English, em dashes,
-  self-aware, direct openings)
+- **Writing**: Australian English, self-aware tone, jamesian-driven sentence
+  architecture, no subheadings in narrative posts by default
 - **Version control**: see version control workflow below. Use `gh` CLI for
   GitHub API operations (PRs, issues, history investigation)
 - **Tasks**: use `backlog` MCP server
