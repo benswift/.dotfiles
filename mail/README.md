@@ -39,18 +39,15 @@ To sync Office365 email with mbsync using OAuth2 authentication:
 
 1. **Build mbsync with SASL support** (if not already available via package
    manager):
-
    - Source available at: https://github.com/isync-devel/isync
    - Configure with `--with-sasl` pointing to your SASL installation
 
 2. **Install cyrus-sasl-xoauth2 plugin**:
-
    - Clone from: https://github.com/moriyoshi/cyrus-sasl-xoauth2
    - Build and install to your SASL plugin directory (e.g.,
      `/opt/homebrew/Cellar/cyrus-sasl/*/lib/sasl2/`)
 
 3. **OAuth2 token management**:
-
    - Use `mutt_oauth2.py` script (from mutt source) to obtain and refresh tokens
    - Configure with Thunderbird's client ID:
      `9e5f94bc-e8a4-4e73-b8be-63364c29d753`
@@ -60,7 +57,6 @@ To sync Office365 email with mbsync using OAuth2 authentication:
    - Run `./reauth-oauth.sh` from the mail directory to re-authenticate
 
 4. **Configure mbsync** (`mbsyncrc`):
-
    - Set `AuthMech XOAUTH2`
    - Use `PassCmd` with full paths to scripts
    - Example:

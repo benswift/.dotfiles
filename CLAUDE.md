@@ -134,14 +134,14 @@ Three directories are involved --- note the differences:
   **private** `benswift/claude-plugin-personal` repo. `install.sh` and
   `dotfiles update` register the marketplace and install the plugin via the
   `claude` CLI (`claude plugin marketplace add benswift/claude-plugin-personal`
-  + `claude plugin install --scope user ben@ben`); @claude/settings.json
-  then enables it via `enabledPlugins: {"ben@ben": true}`. Claude Code
-  maintains its own clone at `~/.claude/plugins/marketplaces/ben/`. That
-  clone is the **single source of truth** --- edit skills there, commit and
-  push from there. `~/.codex/skills` is symlinked into the same directory so
-  codex sees the same content. Skills appear to the model as
-  `ben:<skill-name>` (e.g. `ben:github-explorer`). The same bootstrap
-  pattern handles the `impeccable` and `agent-browser` plugins.
+  and `claude plugin install --scope user ben@ben`); @claude/settings.json then
+  enables it via `enabledPlugins: {"ben@ben": true}`. Claude Code maintains its
+  own clone at `~/.claude/plugins/marketplaces/ben/`. That clone is the **single
+  source of truth** --- edit skills there, commit and push from there.
+  `~/.codex/skills` is symlinked into the same directory so codex sees the same
+  content. Skills appear to the model as `ben:<skill-name>` (e.g.
+  `ben:github-explorer`). The same bootstrap pattern handles the `impeccable`
+  and `agent-browser` plugins.
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Fully gitignored (both globally and in this repo). Contains
   machine-specific state like `settings.local.json`, plans, and session data.
@@ -154,17 +154,17 @@ The @claude/ folder includes:
 
 Skills live in the ben plugin at
 `~/.claude/plugins/marketplaces/ben/skills/<name>/SKILL.md` (Claude Code's
-marketplace clone) and are namespaced as `ben:<name>` when the model loads
-them through Claude Code's plugin mechanism.
+marketplace clone) and are namespaced as `ben:<name>` when the model loads them
+through Claude Code's plugin mechanism.
 
 ### Codex CLI
 
 Codex CLI uses `~/.codex/instructions.md` for global instructions (symlinked to
 @claude/CLAUDE.md). Project-level instructions are read from `CLAUDE.md` via its
-`project_doc_fallback_filenames` setting. Codex doesn't understand Claude
-Code's plugin mechanism, but it reads the raw skill directories fine via a
-symlink from `~/.codex/skills` to `~/.claude/plugins/marketplaces/ben/skills/`
-(created by the ben plugin bootstrap in @install.sh and @bin/dotfiles).
+`project_doc_fallback_filenames` setting. Codex doesn't understand Claude Code's
+plugin mechanism, but it reads the raw skill directories fine via a symlink from
+`~/.codex/skills` to `~/.claude/plugins/marketplaces/ben/skills/` (created by
+the ben plugin bootstrap in @install.sh and @bin/dotfiles).
 
 ### Gemini CLI
 

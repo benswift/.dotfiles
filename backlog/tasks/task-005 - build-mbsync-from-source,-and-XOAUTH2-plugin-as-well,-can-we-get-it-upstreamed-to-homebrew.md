@@ -27,12 +27,10 @@ manual compilation.
 Create and upstream Homebrew formulae to enable XOAUTH2 support in mbsync:
 
 1. **Create a cyrus-sasl-xoauth2 formula** for Homebrew (if it doesn't exist)
-
    - Package the cyrus-sasl-xoauth2 plugin as a Homebrew formula
    - Ensure it integrates properly with the existing cyrus-sasl formula
 
 2. **Modify the isync (mbsync) formula** to:
-
    - Add optional XOAUTH2 support (possibly as a build option or variant)
    - Depend on cyrus-sasl-xoauth2 when the option is enabled
    - Ensure proper SASL plugin discovery at runtime

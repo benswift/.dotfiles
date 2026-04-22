@@ -36,15 +36,15 @@ harness-level scaffolding --- hooks, instructions, or settings changes.
 
 ### Error patterns (5.8% overall, 51.9% of sessions hit at least one)
 
-| Category | Count | Notes |
-| --- | --- | --- |
-| Non-zero exit | 863 | Bash command failures (builds, tests, bad commands) |
-| File not found | 823 | Agent guessing at paths that don't exist |
-| Edit match failure | 347 | `old_string` not unique or stale file model |
-| Write without read | 293 | Pure protocol violation --- agent writes before reading |
-| File doesn't exist (Write/Edit) | 259 | Attempting to modify nonexistent files |
-| Timeout | 228 | Long commands exceeding 2 min default |
-| User rejected tool | 131 | Permission prompts breaking agent flow |
+| Category                        | Count | Notes                                                   |
+| ------------------------------- | ----- | ------------------------------------------------------- |
+| Non-zero exit                   | 863   | Bash command failures (builds, tests, bad commands)     |
+| File not found                  | 823   | Agent guessing at paths that don't exist                |
+| Edit match failure              | 347   | `old_string` not unique or stale file model             |
+| Write without read              | 293   | Pure protocol violation --- agent writes before reading |
+| File doesn't exist (Write/Edit) | 259   | Attempting to modify nonexistent files                  |
+| Timeout                         | 228   | Long commands exceeding 2 min default                   |
+| User rejected tool              | 131   | Permission prompts breaking agent flow                  |
 
 The top four categories (2,326 errors, 41% of all errors) are preventable with
 pre-flight checks.

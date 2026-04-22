@@ -42,7 +42,6 @@ better maintainability and portability
 ### Phase 1: Grammar Repository Setup
 
 1. **Create tree-sitter-muttrc repository**
-
    - Fork neomutt/tree-sitter-muttrc to benswift/tree-sitter-muttrc
    - Review and test current grammar functionality
    - Address any outstanding grammar issues
@@ -59,7 +58,6 @@ better maintainability and portability
 ### Phase 2: Consolidated Extension Development
 
 3. **Create new consolidated extension**
-
    - Create `zed/extensions/mutt/` directory structure
    - Design extension.toml with both grammars referenced
    - Configure dual language support in languages/ subdirectories
@@ -75,7 +73,6 @@ better maintainability and portability
 ### Phase 3: Integration and Testing
 
 5. **Test consolidated extension**
-
    - Verify muttrc files are properly highlighted and detected
    - Verify mutt compose buffers are properly highlighted and detected
    - Test file pattern matching for all supported file types

@@ -73,23 +73,24 @@ etc.) lives in a separate **private** repo,
 [`benswift/claude-plugin-personal`](https://github.com/benswift/claude-plugin-personal),
 loaded as a Claude Code plugin. The setup:
 
-- **Registered via `install.sh` / `dotfiles update`** using `claude plugin
-  marketplace add benswift/claude-plugin-personal` and `claude plugin install
-  --scope user ben@ben`, then enabled in `claude/settings.json` via
-  `enabledPlugins: {"ben@ben": true}` --- portable across machines, no
-  hardcoded paths.
+- **Registered via `install.sh` / `dotfiles update`** using
+  `claude plugin marketplace add benswift/claude-plugin-personal` and
+  `claude plugin install --scope user ben@ben`, then enabled in
+  `claude/settings.json` via `enabledPlugins: {"ben@ben": true}` --- portable
+  across machines, no hardcoded paths.
 - **Claude Code clones it** to `~/.claude/plugins/marketplaces/ben/` on first
   use. That directory is the single source of truth --- edit skills there,
   commit and push from there.
 - **Codex reads from the same directory** via a `~/.codex/skills` symlink (set
-  up by `install.sh` and `dotfiles update` since the target doesn't exist
-  until Claude Code has cloned the marketplace).
+  up by `install.sh` and `dotfiles update` since the target doesn't exist until
+  Claude Code has cloned the marketplace).
 - **Skills appear to the model** as `ben:<skill-name>` (e.g.
   `ben:github-explorer`).
 
-To propagate changes across machines: push from the marketplace clone, then
-run `dotfiles update` elsewhere (which runs `claude plugin update --scope
-user ben@ben`). Requires SSH auth to GitHub (the repo is private).
+To propagate changes across machines: push from the marketplace clone, then run
+`dotfiles update` elsewhere (which runs
+`claude plugin update --scope user ben@ben`). Requires SSH auth to GitHub (the
+repo is private).
 
 ### Elixir projects tip
 

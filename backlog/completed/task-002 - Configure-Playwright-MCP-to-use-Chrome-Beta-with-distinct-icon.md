@@ -31,7 +31,6 @@ visual distinction.
    ```
 
 2. **Create wrapper script**
-
    - Create a `playwright-mcp-beta` wrapper script in `~/bin` (which is already
      in PATH via zshenv)
    - Script should call `npx @playwright/mcp@latest` with Chrome Beta executable
@@ -39,7 +38,6 @@ visual distinction.
    - Make script executable
 
 3. **Integration with dotfiles**
-
    - Decide whether to:
      - a) Add the wrapper script directly to `.dotfiles/bin/` (tracked in git),
        or

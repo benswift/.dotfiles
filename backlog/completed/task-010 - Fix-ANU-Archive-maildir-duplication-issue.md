@@ -62,7 +62,6 @@ solution approach
 Must use proper maildir T-flag deletion process with batched operations:
 
 1. **T-flag marking phase** (batchable overnight runs):
-
    - Identify duplicates (same Message-ID, keep oldest file)
    - Mark duplicates with T flag (rename files to add :2,T suffix)
    - Process in batches of 500-1000 files per run
@@ -70,7 +69,6 @@ Must use proper maildir T-flag deletion process with batched operations:
    - Respect Office365 throttling with exponential backoff
 
 2. **Sync and verify phase**:
-
    - Run `mbsync anu:Archive` to sync T-flagged deletions to server
    - Verify server deletions completed successfully
    - Handle throttling and retry failed deletions

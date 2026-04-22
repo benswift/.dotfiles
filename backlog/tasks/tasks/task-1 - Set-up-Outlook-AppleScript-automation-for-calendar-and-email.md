@@ -23,19 +23,16 @@ access but requires Outlook to be configured with the Exchange account.
 ## Implementation steps
 
 1. **Configure Outlook with ANU Exchange account**
-
    - Open Outlook for Mac
    - Add Exchange account: u2548636@anu.edu.au
    - Authenticate with ANU credentials
    - Wait for initial sync to complete
 
 2. **Test AppleScript access**
-
    - Run `~/.dotfiles/mail/simple-outlook-test.applescript` to verify connection
    - Confirm calendar and email folders are accessible
 
 3. **Enable calendar automation**
-
    - Test `outlook-cal` commands:
      - `outlook-cal today` - view today's events
      - `outlook-cal week` - view week's events
