@@ -43,7 +43,7 @@ _pdf() {
   local _basename
   _basename="$(basename "${_path}" ".${_file_ext}")"
 
-  local _temp_typ="/tmp/${_basename}.typ"
+  local _temp_typ="${NB_NOTEBOOK_PATH}/.${_basename}.tmp.typ"
   local _temp_pdf="/tmp/${_basename}.pdf"
 
   printf "Converting %s to PDF...\\n" "${_basename}.${_file_ext}"
@@ -63,11 +63,14 @@ _pdf() {
       fi
     fi
 
-    if ! typst compile "${_temp_typ}" "${_temp_pdf}"; then
+    if ! typst compile --root "${NB_NOTEBOOK_PATH}" "${_temp_typ}" "${_temp_pdf}"; then
+      rm -f "${_temp_typ}"
       _exit_1 printf "Error: Failed to compile typst to PDF.\\n"
     fi
+
+    rm -f "${_temp_typ}"
   elif [[ "${_file_ext}" == "typ" ]]; then
-    if ! typst compile "${_path}" "${_temp_pdf}"; then
+    if ! typst compile --root "${NB_NOTEBOOK_PATH}" "${_path}" "${_temp_pdf}"; then
       _exit_1 printf "Error: Failed to compile typst to PDF.\\n"
     fi
   fi
