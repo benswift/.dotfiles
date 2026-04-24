@@ -1,9 +1,10 @@
 ---
 id: TASK-018
 title: Investigate extempore tree-sitter grammar and maf textobject in Helix
-status: To Do
+status: Done
 assignee: []
-created_date: "2026-02-24 07:23"
+created_date: '2026-02-24 07:23'
+updated_date: '2026-04-24 01:59'
 labels:
   - helix
   - extempore
@@ -14,7 +15,6 @@ priority: low
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-
 The `maf` (match around function) textobject for extempore files doesn't work in
 Helix. The textobject query exists at
 `helix/runtime/queries/extempore/textobjects.scm` and the grammar source is
@@ -31,3 +31,9 @@ Steps to investigate:
 `:pipe-to xtm-send` in normal terminal usage (it failed through
 headless-terminal MCP but may work fine in a real terminal)
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Extempore grammar compiled (~/.config/helix/runtime/grammars/extempore.so, 2026-02-24); maf textobject added in commit 14881f6.
+<!-- SECTION:NOTES:END -->

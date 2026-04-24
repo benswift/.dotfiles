@@ -1,9 +1,10 @@
 ---
 id: TASK-020
 title: Harness scaffolding from session log analysis
-status: To Do
+status: Done
 assignee: []
-created_date: "2026-04-07"
+created_date: '2026-04-07'
+updated_date: '2026-04-24 01:59'
 labels:
   - tooling
   - claude-code
@@ -17,11 +18,9 @@ priority: medium
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-
 Analysis of 2,871 Claude Code sessions (1.7 GB of logs, 77 projects, ~116k user
 turns, ~98k tool calls) reveals several patterns that could be addressed with
 harness-level scaffolding --- hooks, instructions, or settings changes.
-
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Findings
@@ -123,3 +122,9 @@ sessions suggest the agent sometimes spirals.
 
 The `mcp__acp__*` tools follow the same error patterns as main tools. Any guards
 should apply uniformly to delegated work.
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Log-shipping pipeline in place: bin/ship-claude-logs (rclone copy to weddle:claude-logs/<host>/) and bin/ingest-claude-logs (sqlite summary DB), added in commit a1901be. Run manually --- user decided against automating (no launchd/cron). Analysis-driven harness scaffolding will emerge organically from future ad-hoc session review rather than as a separate initiative.
+<!-- SECTION:NOTES:END -->
