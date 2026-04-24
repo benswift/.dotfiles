@@ -43,6 +43,12 @@ Host dorito
   IdentityFile ~/.ssh/dorito
   ProxyCommand ssh -q -A benswift@cpu1 nc -q0 %h %p
 
+# strproxy
+Host strproxy
+  User u2548636
+  Hostname strproxy.comp.anu.edu.au
+  IdentityFile ~/.ssh/id_ed25519
+
 # varese
 Host lens-varese
   User comp2710-lens
