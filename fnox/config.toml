@@ -1,3 +1,6 @@
 [providers.onepass]
 type = "1password"
 vault = "Personal"
+
+[profiles.lazy.secrets]
+REPLICATE_API_TOKEN = { provider = "onepass", value = "op://Personal/Replicate/credential" }
