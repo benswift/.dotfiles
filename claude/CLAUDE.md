@@ -3,54 +3,26 @@
 My name is Ben. I am an expert programmer with a PhD in Computer Science and 20
 years experience in software development.
 
-## Agent workflow principles
+## Agent workflow
 
-### Think before coding
-
-Follow a brainstorm → plan → execute cycle. For unfamiliar code or ambiguous
-requirements, explore first---do not jump straight to implementation.
-
-### Agent delegation
-
-Delegate to specialized agents when their expertise matches the task. Use
-language-specific agents for substantial work, github-explorer for git history,
-project-manager-backlog for task management, benswift-writer + jamesian for
-prose, and pkb for notes. Keep tasks in the main conversation when they're
-simple, cross-cutting, or require tight integration with ongoing work.
-
-### Error recovery
-
-Read and analyse error messages completely. If blocked after 2-3 attempts,
-explain the situation and ask for guidance rather than continuing to guess.
-
-## Communication and progress
-
-### During work
-
-Provide brief status updates before time-consuming operations. For multi-step
-tasks, use TodoWrite to track progress. Explain key decisions and approaches,
-especially when new information changes the plan.
-
-### Asking for clarification
+### Asking for help
 
 Ask before proceeding when requirements are ambiguous, the task would modify
-significant code, you've found issues beyond the original task, or a destructive
-operation is needed. Do not ask for permission for routine operations clearly
-implied by the task.
-
-### Verification and confidence
-
-Before marking work complete, run all relevant tests and verify pristine output.
-If you modified build configuration or dependencies, run the build. Check for
-unintended side effects. If you cannot fully verify your changes, explicitly
-state what verification you were unable to perform.
+significant code, or you've found issues beyond the original task. If blocked
+after 2-3 attempts on the same problem, explain the situation and ask rather
+than continuing to guess.
 
 ## Writing rules
 
 Use clear, concise language with Australian English spelling. Don't overuse
-lists or exclamation marks. For prose work: draft with the benswift-writer
-skill (Ben's voice and content quirks), then run jamesian (BALANCED preset by
-default; LAYERED for academic) for sentence-level architecture.
+lists or exclamation marks.
+
+For prose work, the skill chain is: draft with benswift-writer (voice and
+content quirks --- dry humour, footnotes, technical confidence), then run
+jamesian (BALANCED preset by default; LAYERED for academic). Jamesian owns
+sentence and paragraph architecture, em-dash discipline (sparing), opening
+patterns, and signposting --- don't reintroduce those decisions inside the
+benswift-writer overlay.
 
 ### Markdown formatting
 
@@ -58,26 +30,12 @@ Use three dashes for em dashes. Lists: don't capitalise the first letter unless
 it's a full sentence ending with a period. Use sentence case for headings. Use
 actual headings, not bold text as a substitute.
 
-## Tool efficiency
-
-### Parallel execution
-
-When multiple independent operations are needed, execute them in parallel within
-a single message. Do not execute dependent operations in parallel.
-
-### Reading and searching
-
-Choose the right tool: Read for files, Glob for patterns, Grep for content
-search, Bash for system commands. For large files or broad exploration, delegate
-to subagents to protect context.
-
-### Code modification
+## Tool use
 
 Prefer ast-grep (sg) for structural operations (functions, classes, method
 calls, imports)---it understands language semantics and preserves formatting.
 Fall back to sed/awk for non-structural text edits, then the Edit tool for
-manual replacements. Never use bash echo to communicate with me---output text
-directly.
+manual replacements.
 
 ## Language and framework preferences
 
@@ -89,38 +47,24 @@ directly.
 - **Elixir/Phoenix**: read the usage_rules, use Ash declarative resources,
   Phoenix LiveView, use generators, PhoenixTest syntax, tidewave for debugging
 - **Frontend web**: semantic HTML with accessibility, modern browser features,
-  Grid/Flexbox, modern ES6+ with functional patterns, Playwright for testing
-- **Writing**: Australian English, self-aware tone, jamesian-driven sentence
-  architecture, no subheadings in narrative posts by default
-- **Version control**: see version control workflow below. Use `gh` CLI for
-  GitHub API operations (PRs, issues, history investigation)
+  Grid/Flexbox, modern ES6+ with functional patterns. Use the `agent-browser`
+  CLI (not Playwright directly) for browser automation and UI testing
 - **Tasks**: use `backlog` MCP server
 - **Notes**: use `nb` CLI, get paths with `nb show <id> --path` before editing
 
 ## Coding rules
 
-Prefer simple, clean, maintainable solutions. Pure functions processing built-in
-data structures is good practice. Match the style of surrounding code. Never
-make unrelated changes or write summary files unless asked. No comments in code
-unless requested---code should be self-documenting.
-
-### Performance and optimisation
-
-Prioritise correctness and maintainability over performance. Only optimise when
-there's a demonstrated problem. Use appropriate data structures, but avoid
-premature optimisation.
+Prefer simple, clean, maintainable solutions. Pure functions processing
+built-in data structures is good practice. Match the style of surrounding
+code.
 
 ### Testing
 
-Tests must cover the functionality being implemented. Prefer integration tests
-over unit tests when both provide similar confidence. Test behaviour and
-outcomes, not implementation details. Write tests first when adding new
-behaviour. Pristine output means zero failures, errors, warnings, and
-backtraces. When tests fail, read the complete error output and identify the
-root cause before attempting a fix. Never ignore test output or mark tests as
-skip unless instructed.
+Prefer integration tests over unit tests when both provide similar confidence.
+Test behaviour and outcomes, not implementation details. Pristine output means
+zero failures, errors, warnings, and backtraces.
 
-### Version control workflow
+### Version control
 
 Write concise, imperative-mood commit messages. Prefer small, focused commits.
 Always rebase, never merge (unless it's the only way, then ask for
@@ -128,7 +72,8 @@ confirmation).
 
 ### Security
 
-Never add raw credentials, passwords, API keys, or tokens to code or config
-files. Use environment variables or secure credential stores. Warn if you
-encounter credentials during modifications. Do not commit files that likely
-contain secrets.
+Never put raw credentials, passwords, API keys, or tokens in code or config
+files. For project secrets, use fnox with the 1Password CLI backend: reference
+values as `op://Vault/Item/field` in `fnox.toml` and load through a fnox
+profile, never inline. Warn if you encounter raw credentials during
+modifications and don't commit files that likely contain secrets.
