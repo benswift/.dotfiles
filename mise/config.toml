@@ -14,6 +14,8 @@ vivid = "latest"
 gemini = "latest"
 glab = "latest"
 typst = "latest"
+bats = "latest"
+1password-cli = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["[]"]
