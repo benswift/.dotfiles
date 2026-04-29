@@ -33,6 +33,7 @@ sysup() {
     brew upgrade
   else
     sudo apt update && sudo apt upgrade -y
+    mise self-update -y
   fi
   mise plugin update
   mise upgrade
