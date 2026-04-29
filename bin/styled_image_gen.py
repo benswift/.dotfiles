@@ -87,7 +87,9 @@ def slugify(text: str, max_words: int = 6) -> str:
 
 def download_image(url: str, target_dir: Path, base_name: str) -> Path:
     ext = Path(urlparse(url).path).suffix.lower()
-    if ext not in (".jpg", ".jpeg", ".png", ".webp"):
+    if ext == ".jpeg":
+        ext = ".jpg"
+    elif ext not in (".jpg", ".png", ".webp"):
         ext = ".jpg"
     target_path = target_dir / f"{base_name}{ext}"
     response = httpx.get(url, timeout=60.0, follow_redirects=True)
