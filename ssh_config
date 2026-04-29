@@ -12,8 +12,6 @@ Host *
 Host github.com
   HostName github.com
   User git
-  IdentityFile ~/.ssh/weddle-gh
-  IdentitiesOnly yes
 
 Host gitlab.anu.edu.au
   HostName gitlab.anu.edu.au
