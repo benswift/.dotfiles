@@ -101,6 +101,10 @@ main() {
     echo -e "\nLinking home directory dotfiles..."
     link_files "$DOTFILES_DIR" "$HOME" "." "" "${home_files[@]}"
 
+    # SSH config
+    echo -e "\nLinking SSH config..."
+    create_symlink "$DOTFILES_DIR/ssh_config" "$HOME/.ssh/config"
+
     # Mail config files
     echo -e "\nLinking mail config files..."
     create_symlink "$DOTFILES_DIR/mail/mbsyncrc" "$HOME/.mbsyncrc"

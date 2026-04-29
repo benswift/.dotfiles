@@ -8,6 +8,25 @@ Host *
   AddKeysToAgent yes
   UseKeychain yes
 
+# git remotes
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/weddle-gh
+  IdentitiesOnly yes
+
+Host gitlab.anu.edu.au
+  HostName gitlab.anu.edu.au
+  User git
+  IdentityFile ~/.ssh/gitlab_anu
+  IdentitiesOnly yes
+
+Host gitlab.comp.anu.edu.au
+  HostName gitlab.comp.anu.edu.au
+  User git
+  IdentityFile ~/.ssh/gitlab_anu
+  IdentitiesOnly yes
+
 # rpis on tailnet
 Host panic-*
   User panic
@@ -77,5 +96,6 @@ Host extempore-win
   Hostname 68.218.107.86
   IdentityFile ~/.ssh/extempore_windows_vm
 
-Host *
+# macOS: route through the 1Password SSH agent. Guarded so it's a no-op on Linux.
+Match host * exec "uname -s | grep -q Darwin"
   IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
