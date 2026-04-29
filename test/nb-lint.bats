@@ -84,3 +84,32 @@ EOF
   [ "$status" -eq 1 ]
   [[ "$output" =~ "people/alice.md:5:5: [[projects/999]] -- target not found" ]]
 }
+
+@test "anchor is stripped before resolution (resolved case)" {
+  mkdir -p "${NB_DIR}/test/people" "${NB_DIR}/test/projects"
+  nb_test_write "projects/real.md" <<'EOF'
+---
+title: Real
+---
+
+## Section A
+EOF
+  nb_test_write "people/alice.md" <<'EOF'
+See [[projects/real#section-a]] for details.
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "anchor is stripped before resolution (broken case reports as-written)" {
+  mkdir -p "${NB_DIR}/test/people"
+  nb_test_write "people/alice.md" <<'EOF'
+See [[projects/gone#section-a]] for details.
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "[[projects/gone#section-a]] -- target not found" ]]
+}
