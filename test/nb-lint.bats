@@ -159,3 +159,33 @@ EOF
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
+
+@test "--summary on a clean notebook prints zero" {
+  mkdir -p "${NB_DIR}/test/people" "${NB_DIR}/test/projects"
+  nb_test_write "projects/real.md" <<'EOF'
+title: Real
+EOF
+  nb_test_write "people/alice.md" <<'EOF'
+See [[projects/real]].
+EOF
+
+  nb_test_lint --summary
+  [ "$status" -eq 0 ]
+  [[ "$output" == "0 broken wikilinks" ]]
+}
+
+@test "--summary on a dirty notebook prints counts and exits 1" {
+  mkdir -p "${NB_DIR}/test/people"
+  nb_test_write "people/alice.md" <<'EOF'
+See [[projects/missing]] and [[projects/also-missing]].
+EOF
+  nb_test_write "people/bob.md" <<'EOF'
+See [[topics/gone]].
+EOF
+
+  nb_test_lint --summary
+  [ "$status" -eq 1 ]
+  # Output should contain BOTH the per-link lines AND the summary line.
+  # The summary line is the last one.
+  [[ "$output" =~ "3 broken wikilinks across 2 files" ]]
+}
