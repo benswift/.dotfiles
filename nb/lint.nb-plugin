@@ -83,7 +83,10 @@ _lint() {
               _resolved=1
             fi
           else
-            if [[ -f "${_notebook_path}/${_folder}/${_slug}.md" ]]; then
+            # Try `<slug>.md` first (the common case), then `<slug>` literal
+            # so wikilinks like [[scripts/foo.py]] resolve to the .py file.
+            if [[ -f "${_notebook_path}/${_folder}/${_slug}.md" ]] \
+                || [[ -f "${_notebook_path}/${_folder}/${_slug}" ]]; then
               _resolved=1
             fi
           fi

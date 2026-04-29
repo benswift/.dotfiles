@@ -223,3 +223,26 @@ EOF
   [[ "$output" =~ "[[projects/missing]] -- target not found" ]]
   [[ ! "$output" =~ "[[projects/example]]" ]]
 }
+
+@test "wikilink with explicit non-md extension resolves as-named" {
+  mkdir -p "${NB_DIR}/test/people" "${NB_DIR}/test/scripts"
+  printf "print('hi')\n" > "${NB_DIR}/test/scripts/hello.py"
+  nb_test_write "people/alice.md" <<'EOF'
+See [[scripts/hello.py]] for the script.
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "wikilink with explicit non-md extension is broken when missing" {
+  mkdir -p "${NB_DIR}/test/people"
+  nb_test_write "people/alice.md" <<'EOF'
+See [[scripts/missing.py]] for the script.
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "[[scripts/missing.py]] -- target not found" ]]
+}
