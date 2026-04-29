@@ -13,10 +13,11 @@ nb_test_setup() {
   # We need to go up to the repo root, then into nb/.
   local plugin_src="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)/nb/lint.nb-plugin"
   ln -s "${plugin_src}" "${NB_DIR}/.plugins/lint.nb-plugin"
-  # nb auto-creates "home" notebook on first use. Suppress the welcome
-  # banner with NB_AUTO_SYNC=0 + a discarded init call.
-  NB_AUTO_SYNC=0 nb notebooks add home >/dev/null 2>&1
+  # First nb invocation on a fresh NB_DIR shows the welcome banner
+  # instead of running the command, so explicitly init first.
+  NB_AUTO_SYNC=0 nb init >/dev/null 2>&1
   NB_AUTO_SYNC=0 nb notebooks add test >/dev/null 2>&1
+  NB_AUTO_SYNC=0 nb use test >/dev/null 2>&1
 }
 
 # Create a note inside the test notebook by writing a file directly to
