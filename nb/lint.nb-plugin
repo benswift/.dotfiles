@@ -18,8 +18,94 @@
 _subcommands add "lint"
 
 _lint() {
-  printf "nb lint: not yet implemented\n" >&2
-  return 1
+  local _summary=0
+  local _notebook_arg=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --summary) _summary=1 ;;
+      *) _notebook_arg="$1" ;;
+    esac
+    shift
+  done
+
+  local _notebook_path
+  if [[ -n "${_notebook_arg}" ]]; then
+    _notebook_path="$(_notebooks "${_notebook_arg}" --path 2>/dev/null)"
+  else
+    _notebook_path="$(_notebooks current --path 2>/dev/null)"
+  fi
+  if [[ -z "${_notebook_path}" || ! -d "${_notebook_path}" ]]; then
+    printf "nb lint: notebook not found\n" >&2
+    return 2
+  fi
+
+  local _broken=0
+  local _broken_files=""
+
+  # Find all .md files; skip data/icloud/, .git/, .plugins/, .archive/
+  local _file
+  while IFS= read -r -d '' _file; do
+    local _rel="${_file#${_notebook_path}/}"
+    local _line_no=0
+    while IFS= read -r _line || [[ -n "${_line}" ]]; do
+      _line_no=$((_line_no + 1))
+      # Match every [[...]] on this line
+      local _rest="${_line}"
+      local _col_offset=0
+      while [[ "${_rest}" =~ \[\[([^\]]+)\]\] ]]; do
+        local _match="${BASH_REMATCH[1]}"
+        local _full_match="[[${_match}]]"
+        # Find column of the [[ in the original line
+        # Note: must escape [[ and ]] in the %% pattern or bash treats them
+        # as glob character classes inside nb's shell context.
+        local _idx="${_rest%%\[\[${_match}\]\]*}"
+        local _col=$((_col_offset + ${#_idx} + 1))
+        # Only check folder-prefixed targets (must contain a /)
+        if [[ "${_match}" == */* ]]; then
+          local _target="${_match%%#*}"  # strip anchor
+          local _folder="${_target%%/*}"
+          local _slug="${_target#*/}"
+          local _resolved=0
+          if [[ -f "${_notebook_path}/${_folder}/${_slug}.md" ]]; then
+            _resolved=1
+          fi
+          if [[ ${_resolved} -eq 0 ]]; then
+            printf "%s:%d:%d: [[%s]] -- target not found\n" \
+              "${_rel}" "${_line_no}" "${_col}" "${_match}"
+            _broken=$((_broken + 1))
+            case " ${_broken_files} " in
+              *" ${_rel} "*) ;;
+              *) _broken_files="${_broken_files} ${_rel}" ;;
+            esac
+          fi
+        fi
+        # Advance past this match
+        local _consumed=$((${#_idx} + ${#_full_match}))
+        _col_offset=$((_col_offset + _consumed))
+        _rest="${_rest:${_consumed}}"
+      done
+    done < "${_file}"
+  done < <(find "${_notebook_path}" -type f -name '*.md' \
+    -not -path "*/.git/*" \
+    -not -path "*/.plugins/*" \
+    -not -path "*/.archive/*" \
+    -not -path "*/data/icloud/*" \
+    -print0)
+
+  if [[ ${_summary} -eq 1 ]]; then
+    if [[ ${_broken} -eq 0 ]]; then
+      printf "0 broken wikilinks\n"
+    else
+      local _file_count
+      _file_count=$(printf "%s\n" ${_broken_files} | wc -l | tr -d ' ')
+      printf "%d broken wikilinks across %d files\n" "${_broken}" "${_file_count}"
+    fi
+  fi
+
+  if [[ ${_broken} -gt 0 ]]; then
+    return 1
+  fi
+  return 0
 }
 
 _subcommands describe "lint" <<HEREDOC

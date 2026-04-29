@@ -11,3 +11,18 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" =~ "Report broken folder-prefixed" ]]
 }
+
+@test "reports a broken non-numeric folder-prefixed link" {
+  mkdir -p "${NB_DIR}/test/people"
+  nb_test_write "people/alice.md" <<'EOF'
+---
+title: Alice
+---
+
+See [[projects/missing-project]] for context.
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "people/alice.md:5:5: [[projects/missing-project]] -- target not found" ]]
+}
