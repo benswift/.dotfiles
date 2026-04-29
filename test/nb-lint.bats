@@ -134,3 +134,28 @@ EOF
   [[ "$output" =~ "people/alice.md:1:30: [[projects/missing]]" ]]
   [[ "$output" =~ "people/alice.md:1:55: [[projects/also-missing]]" ]]
 }
+
+@test "case-mismatched link is reported as broken" {
+  mkdir -p "${NB_DIR}/test/projects" "${NB_DIR}/test/people"
+  nb_test_write "projects/comp4020.md" <<'EOF'
+title: COMP4020
+EOF
+  nb_test_write "people/alice.md" <<'EOF'
+See [[projects/COMP4020]] for the course.
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "[[projects/COMP4020]] -- target not found" ]]
+}
+
+@test "bare wikilink without folder is ignored" {
+  mkdir -p "${NB_DIR}/test/people"
+  nb_test_write "people/alice.md" <<'EOF'
+See [[mounts]] and [[some-bare-thing]] — these should be ignored.
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
