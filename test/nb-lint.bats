@@ -113,3 +113,24 @@ EOF
   [ "$status" -eq 1 ]
   [[ "$output" =~ "[[projects/gone#section-a]] -- target not found" ]]
 }
+
+@test "multiple links on one line — only broken reported with correct columns" {
+  mkdir -p "${NB_DIR}/test/people" "${NB_DIR}/test/projects"
+  nb_test_write "projects/real.md" <<'EOF'
+title: Real
+EOF
+  nb_test_write "people/alice.md" <<'EOF'
+Mix of [[projects/real]] and [[projects/missing]] and [[projects/also-missing]].
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 1 ]
+  # Should NOT report the resolved one
+  [[ ! "$output" =~ "[[projects/real]]" ]]
+  # Should report both broken ones with the right columns
+  # "Mix of " is 7 chars → first link starts at col 8
+  # After "[[projects/real]] and " → second link starts at col 30
+  # After "[[projects/missing]] and " → third link starts at col 55
+  [[ "$output" =~ "people/alice.md:1:30: [[projects/missing]]" ]]
+  [[ "$output" =~ "people/alice.md:1:55: [[projects/also-missing]]" ]]
+}
