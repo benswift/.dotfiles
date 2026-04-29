@@ -189,3 +189,19 @@ EOF
   # The summary line is the last one.
   [[ "$output" =~ "3 broken wikilinks across 2 files" ]]
 }
+
+@test "broken link inside data/icloud/ is ignored" {
+  mkdir -p "${NB_DIR}/test/data/icloud" "${NB_DIR}/test/people"
+  nb_test_write "data/icloud/dump.md" <<'EOF'
+This file is gitignored — broken links here don't matter:
+[[projects/whatever]]
+EOF
+  nb_test_write "people/alice.md" <<'EOF'
+See [[projects/real-broken]].
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "[[projects/real-broken]]" ]]
+  [[ ! "$output" =~ "[[projects/whatever]]" ]]
+}
