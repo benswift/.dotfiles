@@ -126,6 +126,17 @@ main() {
     create_symlink "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
     create_symlink "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.codex/instructions.md"
 
+    # nb plugins (symlink each *.nb-plugin into ~/.nb/.plugins/ so nb
+    # picks them up). Single source of truth in the dotfiles repo;
+    # editing here takes effect on next nb invocation.
+    echo -e "\nLinking nb plugins..."
+    if [[ -d "$DOTFILES_DIR/nb" ]]; then
+        for plugin in "$DOTFILES_DIR"/nb/*.nb-plugin; do
+            [[ -e "$plugin" ]] || continue
+            create_symlink "$plugin" "$HOME/.nb/.plugins/$(basename "$plugin")"
+        done
+    fi
+
     # Tool config files
     echo -e "\nLinking tool config files..."
     create_symlink "$DOTFILES_DIR/mise/config.toml" "$HOME/.config/mise/config.toml"
