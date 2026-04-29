@@ -47,8 +47,15 @@ _lint() {
   while IFS= read -r -d '' _file; do
     local _rel="${_file#${_notebook_path}/}"
     local _line_no=0
+    local _in_fence=0
     while IFS= read -r _line || [[ -n "${_line}" ]]; do
       _line_no=$((_line_no + 1))
+      # Toggle fence state on lines that start with three or more backticks
+      if [[ "${_line}" =~ ^\`\`\`+ ]]; then
+        _in_fence=$((1 - _in_fence))
+        continue
+      fi
+      [[ ${_in_fence} -eq 1 ]] && continue
       # Match every [[...]] on this line
       local _rest="${_line}"
       local _col_offset=0

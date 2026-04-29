@@ -205,3 +205,22 @@ EOF
   [[ "$output" =~ "[[projects/real-broken]]" ]]
   [[ ! "$output" =~ "[[projects/whatever]]" ]]
 }
+
+@test "wikilink inside fenced code block is not flagged" {
+  mkdir -p "${NB_DIR}/test/people"
+  nb_test_write "people/alice.md" <<'EOF'
+Here is an example link in docs:
+
+```
+nb search "[[projects/example]] --list"
+```
+
+And a real one: [[projects/missing]].
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 1 ]
+  # Only the second link should be reported, not the one in the fence
+  [[ "$output" =~ "[[projects/missing]] -- target not found" ]]
+  [[ ! "$output" =~ "[[projects/example]]" ]]
+}
