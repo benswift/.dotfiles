@@ -88,8 +88,10 @@ _lint() {
             fi
           fi
           if [[ ${_resolved} -eq 0 ]]; then
-            printf "%s:%d:%d: [[%s]] -- target not found\n" \
-              "${_rel}" "${_line_no}" "${_col}" "${_match}"
+            if [[ ${_summary} -eq 0 ]]; then
+              printf "%s:%d:%d: [[%s]] -- target not found\n" \
+                "${_rel}" "${_line_no}" "${_col}" "${_match}"
+            fi
             _broken=$((_broken + 1))
             _broken_files["${_rel}"]=1
           fi

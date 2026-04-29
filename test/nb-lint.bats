@@ -185,9 +185,8 @@ EOF
 
   nb_test_lint --summary
   [ "$status" -eq 1 ]
-  # Output should contain BOTH the per-link lines AND the summary line.
-  # The summary line is the last one.
-  [[ "$output" =~ "3 broken wikilinks across 2 files" ]]
+  # --summary suppresses per-link output; only the summary line is emitted.
+  [[ "$output" == "3 broken wikilinks across 2 files" ]]
 }
 
 @test "broken link inside data/icloud/ is ignored" {
