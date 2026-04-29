@@ -66,8 +66,19 @@ _lint() {
           local _folder="${_target%%/*}"
           local _slug="${_target#*/}"
           local _resolved=0
-          if [[ -f "${_notebook_path}/${_folder}/${_slug}.md" ]]; then
-            _resolved=1
+          if [[ "${_slug}" =~ ^[0-9]+$ ]]; then
+            # Numeric --- ask nb. Use the notebook arg when given, else current.
+            local _selector="${_folder}/${_slug}"
+            if [[ -n "${_notebook_arg}" ]]; then
+              _selector="${_notebook_arg}:${_selector}"
+            fi
+            if _show "${_selector}" --path >/dev/null 2>&1; then
+              _resolved=1
+            fi
+          else
+            if [[ -f "${_notebook_path}/${_folder}/${_slug}.md" ]]; then
+              _resolved=1
+            fi
           fi
           if [[ ${_resolved} -eq 0 ]]; then
             printf "%s:%d:%d: [[%s]] -- target not found\n" \

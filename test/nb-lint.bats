@@ -46,3 +46,41 @@ EOF
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
+
+@test "resolved numeric id link is not reported" {
+  mkdir -p "${NB_DIR}/test/people" "${NB_DIR}/test/projects"
+  nb_test_write "projects/real.md" <<'EOF'
+---
+title: Real
+---
+EOF
+  # Index the new file so nb knows its id
+  NB_AUTO_SYNC=0 nb test:index reconcile --ancestors >/dev/null 2>&1 || true
+
+  nb_test_write "people/alice.md" <<'EOF'
+---
+title: Alice
+---
+
+See [[projects/1]] for the first project.
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "broken numeric id link is reported" {
+  mkdir -p "${NB_DIR}/test/people"
+  nb_test_write "people/alice.md" <<'EOF'
+---
+title: Alice
+---
+
+See [[projects/999]] for the missing project.
+EOF
+
+  nb_test_lint
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "people/alice.md:5:5: [[projects/999]] -- target not found" ]]
+}
