@@ -40,7 +40,7 @@ _lint() {
   fi
 
   local _broken=0
-  local _broken_files=""
+  local -A _broken_files=()
 
   # Find all .md files; skip data/icloud/, .git/, .plugins/, .archive/
   local _file
@@ -73,10 +73,7 @@ _lint() {
             printf "%s:%d:%d: [[%s]] -- target not found\n" \
               "${_rel}" "${_line_no}" "${_col}" "${_match}"
             _broken=$((_broken + 1))
-            case " ${_broken_files} " in
-              *" ${_rel} "*) ;;
-              *) _broken_files="${_broken_files} ${_rel}" ;;
-            esac
+            _broken_files["${_rel}"]=1
           fi
         fi
         # Advance past this match
@@ -96,9 +93,8 @@ _lint() {
     if [[ ${_broken} -eq 0 ]]; then
       printf "0 broken wikilinks\n"
     else
-      local _file_count
-      _file_count=$(printf "%s\n" ${_broken_files} | wc -l | tr -d ' ')
-      printf "%d broken wikilinks across %d files\n" "${_broken}" "${_file_count}"
+      printf "%d broken wikilinks across %d files\n" \
+        "${_broken}" "${#_broken_files[@]}"
     fi
   fi
 
