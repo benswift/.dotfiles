@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+###############################################################################
+# lint.nb-plugin
+#
+# Report broken folder-prefixed [[wikilinks]] in a notebook.
+#
+# Usage:
+#   nb lint               # lint current notebook
+#   nb lint <notebook>    # lint named notebook
+#   nb lint --summary     # one-line "<N> broken wikilinks across <M> files"
+#
+# Exit codes:
+#   0  no broken wikilinks
+#   1  one or more broken wikilinks
+#   2  invocation error
+###############################################################################
+
+_subcommands add "lint"
+
+_lint() {
+  printf "nb lint: not yet implemented\n" >&2
+  return 1
+}
+
+_subcommands describe "lint" <<HEREDOC
+Usage:
+  nb lint [<notebook>] [--summary]
+
+Description:
+  Report broken folder-prefixed [[wikilinks]] in the named notebook
+  (or the current notebook if none given). Output is rg-compatible
+  (path:line:col: link -- reason) by default; use --summary for a
+  one-line count.
+
+Exit codes:
+  0  no broken wikilinks
+  1  one or more broken wikilinks
+  2  invocation error
+HEREDOC
