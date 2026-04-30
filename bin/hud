@@ -98,6 +98,22 @@ def cmd_basename(p: psutil.Process) -> str:
     return ""
 
 
+def zellij_session_name(p: psutil.Process) -> str | None:
+    """Return the session name if p is a `zellij --server <socket>` invocation."""
+    try:
+        cmdline = p.cmdline()
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        return None
+    if not cmdline or os.path.basename(cmdline[0]) != "zellij":
+        return None
+    if "--server" not in cmdline:
+        return None
+    idx = cmdline.index("--server")
+    if idx + 1 >= len(cmdline):
+        return None
+    return os.path.basename(cmdline[idx + 1])
+
+
 def safe_cwd(p: psutil.Process) -> str:
     try:
         return shorten_path(p.cwd())
@@ -162,8 +178,13 @@ def collect_processes() -> dict:
                             break
 
                 if cpu >= CPU_HOG_THRESHOLD:
+                    label = display_name
+                    if name == "zellij":
+                        session = zellij_session_name(p)
+                        if session:
+                            label = f"zl:{session}"
                     cpu_hogs.append({
-                        "name": display_name[:20], "pid": pid,
+                        "name": label[:20], "pid": pid,
                         "cpu": cpu, "mem": mem_str, "elapsed": elapsed,
                         "cwd": safe_cwd(p),
                     })
@@ -222,25 +243,22 @@ def lookup_pid(data: dict, pid_str: str) -> tuple[int, str] | None:
 
 def kill_process(pid: int) -> str:
     try:
-        cmdline = psutil.Process(pid).cmdline()
+        session_name = zellij_session_name(psutil.Process(pid))
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-        cmdline = []
+        session_name = None
 
-    if cmdline and os.path.basename(cmdline[0]) == "zellij" and "--server" in cmdline:
-        idx = cmdline.index("--server")
-        if idx + 1 < len(cmdline):
-            session_name = os.path.basename(cmdline[idx + 1])
-            try:
-                result = subprocess.run(
-                    ["zellij", "kill-session", session_name],
-                    capture_output=True, text=True, timeout=5,
-                )
-                if result.returncode == 0:
-                    return f"zellij kill-session {session_name}"
-                err = result.stderr.strip() or result.stdout.strip() or "unknown error"
-                return f"zellij kill-session failed: {err}"
-            except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-                return f"zellij kill-session error: {e}"
+    if session_name:
+        try:
+            result = subprocess.run(
+                ["zellij", "kill-session", session_name],
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode == 0:
+                return f"zellij kill-session {session_name}"
+            err = result.stderr.strip() or result.stdout.strip() or "unknown error"
+            return f"zellij kill-session failed: {err}"
+        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+            return f"zellij kill-session error: {e}"
 
     try:
         os.kill(pid, signal.SIGTERM)
