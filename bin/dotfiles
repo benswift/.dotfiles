@@ -91,9 +91,9 @@ check_symlinks() {
         "$HOME/.config/mise/config.toml:$DOTFILES_DIR/mise/config.toml"
         "$HOME/.config/fnox/config.toml:$DOTFILES_DIR/fnox/config.toml"
         "$HOME/.ssh/config:$DOTFILES_DIR/ssh_config"
-        "$HOME/.claude/CLAUDE.md:$DOTFILES_DIR/GLOBAL-AGENTS.md"
+        "$HOME/.claude/CLAUDE.md:$DOTFILES_DIR/claude/CLAUDE.md"
         "$HOME/.claude/settings.json:$DOTFILES_DIR/claude/settings.json"
-        "$HOME/.codex/instructions.md:$DOTFILES_DIR/GLOBAL-AGENTS.md"
+        "$HOME/.codex/instructions.md:$DOTFILES_DIR/claude/CLAUDE.md"
     )
 
     for entry in "${symlinks[@]}"; do
