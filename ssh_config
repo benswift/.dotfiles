@@ -54,41 +54,13 @@ Host cpu2
   Hostname cpu2.cecs.anu.edu.au
   IdentityFile ~/.ssh/id_ed25519
 
-Host dorito
-  User ben
-  Hostname cecs-048944.cecs.anu.edu.au
-  IdentityFile ~/.ssh/dorito
-  ProxyCommand ssh -q -A benswift@cpu1 nc -q0 %h %p
-
 # strproxy
 Host strproxy
   User u2548636
   Hostname strproxy.comp.anu.edu.au
   IdentityFile ~/.ssh/id_ed25519
 
-# varese
-Host lens-varese
-  User comp2710-lens
-  Hostname varese.anu.edu.au
-  IdentityFile ~/.ssh/comp2710-lens
-
-Host comp1720-varese
-  User comp1720
-  Hostname varese.anu.edu.au
-  IdentityFile ~/.ssh/comp1720-varese
-
-# nci cloud
-Host hdws
-  User deploy
-  Hostname 130.56.246.102
-  IdentityFile ~/.ssh/nci-key-from-harrison
-
 # Azure
-Host edex-experiments
-  User azureuser
-  Hostname 13.73.193.68
-  IdentityFile ~/.ssh/edex-experiments_key.pem
-
 Host extempore-win
   User azureuser
   Hostname 68.218.107.86
