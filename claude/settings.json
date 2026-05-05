@@ -8,6 +8,38 @@
   "permissions": {
     "defaultMode": "default"
   },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claude-turn-tracker start"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "claude-turn-tracker stop"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.message // \"Claude needs input\"' | notify-pushover --title \"Claude needs input on $(hostname -s)\" --priority 1"
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,

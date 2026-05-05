@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Send a Pushover notification.
+# Reads message from stdin or --message. Title from --title.
+# Optional --priority and --url.
+#
+# Credentials are read from 1Password
+# (op://Personal/pushover.net/{Claude Code app token,user key}).
+
+set -euo pipefail
+
+TITLE=""
+MESSAGE=""
+PRIORITY=""
+URL=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --title) TITLE="$2"; shift 2 ;;
+        --message) MESSAGE="$2"; shift 2 ;;
+        --priority) PRIORITY="$2"; shift 2 ;;
+        --url) URL="$2"; shift 2 ;;
+        -h|--help)
+            cat <<'EOF'
+Usage:
+  notify-pushover [--title TITLE] [--priority N] [--url URL] [--message MSG]
+  echo "msg" | notify-pushover --title "Hello"
+
+Reads message from stdin if --message is not provided.
+EOF
+            exit 0
+            ;;
+        *)
+            echo "notify-pushover: unknown argument: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -z "$MESSAGE" ]]; then
+    MESSAGE=$(cat)
+fi
+
+if [[ -z "$MESSAGE" ]]; then
+    echo "notify-pushover: no message provided" >&2
+    exit 1
+fi
+
+if ! command -v op >/dev/null 2>&1; then
+    echo "notify-pushover: 1Password CLI 'op' not found on PATH" >&2
+    exit 1
+fi
+
+TOKEN=$(op read 'op://Personal/pushover.net/Claude Code app token')
+USER_KEY=$(op read 'op://Personal/pushover.net/user key')
+
+CURL_ARGS=(
+    --silent --show-error --fail
+    --max-time 10
+    --form-string "token=$TOKEN"
+    --form-string "user=$USER_KEY"
+    --form-string "message=$MESSAGE"
+)
+[[ -n "$TITLE" ]] && CURL_ARGS+=(--form-string "title=$TITLE")
+[[ -n "$PRIORITY" ]] && CURL_ARGS+=(--form-string "priority=$PRIORITY")
+[[ -n "$URL" ]] && CURL_ARGS+=(--form-string "url=$URL")
+
+curl "${CURL_ARGS[@]}" https://api.pushover.net/1/messages.json >/dev/null

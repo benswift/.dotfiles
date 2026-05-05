@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Track Claude Code turn duration and send a Pushover notification when a turn
+# runs longer than a threshold (60 seconds by default; override with
+# CLAUDE_NOTIFY_THRESHOLD).
+#
+# Used as a hook handler --- reads the hook payload (JSON) from stdin and
+# expects a single subcommand argument:
+#   claude-turn-tracker start   # invoked from UserPromptSubmit hook
+#   claude-turn-tracker stop    # invoked from Stop hook
+
+set -euo pipefail
+
+cmd="${1:-}"
+threshold_seconds="${CLAUDE_NOTIFY_THRESHOLD:-60}"
+stamp_dir="${TMPDIR:-/tmp}"
+
+input=$(cat)
+sid=$(echo "$input" | jq -r '.session_id // empty')
+[[ -n "$sid" ]] || exit 0
+
+stamp_file="$stamp_dir/claude-turn-$sid"
+
+case "$cmd" in
+    start)
+        date +%s > "$stamp_file"
+        ;;
+    stop)
+        [[ -f "$stamp_file" ]] || exit 0
+        start=$(cat "$stamp_file")
+        rm -f "$stamp_file"
+        elapsed=$(( $(date +%s) - start ))
+        (( elapsed >= threshold_seconds )) || exit 0
+        minutes=$((elapsed / 60))
+        seconds=$((elapsed % 60))
+        msg=$(printf 'Turn finished in %dm %02ds' "$minutes" "$seconds")
+        echo "$msg" | notify-pushover --title "Claude Code done on $(hostname -s)" || true
+        ;;
+    *)
+        echo "Usage: $(basename "$0") {start|stop}" >&2
+        exit 1
+        ;;
+esac
