@@ -15,6 +15,7 @@ glab = "latest"
 typst = "latest"
 bats = "latest"
 1password-cli = "latest"
+jq = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["[]"]
