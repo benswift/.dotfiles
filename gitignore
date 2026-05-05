@@ -101,5 +101,5 @@ snippets/extempore-repl-mode
 *.bak
 
 # AI agent working directories (machine-local, auto-generated)
-.claude/
+.claude/*
 

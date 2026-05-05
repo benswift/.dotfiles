@@ -143,8 +143,11 @@ Three directories are involved --- note the differences:
   `ben:github-explorer`). The same bootstrap pattern handles the `impeccable`
   and `agent-browser` plugins.
 - `.claude/` (with dot) --- project-local working directory auto-created by
-  Claude Code. Fully gitignored (both globally and in this repo). Contains
-  machine-specific state like `settings.local.json`, plans, and session data.
+  Claude Code. Contents are gitignored by default (`.claude/*` globally), but
+  individual repos can opt-in to tracking specific subdirectories via a local
+  `!.claude/<path>/` rule (e.g. project-local skills). The directory typically
+  contains machine-specific state like `settings.local.json`, plans, and
+  session data.
 
 The @claude/ folder includes:
 
