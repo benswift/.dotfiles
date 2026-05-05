@@ -73,6 +73,12 @@ Global tool versions are defined in @mise/config.toml. This file is symlinked to
 `~/.config/mise/config.toml` and provides fallback versions for tools when not
 in a project with its own `mise.toml`.
 
+Machine-local config (per-host env vars, secrets not safe for git) goes in
+`~/.config/mise/config.local.toml` --- mise auto-merges it with the global
+config, so any `[env]` entries get exported into every shell. Use this for
+credentials on headless boxes where the 1Password CLI desktop integration
+isn't available (e.g. `PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for `notify-pushover`).
+
 ### Package installation hierarchy
 
 When a tool can be installed multiple ways, prefer this order:
