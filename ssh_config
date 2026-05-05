@@ -16,13 +16,13 @@ Host github.com
 Host gitlab.anu.edu.au
   HostName gitlab.anu.edu.au
   User git
-  IdentityFile ~/.ssh/gitlab_anu
+  IdentityFile ~/.ssh/id_ed25519
   IdentitiesOnly yes
 
 Host gitlab.comp.anu.edu.au
   HostName gitlab.comp.anu.edu.au
   User git
-  IdentityFile ~/.ssh/gitlab_anu
+  IdentityFile ~/.ssh/id_ed25519
   IdentitiesOnly yes
 
 # rpis on tailnet
