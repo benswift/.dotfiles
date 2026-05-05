@@ -28,16 +28,6 @@
           }
         ]
       }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "claude-turn-tracker notify"
-          }
-        ]
-      }
     ]
   },
   "enabledPlugins": {

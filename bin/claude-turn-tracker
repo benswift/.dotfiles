@@ -3,7 +3,6 @@
 # Reads the hook payload (JSON) from stdin and dispatches by subcommand:
 #   start    record turn-start time              (UserPromptSubmit hook)
 #   stop     notify if turn ran >= threshold     (Stop hook)
-#   notify   forward an input-needed message     (Notification hook)
 #
 # Threshold defaults to 300s (5 min); override with CLAUDE_NOTIFY_THRESHOLD.
 # Notifications are tagged "host:project" using $ZELLIJ_SESSION_NAME when
@@ -45,12 +44,8 @@ case "$cmd" in
         msg=$(printf 'Turn finished in %dm %02ds' "$minutes" "$seconds")
         echo "$msg" | notify-pushover --title "Claude done: $host:$proj" || true
         ;;
-    notify)
-        msg=$(echo "$input" | jq -r '.message // "Claude needs input"')
-        echo "$msg" | notify-pushover --title "Claude input needed: $host:$proj" --priority 1 || true
-        ;;
     *)
-        echo "Usage: $(basename "$0") {start|stop|notify}" >&2
+        echo "Usage: $(basename "$0") {start|stop}" >&2
         exit 1
         ;;
 esac
