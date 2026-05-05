@@ -34,7 +34,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.message // \"Claude needs input\"' | notify-pushover --title \"Claude needs input on $(hostname -s)\" --priority 1"
+            "command": "claude-turn-tracker notify"
           }
         ]
       }

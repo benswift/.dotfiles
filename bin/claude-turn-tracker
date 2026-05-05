@@ -1,23 +1,29 @@
 #!/usr/bin/env bash
-# Track Claude Code turn duration and send a Pushover notification when a turn
-# runs longer than a threshold (60 seconds by default; override with
-# CLAUDE_NOTIFY_THRESHOLD).
+# Claude Code hook handler that sends Pushover notifications.
+# Reads the hook payload (JSON) from stdin and dispatches by subcommand:
+#   start    record turn-start time              (UserPromptSubmit hook)
+#   stop     notify if turn ran >= threshold     (Stop hook)
+#   notify   forward an input-needed message     (Notification hook)
 #
-# Used as a hook handler --- reads the hook payload (JSON) from stdin and
-# expects a single subcommand argument:
-#   claude-turn-tracker start   # invoked from UserPromptSubmit hook
-#   claude-turn-tracker stop    # invoked from Stop hook
+# Threshold defaults to 300s (5 min); override with CLAUDE_NOTIFY_THRESHOLD.
+# Notifications are tagged "host:project" using the cwd basename from the
+# payload, so phone alerts are scannable across multiple sessions.
 
 set -euo pipefail
 
 cmd="${1:-}"
-threshold_seconds="${CLAUDE_NOTIFY_THRESHOLD:-60}"
+threshold_seconds="${CLAUDE_NOTIFY_THRESHOLD:-300}"
 stamp_dir="${TMPDIR:-/tmp}"
 
 input=$(cat)
 sid=$(echo "$input" | jq -r '.session_id // empty')
 [[ -n "$sid" ]] || exit 0
 
+cwd=$(echo "$input" | jq -r '.cwd // empty')
+proj="${cwd##*/}"
+[[ -n "$proj" ]] || proj="?"
+
+host=$(hostname -s)
 stamp_file="$stamp_dir/claude-turn-$sid"
 
 case "$cmd" in
@@ -33,10 +39,14 @@ case "$cmd" in
         minutes=$((elapsed / 60))
         seconds=$((elapsed % 60))
         msg=$(printf 'Turn finished in %dm %02ds' "$minutes" "$seconds")
-        echo "$msg" | notify-pushover --title "Claude Code done on $(hostname -s)" || true
+        echo "$msg" | notify-pushover --title "Claude done: $host:$proj" || true
+        ;;
+    notify)
+        msg=$(echo "$input" | jq -r '.message // "Claude needs input"')
+        echo "$msg" | notify-pushover --title "Claude input needed: $host:$proj" --priority 1 || true
         ;;
     *)
-        echo "Usage: $(basename "$0") {start|stop}" >&2
+        echo "Usage: $(basename "$0") {start|stop|notify}" >&2
         exit 1
         ;;
 esac
