@@ -6,8 +6,8 @@
 #   notify   forward an input-needed message     (Notification hook)
 #
 # Threshold defaults to 300s (5 min); override with CLAUDE_NOTIFY_THRESHOLD.
-# Notifications are tagged "host:project" using the cwd basename from the
-# payload, so phone alerts are scannable across multiple sessions.
+# Notifications are tagged "host:project" using $ZELLIJ_SESSION_NAME when
+# running inside zellij, falling back to the cwd basename from the payload.
 
 set -euo pipefail
 
@@ -19,9 +19,13 @@ input=$(cat)
 sid=$(echo "$input" | jq -r '.session_id // empty')
 [[ -n "$sid" ]] || exit 0
 
-cwd=$(echo "$input" | jq -r '.cwd // empty')
-proj="${cwd##*/}"
-[[ -n "$proj" ]] || proj="?"
+if [[ -n "${ZELLIJ_SESSION_NAME:-}" ]]; then
+    proj="$ZELLIJ_SESSION_NAME"
+else
+    cwd=$(echo "$input" | jq -r '.cwd // empty')
+    proj="${cwd##*/}"
+    [[ -n "$proj" ]] || proj="?"
+fi
 
 host=$(hostname -s)
 stamp_file="$stamp_dir/claude-turn-$sid"
