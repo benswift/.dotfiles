@@ -39,7 +39,7 @@
     "claude-md-management@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": true,
-    "plugin-dev@claude-plugins-official": true,
+    "plugin-dev@claude-plugins-official": false,
     "agent-browser@agent-browser": true,
     "impeccable@impeccable": true,
     "ben@ben": true
