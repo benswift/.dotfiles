@@ -41,7 +41,7 @@ Host cybersonic
   User u2548636
   Hostname cybersonic.gpu
   IdentityFile ~/.ssh/cybersonic
-  ProxyCommand ssh -q -A u2548636@bulwark.cecs.anu.edu.au nc -q0 %h %p
+  ProxyCommand ssh -q -W %h:%p u2548636@bulwark.cecs.anu.edu.au
 
 # cpu1
 Host cpu1
