@@ -47,24 +47,20 @@ Host cybersonic
 Host cpu1
   User benswift
   Hostname cpu1.cecs.anu.edu.au
-  IdentityFile ~/.ssh/id_ed25519
 
 Host cpu2
   User benswift
   Hostname cpu2.cecs.anu.edu.au
-  IdentityFile ~/.ssh/id_ed25519
 
 # jetson orin (mDNS — IP rotates on ANU DHCP)
 Host jetson
   User jane
   Hostname jetson-orin.local
-  IdentityFile ~/.ssh/id_ed25519
 
 # strproxy
 Host strproxy
   User u2548636
   Hostname strproxy.comp.anu.edu.au
-  IdentityFile ~/.ssh/id_ed25519
 
 # Azure
 Host extempore-win
