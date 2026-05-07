@@ -35,7 +35,7 @@ Host panic-*
 # bulwark only accepts SSH from on-campus IPs, so off-campus machines hop via
 # weddle (tailnet-reachable). The Match guard skips the ProxyJump when running
 # on weddle itself --- otherwise ssh would tunnel through itself.
-Match host bulwark exec "test \"$(hostname -s)\" != weddle"
+Match host bulwark exec "test $(hostname -s) != weddle"
   ProxyJump weddle
 
 Host bulwark
