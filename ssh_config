@@ -43,15 +43,6 @@ Host bulwark
   Hostname bulwark.cecs.anu.edu.au
   IdentityFile ~/.ssh/cybersonic
 
-# Temporary fallback while weddle's IP is in bulwark's fail2ban recidive jail.
-# Routes via strproxy to present a clean IP to bulwark. Remove this alias once
-# the ban is cleared (servicedesk@anu.edu.au) and weddle direct works again.
-Host bulwark-via-strproxy
-  User u2548636
-  Hostname bulwark.cecs.anu.edu.au
-  IdentityFile ~/.ssh/cybersonic
-  ProxyJump weddle,strproxy
-
 Host cybersonic
   User u2548636
   Hostname cybersonic.gpu
