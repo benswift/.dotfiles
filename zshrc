@@ -147,11 +147,19 @@ command -v fnox &>/dev/null && eval "$(command fnox activate zsh)"
 export LS_COLORS="$(vivid generate catppuccin-mocha)"
 eval "$(zoxide init zsh)"
 
+case "$(hostname -s)" in
+  daysy)       _prompt_host_color="" ;;       # bare prompt at home
+  weddle)      _prompt_host_color='%F{#a6e3a1}' ;;
+  cybersonic)  _prompt_host_color='%F{#cba6f7}' ;;
+  jetson-orin) _prompt_host_color='%F{#94e2d5}' ;;
+  strproxy)    _prompt_host_color='%F{#fab387}' ;;
+  *)           _prompt_host_color='%F{#fab387}' ;;
+esac
+
 _prompt_precmd() {
   local exit_status=$?
   local sep_color='%F{#45475a}'
   local time_color='%F{#a6adc8}'
-  local host_color='%F{#fab387}'
   local dir_color='%F{#89b4fa}'
   local vcs_color='%F{#cba6f7}'
 
@@ -161,7 +169,7 @@ _prompt_precmd() {
   vcs=$(git branch --show-current 2>/dev/null)
 
   local host=""
-  [[ "$(hostname -s)" != "daysy" ]] && host="%B${host_color}%m%f%b "
+  [[ -n "$_prompt_host_color" ]] && host="%B${_prompt_host_color}%m%f%b "
 
   PROMPT="${time_color}%T%f ${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{#a6e3a1}.%F{#f38ba8})❯%f "
 }
