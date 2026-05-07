@@ -14,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "claude-turn-tracker start"
+            "command": "$HOME/.dotfiles/bin/claude-turn-tracker start"
           }
         ]
       }
@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "claude-turn-tracker stop"
+            "command": "$HOME/.dotfiles/bin/claude-turn-tracker stop"
           }
         ]
       }
