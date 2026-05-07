@@ -42,6 +42,11 @@ case "$cmd" in
         minutes=$((elapsed / 60))
         seconds=$((elapsed % 60))
         msg=$(printf 'Turn finished in %dm %02ds' "$minutes" "$seconds")
+        transcript=$(echo "$input" | jq -r '.transcript_path // empty')
+        if [[ -n "$transcript" && -f "$transcript" ]]; then
+            title=$(jq -r 'select(.type=="ai-title") | .aiTitle' "$transcript" 2>/dev/null | tail -n1)
+            [[ -n "$title" ]] && msg="${msg}"$'\n'"${title}"
+        fi
         echo "$msg" | notify-pushover --title "Claude done: $host:$proj" || true
         ;;
     *)
