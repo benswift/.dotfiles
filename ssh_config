@@ -58,10 +58,10 @@ Host cpu2
   User benswift
   Hostname cpu2.cecs.anu.edu.au
 
-# jetson orin (mDNS — IP rotates on ANU DHCP)
+# jetson orin (via tailscale MagicDNS — works anywhere on the tailnet)
 Host jetson
   User jane
-  Hostname jetson-orin.local
+  Hostname jetson-orin
 
 # strproxy
 Host strproxy
