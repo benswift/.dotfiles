@@ -29,15 +29,57 @@ symlink_valid() {
     [[ -L "$target" && -e "$target" ]]
 }
 
+check_shell() {
+    if [[ "$SHELL" == *zsh ]]; then
+        check_pass "zsh is login shell"
+        return
+    fi
+
+    if ! command_exists zsh; then
+        check_fail "zsh not installed"
+        return
+    fi
+
+    local zsh_path
+    zsh_path=$(command -v zsh)
+
+    # An exec stanza in a login rc bridges to zsh when chsh isn't an option
+    # (typical on LDAP-managed accounts where the user isn't in /etc/passwd).
+    local rc
+    for rc in "$HOME/.profile" "$HOME/.bash_profile" "$HOME/.bash_login"; do
+        if [[ -f "$rc" ]] && grep -qE "exec[[:space:]]+.*zsh" "$rc"; then
+            check_warn "login shell is $SHELL but $(basename "$rc") execs zsh"
+            return
+        fi
+    done
+
+    check_fail "zsh installed at $zsh_path but login shell is $SHELL"
+
+    # Detect LDAP/SSSD account: present via NSS but absent from /etc/passwd.
+    # In that case chsh fails with 'user does not exist' --- suggest the
+    # exec workaround instead.
+    if command_exists getent \
+       && ! getent -s files passwd "$USER" >/dev/null 2>&1 \
+       && getent passwd "$USER" >/dev/null 2>&1; then
+        cat <<EOF
+    Account is in LDAP/NSS (not /etc/passwd) --- chsh will fail locally.
+    Append to ~/.profile:
+
+      case \$- in
+        *i*) [ -x $zsh_path ] && [ -z "\$ZSH_VERSION" ] && exec $zsh_path -l ;;
+      esac
+
+    Or ask sysadmin to set loginShell in LDAP.
+EOF
+    else
+        echo "    Run: chsh -s $zsh_path"
+    fi
+}
+
 check_core() {
     section "Checking core requirements..."
 
-    # Shell
-    if [[ "$SHELL" == *zsh ]]; then
-        check_pass "zsh is current shell"
-    else
-        check_fail "zsh is not current shell (using $SHELL)"
-    fi
+    check_shell
 
     # Homebrew (macOS only)
     if [[ "$OSTYPE" == darwin* ]]; then
