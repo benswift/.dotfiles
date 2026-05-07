@@ -2,6 +2,13 @@
 
 set -o vi
 
+# vi-mode rebinds: use readline-style backspace/word-kill rather than vi's
+# stricter variants that won't cross the insert-start boundary
+bindkey -M viins '^?' backward-delete-char
+bindkey -M viins '^H' backward-delete-char
+bindkey -M viins '^W' backward-kill-word
+bindkey -M viins '^U' backward-kill-line
+
 zle-keymap-select() {
   case $KEYMAP in
     vicmd) printf '\e[2 q' ;;
