@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Claude Code status line: prints "<host> <dir> <branch>" with colours
+# matching the zsh prompt (catppuccin mocha palette). Reads the session
+# JSON from stdin --- Claude Code passes session info this way.
+
+set -euo pipefail
+
+input=$(cat)
+cwd=$(jq -r '.workspace.current_dir // .cwd // ""' <<<"$input")
+
+# Shorten cwd to "~" for $HOME or the basename otherwise (zsh's %1~).
+if [[ "$cwd" == "$HOME" ]]; then
+  short_cwd="~"
+elif [[ -n "$cwd" ]]; then
+  short_cwd="${cwd##*/}"
+else
+  short_cwd=""
+fi
+
+branch=""
+[[ -n "$cwd" && -d "$cwd" ]] && branch=$(git -C "$cwd" branch --show-current 2>/dev/null || true)
+
+# Hostname colour --- mirrors the case statement in zshrc.
+host=$(hostname -s)
+case "$host" in
+  daysy)       host_color="" ;;
+  weddle)      host_color=$'\e[1;38;2;166;227;161m' ;;  # #a6e3a1 green
+  cybersonic)  host_color=$'\e[1;38;2;203;166;247m' ;;  # #cba6f7 mauve
+  jetson-orin) host_color=$'\e[1;38;2;148;226;213m' ;;  # #94e2d5 teal
+  strproxy)    host_color=$'\e[1;38;2;250;179;135m' ;;  # #fab387 peach
+  *)           host_color=$'\e[1;38;2;250;179;135m' ;;  # #fab387 peach
+esac
+
+reset=$'\e[0m'
+dir_color=$'\e[1;38;2;137;180;250m'  # #89b4fa blue
+vcs_color=$'\e[1;38;2;203;166;247m'  # #cba6f7 mauve
+
+out=""
+[[ -n "$host_color" ]] && out+="${host_color}${host}${reset} "
+[[ -n "$short_cwd" ]] && out+="${dir_color}${short_cwd}${reset}"
+[[ -n "$branch" ]] && out+=" ${vcs_color}${branch}${reset}"
+
+printf '%s' "$out"

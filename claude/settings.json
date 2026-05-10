@@ -61,5 +61,9 @@
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim",
-  "preferredNotifChannel": "ghostty"
+  "preferredNotifChannel": "ghostty",
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.dotfiles/bin/claude-statusline"
+  }
 }
