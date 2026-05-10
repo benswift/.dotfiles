@@ -35,6 +35,15 @@ command = "nb-lsp"
 # [language-server.harper-ls.config.harper-ls]
 # dialect = "Australian"
 
+# astromotion decks: skip auto-format because oxfmt treats MDX comments like
+# `{/* _class: banner */}` as markdown and mangles the underscores/asterisks
+[[language]]
+name = "astromotion-deck"
+scope = "source.markdown"
+grammar = "markdown"
+file-types = [{ glob = "*.deck.mdx" }]
+auto-format = false
+
 [[language]]
 name = "markdown"
 language-servers = ["marksman", "nb-lsp"]
