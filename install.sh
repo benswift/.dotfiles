@@ -21,9 +21,9 @@ command_exists() { command -v "$1" &>/dev/null; }
 
 detect_platform() {
     case "$(uname -s)" in
-        Darwin) echo "macos" ;;
-        Linux)  echo "linux" ;;
-        *)      echo "unknown" ;;
+    Darwin) echo "macos" ;;
+    Linux) echo "linux" ;;
+    *) echo "unknown" ;;
     esac
 }
 
@@ -115,52 +115,14 @@ install_claude() {
 
 install_agent_skills() {
     mkdir -p "$HOME/.agents"
-    ln -sfn "$HOME/.agents" "$DOTFILES_DIR/.agents"
 
     info "Installing agent-browser skill..."
     bunx skills add vercel-labs/agent-browser
 }
 
-# Claude Code plugins not shipped by the official marketplace. Each entry is
-# "github-repo plugin-id". We register marketplaces and install plugins via
-# the claude CLI here rather than declaring them in claude/settings.json ---
-# the CLI path persists state to Claude Code's own plugin config and avoids
-# duplicating marketplace sources across two files. Non-fatal: on a fresh
-# machine without SSH set up, these warn and let the rest of bootstrap
-# continue. Re-run 'dotfiles update' once SSH auth works.
-CLAUDE_PLUGINS=(
-    "benswift/claude-plugin-personal ben@ben"
-    "pbakaus/impeccable impeccable@impeccable"
-    "vercel-labs/agent-browser agent-browser@agent-browser"
-)
-
-bootstrap_claude_plugins() {
-    if ! command -v claude &>/dev/null; then
-        warn "claude not installed --- skipping claude plugin bootstrap"
-        warn "Re-run 'dotfiles update' after installing claude"
-        return
-    fi
-
-    info "Setting up claude plugins..."
-    local entry repo plugin_id
-    for entry in "${CLAUDE_PLUGINS[@]}"; do
-        read -r repo plugin_id <<<"$entry"
-        claude plugin marketplace add "$repo" 2>/dev/null \
-            || warn "Could not add marketplace $repo --- check SSH auth to GitHub"
-        claude plugin install --scope user "$plugin_id" 2>/dev/null \
-            || warn "Could not install $plugin_id (marketplace may not be available yet)"
-    done
-
-    # ben-plugin-specific: point codex at claude's marketplace clone so both
-    # tools read the same directory. Doing it here (not in create_symlinks.sh)
-    # because the target doesn't exist until the marketplace has been cloned.
-    local codex_skills_target="$HOME/.claude/plugins/marketplaces/ben/skills"
-    local codex_skills_link="$HOME/.codex/skills"
-    if [[ -d "$codex_skills_target" ]]; then
-        mkdir -p "$(dirname "$codex_skills_link")"
-        ln -sfn "$codex_skills_target" "$codex_skills_link"
-        info "Linked codex skills -> $codex_skills_target"
-    fi
+sync_agent_config() {
+    info "Synchronising AI agent configuration..."
+    "$DOTFILES_DIR/bin/sync-agent-config"
 }
 
 main() {
@@ -196,11 +158,11 @@ main() {
     install_op
     install_mise
     clone_dotfiles
-    bootstrap_claude_plugins
     setup_symlinks
     install_mise_tools
     install_claude
     install_agent_skills
+    sync_agent_config
 
     echo ""
     info "Bootstrap complete!"

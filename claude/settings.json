@@ -30,6 +30,10 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.dotfiles/bin/claude-statusline"
+  },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "superpowers@claude-plugins-official": false,
@@ -61,9 +65,5 @@
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim",
-  "preferredNotifChannel": "ghostty",
-  "statusLine": {
-    "type": "command",
-    "command": "$HOME/.dotfiles/bin/claude-statusline"
-  }
+  "preferredNotifChannel": "ghostty"
 }

@@ -50,6 +50,31 @@ create_symlink() {
     fi
 }
 
+create_symlink_with_backup() {
+    local source_path="$1"
+    local target="$2"
+    local timestamp
+
+    if [[ -e "$target" && ! -L "$target" ]]; then
+        if cmp -s "$source_path" "$target"; then
+            if [[ "$DRY_RUN" == "true" ]]; then
+                echo -e "${YELLOW}[DRY RUN] Would replace identical file with symlink: $target${NC}"
+            else
+                rm "$target"
+            fi
+        else
+            timestamp="$(date +%Y%m%d%H%M%S)"
+            if [[ "$DRY_RUN" == "true" ]]; then
+                echo -e "${YELLOW}[DRY RUN] Would back up existing file: $target -> $target.backup.$timestamp${NC}"
+            else
+                mv "$target" "$target.backup.$timestamp"
+            fi
+        fi
+    fi
+
+    create_symlink "$source_path" "$target"
+}
+
 # Process a list of files with a common pattern
 link_files() {
     local source_dir="$1"
@@ -125,6 +150,8 @@ main() {
     create_symlink "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
     create_symlink "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
     create_symlink "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.codex/instructions.md"
+    create_symlink_with_backup "$DOTFILES_DIR/codex/config.toml" "$HOME/.codex/config.toml"
+    create_symlink_with_backup "$DOTFILES_DIR/gemini/settings.json" "$HOME/.gemini/settings.json"
 
     # nb plugins (symlink each *.nb-plugin into ~/.nb/.plugins/ so nb
     # picks them up). Single source of truth in the dotfiles repo;
@@ -159,27 +186,27 @@ main() {
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --dry-run|-n)
-            DRY_RUN=true
-            shift
-            ;;
-        --help|-h)
-            echo "Usage: $0 [OPTIONS]"
-            echo ""
-            echo "Options:"
-            echo "  -n, --dry-run    Show what would be done without making changes"
-            echo "  -h, --help       Show this help message"
-            echo ""
-            echo "Environment variables:"
-            echo "  DOTFILES_DIR     Set the dotfiles directory (default: ~/.dotfiles)"
-            echo "  DRY_RUN          Set to 'true' for dry run mode"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Use --help for usage information"
-            exit 1
-            ;;
+    --dry-run | -n)
+        DRY_RUN=true
+        shift
+        ;;
+    --help | -h)
+        echo "Usage: $0 [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo "  -n, --dry-run    Show what would be done without making changes"
+        echo "  -h, --help       Show this help message"
+        echo ""
+        echo "Environment variables:"
+        echo "  DOTFILES_DIR     Set the dotfiles directory (default: ~/.dotfiles)"
+        echo "  DRY_RUN          Set to 'true' for dry run mode"
+        exit 0
+        ;;
+    *)
+        echo "Unknown option: $1"
+        echo "Use --help for usage information"
+        exit 1
+        ;;
     esac
 done
 

@@ -47,22 +47,17 @@ Linux.
 
 ## AI coding agents
 
-This repo provides provider-agnostic configuration for multiple AI coding
-agents, allowing them to share the same instruction files:
-
-- **Global instructions**: `GLOBAL-AGENTS.md` contains instructions used across
-  all projects
-- **Project instructions**: `AGENTS.md` contains project-specific instructions
-  (checked into each project's repo)
+This repo provides shared configuration for multiple AI coding agents, with
+`CLAUDE.md` as the common project-level instructions file.
 
 ### How each agent uses these files
 
-- **Claude Code**: Symlinks `GLOBAL-AGENTS.md` → `~/.claude/CLAUDE.md` and
-  `AGENTS.md` → `CLAUDE.md` (gitignored)
-- **Codex CLI**: Symlinks `GLOBAL-AGENTS.md` → `~/.codex/instructions.md` and
-  `AGENTS.md` → `codex.md` (gitignored)
-- **Gemini CLI**: Configured via `~/.gemini/settings.json` to read `AGENTS.md`
-  directly (no symlinks needed)
+- **Claude Code**: `claude/CLAUDE.md` is symlinked to `~/.claude/CLAUDE.md`.
+- **Codex CLI**: the same global instructions are symlinked to
+  `~/.codex/instructions.md`, while `codex/config.toml` tells Codex to read
+  project `CLAUDE.md` files.
+- **Gemini CLI**: `gemini/settings.json` tells Gemini to read `CLAUDE.md` and
+  `GEMINI.md` as context files.
 
 The `create_symlinks.sh` script sets up all necessary symlinks and directories.
 
@@ -81,24 +76,23 @@ loaded as a Claude Code plugin. The setup:
 - **Claude Code clones it** to `~/.claude/plugins/marketplaces/ben/` on first
   use. That directory is the single source of truth --- edit skills there,
   commit and push from there.
-- **Codex reads from the same directory** via a `~/.codex/skills` symlink (set
-  up by `install.sh` and `dotfiles update` since the target doesn't exist until
-  Claude Code has cloned the marketplace).
+- **Codex reads the same personal skills** via per-skill symlinks inside
+  `~/.codex/skills`. Codex keeps its generated `.system/` skills in its own
+  directory, so they do not dirty the private Claude marketplace clone.
 - **Skills appear to the model** as `ben:<skill-name>` (e.g.
   `ben:github-explorer`).
 
 To propagate changes across machines: push from the marketplace clone, then run
-`dotfiles update` elsewhere (which runs
-`claude plugin update --scope user ben@ben`). Requires SSH auth to GitHub (the
-repo is private).
+`dotfiles update` elsewhere. That refreshes Claude plugins and re-syncs Codex
+skill links. Requires SSH auth to GitHub (the repo is private).
 
 ### Elixir projects tip
 
 The [Usage Rules](https://hexdocs.pm/usage_rules/) package is excellent for
-injecting project-specific rules into your `AGENTS.md` file:
+injecting project-specific rules into your `CLAUDE.md` file:
 
 ```bash
-mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing
+mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing
 ```
 
 ## Email configuration

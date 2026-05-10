@@ -59,8 +59,8 @@ check_shell() {
     # In that case chsh fails with 'user does not exist' --- suggest the
     # exec workaround instead.
     if command_exists getent \
-       && ! getent -s files passwd "$USER" >/dev/null 2>&1 \
-       && getent passwd "$USER" >/dev/null 2>&1; then
+        && ! getent -s files passwd "$USER" >/dev/null 2>&1 \
+        && getent passwd "$USER" >/dev/null 2>&1; then
         cat <<EOF
     Account is in LDAP/NSS (not /etc/passwd) --- chsh will fail locally.
     Append to ~/.profile:
@@ -136,6 +136,8 @@ check_symlinks() {
         "$HOME/.claude/CLAUDE.md:$DOTFILES_DIR/claude/CLAUDE.md"
         "$HOME/.claude/settings.json:$DOTFILES_DIR/claude/settings.json"
         "$HOME/.codex/instructions.md:$DOTFILES_DIR/claude/CLAUDE.md"
+        "$HOME/.codex/config.toml:$DOTFILES_DIR/codex/config.toml"
+        "$HOME/.gemini/settings.json:$DOTFILES_DIR/gemini/settings.json"
     )
 
     for entry in "${symlinks[@]}"; do
@@ -267,6 +269,96 @@ check_secrets() {
     fi
 }
 
+check_skill_yaml() {
+    local skills_dir="$1"
+
+    if ! command_exists ruby; then
+        check_warn "ruby not installed, skipping skill YAML validation"
+        return
+    fi
+
+    if ruby -e 'require "yaml"; ARGV.each { |path|
+        text = File.read(path)
+        next unless text.start_with?("---\n")
+        idx = text.index("\n---\n", 4)
+        raise "#{path}: missing closing front matter" unless idx
+        YAML.safe_load(text[4...idx], permitted_classes: [], aliases: false)
+    }' "$skills_dir"/*/SKILL.md >/dev/null 2>&1; then
+        check_pass "skill front matter parses"
+    else
+        check_fail "skill front matter has YAML errors"
+    fi
+}
+
+check_agent_config() {
+    section "Checking AI agent configuration..."
+
+    local ben_skills="$HOME/.claude/plugins/marketplaces/ben/skills"
+    local codex_skills="$HOME/.codex/skills"
+
+    if command_exists claude; then
+        check_pass "claude installed"
+    else
+        check_fail "claude not installed"
+    fi
+
+    if command_exists codex; then
+        check_pass "codex installed"
+    else
+        check_fail "codex not installed"
+    fi
+
+    if [[ -d "$ben_skills" ]]; then
+        check_pass "ben marketplace skills cloned"
+        check_skill_yaml "$ben_skills"
+        if [[ -d "$ben_skills/.system" ]]; then
+            check_fail "Codex .system skills are inside ben marketplace clone"
+        else
+            check_pass "ben marketplace has no Codex .system skills"
+        fi
+    else
+        check_fail "ben marketplace skills missing"
+    fi
+
+    if [[ -d "$codex_skills" && ! -L "$codex_skills" ]]; then
+        check_pass "codex skills directory is local"
+    elif [[ -L "$codex_skills" ]]; then
+        check_fail "codex skills is a whole-directory symlink"
+    else
+        check_fail "codex skills directory missing"
+    fi
+
+    if [[ -L "$codex_skills/project-manager-backlog" && -e "$codex_skills/project-manager-backlog/SKILL.md" ]]; then
+        check_pass "codex sees ben personal skills"
+    else
+        check_fail "codex personal skill links missing"
+    fi
+
+    if [[ -d "$codex_skills/.system" ]]; then
+        check_pass "codex owns .system skills"
+    else
+        check_warn "codex .system skills not present yet"
+    fi
+
+    if [[ -f "$HOME/.agents/skills/agent-browser/SKILL.md" ]]; then
+        check_pass "agent-browser skill installed for Codex"
+    else
+        check_warn "agent-browser skill not installed in ~/.agents"
+    fi
+
+    if command_exists claude && command_exists jq; then
+        local plugins
+        if plugins=$(claude plugin list --json 2>/dev/null) &&
+            jq -e '.[] | select(.id == "ben@ben" and .enabled == true)' >/dev/null <<<"$plugins"; then
+            check_pass "ben@ben Claude plugin enabled"
+        else
+            check_fail "ben@ben Claude plugin not enabled"
+        fi
+    else
+        check_warn "claude or jq unavailable, skipping plugin status"
+    fi
+}
+
 doctor() {
     echo ""
     echo "╔═══════════════════════════════════════╗"
@@ -279,6 +371,7 @@ doctor() {
     check_mise_tools
     check_directories
     check_secrets
+    check_agent_config
 
     echo ""
     section "Summary"
@@ -292,51 +385,11 @@ doctor() {
     fi
 }
 
-update_claude_plugins() {
-    if ! command -v claude &>/dev/null; then
-        return
-    fi
-    if ! command -v jq &>/dev/null; then
-        echo "jq required for claude plugin updates --- skipping"
-        return
-    fi
-    echo "Updating claude plugins..."
-    local settings="$DOTFILES_DIR/claude/settings.json"
-
-    # Bootstrap: register extra marketplaces and install enabled plugins.
-    # claude plugin subcommands don't auto-register from settings.json, so we
-    # run add/install idempotently --- sourced from settings.json itself to
-    # avoid keeping a second list in sync.
-    jq -r '.extraKnownMarketplaces // {} | to_entries[] | .value.source.repo' "$settings" \
-        | xargs -P 4 -I {} claude plugin marketplace add {} >/dev/null 2>&1
-    jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "$settings" \
-        | xargs -P 4 -I {} claude plugin install --scope user {} >/dev/null 2>&1
-
-    # Refresh marketplace metadata (git pulls on marketplace clones).
-    claude plugin marketplace update >/dev/null 2>&1 || true
-
-    # Re-index installed plugins. `marketplace update` pulls files but doesn't
-    # refresh already-installed plugins' registries --- `plugin update` does.
-    # Parallelised because serial takes ages with 15+ plugins.
-    claude plugin list --json 2>/dev/null \
-        | jq -r '.[] | select(.enabled) | "\(.id) \(.scope)"' \
-        | xargs -P 8 -L 1 sh -c 'claude plugin update --scope "$2" "$1" >/dev/null 2>&1' _
-
-    # ben-plugin-specific: point ~/.codex/skills at claude's marketplace clone
-    # so codex reads the same directory. Can't live in create_symlinks.sh
-    # because the target doesn't exist until the marketplace has been cloned.
-    local codex_skills_target="$HOME/.claude/plugins/marketplaces/ben/skills"
-    if [[ -d "$codex_skills_target" && ! -L "$HOME/.codex/skills" ]]; then
-        mkdir -p "$HOME/.codex"
-        ln -sfn "$codex_skills_target" "$HOME/.codex/skills"
-    fi
-}
-
 update() {
     echo "Updating dotfiles..."
     git -C "$DOTFILES_DIR" pull --rebase
-    update_claude_plugins
     "$DOTFILES_DIR/create_symlinks.sh"
+    "$DOTFILES_DIR/bin/sync-agent-config" --update-claude
     echo "Done!"
 }
 

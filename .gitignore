@@ -15,5 +15,9 @@ __pycache__/
 # Claude Code project-local directory (machine-specific)
 .claude/
 
+# Agent runtime state and obsolete project-level shims
+.agents
+codex.md
+
 # Private Claude Code plugins (cloned separately by install.sh / dotfiles update)
 claude-plugins/

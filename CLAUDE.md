@@ -127,8 +127,7 @@ My Zellij config is in the @zellij/ folder. This includes:
 All three AI coding agents (Claude Code, Codex CLI, Gemini CLI) are configured
 to read `CLAUDE.md` as the project-level instructions file. This means a single
 file works across all tools with no symlinks needed. Global instructions and
-per-tool configuration (e.g. `~/.codex/config.toml`, `~/.gemini/settings.json`)
-are managed per-machine, not tracked here.
+base per-tool configuration are tracked here and symlinked into place.
 
 ### Claude Code
 
@@ -138,16 +137,15 @@ Three directories are involved --- note the differences:
   (global instructions) and `settings.json` are symlinked into `~/.claude/`.
 - The `ben` Claude Code plugin (personal skills library) lives in the
   **private** `benswift/claude-plugin-personal` repo. `install.sh` and
-  `dotfiles update` register the marketplace and install the plugin via the
-  `claude` CLI (`claude plugin marketplace add benswift/claude-plugin-personal`
-  and `claude plugin install --scope user ben@ben`); @claude/settings.json then
-  enables it via `enabledPlugins: {"ben@ben": true}`. Claude Code maintains its
-  own clone at `~/.claude/plugins/marketplaces/ben/`. That clone is the **single
-  source of truth** --- edit skills there, commit and push from there.
-  `~/.codex/skills` is symlinked into the same directory so codex sees the same
-  content. Skills appear to the model as `ben:<skill-name>` (e.g.
-  `ben:github-explorer`). The same bootstrap pattern handles the `impeccable`
-  and `agent-browser` plugins.
+  `dotfiles update` run @bin/sync-agent-config, which registers the marketplace
+  and installs enabled plugins via the `claude` CLI; @claude/settings.json then
+  enables them via `enabledPlugins`. Claude Code maintains its own clone at
+  `~/.claude/plugins/marketplaces/ben/`. That clone is the **single source of
+  truth** --- edit skills there, commit and push from there. Codex gets
+  per-skill symlinks into that clone, while its generated `.system/` skills stay
+  under `~/.codex/skills/.system`. Skills appear to the model as
+  `ben:<skill-name>` (e.g. `ben:github-explorer`). The same bootstrap pattern
+  handles the `impeccable` and `agent-browser` plugins.
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Contents are gitignored by default (`.claude/*` globally), but
   individual repos can opt-in to tracking specific subdirectories via a local
@@ -160,6 +158,8 @@ The @claude/ folder includes:
 - @claude/CLAUDE.md - global agent instructions (symlinked to both
   `~/.claude/CLAUDE.md` and `~/.codex/instructions.md`)
 - @claude/settings.json - Claude Code settings
+- @codex/config.toml - portable Codex defaults
+- @gemini/settings.json - portable Gemini context settings
 
 Skills live in the ben plugin at
 `~/.claude/plugins/marketplaces/ben/skills/<name>/SKILL.md` (Claude Code's
@@ -171,13 +171,13 @@ through Claude Code's plugin mechanism.
 Codex CLI uses `~/.codex/instructions.md` for global instructions (symlinked to
 @claude/CLAUDE.md). Project-level instructions are read from `CLAUDE.md` via its
 `project_doc_fallback_filenames` setting. Codex doesn't understand Claude Code's
-plugin mechanism, but it reads the raw skill directories fine via a symlink from
-`~/.codex/skills` to `~/.claude/plugins/marketplaces/ben/skills/` (created by
-the ben plugin bootstrap in @install.sh and @bin/dotfiles).
+plugin mechanism, but it reads the raw skill directories fine. @bin/sync-agent-config
+keeps `~/.codex/skills` as a Codex-owned directory and symlinks each personal
+skill from `~/.claude/plugins/marketplaces/ben/skills/` into it.
 
 ### Gemini CLI
 
-Gemini CLI is configured per-machine to use `CLAUDE.md` as a context file (in
+Gemini CLI uses @gemini/settings.json to read `CLAUDE.md` as a context file (in
 addition to the default `GEMINI.md`).
 
 ## Email

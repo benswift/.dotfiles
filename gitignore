@@ -102,4 +102,4 @@ snippets/extempore-repl-mode
 
 # AI agent working directories (machine-local, auto-generated)
 .claude/*
-
+codex.md
