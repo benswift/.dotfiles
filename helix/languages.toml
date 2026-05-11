@@ -36,11 +36,14 @@ command = "nb-lsp"
 # dialect = "Australian"
 
 # astromotion decks: skip auto-format because oxfmt treats MDX comments like
-# `{/* _class: banner */}` as markdown and mangles the underscores/asterisks
+# `{/* _class: banner */}` as markdown and mangles the underscores/asterisks.
+# Highlighting/injections inherit from markdown via
+# ~/.config/helix/runtime/queries/astromotion-deck/
 [[language]]
 name = "astromotion-deck"
 scope = "source.markdown"
 grammar = "markdown"
+language-servers = ["marksman", "nb-lsp"]
 file-types = [{ glob = "*.deck.mdx" }]
 auto-format = false
 
