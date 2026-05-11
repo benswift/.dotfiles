@@ -28,6 +28,7 @@ C-ret = ":pipe-to xtm-send"
 [keys.normal.space]
 f = ":write"
 v = "file_picker"
+x = ":write-quit"
 # y = "yank_to_clipboard"
 # p = "paste_clipboard_after"
 # P = "paste_clipboard_before"
