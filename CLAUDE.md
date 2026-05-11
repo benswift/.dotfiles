@@ -175,6 +175,15 @@ plugin mechanism, but it reads the raw skill directories fine. @bin/sync-agent-c
 keeps `~/.codex/skills` as a Codex-owned directory and symlinks each personal
 skill from `~/.claude/plugins/marketplaces/ben/skills/` into it.
 
+`~/.codex/config.toml` is symlinked to @codex/config.toml, which holds only
+portable defaults (model, reasoning effort, personality, project doc
+fallback). Codex itself rewrites this file when it dismisses notices or
+records trusted projects, so expect occasional uncommitted churn in the repo
+--- discard with `git checkout codex/config.toml`, or run
+`git update-index --skip-worktree codex/config.toml` per-machine if it gets
+noisy. Machine-specific blocks (`[notice]`, `[tui.*]`, `[projects."..."]`)
+should not be committed.
+
 ### Gemini CLI
 
 Gemini CLI uses @gemini/settings.json to read `CLAUDE.md` as a context file (in
