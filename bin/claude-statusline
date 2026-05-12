@@ -23,7 +23,7 @@ branch=""
 # Hostname colour --- mirrors the case statement in zshrc.
 host=$(hostname -s)
 case "$host" in
-  daysy)       host_color="" ;;
+  daysy)       host_color=$'\e[1;38;2;249;226;175m' ;;  # #f9e2af yellow
   weddle)      host_color=$'\e[1;38;2;166;227;161m' ;;  # #a6e3a1 green
   cybersonic)  host_color=$'\e[1;38;2;203;166;247m' ;;  # #cba6f7 mauve
   jetson-orin) host_color=$'\e[1;38;2;148;226;213m' ;;  # #94e2d5 teal

@@ -155,7 +155,7 @@ export LS_COLORS="$(vivid generate catppuccin-mocha)"
 eval "$(zoxide init zsh)"
 
 case "$(hostname -s)" in
-  daysy)       _prompt_host_color="" ;;       # bare prompt at home
+  daysy)       _prompt_host_color='%F{#f9e2af}' ;;
   weddle)      _prompt_host_color='%F{#a6e3a1}' ;;
   cybersonic)  _prompt_host_color='%F{#cba6f7}' ;;
   jetson-orin) _prompt_host_color='%F{#94e2d5}' ;;
