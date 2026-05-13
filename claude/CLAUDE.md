@@ -50,7 +50,10 @@ manual replacements.
   Grid/Flexbox, modern ES6+ with functional patterns. Use the `agent-browser`
   CLI (not Playwright directly) for browser automation and UI testing
 - **Tasks**: use `backlog` MCP server
-- **Notes**: use `nb` CLI, get paths with `nb show <id> --path` before editing
+- **Notes**: my personal knowledge base lives at `~/.nb/home/` and is managed
+  via the `nb` CLI. Use the `ben:pkb` skill whenever a task involves journals,
+  dailies, todos, notes, people/, projects/, or the knowledge base. Get paths
+  with `nb show <id> --path` before editing
 
 ## Coding rules
 
