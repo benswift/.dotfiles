@@ -60,6 +60,12 @@
         "source": "github",
         "repo": "pbakaus/impeccable"
       }
+    },
+    "agent-browser": {
+      "source": {
+        "source": "github",
+        "repo": "vercel-labs/agent-browser"
+      }
     }
   },
   "alwaysThinkingEnabled": true,
