@@ -16,6 +16,7 @@ bats = "latest"
 1password-cli = "latest"
 jq = "latest"
 fd = "latest"
+"cargo:oxipng" = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["[]"]
