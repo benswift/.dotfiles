@@ -81,7 +81,8 @@ confirmation).
 ### Security
 
 Never put raw credentials, passwords, API keys, or tokens in code or config
-files. For project secrets, use fnox with the 1Password CLI backend: reference
+files. For project secrets, use fnox with the 1Password CLI backend on macOS: reference
 values as `op://Vault/Item/field` in `fnox.toml` and load through a fnox
-profile, never inline. Warn if you encounter raw credentials during
+profile, never inline. On Linux it's ok to have things in an untracked mise env block.
+Warn if you encounter raw credentials during
 modifications and don't commit files that likely contain secrets.
