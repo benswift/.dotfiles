@@ -32,10 +32,15 @@ actual headings, not bold text as a substitute.
 
 ## Tool use
 
-Prefer ast-grep (sg) for structural operations (functions, classes, method
-calls, imports)---it understands language semantics and preserves formatting.
-Fall back to sed/awk for non-structural text edits, then the Edit tool for
-manual replacements.
+Default to ast-grep (`sg`) whenever the target is a code symbol --- a
+function/class/method definition, its callers, an import, a rename, or "show
+me the body of X" from a large file. Treat any task that names a code
+construct as a structural query, not a string search. The `ast-grep` skill
+carries the pattern/rule syntax --- invoke it rather than guessing.
+
+Reserve `rg`/`grep` for plain text searches over unstructured content,
+`sed`/`awk` for non-structural text edits, and the Edit tool for manual
+replacements.
 
 ## Language and framework preferences
 

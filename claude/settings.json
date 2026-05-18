@@ -46,6 +46,7 @@
     "plugin-dev@claude-plugins-official": false,
     "agent-browser@agent-browser": true,
     "impeccable@impeccable": true,
+    "ast-grep@ast-grep-marketplace": true,
     "ben@ben": true
   },
   "extraKnownMarketplaces": {
@@ -65,6 +66,12 @@
       "source": {
         "source": "github",
         "repo": "vercel-labs/agent-browser"
+      }
+    },
+    "ast-grep-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "ast-grep/agent-skill"
       }
     }
   },
