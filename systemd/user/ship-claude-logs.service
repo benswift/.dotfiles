@@ -1,0 +1,11 @@
+[Unit]
+Description=Ship Claude Code session logs to weddle
+Documentation=file:///home/ben/.dotfiles/bin/ship-claude-logs
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PATH=/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ben/.dotfiles/bin/ship-claude-logs
+TimeoutStartSec=15min

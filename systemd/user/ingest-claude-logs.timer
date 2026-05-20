@@ -1,0 +1,12 @@
+[Unit]
+Description=Trigger ingest-claude-logs hourly at :10
+Requires=ingest-claude-logs.service
+
+[Timer]
+OnCalendar=*:10
+RandomizedDelaySec=5min
+Persistent=true
+Unit=ingest-claude-logs.service
+
+[Install]
+WantedBy=timers.target

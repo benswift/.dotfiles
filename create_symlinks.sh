@@ -169,6 +169,16 @@ main() {
     create_symlink "$DOTFILES_DIR/mise/config.toml" "$HOME/.config/mise/config.toml"
     create_symlink "$DOTFILES_DIR/fnox/config.toml" "$HOME/.config/fnox/config.toml"
 
+    # Systemd user units (timers + services). Linked individually because
+    # ~/.config/systemd/user/ holds units from several repos; we can't
+    # link_directory it. Run `systemctl --user daemon-reload &&
+    # systemctl --user enable --now <name>.timer` after first install.
+    echo -e "\nLinking systemd user units..."
+    create_symlink "$DOTFILES_DIR/systemd/user/ship-claude-logs.service" "$HOME/.config/systemd/user/ship-claude-logs.service"
+    create_symlink "$DOTFILES_DIR/systemd/user/ship-claude-logs.timer" "$HOME/.config/systemd/user/ship-claude-logs.timer"
+    create_symlink "$DOTFILES_DIR/systemd/user/ingest-claude-logs.service" "$HOME/.config/systemd/user/ingest-claude-logs.service"
+    create_symlink "$DOTFILES_DIR/systemd/user/ingest-claude-logs.timer" "$HOME/.config/systemd/user/ingest-claude-logs.timer"
+
     # Directory symlinks
     echo -e "\nLinking directories..."
     # ~/.codex/skills is symlinked at ben plugin bootstrap time (in install.sh

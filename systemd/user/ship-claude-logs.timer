@@ -1,0 +1,12 @@
+[Unit]
+Description=Trigger ship-claude-logs every 15 minutes
+Requires=ship-claude-logs.service
+
+[Timer]
+OnCalendar=*:0/15
+RandomizedDelaySec=1min
+Persistent=true
+Unit=ship-claude-logs.service
+
+[Install]
+WantedBy=timers.target

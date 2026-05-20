@@ -1,0 +1,9 @@
+[Unit]
+Description=Ingest shipped Claude logs into ~/claude-logs/analytics.db
+Documentation=file:///home/ben/.dotfiles/bin/ingest-claude-logs
+
+[Service]
+Type=oneshot
+Environment=PATH=/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ben/.dotfiles/bin/ingest-claude-logs
+TimeoutStartSec=15min
