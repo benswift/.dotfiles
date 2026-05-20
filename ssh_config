@@ -58,10 +58,14 @@ Host cpu2
   User benswift
   Hostname cpu2.cecs.anu.edu.au
 
-# jetson orin (via tailscale MagicDNS — works anywhere on the tailnet)
+# jetson orin — use the Tailscale MagicDNS FQDN so resolution always goes
+# through Tailscale (works on any network), and never collides with the
+# local LAN's `jetson-orin.uds.anu.edu.au` entry that points at the wired IP.
+# HostKeyAlias keeps known_hosts stable across address changes.
 Host jetson
   User jane
-  Hostname jetson-orin
+  Hostname jetson-orin.tail2b9b56.ts.net
+  HostKeyAlias jetson-orin
 
 # strproxy
 Host strproxy
