@@ -66,6 +66,8 @@ etc.). Key scripts:
 - `mailsync` --- sync all email accounts
 - `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI
   agents
+- `flash-voyager` --- build/flash ZSA Voyager firmware from an Oryx layout,
+  with the thumb-key tap/hold patch in @voyager/ applied
 
 ## Tool management (mise)
 
