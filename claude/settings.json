@@ -47,6 +47,7 @@
     "agent-browser@agent-browser": true,
     "impeccable@impeccable": true,
     "ast-grep@ast-grep-marketplace": true,
+    "modern-web-guidance@googlechrome": true,
     "ben@ben": true
   },
   "extraKnownMarketplaces": {
@@ -72,6 +73,12 @@
       "source": {
         "source": "github",
         "repo": "ast-grep/agent-skill"
+      }
+    },
+    "googlechrome": {
+      "source": {
+        "source": "github",
+        "repo": "GoogleChrome/modern-web-guidance"
       }
     }
   },
