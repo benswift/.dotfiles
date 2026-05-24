@@ -162,14 +162,42 @@ if command -v brew &>/dev/null; then
     export PATH
 fi
 
-# --- build / flash ----------------------------------------------------------
+# --- compile ----------------------------------------------------------------
+info "Compiling ($KEYBOARD:$KEYMAP)..."
+qmk compile -kb "$KEYBOARD" -km "$KEYMAP"
+
+KEYBOARD_FILESAFE="${KEYBOARD//\//_}"
+FIRMWARE_BIN="$QMK_HOME/${KEYBOARD_FILESAFE}_${KEYMAP}.bin"
+[[ -f "$FIRMWARE_BIN" ]] || die "Firmware not found at $FIRMWARE_BIN."
+
 if [[ "$COMPILE_ONLY" == true ]]; then
-    info "Compiling..."
-    qmk compile -kb "$KEYBOARD" -km "$KEYMAP"
-    info "Built --- see the path above. Re-run without --compile-only to flash."
-else
-    info "Compiling and flashing."
-    warn "Press the reset button on the Voyager's top edge when prompted."
-    qmk flash -kb "$KEYBOARD" -km "$KEYMAP"
-    info "Done."
+    info "Built: $FIRMWARE_BIN"
+    info "Re-run without --compile-only to flash."
+    exit 0
 fi
+
+# --- flash via dfu-util -----------------------------------------------------
+# qmk flash invokes dfu-util without disambiguating, but the Voyager exposes
+# both its run-time DFU interface (194f:0108) and the bootloader (3297:0791)
+# at once --- so qmk flash errors with "More than one DFU capable USB device
+# found". Locate the bootloader by vid:pid and target it by serial instead.
+
+BOOTLOADER_VIDPID="3297:0791"
+BOOTLOADER_ADDR="0x08002000"
+
+BOOTLOADER_SERIAL=$(dfu-util -l 2>/dev/null \
+    | grep -F "[$BOOTLOADER_VIDPID]" \
+    | head -1 \
+    | sed -n 's/.*serial="\([^"]*\)".*/\1/p')
+
+if [[ -z "$BOOTLOADER_SERIAL" ]]; then
+    warn "Voyager bootloader (DFU $BOOTLOADER_VIDPID) not visible on USB."
+    warn "Put the board into bootloader and re-run --- on the keyboard, tap"
+    warn "TG(2) (top-outer-left), then QK_BOOT (top-outer-right); or press"
+    warn "the reset button on the Voyager's top edge just before re-running."
+    die "Aborting flash."
+fi
+
+info "Bootloader found (serial $BOOTLOADER_SERIAL). Flashing..."
+dfu-util -S "$BOOTLOADER_SERIAL" -a 0 -s "${BOOTLOADER_ADDR}:leave" -D "$FIRMWARE_BIN"
+info "Flashed. Board should reboot into the new firmware momentarily."

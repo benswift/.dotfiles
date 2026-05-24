@@ -43,7 +43,13 @@ flash-voyager                                       # reuse the last source
 flash-voyager --compile-only 'https://...'           # build without flashing
 ```
 
-Flashing prompts you to press the reset button on the Voyager's top edge.
+Flashing requires the board in bootloader mode first --- easiest is the
+keymap's `QK_BOOT` keycode: tap `TG(2)` (top-outer-left), then `QK_BOOT`
+(top-outer-right); the keyboard goes quiet and waits. Alternatively, press
+the reset button on the Voyager's top edge just before running. The script
+locates the bootloader by vid:pid and invokes `dfu-util` directly, because
+`qmk flash` can't disambiguate when both the Voyager's run-time DFU
+interface and the bootloader are visible at once.
 
 The Oryx source URL is keyed by build revision, not by the stable layout hash,
 so it changes every time you recompile in Oryx --- hence passing it each time.
