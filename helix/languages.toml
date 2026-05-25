@@ -35,8 +35,12 @@ command = "nb-lsp"
 # [language-server.harper-ls.config.harper-ls]
 # dialect = "Australian"
 
-# astromotion decks: skip auto-format because oxfmt treats MDX comments like
-# `{/* _class: banner */}` as markdown and mangles the underscores/asterisks.
+# astromotion decks: skip auto-format because prettier/oxfmt mangle multi-line
+# MDX expression containers like `{/* notes: ...\n<ol>...</ol>\n*/}` (the
+# leading `*` gets escaped to `\*` and a blank line is inserted before the
+# content). Single-line `{/* _class: hero */}` survives correctly *if* oxfmt
+# is told the file is .mdx (see the dedicated mdx rule below), but multi-line
+# cases are a known prettier behaviour, so we just skip auto-format here.
 # Covers both parent decks (`*.deck.mdx`, routed by astromotion) and partials
 # (`*.mdx` files under any `decks/` subtree, included via `@include`).
 # Highlighting/injections inherit from markdown via
@@ -49,11 +53,24 @@ language-servers = ["marksman", "nb-lsp"]
 file-types = [{ glob = "*.deck.mdx" }, { glob = "**/decks/**/*.mdx" }]
 auto-format = false
 
+# mdx: separate from markdown so oxfmt sees the .mdx extension via
+# --stdin-filepath and uses its MDX parser. Without this, oxfmt treats MDX
+# expression containers as markdown emphasis and mangles single-line MDX
+# comments like `{/* _class: hero */}`.
+[[language]]
+name = "mdx"
+scope = "source.markdown"
+grammar = "markdown"
+language-servers = ["marksman", "nb-lsp"]
+auto-format = true
+file-types = ["mdx"]
+formatter = { command = "oxfmt", args = ["-c", "/Users/ben/.dotfiles/oxfmtrc.json", "--stdin-filepath", "file.mdx"] }
+
 [[language]]
 name = "markdown"
 language-servers = ["marksman", "nb-lsp"]
 auto-format = true
-file-types = ["md", "markdown", "mdx", "mkd", "mkdn", "mdwn", "mdown", "markdn", "mdtxt", "mdtext", "workbook", { glob = "PULLREQ_EDITMSG" }, { glob = "*.deck.svx" }]
+file-types = ["md", "markdown", "mkd", "mkdn", "mdwn", "mdown", "markdn", "mdtxt", "mdtext", "workbook", { glob = "PULLREQ_EDITMSG" }, { glob = "*.deck.svx" }]
 formatter = { command = "oxfmt", args = ["-c", "/Users/ben/.dotfiles/oxfmtrc.json", "--stdin-filepath", "file.md"] }
 
 [[language]]
