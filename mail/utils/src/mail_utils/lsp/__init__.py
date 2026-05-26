@@ -19,7 +19,7 @@ MAX_ATTACHMENT_SIZE_MB = 10
 GREETING_TRIGGERS = ("hey", "hi", "hello", "g'day", "dear")
 
 NICKNAMES: dict[str, str] = {
-    # "john.smith@example.com": "Smithy",
+    "sharon.lopez@anu.edu.au": "Shaz",
 }
 
 
