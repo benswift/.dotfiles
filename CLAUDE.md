@@ -203,17 +203,21 @@ The email config lives in @mail/ and includes:
 
 See @mail/README.md for detailed setup instructions.
 
-### Using neomutt with headless-terminal MCP
+### Using neomutt with ht-mcp
 
-To drive neomutt interactively in this project, use the headless-terminal MCP
-tools:
+To drive neomutt (or any TUI) interactively, use the `ht-mcp` MCP server. It's
+installed via brew (`ht-mcp` binary) and registered globally in `~/.claude.json`
+under `mcpServers.ht-mcp`. Tools appear under the `mcp__ht-mcp__` prefix:
 
-1. Create a session with `mcp__headless-terminal__ht_create_session` using
-   `["bash"]` as the command and `enableWebServer: true`
-2. Run neomutt with `ht_execute_command` using `TERM=xterm-direct neomutt`
-3. Use `ht_send_keys` to send keystrokes (e.g., `["m"]` to compose mail)
-4. Use `ht_take_snapshot` to view the current terminal state
-5. Close the session with `ht_close_session` when done
+1. `mcp__ht-mcp__ht_create_session` with `["bash"]` and `enableWebServer: true`
+2. `mcp__ht-mcp__ht_execute_command` with `TERM=xterm-direct neomutt`
+3. `mcp__ht-mcp__ht_send_keys` to send keystrokes (e.g. `["m"]`, `["Enter"]`,
+   `["C-g"]`)
+4. `mcp__ht-mcp__ht_take_snapshot` to view current terminal state. Note the
+   snapshot is plain text and does NOT show which row has the cursor (the
+   indicator is rendered via background colour). To probe cursor position,
+   send a side-effect key like `<space>` (tag-entry) and check which row got
+   the `*` flag, or rely on the resolve=yes cursor-advance behaviour
+5. `mcp__ht-mcp__ht_close_session` when done
 
-This allows testing neomutt workflows (like the markdown conversion macro)
-without requiring GUI interaction.
+Useful for testing neomutt macros and workflows without GUI interaction.
