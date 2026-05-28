@@ -14,6 +14,7 @@ Supported models:
     flux      - FLUX 2 Max: up to 8 ref images, resolution in MP
     seedream  - ByteDance Seedream 4.5: cinematic aesthetics, up to 14 ref images, 2K/4K
     gpt       - OpenAI GPT Image 1.5: all-round text-to-image + editing (limited aspect ratios)
+    recraft   - Recraft v4 Pro SVG: text-to-SVG vector graphics (no ref images)
 
 Provide a single prompt. Optionally include one or more input images with
 --input-image (repeatable) to transform or use as reference.
@@ -43,6 +44,7 @@ MODELS: dict[str, str] = {
     "flux": "black-forest-labs/flux-2-max",
     "seedream": "bytedance/seedream-4.5",
     "gpt": "openai/gpt-image-1.5",
+    "recraft": "recraft-ai/recraft-v4-pro-svg",
 }
 
 app = typer.Typer()
@@ -89,7 +91,7 @@ def download_image(url: str, target_dir: Path, base_name: str) -> Path:
     ext = Path(urlparse(url).path).suffix.lower()
     if ext == ".jpeg":
         ext = ".jpg"
-    elif ext not in (".jpg", ".png", ".webp"):
+    elif ext not in (".jpg", ".png", ".webp", ".svg"):
         ext = ".jpg"
     target_path = target_dir / f"{base_name}{ext}"
     response = httpx.get(url, timeout=60.0, follow_redirects=True)
@@ -178,6 +180,11 @@ def build_model_input(
                 stack.enter_context(open(p, "rb")) for p in image_paths
             ]
 
+    elif model == "recraft":
+        params.pop("output_format", None)
+        if image_paths:
+            warn("recraft model does not accept input images; ignoring them")
+
     elif model == "gpt":
         gpt_ratio_map = {
             "1:1": "1:1",
@@ -248,7 +255,7 @@ def _main_impl(
     prompt: Annotated[str, typer.Argument(help="Image prompt")],
     model: Annotated[
         str,
-        typer.Option(help="Model to use: banana, qwen, flux, seedream, gpt"),
+        typer.Option(help="Model to use: banana, qwen, flux, seedream, gpt, recraft"),
     ] = "banana",
     output_dir: Annotated[Path, typer.Option(help="Output directory")] = Path(
         "styled_image_gen_output"
@@ -315,7 +322,10 @@ def _main_impl(
 
     client = replicate.Client(api_token=api_token)
 
-    output_format = "jpg" if jpg else "avif"
+    if model == "recraft":
+        output_format = "svg"
+    else:
+        output_format = "jpg" if jpg else "avif"
     filename = output_filename if output_filename else slugify(prompt)
 
     print(f"Model: {MODELS[model]} ({model})")
@@ -346,13 +356,14 @@ def _main_impl(
 
     final_path = downloaded_path
     if not jpg:
-        if downloaded_path.suffix.lower() in (".jpg", ".jpeg", ".png"):
+        suffix = downloaded_path.suffix.lower()
+        if suffix in (".jpg", ".jpeg", ".png"):
             avif_path = target_dir / f"{filename}.avif"
             print("Converting to AVIF...")
             convert_to_avif(downloaded_path, avif_path)
             final_path = avif_path
-        else:
-            warn(f"Cannot convert {downloaded_path.suffix} to AVIF; keeping as downloaded")
+        elif suffix != ".svg":
+            warn(f"Cannot convert {suffix} to AVIF; keeping as downloaded")
 
     print()
     print(f"Image generated: {final_path}")
