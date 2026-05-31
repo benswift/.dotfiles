@@ -272,18 +272,23 @@ check_secrets() {
 check_skill_yaml() {
     local skills_dir="$1"
 
-    if ! command_exists ruby; then
-        check_warn "ruby not installed, skipping skill YAML validation"
+    if ! command_exists python3 || ! python3 -c 'import yaml' 2>/dev/null; then
+        check_warn "python3 + PyYAML not available, skipping skill YAML validation"
         return
     fi
 
-    if ruby -e 'require "yaml"; ARGV.each { |path|
-        text = File.read(path)
-        next unless text.start_with?("---\n")
-        idx = text.index("\n---\n", 4)
-        raise "#{path}: missing closing front matter" unless idx
-        YAML.safe_load(text[4...idx], permitted_classes: [], aliases: false)
-    }' "$skills_dir"/*/SKILL.md >/dev/null 2>&1; then
+    if python3 -c '
+import sys, yaml
+for path in sys.argv[1:]:
+    with open(path) as f:
+        text = f.read()
+    if not text.startswith("---\n"):
+        continue
+    idx = text.find("\n---\n", 4)
+    if idx == -1:
+        raise SystemExit(f"{path}: missing closing front matter")
+    yaml.safe_load(text[4:idx])
+' "$skills_dir"/*/SKILL.md >/dev/null 2>&1; then
         check_pass "skill front matter parses"
     else
         check_fail "skill front matter has YAML errors"
