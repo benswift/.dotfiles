@@ -82,5 +82,6 @@
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim",
-  "preferredNotifChannel": "ghostty"
+  "preferredNotifChannel": "ghostty",
+  "agentPushNotifEnabled": true
 }
