@@ -64,14 +64,14 @@ grammar = "markdown"
 language-servers = ["marksman", "nb-lsp"]
 auto-format = true
 file-types = ["mdx"]
-formatter = { command = "oxfmt", args = ["-c", "/Users/ben/.dotfiles/oxfmtrc.json", "--stdin-filepath", "file.mdx"] }
+formatter = { command = "oxfmt-helix", args = ["--stdin-filepath", "file.mdx"] }
 
 [[language]]
 name = "markdown"
 language-servers = ["marksman", "nb-lsp"]
 auto-format = true
 file-types = ["md", "markdown", "mkd", "mkdn", "mdwn", "mdown", "markdn", "mdtxt", "mdtext", "workbook", { glob = "PULLREQ_EDITMSG" }, { glob = "*.deck.svx" }]
-formatter = { command = "oxfmt", args = ["-c", "/Users/ben/.dotfiles/oxfmtrc.json", "--stdin-filepath", "file.md"] }
+formatter = { command = "oxfmt-helix", args = ["--stdin-filepath", "file.md"] }
 
 [[language]]
 name = "latex"

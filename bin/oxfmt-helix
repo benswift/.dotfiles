@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# oxfmt-helix --- run oxfmt with the global dotfiles config, portably.
+#
+# Helix passes formatter args verbatim (no shell), and oxfmt expands neither ~
+# nor $HOME, so the config path can't be templated in languages.toml. This
+# wrapper is the shell layer that expands $HOME (/Users/ben on macOS,
+# /home/ben on Linux). Referenced as the markdown/mdx formatter in
+# ~/.config/helix/languages.toml.
+set -euo pipefail
+exec oxfmt -c "$HOME/.dotfiles/oxfmtrc.json" "$@"
