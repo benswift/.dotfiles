@@ -45,7 +45,7 @@ sysup() {
   mise plugin update
   mise upgrade
   uv tool upgrade --all
-  bun update -g
+  bun update -g --latest
   cargo install-update -a
   dotfiles update
 }
