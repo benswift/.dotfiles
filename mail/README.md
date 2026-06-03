@@ -37,17 +37,19 @@ helpful.
 
 To sync Office365 email with mbsync using OAuth2 authentication:
 
-1. **Build mbsync with SASL support** (if not already available via package
-   manager):
-   - Source available at: https://github.com/isync-devel/isync
-   - Configure with `--with-sasl` pointing to your SASL installation
+1. **Install mbsync with XOAUTH2 support** (macOS):
+   ```sh
+   brew install benswift/tap/isync
+   ```
+   homebrew-core's isync is compiled without SASL, so it can't do OAuth2. The
+   [`benswift/homebrew-tap`](https://github.com/benswift/homebrew-tap) build
+   links a `cyrus-sasl` that bundles the
+   [cyrus-sasl-xoauth2](https://github.com/moriyoshi/cyrus-sasl-xoauth2) plugin,
+   so XOAUTH2 works out of the box --- no `SASL_PATH` and no self-compiled
+   binary. `install.sh` runs this automatically on macOS. On Linux, install the
+   distro's `isync` and `cyrus-sasl-xoauth2` packages instead.
 
-2. **Install cyrus-sasl-xoauth2 plugin**:
-   - Clone from: https://github.com/moriyoshi/cyrus-sasl-xoauth2
-   - Build and install to your SASL plugin directory (e.g.,
-     `/opt/homebrew/Cellar/cyrus-sasl/*/lib/sasl2/`)
-
-3. **OAuth2 token management**:
+2. **OAuth2 token management**:
    - Use `mutt_oauth2.py` script (from mutt source) to obtain and refresh tokens
    - Configure with Thunderbird's client ID:
      `9e5f94bc-e8a4-4e73-b8be-63364c29d753`
@@ -56,13 +58,13 @@ To sync Office365 email with mbsync using OAuth2 authentication:
    - Store tokens securely in macOS Keychain using `keychain-store.sh` wrapper
    - Run `./reauth-oauth.sh` from the mail directory to re-authenticate
 
-4. **Configure mbsync** (`mbsyncrc`):
+3. **Configure mbsync** (`mbsyncrc`):
    - Set `AuthMech XOAUTH2`
    - Use `PassCmd` with full paths to scripts
    - Example:
      `PassCmd "/path/to/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a user@example.com -s mutt_oauth2_account -w' --encryption-pipe '/path/to/keychain-store.sh user@example.com mutt_oauth2_account' /path/to/oauth2_keychain_stub"`
 
-5. **Configure msmtp** for sending:
+4. **Configure msmtp** for sending:
    - Install with `brew install msmtp`
    - Use same OAuth token from keychain
    - See `msmtprc` for configuration

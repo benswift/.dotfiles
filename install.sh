@@ -81,6 +81,25 @@ install_op() {
     fi
 }
 
+# isync (mbsync) with OAuth2. homebrew-core's isync is built without SASL, so it
+# can't authenticate to Office365/Gmail over XOAUTH2. The benswift/tap build
+# links a cyrus-sasl that bundles the XOAUTH2 plugin, so OAuth2 IMAP works out of
+# the box (and survives `brew upgrade`, unlike the old self-compiled binary).
+# macOS only --- on Linux install the distro's isync + cyrus-sasl-xoauth2
+# packages instead (see mail/README.md).
+install_mail_sync() {
+    [[ "$platform" == "macos" ]] || return 0
+
+    if brew list isync &>/dev/null; then
+        info "isync already installed (mbsync with XOAUTH2)"
+        return
+    fi
+
+    info "Installing isync (mbsync) with XOAUTH2 support..."
+    brew tap benswift/tap
+    brew install benswift/tap/isync
+}
+
 clone_dotfiles() {
     if [[ -d "$DOTFILES_DIR" ]]; then
         info "Dotfiles already exist at $DOTFILES_DIR"
@@ -156,6 +175,7 @@ main() {
         install_homebrew
     fi
     install_op
+    install_mail_sync
     install_mise
     clone_dotfiles
     setup_symlinks

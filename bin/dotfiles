@@ -183,6 +183,18 @@ check_tools() {
             check_warn "$tool not installed"
         fi
     done
+
+    # mbsync must be SASL-enabled for Office365/Gmail OAuth2 --- the
+    # benswift/tap build provides this, homebrew-core's isync does not. Catches
+    # a stray plain isync silently shadowing the XOAUTH2 one (e.g. after a
+    # botched upgrade).
+    if [[ "$OSTYPE" == darwin* ]] && command_exists mbsync; then
+        if strings "$(command -v mbsync)" 2>/dev/null | grep -q '+HAVE_LIBSASL'; then
+            check_pass "mbsync XOAUTH2 (SASL) support"
+        else
+            check_fail "mbsync lacks SASL --- run 'brew install benswift/tap/isync'"
+        fi
+    fi
 }
 
 check_mise_tools() {
