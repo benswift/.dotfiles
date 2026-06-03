@@ -14,7 +14,7 @@ __all__ = [
     "DenormalisedStudent",
 ]
 
-NB_NOTE_ID = "student-db.json"
+NB_NOTE_ID = "data/student-db.json"
 
 
 class StudentDB:
