@@ -78,6 +78,12 @@ Write concise, imperative-mood commit messages. Prefer small, focused commits.
 Always rebase, never merge (unless it's the only way, then ask for
 confirmation).
 
+During long-running agentic work, commit as you go rather than waiting to be
+asked: land a commit at each logical checkpoint, but only when the full suite
+of tests, lints, and other checks passes --- never commit a red state. Commit
+to the current branch (don't branch first) and commit locally only; leave
+pushing to me as a deliberate step.
+
 ### Security
 
 Never put raw credentials, passwords, API keys, or tokens in code or config
