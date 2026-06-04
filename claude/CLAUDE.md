@@ -46,9 +46,10 @@ replacements.
 
 - **mise**: always available via global config (`~/.config/mise/config.toml`).
   When a project has its own `mise.toml`, prefix commands with `mise exec --`
-- **Python**: _always_ use `uv`, Python 3.12+ with type hints, prefer polars
-  over pandas, pydantic for validation, httpx over requests, pytest with
-  parallel execution
+- **Python**: _always_ use `uv`, Python 3.12+ with type hints, fail fast (let
+  exceptions bubble, no bare `except`). Prefer polars over pandas,
+  pydantic/sqlmodel for validation, httpx over requests, typer for CLIs, loguru
+  for logging, pathlib over os.path, pytest with parallel execution
 - **Elixir/Phoenix**: read the usage_rules, use Ash declarative resources,
   Phoenix LiveView, use generators, PhoenixTest syntax, tidewave for debugging
 - **Frontend web**: semantic HTML with accessibility, modern browser features,
