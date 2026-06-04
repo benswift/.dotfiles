@@ -66,8 +66,8 @@ etc.). Key scripts:
 - `mailsync` --- sync all email accounts
 - `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI
   agents
-- `flash-voyager` --- build/flash ZSA Voyager firmware from an Oryx layout,
-  with the thumb-key tap/hold patch in @voyager/ applied
+- `flash-voyager` --- build/flash ZSA Voyager firmware from an Oryx layout, with
+  the thumb-key tap/hold patch in @voyager/ applied
 
 ## Tool management (mise)
 
@@ -78,8 +78,8 @@ in a project with its own `mise.toml`.
 Machine-local config (per-host env vars, secrets not safe for git) goes in
 `~/.config/mise/config.local.toml` --- mise auto-merges it with the global
 config, so any `[env]` entries get exported into every shell. Use this for
-credentials on headless boxes where the 1Password CLI desktop integration
-isn't available (e.g. `PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for `notify-pushover`).
+credentials on headless boxes where the 1Password CLI desktop integration isn't
+available (e.g. `PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for `notify-pushover`).
 
 ### Package installation hierarchy
 
@@ -152,8 +152,8 @@ Three directories are involved --- note the differences:
   Claude Code. Contents are gitignored by default (`.claude/*` globally), but
   individual repos can opt-in to tracking specific subdirectories via a local
   `!.claude/<path>/` rule (e.g. project-local skills). The directory typically
-  contains machine-specific state like `settings.local.json`, plans, and
-  session data.
+  contains machine-specific state like `settings.local.json`, plans, and session
+  data.
 
 The @claude/ folder includes:
 
@@ -173,15 +173,16 @@ through Claude Code's plugin mechanism.
 Codex CLI uses `~/.codex/instructions.md` for global instructions (symlinked to
 @claude/CLAUDE.md). Project-level instructions are read from `CLAUDE.md` via its
 `project_doc_fallback_filenames` setting. Codex doesn't understand Claude Code's
-plugin mechanism, but it reads the raw skill directories fine. @bin/sync-agent-config
-keeps `~/.codex/skills` as a Codex-owned directory and symlinks each personal
-skill from `~/.claude/plugins/marketplaces/ben/skills/` into it.
+plugin mechanism, but it reads the raw skill directories fine.
+@bin/sync-agent-config keeps `~/.codex/skills` as a Codex-owned directory and
+symlinks each personal skill from `~/.claude/plugins/marketplaces/ben/skills/`
+into it.
 
 `~/.codex/config.toml` is symlinked to @codex/config.toml, which holds only
-portable defaults (model, reasoning effort, personality, project doc
-fallback). Codex itself rewrites this file when it dismisses notices or
-records trusted projects, so expect occasional uncommitted churn in the repo
---- discard with `git checkout codex/config.toml`, or run
+portable defaults (model, reasoning effort, personality, project doc fallback).
+Codex itself rewrites this file when it dismisses notices or records trusted
+projects, so expect occasional uncommitted churn in the repo --- discard with
+`git checkout codex/config.toml`, or run
 `git update-index --skip-worktree codex/config.toml` per-machine if it gets
 noisy. Machine-specific blocks (`[notice]`, `[tui.*]`, `[projects."..."]`)
 should not be committed.
@@ -215,9 +216,9 @@ under `mcpServers.ht-mcp`. Tools appear under the `mcp__ht-mcp__` prefix:
    `["C-g"]`)
 4. `mcp__ht-mcp__ht_take_snapshot` to view current terminal state. Note the
    snapshot is plain text and does NOT show which row has the cursor (the
-   indicator is rendered via background colour). To probe cursor position,
-   send a side-effect key like `<space>` (tag-entry) and check which row got
-   the `*` flag, or rely on the resolve=yes cursor-advance behaviour
+   indicator is rendered via background colour). To probe cursor position, send
+   a side-effect key like `<space>` (tag-entry) and check which row got the `*`
+   flag, or rely on the resolve=yes cursor-advance behaviour
 5. `mcp__ht-mcp__ht_close_session` when done
 
 Useful for testing neomutt macros and workflows without GUI interaction.
