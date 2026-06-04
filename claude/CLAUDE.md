@@ -55,7 +55,8 @@ replacements.
 - **Frontend web**: semantic HTML with accessibility, modern browser features,
   Grid/Flexbox, modern ES6+ with functional patterns. Use the `agent-browser`
   CLI (not Playwright directly) for browser automation and UI testing
-- **Tasks**: use `backlog` MCP server
+- **Tasks**: use the `backlog` CLI (Backlog.md); the
+  `ben:project-manager-backlog` skill covers task format and workflow
 - **Notes**: my personal knowledge base lives at `~/.nb/home/` and is managed
   via the `nb` CLI. Use the `ben:pkb` skill whenever a task involves journals,
   dailies, todos, notes, people/, projects/, or the knowledge base. Get paths
