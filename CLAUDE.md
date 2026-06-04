@@ -146,7 +146,7 @@ Three directories are involved --- note the differences:
   truth** --- edit skills there, commit and push from there. Codex gets
   per-skill symlinks into that clone, while its generated `.system/` skills stay
   under `~/.codex/skills/.system`. Skills appear to the model as
-  `ben:<skill-name>` (e.g. `ben:github-explorer`). The same bootstrap pattern
+  `ben:<skill-name>` (e.g. `ben:pkb`). The same bootstrap pattern
   handles the `impeccable` and `agent-browser` plugins.
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Contents are gitignored by default (`.claude/*` globally), but

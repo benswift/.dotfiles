@@ -75,8 +75,9 @@ zero failures, errors, warnings, and backtraces.
 ### Version control
 
 Write concise, imperative-mood commit messages. Prefer small, focused commits.
-Always rebase, never merge (unless it's the only way, then ask for
-confirmation).
+Stage specific files by name rather than `git add .` or `-A`. Always rebase,
+never merge (unless it's the only way, then ask for confirmation); force-push
+only with `--force-with-lease`, never a bare `--force`.
 
 During long-running agentic work, commit as you go rather than waiting to be
 asked: land a commit at each logical checkpoint, but only when the full suite

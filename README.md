@@ -63,7 +63,7 @@ The `create_symlinks.sh` script sets up all necessary symlinks and directories.
 
 ### Personal skills plugin (`ben`)
 
-My personal Claude Code skills library (pkb, benswift-writer, github-explorer,
+My personal Claude Code skills library (pkb, benswift-writer, phdconvenor,
 etc.) lives in a separate **private** repo,
 [`benswift/claude-plugin-personal`](https://github.com/benswift/claude-plugin-personal),
 loaded as a Claude Code plugin. The setup:
@@ -80,7 +80,7 @@ loaded as a Claude Code plugin. The setup:
   `~/.codex/skills`. Codex keeps its generated `.system/` skills in its own
   directory, so they do not dirty the private Claude marketplace clone.
 - **Skills appear to the model** as `ben:<skill-name>` (e.g.
-  `ben:github-explorer`).
+  `ben:pkb`).
 
 To propagate changes across machines: push from the marketplace clone, then run
 `dotfiles update` elsewhere. That refreshes Claude plugins and re-syncs Codex
