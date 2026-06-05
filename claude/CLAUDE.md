@@ -76,10 +76,16 @@ zero failures, errors, warnings, and backtraces.
 
 ### Version control
 
-Write concise, imperative-mood commit messages. Prefer small, focused commits.
-Stage specific files by name rather than `git add .` or `-A`. Always rebase,
-never merge (unless it's the only way, then ask for confirmation); force-push
-only with `--force-with-lease`, never a bare `--force`.
+Write concise, imperative-mood commit messages with a `scope: description`
+subject: the scope names the part of the codebase that changed (subsystem,
+module, or file), which is what a reader scanning the log actually cares about.
+Give every commit a scope --- one without it is like a sentence without a
+subject. Don't use Conventional Commits type prefixes (`feat:`, `fix:`,
+`chore:`); the type wastes the subject line and a clear description makes the
+change obvious anyway. Prefer small, focused commits. Stage specific files by
+name rather than `git add .` or `-A`. Always rebase, never merge (unless it's
+the only way, then ask for confirmation); force-push only with
+`--force-with-lease`, never a bare `--force`.
 
 During long-running agentic work, commit as you go rather than waiting to be
 asked: land a commit at each logical checkpoint, but only when the full suite
