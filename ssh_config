@@ -49,14 +49,12 @@ Host cybersonic
   IdentityFile ~/.ssh/cybersonic
   ProxyJump bulwark
 
-# cpu1
-Host cpu1
-  User benswift
-  Hostname cpu1.cecs.anu.edu.au
-
-Host cpu2
-  User benswift
-  Hostname cpu2.cecs.anu.edu.au
+# weddle — tailnet jump host for bulwark (see the Match block above). FQDN so it
+# always resolves through Tailscale, on any network.
+Host weddle
+  User ben
+  Hostname weddle.tail2b9b56.ts.net
+  HostKeyAlias weddle
 
 # jetson orin — use the Tailscale MagicDNS FQDN so resolution always goes
 # through Tailscale (works on any network), and never collides with the
@@ -67,16 +65,18 @@ Host jetson
   Hostname jetson-orin.tail2b9b56.ts.net
   HostKeyAlias jetson-orin
 
+# daysy — Ben's Mac on the tailnet. Tailscale owner shows as benswift@, but the
+# macOS account is `ben`. MagicDNS FQDN resolves on any network; HostKeyAlias
+# keeps known_hosts stable across address changes.
+Host daysy
+  User ben
+  Hostname daysy.tail2b9b56.ts.net
+  HostKeyAlias daysy
+
 # strproxy
 Host strproxy
   User u2548636
   Hostname strproxy.comp.anu.edu.au
-
-# Azure
-Host extempore-win
-  User azureuser
-  Hostname 68.218.107.86
-  IdentityFile ~/.ssh/extempore_windows_vm
 
 # macOS: route through the 1Password SSH agent. Guarded so it's a no-op on Linux.
 Match host * exec "uname -s | grep -q Darwin"
