@@ -43,7 +43,7 @@ sysup() {
     mise self-update -y
   fi
   mise plugin update
-  mise upgrade
+  mise upgrade -y
   uv tool upgrade --all
   bun update -g --latest
   cargo install-update -a
