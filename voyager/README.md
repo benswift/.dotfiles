@@ -1,67 +1,65 @@
-# Voyager firmware
+# Voyager keyboard
 
-A build-time fix for the ZSA Voyager's thumb-key tap/hold behaviour, plus the
-`flash-voyager` script that applies it.
+Setup notes for my ZSA Voyager. The layout and all of its tap-hold behaviour
+live in Oryx (ZSA's web configurator) --- there's no local build step, no
+custom firmware code, and no flashing script: I flash with ZSA's Keymapp app.
 
-## Why this exists
+> Previously this directory held `thumb-fix.c`, a per-key QMK patch applied at
+> build time, because Oryx only exposed "Hold On Other Key Press" and "Tap
+> Flow" as global switches. Oryx now exposes the tap-hold options natively and
+> the layout has been reworked so none of those per-key overrides are needed,
+> so the patch (and the `flash-voyager` build/flash pipeline that applied it)
+> is gone. See the git history if you ever need it back.
 
-Oryx exposes "Hold On Other Key Press" and "Tap Flow" only as global switches,
-but two of the Voyager's thumb dual-function keys need *per-key* behaviour:
+## Tap-hold setup (all in Oryx)
 
-- `MT(MOD_LSFT, KC_BSPC)` (Shift / Backspace) --- needs hold-on-other-key-press
-  so a fast Shift+letter roll produces a capital, not Backspace + lowercase.
-- `LT(1, KC_SPACE)` (Layer 1 / Space) --- needs exemption from Tap Flow so the
-  layer hold isn't demoted to Space during fast typing.
+Under Oryx's tap-hold / "Holding" settings:
 
-`thumb-fix.c` supplies both as QMK per-key callbacks. It is layout-independent
---- it keys off the thumb keycodes, not the layout array --- so Oryx stays the
-source of truth for the layout and the fix is re-applied mechanically on every
-build. Editing the layout in Oryx never invalidates it, and you keep using the
-Oryx GUI as normal.
+- **Chordal Hold: on** --- the "opposite hands" rule. A dual-function key
+  chorded with a *same-hand* key resolves as a tap (so fast rolls never
+  misfire); chorded with the *opposite* hand it can resolve as a hold.
+- **Permissive Hold: on** --- an opposite-hand chord settles as a hold as soon
+  as the other key is pressed-and-released, so intentional chords are instant.
+- **Tap Flow: off** --- the key change from the old setup. Tap Flow biased
+  dual-function keys toward their tap during fast typing, which is what made
+  the Cmd home-row mods drop on quick rolls.
+- **Tapping term: ~200 ms** --- ZSA's recommended range with Chordal Hold.
+  Intentional chords resolve on the nested keypress (Permissive Hold) rather
+  than waiting this out, so the term mostly just sets the accidental-mod
+  margin; the Cmd keys can sit a little higher, Shift a little lower.
 
-## One-time setup
+### Modifiers
 
-```sh
-flash-voyager --setup
-```
+The design rule: chord every modifier with the **opposite hand**. Same-hand
+presses are always letters, so fast typing is never obstructed.
 
-Installs the QMK CLI (`brew install qmk/qmk/qmk`) and clones ZSA's QMK fork
-(`zsa/qmk_firmware`, branch `firmware25`) to `~/qmk_firmware`. The clone is
-large (~1 GB) and takes a few minutes.
+- **Cmd (GUI)** on the pinky home keys, `a` / `;`.
+- **Shift** on the index home keys, `f` / `j` (left = Left Shift, right = Right
+  Shift). Capitalise with the opposite-hand Shift: capital B -> right Shift
+  (`j`) + `b`; capital U -> left Shift (`f`) + `u`. A misfire here is just a
+  stray capital, not a destructive backspace.
+- **Ctrl / Tab** stay on the left-inner thumb (hold = Ctrl, tap = Tab), so
+  one-handed Cmd+Tab (`a` + thumb Tab) and zellij's Ctrl chords are unchanged.
+- **Left-outer thumb is plain Backspace** --- no longer a Shift/Backspace
+  dual-function, which is what used to eat capitals.
 
-If Oryx later bumps the firmware version, re-run setup with the matching
-branch, e.g. `ZSA_BRANCH=firmware26 flash-voyager --setup`.
+### Combos
 
-## Usage
+- `j`+`k` -> Esc.
+- `f`+`j` -> Caps Word (both Shift keys), for acronyms and ALL-CAPS runs.
 
-After editing the layout in Oryx, click Compile, then copy the "Download
-Source" link (or download the `.zip`):
+### The one trade-off
 
-```sh
-flash-voyager 'https://oryx.zsa.io/source/XXXXXX'   # URL, or a path to the .zip
-flash-voyager                                       # reuse the last source
-flash-voyager --compile-only 'https://...'           # build without flashing
-```
+Tap Flow is global in Oryx, so turning it off turns it off everywhere. The
+cost is that a few fast opposite-hand rolls through a home-row mod can misfire
+(e.g. "ah" -> Cmd+H, or a stray capital). They're rare and, for Shift,
+harmless. If they ever get annoying, the only fix that keeps Tap Flow off for
+the Space/layer thumb is a small per-key `get_flow_tap_term` callback --- i.e.
+bringing back a trimmed `thumb-fix.c`. Not expected to be necessary.
 
-Flashing requires the board in bootloader mode first --- easiest is the
-keymap's `QK_BOOT` keycode: tap `TG(2)` (top-outer-left), then `QK_BOOT`
-(top-outer-right); the keyboard goes quiet and waits. Alternatively, press
-the reset button on the Voyager's top edge just before running. The script
-locates the bootloader by vid:pid and invokes `dfu-util` directly, because
-`qmk flash` can't disambiguate when both the Voyager's run-time DFU
-interface and the bootloader are visible at once.
+## Flashing
 
-The Oryx source URL is keyed by build revision, not by the stable layout hash,
-so it changes every time you recompile in Oryx --- hence passing it each time.
-
-## Keep this baseline in Oryx
-
-The snippet assumes **Hold On Other Key Press OFF** and **Tap Flow ON**. Leave
-Tap Flow on --- you want it for the home-row mods; the snippet just carves out
-the thumbs.
-
-## If you rebind a thumb key
-
-`thumb-fix.c` hardcodes `MT(MOD_LSFT, KC_BSPC)` and `LT(1, KC_SPACE)`. If you
-change either thumb assignment in Oryx, update the `case` labels to match.
-`flash-voyager` prints a warning if those keycodes are no longer in the layout.
+Oryx compiles server-side, so there's no toolchain to install. Flash with
+**Keymapp** (ZSA's desktop app): open it, put the board into the bootloader
+(tap `TG(2)` top-outer-left, then `QK_BOOT` top-outer-right, or press the reset
+button on the top edge), and click flash.
