@@ -32,8 +32,8 @@ setopt HIST_IGNORE_SPACE
 alias y="yazi"
 alias h="hx ."
 alias zp="zed-preview"
-alias ayolo="claude --dangerously-skip-permissions --model opus --effort max"
-alias ayolof="claude --dangerously-skip-permissions --model fable --effort high"
+alias ay="claude --dangerously-skip-permissions --model opus --effort max"
+alias ayf="claude --dangerously-skip-permissions --model fable --effort high"
 alias oyolo="codex --dangerously-bypass-approvals-and-sandbox"
 alias gyolo="gemini --yolo"
 sysup() {
