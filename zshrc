@@ -37,7 +37,7 @@ alias oyolo="codex --dangerously-bypass-approvals-and-sandbox"
 alias gyolo="gemini --yolo"
 sysup() {
   if [[ "$OSTYPE" == darwin* ]]; then
-    brew upgrade --formula
+    HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS=1 brew upgrade --formula --yes
   else
     sudo apt update && sudo apt upgrade -y
     mise self-update -y
