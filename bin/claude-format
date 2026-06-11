@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# claude-format --- Claude Code PostToolUse hook (Write|Edit): format the
+# edited file with the same formatter invocations Helix uses on save, so
+# Claude and Helix never leave formatting-only git diffs behind.
+#
+# Keep the dispatch table in sync with ~/.dotfiles/helix/languages.toml ---
+# same commands, same args, same exclusions (e.g. astromotion decks are
+# auto-format = false in Helix, so they're skipped here too).
+#
+# Reads the hook JSON payload on stdin and extracts the file path.
+set -euo pipefail
+
+f="$(jq -r '.tool_input.file_path // .tool_response.filePath // empty')"
+[[ -n "$f" && -f "$f" ]] || exit 0
+
+# Run a stdin->stdout formatter exactly as Helix would; write back only on
+# success and only if the output differs (cat > preserves inode/permissions).
+# Missing formatters are skipped silently, matching Helix's behaviour.
+fmt() {
+    command -v "$1" &>/dev/null || return 0
+    local tmp
+    tmp="$(mktemp)"
+    trap 'rm -f "$tmp"' RETURN
+    if "$@" <"$f" >"$tmp" 2>/dev/null && ! cmp -s "$tmp" "$f"; then
+        cat "$tmp" >"$f"
+    fi
+}
+
+# mix format needs the project's .formatter.exs; walk up to the mix root.
+# elixir-ls formats via mix format, so this matches Helix output.
+fmt_mix() {
+    command -v mix &>/dev/null || return 0
+    local dir
+    dir="$(dirname "$f")"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/mix.exs" ]]; then
+            (cd "$dir" && mix format "$f" 2>/dev/null) || true
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+}
+
+case "$f" in
+*.deck.mdx | */decks/*.mdx) ;; # astromotion decks: auto-format = false
+*.md | *.markdown | *.deck.svx) fmt oxfmt-helix --stdin-filepath file.md ;;
+*.mdx) fmt oxfmt-helix --stdin-filepath file.mdx ;;
+*.typ) fmt typstyle --wrap-text ;;
+*.tex) fmt tex-fmt --stdin ;;
+*.toml) fmt taplo fmt - ;;
+*.kdl) fmt kdlfmt format - ;;
+*.py) fmt ruff format --stdin-filename "$f" - ;;
+*.ex | *.exs | *.heex) fmt_mix ;;
+esac
+
+exit 0
