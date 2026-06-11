@@ -47,7 +47,7 @@ case "$f" in
 *.mdx) fmt oxfmt-helix --stdin-filepath file.mdx ;;
 *.typ) fmt typstyle --wrap-text ;;
 *.tex) fmt tex-fmt --stdin ;;
-*.toml) fmt taplo fmt - ;;
+*.toml) fmt oxfmt-helix --stdin-filepath file.toml ;;
 *.kdl) fmt kdlfmt format - ;;
 *.py) fmt ruff format --stdin-filename "$f" - ;;
 *.ex | *.exs | *.heex) fmt_mix ;;
