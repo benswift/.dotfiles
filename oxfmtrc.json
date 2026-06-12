@@ -1,4 +1,10 @@
 {
   "proseWrap": "always",
-  "printWidth": 80
+  "printWidth": 80,
+  "overrides": [
+    {
+      "files": ["*.mdx", "**/*.mdx"],
+      "options": { "proseWrap": "preserve" }
+    }
+  ]
 }
