@@ -191,7 +191,11 @@ macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/acco
 macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
 
 # === Sync operations ===
-macro index,pager ,s "<shell-escape>mailsync<enter>" "sync all mail"
+# sync-mailbox before mailsync so pending local changes (deletes from the
+# archive macro, read flags) hit disk and get pushed this run, and again
+# after so messages archived/deleted on other devices drop out of the index
+# instead of lingering as D-flagged ghosts
+macro index,pager ,s "<sync-mailbox><shell-escape>mailsync<enter><sync-mailbox>" "sync all mail"
 
 # === Archive workflow ===
 # Immediate archive (message disappears from index)
