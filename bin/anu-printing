@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+#
+# anu-printing --- enable or disable ANU's PaperCut printing on demand (macOS).
+#
+# ANU printing runs through the PaperCut Print Deploy Client, which installs a
+# KeepAlive system LaunchDaemon (pc-print-deploy-client) plus a foreground login
+# agent (com.papercut.printdeploy.client). Those keep a background client (and
+# its webview window) alive at all times. This script lets you switch the whole
+# thing off when you don't need it and back on before printing to an ANU
+# printer. It does NOT uninstall anything --- the app and any deployed print
+# queues survive, so re-enabling is instant.
+#
+#   anu-printing off      stop it now, stays off across reboots
+#   anu-printing on       re-enable and start it
+#   anu-printing status   show whether it's currently running
+#
+# off/on need sudo (you'll be prompted for your password).
+
+set -euo pipefail
+
+DAEMON_LABEL="pc-print-deploy-client"
+AGENT_LABEL="com.papercut.printdeploy.client"
+MONITOR_LABEL="papercut.pc-event-monitor"
+DAEMON_PLIST="/Library/LaunchDaemons/pc-print-deploy-client.plist"
+AGENT_PLIST="/Library/LaunchAgents/com.papercut.printdeploy.client.plist"
+APP_DIR="/Applications/PaperCut Print Deploy Client"
+PROC_PATTERN='PaperCut Print Deploy Client|print-deploy-client|usercontextservice|pc-event-monitor|pc-webview'
+
+if [[ "$OSTYPE" != darwin* ]]; then
+  echo "anu-printing: macOS only (uses launchctl)." >&2
+  exit 1
+fi
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: anu-printing <on|off|status>
+
+  off      stop ANU PaperCut printing now and keep it off across reboots
+  on       re-enable and start ANU PaperCut printing
+  status   show whether the client is currently running
+
+off/on need sudo (you'll be prompted for your password).
+EOF
+}
+
+uid="$(id -u)"
+
+cmd_off() {
+  echo "Disabling ANU PaperCut printing..."
+  # Stop + disable the background supervisor (the KeepAlive respawner) first,
+  # so killing the client processes below doesn't just trigger a relaunch.
+  sudo launchctl bootout "system/${DAEMON_LABEL}" 2>/dev/null || true
+  sudo launchctl disable "system/${DAEMON_LABEL}"
+  # Stop + disable the foreground login agent.
+  sudo launchctl bootout "gui/${uid}/${AGENT_LABEL}" 2>/dev/null || true
+  sudo launchctl disable "gui/${uid}/${AGENT_LABEL}"
+  # Event-monitor daemon (usually already Disabled) --- make sure it's out too.
+  sudo launchctl bootout "system/${MONITOR_LABEL}" 2>/dev/null || true
+  # Mop up any client / UI / wedged-installer processes left behind.
+  sudo pkill -fi "$PROC_PATTERN" 2>/dev/null || true
+  echo "Done. ANU printing is OFF --- run 'anu-printing on' before printing."
+}
+
+cmd_on() {
+  echo "Enabling ANU PaperCut printing..."
+  sudo launchctl enable "system/${DAEMON_LABEL}"
+  sudo launchctl enable "gui/${uid}/${AGENT_LABEL}"
+  sudo launchctl bootstrap system "$DAEMON_PLIST" 2>/dev/null || true
+  sudo launchctl bootstrap "gui/${uid}" "$AGENT_PLIST" 2>/dev/null || true
+  echo "Done. ANU printing is ON."
+}
+
+cmd_status() {
+  if pgrep -fi "$PROC_PATTERN" >/dev/null 2>&1; then
+    echo "ANU printing: RUNNING"
+    pgrep -fil "$PROC_PATTERN"
+  else
+    echo "ANU printing: not running"
+  fi
+  [[ -d "$APP_DIR" ]] || echo "(note: $APP_DIR not found --- client may be uninstalled)"
+}
+
+case "${1:-}" in
+  off) cmd_off ;;
+  on) cmd_on ;;
+  status) cmd_status ;;
+  -h | --help | help) usage ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac
