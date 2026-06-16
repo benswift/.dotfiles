@@ -22,7 +22,7 @@ class Student(BaseModel):
     @field_validator("status")
     @classmethod
     def validate_status(cls, v: str) -> str:
-        valid = {"pre-confirmation", "confirmed", "paused", "completed"}
+        valid = {"pre-confirmation", "confirmed", "submitted", "paused", "completed"}
         if v not in valid:
             raise ValueError(f"status must be one of {valid}, got {v!r}")
         return v
