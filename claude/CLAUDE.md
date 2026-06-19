@@ -92,6 +92,22 @@ tests, lints, and other checks passes --- never commit a red state. Commit to
 the current branch (don't branch first) and commit locally only; leave pushing
 to me as a deliberate step.
 
+### Formatter hook
+
+A PostToolUse `Write|Edit` hook (`~/.dotfiles/bin/claude-format`) reformats
+every file I edit, running the same per-type formatter Helix runs on save so the
+two never fight over formatting (`oxfmt-helix` for markdown/toml, `ruff format`
+for Python, `typstyle --wrap-text` for Typst, and so on). The catch: the first
+edit to a file that isn't already a fixed point of its formatter reflows the
+whole file, so a one-line change can land as a 100--300 line diff mixing the
+reflow with the real edit. Don't bundle the two. Reproduce the pure reflow from
+HEAD with the file's EXACT dispatch-table command (never a guessed flag --- a
+mismatched invocation formats differently and fights the hook), commit that
+reflow alone, then commit the semantic change on top and check the second diff
+shows only your edit. If matching the hook is impractical, commit the working
+(hook-formatted) file and note the bundled reflow --- it still lands as a fresh
+fixed point, so later edits diff clean.
+
 ### Security
 
 Never put raw credentials, passwords, API keys, or tokens in code or config
