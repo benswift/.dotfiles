@@ -33,10 +33,10 @@ actual headings, not bold text as a substitute.
 ## Tool use
 
 Default to ast-grep (`sg`) whenever the target is a code symbol --- a
-function/class/method definition, its callers, an import, a rename, or "show
-me the body of X" from a large file. Treat any task that names a code
-construct as a structural query, not a string search. The `ast-grep` skill
-carries the pattern/rule syntax --- invoke it rather than guessing.
+function/class/method definition, its callers, an import, a rename, or "show me
+the body of X" from a large file. Treat any task that names a code construct as
+a structural query, not a string search. The `ast-grep` skill carries the
+pattern/rule syntax --- invoke it rather than guessing.
 
 Reserve `rg`/`grep` for plain text searches over unstructured content,
 `sed`/`awk` for non-structural text edits, and the Edit tool for manual
@@ -64,9 +64,8 @@ replacements.
 
 ## Coding rules
 
-Prefer simple, clean, maintainable solutions. Pure functions processing
-built-in data structures is good practice. Match the style of surrounding
-code.
+Prefer simple, clean, maintainable solutions. Pure functions processing built-in
+data structures is good practice. Match the style of surrounding code.
 
 ### Testing
 
@@ -88,16 +87,16 @@ the only way, then ask for confirmation); force-push only with
 `--force-with-lease`, never a bare `--force`.
 
 During long-running agentic work, commit as you go rather than waiting to be
-asked: land a commit at each logical checkpoint, but only when the full suite
-of tests, lints, and other checks passes --- never commit a red state. Commit
-to the current branch (don't branch first) and commit locally only; leave
-pushing to me as a deliberate step.
+asked: land a commit at each logical checkpoint, but only when the full suite of
+tests, lints, and other checks passes --- never commit a red state. Commit to
+the current branch (don't branch first) and commit locally only; leave pushing
+to me as a deliberate step.
 
 ### Security
 
 Never put raw credentials, passwords, API keys, or tokens in code or config
-files. For project secrets, use fnox with the 1Password CLI backend on macOS: reference
-values as `op://Vault/Item/field` in `fnox.toml` and load through a fnox
-profile, never inline. On Linux it's ok to have things in an untracked mise env block.
-Warn if you encounter raw credentials during
-modifications and don't commit files that likely contain secrets.
+files. For project secrets, use fnox with the 1Password CLI backend on macOS:
+reference values as `op://Vault/Item/field` in `fnox.toml` and load through a
+fnox profile, never inline. On Linux it's ok to have things in an untracked mise
+env block. Warn if you encounter raw credentials during modifications and don't
+commit files that likely contain secrets.
