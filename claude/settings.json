@@ -92,9 +92,9 @@
     }
   },
   "alwaysThinkingEnabled": true,
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim",
   "preferredNotifChannel": "ghostty",
-  "agentPushNotifEnabled": true,
-  "tui": "fullscreen"
+  "agentPushNotifEnabled": true
 }
