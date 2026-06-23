@@ -84,7 +84,7 @@ def fmt_elapsed(create_time: float) -> str:
 
 def shorten_path(path: str) -> str:
     if path.startswith(HOME):
-        return "~" + path[len(HOME):]
+        return "~" + path[len(HOME) :]
     return path
 
 
@@ -150,31 +150,52 @@ def collect_processes() -> dict:
                 elapsed = fmt_elapsed(p.create_time())
 
                 if name in AGENT_STYLES:
-                    agents.append({
-                        "agent": name, "pid": pid, "cpu": cpu_str,
-                        "mem": mem_str, "elapsed": elapsed, "cwd": safe_cwd(p),
-                    })
+                    agents.append(
+                        {
+                            "agent": name,
+                            "pid": pid,
+                            "cpu": cpu_str,
+                            "mem": mem_str,
+                            "elapsed": elapsed,
+                            "cwd": safe_cwd(p),
+                        }
+                    )
 
                 if name == "neomutt":
-                    mail_clients.append({
-                        "pid": pid, "cpu": cpu_str, "mem": mem_str,
-                        "elapsed": elapsed, "cwd": safe_cwd(p),
-                    })
+                    mail_clients.append(
+                        {
+                            "pid": pid,
+                            "cpu": cpu_str,
+                            "mem": mem_str,
+                            "elapsed": elapsed,
+                            "cwd": safe_cwd(p),
+                        }
+                    )
 
                 try:
                     cmdline_str = " ".join(p.cmdline())
-                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                except (
+                    psutil.NoSuchProcess,
+                    psutil.AccessDenied,
+                    psutil.ZombieProcess,
+                ):
                     cmdline_str = ""
                 if cmdline_str:
                     for label, pattern in STRAY_PATTERNS:
                         if re.search(pattern, cmdline_str):
                             ppid = p.ppid()
-                            strays.append({
-                                "label": label, "pid": pid,
-                                "cpu": cpu_str, "mem": mem_str,
-                                "elapsed": elapsed,
-                                "status": "orphaned" if ppid == 1 else f"ppid={ppid}",
-                            })
+                            strays.append(
+                                {
+                                    "label": label,
+                                    "pid": pid,
+                                    "cpu": cpu_str,
+                                    "mem": mem_str,
+                                    "elapsed": elapsed,
+                                    "status": "orphaned"
+                                    if ppid == 1
+                                    else f"ppid={ppid}",
+                                }
+                            )
                             break
 
                 if cpu >= CPU_HOG_THRESHOLD:
@@ -183,28 +204,46 @@ def collect_processes() -> dict:
                         session = zellij_session_name(p)
                         if session:
                             label = f"zl:{session}"
-                    cpu_hogs.append({
-                        "name": label[:20], "pid": pid,
-                        "cpu": cpu, "mem": mem_str, "elapsed": elapsed,
-                        "cwd": safe_cwd(p),
-                    })
+                    cpu_hogs.append(
+                        {
+                            "name": label[:20],
+                            "pid": pid,
+                            "cpu": cpu,
+                            "mem": mem_str,
+                            "elapsed": elapsed,
+                            "cwd": safe_cwd(p),
+                        }
+                    )
 
                 try:
                     conns = p.net_connections(kind="tcp")
-                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                except (
+                    psutil.NoSuchProcess,
+                    psutil.AccessDenied,
+                    psutil.ZombieProcess,
+                ):
                     conns = []
                 if conns:
                     if display_name.lower() in LISTENER_NAMES:
                         ports = [c.laddr.port for c in conns if c.status == "LISTEN"]
                     else:
-                        ports = [c.laddr.port for c in conns if c.status == "LISTEN" and 3000 <= c.laddr.port <= 9999]
+                        ports = [
+                            c.laddr.port
+                            for c in conns
+                            if c.status == "LISTEN" and 3000 <= c.laddr.port <= 9999
+                        ]
                     if ports:
-                        servers.append({
-                            "cmd": display_name[:12], "pid": pid,
-                            "port": str(ports[0]), "cpu": cpu_str,
-                            "mem": mem_str, "elapsed": elapsed,
-                            "cwd": safe_cwd(p),
-                        })
+                        servers.append(
+                            {
+                                "cmd": display_name[:12],
+                                "pid": pid,
+                                "port": str(ports[0]),
+                                "cpu": cpu_str,
+                                "mem": mem_str,
+                                "elapsed": elapsed,
+                                "cwd": safe_cwd(p),
+                            }
+                        )
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
 
@@ -251,7 +290,9 @@ def kill_process(pid: int) -> str:
         try:
             result = subprocess.run(
                 ["zellij", "kill-session", session_name],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if result.returncode == 0:
                 return f"zellij kill-session {session_name}"
@@ -269,8 +310,13 @@ def kill_process(pid: int) -> str:
         return f"permission denied to kill PID {pid}"
 
 
-def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
-                  target: tuple[int, str] | None = None, message: str = "") -> Group:
+def build_display(
+    data: dict,
+    state: str = STATE_NORMAL,
+    input_buf: str = "",
+    target: tuple[int, str] | None = None,
+    message: str = "",
+) -> Group:
     now = datetime.now().strftime("%H:%M:%S")
     header = Text()
     header.append("hud", style=Style(color="#cdd6f4", bold=True))
@@ -303,12 +349,20 @@ def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
         style = AGENT_STYLES[a["agent"]]
         agent_table.add_row(
             Text(a["agent"], style=style),
-            a["pid"], a["cpu"], a["mem"], a["elapsed"], a["cwd"],
+            a["pid"],
+            a["cpu"],
+            a["mem"],
+            a["elapsed"],
+            a["cwd"],
         )
     if not agents:
         agent_table.add_row(
             Text("(no agents running)", style=MOCHA["dim"]),
-            "", "", "", "", "",
+            "",
+            "",
+            "",
+            "",
+            "",
         )
 
     stray_table = Table(
@@ -329,12 +383,20 @@ def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
     for s in strays:
         stray_table.add_row(
             Text(s["label"], style=MOCHA["yellow_bold"]),
-            s["pid"], s["cpu"], s["mem"], s["elapsed"], s["status"],
+            s["pid"],
+            s["cpu"],
+            s["mem"],
+            s["elapsed"],
+            s["status"],
         )
     if not strays:
         stray_table.add_row(
             Text("(no stray processes)", style=MOCHA["dim"]),
-            "", "", "", "", "",
+            "",
+            "",
+            "",
+            "",
+            "",
         )
 
     hog_table = Table(
@@ -356,12 +418,20 @@ def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
         cpu_style = MOCHA["red"] if h["cpu"] >= 50 else MOCHA["yellow_bold"]
         hog_table.add_row(
             Text(h["name"], style=cpu_style),
-            h["pid"], f"{h['cpu']:.1f}", h["mem"], h["elapsed"], h["cwd"],
+            h["pid"],
+            f"{h['cpu']:.1f}",
+            h["mem"],
+            h["elapsed"],
+            h["cwd"],
         )
     if not cpu_hogs:
         hog_table.add_row(
             Text("(no cpu hogs)", style=MOCHA["dim"]),
-            "", "", "", "", "",
+            "",
+            "",
+            "",
+            "",
+            "",
         )
 
     mail_table = Table(
@@ -382,12 +452,20 @@ def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
     for m in mail_clients:
         mail_table.add_row(
             Text("neomutt", style=MOCHA["green"]),
-            m["pid"], m["cpu"], m["mem"], m["elapsed"], m["cwd"],
+            m["pid"],
+            m["cpu"],
+            m["mem"],
+            m["elapsed"],
+            m["cwd"],
         )
     if not mail_clients:
         mail_table.add_row(
             Text("(no mail clients)", style=MOCHA["dim"]),
-            "", "", "", "", "",
+            "",
+            "",
+            "",
+            "",
+            "",
         )
 
     server_table = Table(
@@ -409,12 +487,22 @@ def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
     for s in servers:
         server_table.add_row(
             Text(s["cmd"], style=MOCHA["red"]),
-            s["pid"], s["port"], s["cpu"], s["mem"], s["elapsed"], s["cwd"],
+            s["pid"],
+            s["port"],
+            s["cpu"],
+            s["mem"],
+            s["elapsed"],
+            s["cwd"],
         )
     if not servers:
         server_table.add_row(
             Text("(no dev servers running)", style=MOCHA["dim"]),
-            "", "", "", "", "", "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
         )
 
     footer = Text()
@@ -448,7 +536,20 @@ def build_display(data: dict, state: str = STATE_NORMAL, input_buf: str = "",
         footer.append("  \u2022  ", style=MOCHA["dim"])
         footer.append(message, style=MOCHA["aqua"])
 
-    return Group(header, agent_table, Text(), mail_table, Text(), stray_table, Text(), hog_table, Text(), server_table, Text(), footer)
+    return Group(
+        header,
+        agent_table,
+        Text(),
+        mail_table,
+        Text(),
+        stray_table,
+        Text(),
+        hog_table,
+        Text(),
+        server_table,
+        Text(),
+        footer,
+    )
 
 
 def main() -> None:
