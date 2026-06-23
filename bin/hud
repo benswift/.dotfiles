@@ -59,6 +59,18 @@ MAX_CPU_HOGS = 8
 
 HOME = os.path.expanduser("~")
 
+# Below this terminal width, drop the horizontal tables for a stacked layout
+# that gives each process's cwd its own full-width line (phone terminals).
+NARROW_THRESHOLD = 60
+
+# Width consumed by the non-cwd columns (content min-widths + padding) of each
+# wide table, so we can left-truncate the cwd to what's actually left and keep
+# the leaf directory rather than letting rich ellipsise the tail.
+AGENT_CWD_RESERVED = 47
+MAIL_CWD_RESERVED = 47
+HOG_CWD_RESERVED = 56
+SERVER_CWD_RESERVED = 58
+
 STATE_NORMAL = "normal"
 STATE_ENTERING = "entering"
 STATE_CONFIRMING = "confirming"
@@ -86,6 +98,17 @@ def shorten_path(path: str) -> str:
     if path.startswith(HOME):
         return "~" + path[len(HOME) :]
     return path
+
+
+def fit_path(path: str, budget: int) -> str:
+    """Left-truncate a path to `budget` columns, keeping the leaf directory."""
+    if budget <= 0:
+        return ""
+    if len(path) <= budget:
+        return path
+    if budget == 1:
+        return "…"
+    return "…" + path[-(budget - 1) :]
 
 
 def cmd_basename(p: psutil.Process) -> str:
@@ -310,12 +333,146 @@ def kill_process(pid: int) -> str:
         return f"permission denied to kill PID {pid}"
 
 
+def build_footer(
+    data: dict, state: str, input_buf: str, target: tuple[int, str] | None, message: str
+) -> Text:
+    agents = data["agents"]
+    strays = data["strays"]
+    cpu_hogs = data["cpu_hogs"]
+    mail_clients = data["mail_clients"]
+    servers = data["servers"]
+
+    footer = Text()
+    stray_count_style = MOCHA["yellow"] if strays else MOCHA["green"]
+    hog_count_style = MOCHA["red"] if cpu_hogs else MOCHA["green"]
+    footer.append(str(len(agents)), style=MOCHA["green"])
+    footer.append(" agent(s), ", style=MOCHA["dim"])
+    footer.append(str(len(mail_clients)), style=MOCHA["green"])
+    footer.append(" mail, ", style=MOCHA["dim"])
+    footer.append(str(len(servers)), style=MOCHA["green"])
+    footer.append(" server(s), ", style=MOCHA["dim"])
+    footer.append(str(len(strays)), style=stray_count_style)
+    footer.append(" stray(s), ", style=MOCHA["dim"])
+    footer.append(str(len(cpu_hogs)), style=hog_count_style)
+    footer.append(" cpu hog(s)", style=MOCHA["dim"])
+    footer.append("\n")
+
+    if state == STATE_ENTERING:
+        footer.append("kill PID: ", style=MOCHA["yellow_bold"])
+        footer.append(input_buf, style=MOCHA["fg"])
+        footer.append("▏", style=MOCHA["yellow"])
+        footer.append("    (enter=confirm, esc=cancel)", style=MOCHA["dim"])
+    elif state == STATE_CONFIRMING and target is not None:
+        pid, label = target
+        footer.append(f"kill {label} (PID {pid})? ", style=MOCHA["red"])
+        footer.append("[y/N]", style=MOCHA["yellow_bold"])
+    else:
+        footer.append("q quit  •  k kill-by-pid", style=MOCHA["dim"])
+
+    if message:
+        footer.append("  •  ", style=MOCHA["dim"])
+        footer.append(message, style=MOCHA["aqua"])
+    return footer
+
+
+def build_narrow(data: dict, width: int, header: Text, footer: Text) -> Group:
+    """Stacked, one-block-per-process layout for narrow (phone) terminals: the
+    cwd gets its own full-width line so it's never chopped off."""
+    agents = data["agents"]
+    strays = data["strays"]
+    cpu_hogs = data["cpu_hogs"]
+    mail_clients = data["mail_clients"]
+    servers = data["servers"]
+
+    path_budget = max(8, width - 2)
+
+    def cwd_line(t: Text, cwd: str) -> None:
+        t.append("  ")
+        t.append(fit_path(cwd, path_budget) or "—", style=MOCHA["aqua"])
+        t.append("\n")
+
+    def render_agent(t: Text, a: dict) -> None:
+        t.append(a["agent"], style=AGENT_STYLES[a["agent"]])
+        t.append("  ")
+        t.append(a["pid"], style=MOCHA["fg"])
+        t.append("  ")
+        t.append(a["elapsed"], style=MOCHA["dim"])
+        t.append("\n")
+        cwd_line(t, a["cwd"])
+
+    def render_mail(t: Text, m: dict) -> None:
+        t.append("neomutt", style=MOCHA["green"])
+        t.append("  ")
+        t.append(m["pid"], style=MOCHA["fg"])
+        t.append("  ")
+        t.append(m["elapsed"], style=MOCHA["dim"])
+        t.append("\n")
+        cwd_line(t, m["cwd"])
+
+    def render_stray(t: Text, s: dict) -> None:
+        t.append(s["label"], style=MOCHA["yellow_bold"])
+        t.append("  ")
+        t.append(s["pid"], style=MOCHA["fg"])
+        t.append("\n")
+        t.append("  ")
+        t.append(f"{s['status']} · {s['elapsed']}", style=MOCHA["dim"])
+        t.append("\n")
+
+    def render_hog(t: Text, h: dict) -> None:
+        cpu_style = MOCHA["red"] if h["cpu"] >= 50 else MOCHA["yellow_bold"]
+        t.append(h["name"], style=cpu_style)
+        t.append("  ")
+        t.append(h["pid"], style=MOCHA["fg"])
+        t.append("  ")
+        t.append(f"{h['cpu']:.1f}%", style=cpu_style)
+        t.append("\n")
+        cwd_line(t, h["cwd"])
+
+    def render_server(t: Text, s: dict) -> None:
+        t.append(s["cmd"], style=MOCHA["red"])
+        t.append("  ")
+        t.append(s["pid"], style=MOCHA["fg"])
+        t.append("  ")
+        t.append(f":{s['port']}", style=MOCHA["fg"])
+        t.append("\n")
+        cwd_line(t, s["cwd"])
+
+    def section(title: str, entries: list, render, empty: str) -> Text:
+        t = Text()
+        t.append(title, style=MOCHA["bg4"])
+        if entries:
+            t.append(f" ({len(entries)})", style=MOCHA["dim"])
+        t.append("\n")
+        if not entries:
+            t.append(f"  {empty}\n", style=MOCHA["dim"])
+        else:
+            for e in entries:
+                render(t, e)
+        return t
+
+    return Group(
+        header,
+        section("AGENTS", agents, render_agent, "(no agents running)"),
+        Text(),
+        section("MAIL", mail_clients, render_mail, "(no mail clients)"),
+        Text(),
+        section("STRAYS", strays, render_stray, "(no stray processes)"),
+        Text(),
+        section("CPU HOGS", cpu_hogs, render_hog, "(no cpu hogs)"),
+        Text(),
+        section("SERVERS", servers, render_server, "(no dev servers running)"),
+        Text(),
+        footer,
+    )
+
+
 def build_display(
     data: dict,
     state: str = STATE_NORMAL,
     input_buf: str = "",
     target: tuple[int, str] | None = None,
     message: str = "",
+    width: int = 120,
 ) -> Group:
     now = datetime.now().strftime("%H:%M:%S")
     header = Text()
@@ -323,6 +480,11 @@ def build_display(
     header.append("  ")
     header.append(now, style=MOCHA["yellow"])
     header.append("\n")
+
+    footer = build_footer(data, state, input_buf, target, message)
+
+    if width < NARROW_THRESHOLD:
+        return build_narrow(data, width, header, footer)
 
     agents = data["agents"]
     strays = data["strays"]
@@ -353,7 +515,7 @@ def build_display(
             a["cpu"],
             a["mem"],
             a["elapsed"],
-            a["cwd"],
+            fit_path(a["cwd"], width - AGENT_CWD_RESERVED),
         )
     if not agents:
         agent_table.add_row(
@@ -422,7 +584,7 @@ def build_display(
             f"{h['cpu']:.1f}",
             h["mem"],
             h["elapsed"],
-            h["cwd"],
+            fit_path(h["cwd"], width - HOG_CWD_RESERVED),
         )
     if not cpu_hogs:
         hog_table.add_row(
@@ -456,7 +618,7 @@ def build_display(
             m["cpu"],
             m["mem"],
             m["elapsed"],
-            m["cwd"],
+            fit_path(m["cwd"], width - MAIL_CWD_RESERVED),
         )
     if not mail_clients:
         mail_table.add_row(
@@ -492,7 +654,7 @@ def build_display(
             s["cpu"],
             s["mem"],
             s["elapsed"],
-            s["cwd"],
+            fit_path(s["cwd"], width - SERVER_CWD_RESERVED),
         )
     if not servers:
         server_table.add_row(
@@ -504,37 +666,6 @@ def build_display(
             "",
             "",
         )
-
-    footer = Text()
-    stray_count_style = MOCHA["yellow"] if strays else MOCHA["green"]
-    hog_count_style = MOCHA["red"] if cpu_hogs else MOCHA["green"]
-    footer.append(str(len(agents)), style=MOCHA["green"])
-    footer.append(" agent(s), ", style=MOCHA["dim"])
-    footer.append(str(len(mail_clients)), style=MOCHA["green"])
-    footer.append(" mail, ", style=MOCHA["dim"])
-    footer.append(str(len(servers)), style=MOCHA["green"])
-    footer.append(" server(s), ", style=MOCHA["dim"])
-    footer.append(str(len(strays)), style=stray_count_style)
-    footer.append(" stray(s), ", style=MOCHA["dim"])
-    footer.append(str(len(cpu_hogs)), style=hog_count_style)
-    footer.append(" cpu hog(s)", style=MOCHA["dim"])
-    footer.append("\n")
-
-    if state == STATE_ENTERING:
-        footer.append("kill PID: ", style=MOCHA["yellow_bold"])
-        footer.append(input_buf, style=MOCHA["fg"])
-        footer.append("\u258f", style=MOCHA["yellow"])
-        footer.append("    (enter=confirm, esc=cancel)", style=MOCHA["dim"])
-    elif state == STATE_CONFIRMING and target is not None:
-        pid, label = target
-        footer.append(f"kill {label} (PID {pid})? ", style=MOCHA["red"])
-        footer.append("[y/N]", style=MOCHA["yellow_bold"])
-    else:
-        footer.append("q quit  \u2022  k kill-by-pid", style=MOCHA["dim"])
-
-    if message:
-        footer.append("  \u2022  ", style=MOCHA["dim"])
-        footer.append(message, style=MOCHA["aqua"])
 
     return Group(
         header,
@@ -571,7 +702,7 @@ def main() -> None:
     console = Console()
 
     if once or not sys.stdin.isatty():
-        console.print(build_display(collect_processes()))
+        console.print(build_display(collect_processes(), width=console.size.width))
         return
 
     fd = sys.stdin.fileno()
@@ -586,13 +717,24 @@ def main() -> None:
     try:
         tty.setcbreak(fd)
         with Live(
-            build_display(data, state, input_buf, target, message),
+            build_display(
+                data, state, input_buf, target, message, width=console.size.width
+            ),
             console=console,
             auto_refresh=False,
             screen=True,
         ) as live:
             while True:
-                live.update(build_display(data, state, input_buf, target, message))
+                live.update(
+                    build_display(
+                        data,
+                        state,
+                        input_buf,
+                        target,
+                        message,
+                        width=console.size.width,
+                    )
+                )
                 live.refresh()
                 ready, _, _ = select.select([sys.stdin], [], [], 2)
 
