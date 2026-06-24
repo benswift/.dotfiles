@@ -66,6 +66,11 @@ etc.). Key scripts:
 - `mailsync` --- sync all email accounts
 - `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI
   agents
+- `agenda` --- read/create ANU Exchange calendar events via EventKit
+- `teams` --- read/send Teams DMs by driving the web client
+
+See the "Microsoft 365 (calendar and Teams)" section below for this tooling and
+why it sidesteps Microsoft Graph.
 
 ## Tool management (mise)
 
@@ -144,8 +149,8 @@ Three directories are involved --- note the differences:
   truth** --- edit skills there, commit and push from there. Codex gets
   per-skill symlinks into that clone, while its generated `.system/` skills stay
   under `~/.codex/skills/.system`. Skills appear to the model as
-  `ben:<skill-name>` (e.g. `ben:pkb`). The same bootstrap pattern
-  handles the `impeccable` and `agent-browser` plugins.
+  `ben:<skill-name>` (e.g. `ben:pkb`). The same bootstrap pattern handles the
+  `impeccable` and `agent-browser` plugins.
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Contents are gitignored by default (`.claude/*` globally), but
   individual repos can opt-in to tracking specific subdirectories via a local
@@ -220,3 +225,56 @@ under `mcpServers.ht-mcp`. Tools appear under the `mcp__ht-mcp__` prefix:
 5. `mcp__ht-mcp__ht_close_session` when done
 
 Useful for testing neomutt macros and workflows without GUI interaction.
+
+## Microsoft 365 (calendar and Teams)
+
+ANU locks down third-party Microsoft Graph app registrations and the device-code
+flow, so there is no API path to ANU calendar or Teams data --- don't reach for
+Graph here. It was tried and abandoned (no public client id works, and staff
+can't self-register an app); the dead `sharepoint-dl` script that documented the
+attempt has been removed. Two scripts in @bin/ instead go through channels ANU
+does permit: the native macOS calendar stack, and the Teams web client signed in
+as yourself.
+
+### Calendar --- @bin/agenda
+
+Native, registration-free calendar access via EventKit. The ANU Exchange account
+is already synced into macOS Calendar.app --- it shows up as the calendar titled
+"Calendar" under the "ANU Exchange" source --- and EventKit reads and writes it
+directly, far faster than Calendar.app's AppleScript date-range queries. macOS
+only; the first run prompts once for Calendar access (granted to the controlling
+terminal).
+
+- `agenda` --- upcoming events (default 7 days); takes `--days N`,
+  `--cal "<name>"`, `--json`
+- `agenda calendars` --- list calendars and their account source
+- `agenda create --title "..." --start "2026-06-25 14:00" --end "..."` ---
+  create an event (optional `--cal`, `--location`, `--notes`, `--all-day`).
+  There is no `--attendee` option by design, so it only ever creates a personal
+  time-block, never a meeting invite.
+
+### Teams DMs --- @bin/teams
+
+Reads and sends Teams chats by driving the Teams _web_ client with
+`agent-browser`. Signing into teams.microsoft.com as yourself uses Microsoft's
+own first-party client (which ANU permits), and the logged-in session lives in a
+persistent Chrome profile at `~/.cache/agent-browser/teams-profile` on an
+isolated `--session teams`. This is UI automation, so it's inherently more
+brittle than the calendar tool --- expect occasional fix-ups when Microsoft
+reshuffles the web client. Parsing leans on ARIA roles and labels rather than
+positions to stay as durable as possible.
+
+- `teams chats [N]` --- recent chats with previews and timestamps
+- `teams read <name> [N]` --- a thread matched by a name substring (people or
+  group chats)
+- `teams send <name> <text>` --- post to a chat
+- `teams login` --- interactive re-auth when the on-disk session expires (opens
+  a window; tick "stay signed in")
+- `teams status` --- login state
+
+After the first interactive login the browser runs headless, reusing the on-disk
+cookies. A cold start takes ~25--30s while Teams web loads; warm calls reuse the
+running browser. Stop the background browser with
+`agent-browser --session teams close`. Send clears the compose box (select-all +
+delete) before typing, because Teams' contenteditable ignores an empty `fill`
+and otherwise appends.
