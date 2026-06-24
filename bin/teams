@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+#
+# teams --- read and send Microsoft Teams DMs from the CLI (and from Claude
+# Code), by driving the Teams *web* client (teams.microsoft.com) with
+# agent-browser.
+#
+# Why this and not Graph: ANU locks down third-party Graph app registrations,
+# so there's no API path to Teams chat. But signing into the Teams web app as
+# yourself uses Microsoft's own first-party client, which ANU permits. We keep
+# that logged-in session in a dedicated, persistent Chrome profile and read the
+# accessibility tree --- no message API, just the rendered web UI.
+#
+# This is UI automation, so it's inherently more brittle than the calendar tool
+# (bin/agenda, which uses EventKit): expect occasional fix-ups when Microsoft
+# reshuffles the Teams web client. Parsing leans on roles/labels (treeitem,
+# group) rather than positions to stay as durable as possible.
+#
+#   teams login                 # one-time interactive sign-in (opens a window)
+#   teams chats [N]             # list recent chats (default 25)
+#   teams read <query> [N]      # read a chat matched by name (default 20 msgs)
+#   teams send <query> <text>   # send a message to a chat matched by name
+#   teams open                  # bring up the (headed) window for manual use
+#   teams status                # show login state
+#
+# <query> is a case-insensitive substring of the chat's name as it appears in
+# the chat list (e.g. "bill", "socy hdr").
+
+set -euo pipefail
+
+PROFILE="$HOME/.cache/agent-browser/teams-profile"
+URL="https://teams.microsoft.com/v2/"
+SESSION="teams"
+
+ab() { agent-browser --session "$SESSION" "$@"; }
+
+running() { pgrep -f "user-data-dir=$PROFILE" >/dev/null 2>&1; }
+
+current_url() { ab get url 2>/dev/null | tail -1; }
+
+logged_in() {
+    local u
+    u="$(current_url)"
+    [[ "$u" == *teams.microsoft.com* && "$u" != *login.microsoftonline.com* ]]
+}
+
+# Bring up a browser on the persistent profile. headed=1 forces a visible
+# window (for interactive login); otherwise headless reuses on-disk cookies.
+launch() {
+    local headed="${1:-}"
+    running && return 0
+    if [[ -n "$headed" ]]; then
+        ab --profile "$PROFILE" --headed open "$URL" >/dev/null 2>&1 || true
+    else
+        ab --profile "$PROFILE" open "$URL" >/dev/null 2>&1 || true
+    fi
+    ab wait --load networkidle >/dev/null 2>&1 || true
+}
+
+ensure() {
+    launch
+    if ! logged_in; then
+        echo "teams: not signed in (or session expired). Run: teams login" >&2
+        exit 3
+    fi
+}
+
+# Click the Chat app in the left rail so the chat list is showing.
+goto_chat_pane() {
+    local ref
+    ref="$(ab snapshot -i --json 2>/dev/null | jq -r '
+        .data.refs | to_entries
+        | map(select(.value.role=="button" and (.value.name|startswith("Chat ("))))
+        | .[0].key // empty')"
+    [[ -n "$ref" ]] && ab click "@$ref" >/dev/null 2>&1 && ab wait 800 >/dev/null 2>&1 || true
+}
+
+# Print the chat-list treeitems (the actual conversations carry "Last message").
+cmd_chats() {
+    local n="${1:-25}"
+    ensure
+    goto_chat_pane
+    ab snapshot -i --json 2>/dev/null | jq -r '
+        .data.refs | to_entries
+        | map(select(.value.role=="treeitem"
+                     and (.value.name | test("Last message|^Chat |^Group chat |^Unread message "))))
+        | .[].value.name' | head -n "$n"
+}
+
+# Open the first chat whose name contains <query> (case-insensitive).
+open_chat() {
+    local query="$1" ref
+    ensure
+    goto_chat_pane
+    ref="$(ab snapshot -i --json 2>/dev/null | jq -r --arg q "$query" '
+        .data.refs | to_entries
+        | map(select(.value.role=="treeitem"
+                     and ((.value.name|ascii_downcase) | contains($q|ascii_downcase))
+                     and (.value.name | test("Last message|^Chat |^Group chat |^Unread message "))))
+        | .[0].key // empty')"
+    if [[ -z "$ref" ]]; then
+        echo "teams: no chat matching \"$query\" in the visible list." >&2
+        echo "       Try \`teams chats\` to see available names." >&2
+        exit 4
+    fi
+    ab click "@$ref" >/dev/null 2>&1
+    ab wait --load networkidle >/dev/null 2>&1 || true
+    ab wait 800 >/dev/null 2>&1 || true
+}
+
+# Read messages in the open chat. Each message is a `group` whose accessible
+# name is "<text> <sender> <when>"; we keep those that end in a date/time.
+cmd_read() {
+    local query="${1:?usage: teams read <query> [N]}" n="${2:-20}"
+    open_chat "$query"
+    ab snapshot --json 2>/dev/null | jq -r '
+        [.. | objects
+         | select(.role=="group" and (.name|type=="string")
+                  and (.name | test(" at [0-9]|[0-9]{2}/[0-9]{2}/[0-9]{4}|[0-9]{4} [0-9]{2}:[0-9]{2}")))]
+        | .[].name' | tail -n "$n"
+}
+
+cmd_send() {
+    local query="${1:?usage: teams send <query> <text>}"
+    shift
+    local text="${*:?usage: teams send <query> <text>}"
+    open_chat "$query"
+    # Focus and clear first: Teams' contenteditable compose box ignores
+    # `fill ""` and `fill` appends rather than replaces, so select-all + delete.
+    ab find role textbox click --name "Type a message" >/dev/null 2>&1 || true
+    ab press Meta+a >/dev/null 2>&1 || true
+    ab press Backspace >/dev/null 2>&1 || true
+    ab find role textbox fill "$text" --name "Type a message" >/dev/null 2>&1
+    ab wait 400 >/dev/null 2>&1 || true
+    local sendref
+    sendref="$(ab snapshot -i --json 2>/dev/null | jq -r '
+        .data.refs | to_entries
+        | map(select(.value.role=="button" and (.value.name|startswith("Send"))))
+        | .[0].key // empty')"
+    if [[ -n "$sendref" ]]; then
+        ab click "@$sendref" >/dev/null 2>&1
+    else
+        ab press Enter >/dev/null 2>&1
+    fi
+    echo "teams: sent to \"$query\"."
+}
+
+cmd_login() {
+    pkill -f "user-data-dir=$PROFILE" >/dev/null 2>&1 || true
+    sleep 1
+    launch headed
+    echo "A Chrome window is opening at $URL."
+    echo "Complete the ANU sign-in (tick 'stay signed in'), then re-run your command."
+}
+
+cmd_status() {
+    if ! running; then
+        echo "teams: not running. A command will start it; if it isn't signed in, run: teams login"
+        return
+    fi
+    if logged_in; then
+        echo "teams: signed in ($(current_url))"
+    else
+        echo "teams: running but not signed in --- run: teams login"
+    fi
+}
+
+cmd_open() { cmd_login; }
+
+case "${1:-}" in
+    chats)  shift; cmd_chats "$@" ;;
+    read)   shift; cmd_read "$@" ;;
+    send)   shift; cmd_send "$@" ;;
+    login)  cmd_login ;;
+    open)   cmd_open ;;
+    status) cmd_status ;;
+    ""|-h|--help)
+        sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'
+        ;;
+    *)
+        echo "teams: unknown command \"$1\" (try: chats, read, send, login, status)" >&2
+        exit 1
+        ;;
+esac
