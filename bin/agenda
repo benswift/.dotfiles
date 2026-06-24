@@ -1,0 +1,180 @@
+#!/usr/bin/swift
+//
+// agenda --- read and create macOS Calendar events from the CLI (and from
+// Claude Code), via EventKit.
+//
+// This is the native, registration-free way to reach an ANU Exchange calendar
+// that's already synced into Calendar.app: ANU locks down third-party Graph app
+// registrations, but the account is present in macOS Internet Accounts, and
+// EventKit reads/writes it directly (and far faster than Calendar.app's
+// AppleScript date-range queries). The ANU calendar shows up as the calendar
+// titled "Calendar" under the "ANU Exchange" source.
+//
+// First run prompts once for Calendar access (granted to the controlling
+// terminal app); thereafter it's non-interactive. macOS only --- there's no
+// EventKit on Linux, and `swift` won't be on the shebang path there.
+//
+//   agenda                       # next 7 days, all calendars
+//   agenda --days 14             # change the window
+//   agenda --cal "Calendar"      # only the ANU Exchange calendar
+//   agenda --json                # machine-readable (for Claude Code)
+//   agenda calendars             # list calendar names and their account source
+//   agenda create --title "1:1 with X" \
+//       --start "2026-06-25 14:00" --end "2026-06-25 15:00" \
+//       [--cal "Calendar"] [--location "..."] [--notes "..."] [--all-day]
+//
+// Times are local (Australia/Sydney on this machine), format "YYYY-MM-DD HH:MM".
+
+import EventKit
+import Foundation
+
+let store = EKEventStore()
+
+func die(_ msg: String, _ code: Int32 = 1) -> Never {
+    FileHandle.standardError.write((msg + "\n").data(using: .utf8)!)
+    exit(code)
+}
+
+func requestAccess() {
+    let sem = DispatchSemaphore(value: 0)
+    var granted = false
+    var err: Error?
+    store.requestFullAccessToEvents { ok, e in granted = ok; err = e; sem.signal() }
+    sem.wait()
+    if !granted {
+        die("Calendar access not granted. Enable it in System Settings -> Privacy "
+            + "& Security -> Calendars for your terminal app."
+            + (err.map { " (\($0.localizedDescription))" } ?? ""), 2)
+    }
+}
+
+// "YYYY-MM-DD HH:MM" or "YYYY-MM-DD" in the machine's local time zone.
+func parseDate(_ s: String, endOfDay: Bool = false) -> Date {
+    let f = DateFormatter()
+    f.calendar = Calendar.current
+    f.timeZone = .current
+    for fmt in ["yyyy-MM-dd HH:mm", "yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd"] {
+        f.dateFormat = fmt
+        if let d = f.date(from: s) {
+            if fmt == "yyyy-MM-dd" && endOfDay {
+                return Calendar.current.date(byAdding: .day, value: 1, to: d)!
+            }
+            return d
+        }
+    }
+    die("could not parse date: \(s) (use \"YYYY-MM-DD HH:MM\")")
+}
+
+func findCalendar(_ name: String) -> EKCalendar {
+    let cals = store.calendars(for: .event)
+    if let c = cals.first(where: { $0.title == name }) { return c }
+    die("no calendar named \"\(name)\". Available: "
+        + cals.map { "\"\($0.title)\"" }.joined(separator: ", "))
+}
+
+// --- option parsing ----------------------------------------------------------
+
+var args = Array(CommandLine.arguments.dropFirst())
+var subcommand = "list"
+if let first = args.first, !first.hasPrefix("-") {
+    subcommand = first
+    args.removeFirst()
+}
+
+func opt(_ name: String) -> String? {
+    guard let i = args.firstIndex(of: name), i + 1 < args.count else { return nil }
+    return args[i + 1]
+}
+func flag(_ name: String) -> Bool { args.contains(name) }
+
+// --- subcommands -------------------------------------------------------------
+
+func iso(_ d: Date) -> String {
+    let f = ISO8601DateFormatter()
+    f.timeZone = .current
+    f.formatOptions = [.withInternetDateTime]
+    return f.string(from: d)
+}
+
+func listCalendars() {
+    requestAccess()
+    for c in store.calendars(for: .event).sorted(by: { $0.title < $1.title }) {
+        let writable = c.allowsContentModifications ? "" : "  (read-only)"
+        print("\(c.title)  |  \(c.source.title)\(writable)")
+    }
+}
+
+func listEvents() {
+    requestAccess()
+    let days = Int(opt("--days") ?? "7") ?? 7
+    let now = Date()
+    let end = Calendar.current.date(byAdding: .day, value: days, to: now)!
+    let cals = opt("--cal").map { [findCalendar($0)] }
+    let pred = store.predicateForEvents(withStart: now, end: end, calendars: cals)
+    let evs = store.events(matching: pred).sorted { $0.startDate < $1.startDate }
+
+    if flag("--json") {
+        let items = evs.map { e -> [String: Any] in
+            [
+                "title": e.title ?? "",
+                "start": iso(e.startDate),
+                "end": iso(e.endDate),
+                "allDay": e.isAllDay,
+                "calendar": e.calendar.title,
+                "location": e.location ?? "",
+                "id": e.eventIdentifier ?? "",
+            ]
+        }
+        let data = try! JSONSerialization.data(withJSONObject: items, options: [.prettyPrinted])
+        print(String(data: data, encoding: .utf8)!)
+        return
+    }
+
+    if evs.isEmpty { die("No events in the next \(days) day(s).", 0) }
+    let df = DateFormatter(); df.dateFormat = "EEE dd MMM HH:mm"
+    let dayf = DateFormatter(); dayf.dateFormat = "EEE dd MMM"
+    let tf = DateFormatter(); tf.dateFormat = "HH:mm"
+    for e in evs {
+        let when = e.isAllDay
+            ? "\(dayf.string(from: e.startDate))  (all day)"
+            : "\(df.string(from: e.startDate))–\(tf.string(from: e.endDate))"
+        let loc = (e.location?.isEmpty == false) ? "  @ \(e.location!)" : ""
+        print("\(when)  \(e.title ?? "(no title)")  [\(e.calendar.title)]\(loc)")
+    }
+}
+
+func createEvent() {
+    requestAccess()
+    guard let title = opt("--title") else { die("--title is required") }
+    guard let startS = opt("--start") else { die("--start is required") }
+    let allDay = flag("--all-day")
+
+    let ev = EKEvent(eventStore: store)
+    ev.title = title
+    ev.isAllDay = allDay
+    ev.startDate = parseDate(startS)
+    if let endS = opt("--end") {
+        ev.endDate = parseDate(endS, endOfDay: allDay)
+    } else {
+        ev.endDate = allDay
+            ? Calendar.current.date(byAdding: .day, value: 1, to: ev.startDate)!
+            : ev.startDate.addingTimeInterval(3600)
+    }
+    if let loc = opt("--location") { ev.location = loc }
+    if let notes = opt("--notes") { ev.notes = notes }
+    ev.calendar = findCalendar(opt("--cal") ?? "Calendar")
+
+    do {
+        try store.save(ev, span: .thisEvent, commit: true)
+    } catch {
+        die("failed to save event: \(error.localizedDescription)")
+    }
+    print("Created \"\(title)\" on [\(ev.calendar.title)] at \(iso(ev.startDate))")
+}
+
+switch subcommand {
+case "list": listEvents()
+case "calendars": listCalendars()
+case "create": createEvent()
+default: die("unknown subcommand \"\(subcommand)\" (expected: list, calendars, create)")
+}
