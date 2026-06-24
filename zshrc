@@ -123,16 +123,9 @@ alias nm='neomutt'
 if [[ "$OSTYPE" == darwin* ]]; then
   alias zed-update-expert='rm -rf "$HOME/Library/Application Support/Zed/extensions/work/elixir/expert-nightly" && echo "Expert cache cleared. Restart Zed to download latest."'
 fi
-# Platform-specific clipboard command
-if command -v pbcopy &>/dev/null; then
-  clipboard() { pbcopy; }
-elif command -v xclip &>/dev/null; then
-  clipboard() { xclip -selection clipboard; }
-elif command -v wl-copy &>/dev/null; then
-  clipboard() { wl-copy; }
-else
-  clipboard() { cat > /dev/null; echo "No clipboard tool available" >&2; return 1; }
-fi
+# Clipboard via OSC 52 (works locally and over SSH in ghostty); see
+# bin/clipboard-copy for the fallback chain when there's no terminal
+clipboard() { clipboard-copy; }
 cpath() { realpath "${1:-.}" | clipboard && echo "Copied to clipboard: $(realpath "${1:-.}")"; }
 
 # macOS-specific integrations

@@ -26,14 +26,10 @@ _cpath() {
     _exit_1 printf "Error: Note not found: %s\\n" "${_selector}"
   fi
 
-  if command -v pbcopy &> /dev/null; then
-    printf "%s" "${_path}" | pbcopy
-  elif command -v xclip &> /dev/null; then
-    printf "%s" "${_path}" | xclip -selection clipboard
-  elif command -v xsel &> /dev/null; then
-    printf "%s" "${_path}" | xsel --clipboard
+  if command -v clipboard-copy &> /dev/null; then
+    printf "%s" "${_path}" | clipboard-copy
   else
-    _exit_1 printf "Error: No clipboard command found (pbcopy, xclip, or xsel).\\n"
+    _exit_1 printf "Error: clipboard-copy not found on PATH.\\n"
   fi
 
   printf "Copied to clipboard: %s\\n" "${_path}"

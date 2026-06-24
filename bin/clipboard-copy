@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# Copy stdin to the system clipboard using an OSC 52 escape sequence, so it
+# works both locally and over remote SSH connections in any terminal that
+# supports it (e.g. ghostty). zellij forwards OSC 52 to the host terminal by
+# default, so it works inside a zellij session too.
+#
+# Falls back to native clipboard tools (pbcopy/xclip/wl-copy) when there is no
+# controlling terminal to receive the escape sequence (e.g. a pipe in a cron
+# job).
+#
+set -euo pipefail
+
+data="$(cat)"
+
+emit_osc52() {
+    local b64 seq
+    # macOS base64 doesn't support `-w 0`, so strip newlines portably.
+    b64="$(printf '%s' "$data" | base64 | tr -d '\n')"
+    seq="\033]52;c;${b64}\a"
+    # tmux and GNU screen need the sequence wrapped in their passthrough escape.
+    if [[ -n "${TMUX:-}" ]]; then
+        seq="\033Ptmux;\033${seq}\033\\"
+    elif [[ "${TERM:-}" == screen* ]]; then
+        seq="\033P${seq}\033\\"
+    fi
+    printf '%b' "$seq" >/dev/tty
+}
+
+if { : >/dev/tty; } 2>/dev/null; then
+    emit_osc52
+elif command -v pbcopy &>/dev/null; then
+    printf '%s' "$data" | pbcopy
+elif command -v xclip &>/dev/null; then
+    printf '%s' "$data" | xclip -selection clipboard
+elif command -v wl-copy &>/dev/null; then
+    printf '%s' "$data" | wl-copy
+else
+    echo "clipboard-copy: no clipboard mechanism available" >&2
+    exit 1
+fi
