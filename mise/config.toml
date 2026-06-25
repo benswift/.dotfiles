@@ -18,8 +18,8 @@ jq = "latest"
 fd = "latest"
 "cargo:oxipng" = "latest"
 flyctl = "latest"
-oxfmt = "0.52.0"
-typstyle = "0.14.4"
+oxfmt = "latest"
+typstyle = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["[]"]
