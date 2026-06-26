@@ -1,5 +1,0 @@
-# Ignore everything in this directory except the tracked config files
-*
-!.gitignore
-!CLAUDE.md
-!settings.json

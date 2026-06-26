@@ -138,8 +138,11 @@ base per-tool configuration are tracked here and symlinked into place.
 
 Three directories are involved --- note the differences:
 
-- `claude/` (no dot) --- tracked config source in this public repo. `CLAUDE.md`
-  (global instructions) and `settings.json` are symlinked into `~/.claude/`.
+- `claude/` (no dot) --- tracked config source in this public repo. It holds
+  only `CLAUDE.md` (global instructions) and `settings.json`, both symlinked
+  into `~/.claude/`. Deliberately **no** skills live here: personal skills are
+  hosted exclusively in the `ben` plugin (below), so there's no `claude/skills/`
+  directory and no `~/.claude/skills` symlink pointing back into dotfiles.
 - The `ben` Claude Code plugin (personal skills library) lives in the
   **private** `benswift/claude-plugin-personal` repo. `install.sh` and
   `dotfiles update` run @bin/sync-agent-config, which registers the marketplace
@@ -166,10 +169,16 @@ The @claude/ folder includes:
 - @codex/config.toml - portable Codex defaults
 - @gemini/settings.json - portable Gemini context settings
 
-Skills live in the ben plugin at
-`~/.claude/plugins/marketplaces/ben/skills/<name>/SKILL.md` (Claude Code's
-marketplace clone) and are namespaced as `ben:<name>` when the model loads them
-through Claude Code's plugin mechanism.
+Every personal skill lives in the ben plugin --- that is the single, exclusive
+home, with no second copy tracked in this dotfiles repo. Each skill is a
+directory at `~/.claude/plugins/marketplaces/ben/skills/<name>/SKILL.md` inside
+Claude Code's marketplace clone, and is namespaced as `ben:<name>` when the
+model loads it through the plugin mechanism. To add or edit a skill, work in
+that clone (`~/.claude/plugins/marketplaces/ben/`), then commit and push from
+there; @bin/sync-agent-config propagates it to Codex on the next
+`dotfiles update`. No symlink wiring in @create_symlinks.sh is involved --- the
+marketplace clone (for Claude Code) and the per-skill Codex symlinks (for Codex)
+cover everything.
 
 ### Codex CLI
 
