@@ -29,6 +29,11 @@ mise.local.toml
 *.rar
 *.7z
 
+# python
+
+__pycache__/
+*.py[cod]
+
 # R
 
 .Rhistory
