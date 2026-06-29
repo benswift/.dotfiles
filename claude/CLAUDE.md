@@ -18,11 +18,11 @@ Use clear, concise language with Australian English spelling. Don't overuse
 lists or exclamation marks.
 
 For prose work, the skill chain is: draft with benswift-writer (voice and
-content quirks --- dry humour, footnotes, technical confidence), then run
-jamesian (BALANCED preset by default; LAYERED for academic). Jamesian owns
-sentence and paragraph architecture, em-dash discipline (sparing), opening
-patterns, and signposting --- don't reintroduce those decisions inside the
-benswift-writer overlay.
+content quirks --- plain, technically confident prose grounded in concrete
+specifics, footnotes, extensive links), then run jamesian (BALANCED preset by
+default; LAYERED for academic). Jamesian owns sentence and paragraph
+architecture, em-dash discipline (sparing), opening patterns, and signposting
+--- don't reintroduce those decisions inside the benswift-writer overlay.
 
 ### Markdown formatting
 
