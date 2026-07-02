@@ -114,7 +114,7 @@ main() {
 
     # Dotfiles in home directory (with . prefix)
     local home_files=(
-        "RProfile"
+        "Rprofile"
         "gitattributes"
         "gitconfig"
         "gitignore"
