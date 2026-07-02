@@ -140,13 +140,27 @@ if [[ -n $HOMEBREW_PREFIX ]]; then
   FPATH="$HOMEBREW_PREFIX/share/zsh/site-functions:$FPATH"
 fi
 
-# Initialize completions
+# Initialize completions. The full compinit audits every completion file,
+# which is the slowest part of startup --- only do that when the dump is
+# more than a day old, otherwise trust it with -C.
 autoload -Uz compinit
-compinit
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+  compinit
+else
+  compinit -C
+fi
 
 eval "$(mise activate zsh)"
 command -v fnox &>/dev/null && eval "$(command fnox activate zsh)"
-export LS_COLORS="$(vivid generate catppuccin-mocha)"
+# LS_COLORS via vivid, cached because the output is static per theme
+# (delete the cache file after changing theme)
+_lscolors_cache=~/.cache/vivid-lscolors
+if [[ ! -r $_lscolors_cache ]] && command -v vivid &>/dev/null; then
+  mkdir -p ~/.cache
+  vivid generate catppuccin-mocha > $_lscolors_cache
+fi
+[[ -r $_lscolors_cache ]] && export LS_COLORS="$(<$_lscolors_cache)"
+unset _lscolors_cache
 eval "$(zoxide init zsh)"
 
 case "$(hostname -s)" in
