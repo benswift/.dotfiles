@@ -38,9 +38,11 @@ helpful.
 To sync Office365 email with mbsync using OAuth2 authentication:
 
 1. **Install mbsync with XOAUTH2 support** (macOS):
+
    ```sh
    brew install benswift/tap/isync
    ```
+
    homebrew-core's isync is compiled without SASL, so it can't do OAuth2. The
    [`benswift/homebrew-tap`](https://github.com/benswift/homebrew-tap) build
    links a `cyrus-sasl` that bundles the
