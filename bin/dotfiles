@@ -7,11 +7,8 @@ set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+source "$DOTFILES_DIR/lib/log.sh"
+source "$DOTFILES_DIR/lib/symlink-manifest.sh"
 
 pass=0
 fail=0
@@ -124,38 +121,32 @@ check_core() {
 check_symlinks() {
     section "Checking symlinks..."
 
-    local symlinks=(
-        "$HOME/.zshrc:$DOTFILES_DIR/zshrc"
-        "$HOME/.zshenv:$DOTFILES_DIR/zshenv"
-        "$HOME/.gitconfig:$DOTFILES_DIR/gitconfig"
-        "$HOME/.gitignore:$DOTFILES_DIR/gitignore"
-        "$HOME/.tmux.conf:$DOTFILES_DIR/tmux.conf"
-        "$HOME/.config/mise/config.toml:$DOTFILES_DIR/mise/config.toml"
-        "$HOME/.config/fnox/config.toml:$DOTFILES_DIR/fnox/config.toml"
-        "$HOME/.ssh/config:$DOTFILES_DIR/ssh_config"
-        "$HOME/.claude/CLAUDE.md:$DOTFILES_DIR/claude/CLAUDE.md"
-        "$HOME/.claude/settings.json:$DOTFILES_DIR/claude/settings.json"
-        "$HOME/.codex/instructions.md:$DOTFILES_DIR/claude/CLAUDE.md"
-        "$HOME/.codex/config.toml:$DOTFILES_DIR/codex/config.toml"
-        "$HOME/.gemini/settings.json:$DOTFILES_DIR/gemini/settings.json"
-    )
+    # Verify exactly what create_symlinks.sh installs: everything comes
+    # from lib/symlink-manifest.sh, so the two can't drift.
+    local entries=("${SYMLINK_MANIFEST[@]}" "${SYMLINK_MANIFEST_WITH_BACKUP[@]}")
+    local entry
+    while IFS= read -r entry; do
+        entries+=("$entry")
+    done < <(nb_plugin_links)
 
-    for entry in "${symlinks[@]}"; do
-        local target="${entry%%:*}"
-        local expected="${entry##*:}"
+    for entry in "${entries[@]}"; do
+        local expected target pretty
+        expected=$(manifest_source "$entry")
+        target=$(manifest_target "$entry")
+        pretty="${target/#$HOME/\~}"
 
         if [[ -L "$target" ]]; then
             local actual
             actual=$(readlink "$target")
             if [[ "$actual" == "$expected" ]]; then
-                check_pass "$(basename "$target") → $(basename "$expected")"
+                check_pass "$pretty → ${entry%%:*}"
             else
-                check_fail "$(basename "$target") points to wrong target"
+                check_fail "$pretty points to $actual (expected $expected)"
             fi
         elif [[ -e "$target" ]]; then
-            check_fail "$(basename "$target") exists but is not a symlink"
+            check_fail "$pretty exists but is not a symlink"
         else
-            check_fail "$(basename "$target") missing"
+            check_fail "$pretty missing"
         fi
     done
 }

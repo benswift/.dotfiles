@@ -6,11 +6,8 @@ set -euo pipefail
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 DRY_RUN="${DRY_RUN:-false}"
 
-# Colour output for better readability
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No colour
+source "$DOTFILES_DIR/lib/log.sh"
+source "$DOTFILES_DIR/lib/symlink-manifest.sh"
 
 # Helper function to create symlinks with error handling
 create_symlink() {
@@ -75,35 +72,6 @@ create_symlink_with_backup() {
     create_symlink "$source_path" "$target"
 }
 
-# Process a list of files with a common pattern
-link_files() {
-    local source_dir="$1"
-    local target_dir="$2"
-    local prefix="${3:-}"
-    local suffix="${4:-}"
-    shift 4
-    local files=("$@")
-
-    for file in "${files[@]}"; do
-        local source_path="$source_dir/$file"
-        local target="$target_dir/${prefix}${file}${suffix}"
-        create_symlink "$source_path" "$target"
-    done
-}
-
-# Process directory symlinks
-link_directory() {
-    local source_path="$1"
-    local target="$2"
-
-    if [[ ! -d "$source_path" ]]; then
-        echo -e "${RED}✗ Source directory not found: $source_path${NC}"
-        return 1
-    fi
-
-    create_symlink "$source_path" "$target"
-}
-
 main() {
     echo "Setting up dotfiles symlinks..."
     echo "Dotfiles directory: $DOTFILES_DIR"
@@ -112,83 +80,22 @@ main() {
         echo -e "${YELLOW}Running in DRY RUN mode - no changes will be made${NC}"
     fi
 
-    # Dotfiles in home directory (with . prefix)
-    local home_files=(
-        "Rprofile"
-        "gitattributes"
-        "gitconfig"
-        "gitignore"
-        "tmux.conf"
-        "zshenv"
-        "zshrc"
-    )
+    local entry
 
-    echo -e "\nLinking home directory dotfiles..."
-    link_files "$DOTFILES_DIR" "$HOME" "." "" "${home_files[@]}"
+    echo -e "\nLinking manifest entries..."
+    for entry in "${SYMLINK_MANIFEST[@]}"; do
+        create_symlink "$(manifest_source "$entry")" "$(manifest_target "$entry")"
+    done
 
-    # SSH config
-    echo -e "\nLinking SSH config..."
-    create_symlink "$DOTFILES_DIR/ssh_config" "$HOME/.ssh/config"
+    echo -e "\nLinking tool-rewritten configs (with backup)..."
+    for entry in "${SYMLINK_MANIFEST_WITH_BACKUP[@]}"; do
+        create_symlink_with_backup "$(manifest_source "$entry")" "$(manifest_target "$entry")"
+    done
 
-    # Mail config files
-    echo -e "\nLinking mail config files..."
-    create_symlink "$DOTFILES_DIR/mail/mbsyncrc" "$HOME/.mbsyncrc"
-    create_symlink "$DOTFILES_DIR/mail/msmtprc" "$HOME/.msmtprc"
-
-    # Zed config files
-    local zed_files=(
-        "keymap.json"
-        "settings.json"
-        "tasks.json"
-    )
-
-    echo -e "\nLinking Zed config files..."
-    link_files "$DOTFILES_DIR/zed" "$HOME/.config/zed" "" "" "${zed_files[@]}"
-
-    # Agent config files
-    echo -e "\nLinking agent config files..."
-    create_symlink "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
-    create_symlink "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
-    create_symlink "$DOTFILES_DIR/claude/CLAUDE.md" "$HOME/.codex/instructions.md"
-    create_symlink_with_backup "$DOTFILES_DIR/codex/config.toml" "$HOME/.codex/config.toml"
-    create_symlink_with_backup "$DOTFILES_DIR/gemini/settings.json" "$HOME/.gemini/settings.json"
-
-    # nb plugins (symlink each *.nb-plugin into ~/.nb/.plugins/ so nb
-    # picks them up). Single source of truth in the dotfiles repo;
-    # editing here takes effect on next nb invocation.
     echo -e "\nLinking nb plugins..."
-    if [[ -d "$DOTFILES_DIR/nb" ]]; then
-        for plugin in "$DOTFILES_DIR"/nb/*.nb-plugin; do
-            [[ -e "$plugin" ]] || continue
-            create_symlink "$plugin" "$HOME/.nb/.plugins/$(basename "$plugin")"
-        done
-    fi
-
-    # Tool config files
-    echo -e "\nLinking tool config files..."
-    create_symlink "$DOTFILES_DIR/mise/config.toml" "$HOME/.config/mise/config.toml"
-    create_symlink "$DOTFILES_DIR/fnox/config.toml" "$HOME/.config/fnox/config.toml"
-
-    # Systemd user units (timers + services). Linked individually because
-    # ~/.config/systemd/user/ holds units from several repos; we can't
-    # link_directory it. Run `systemctl --user daemon-reload &&
-    # systemctl --user enable --now <name>.timer` after first install.
-    echo -e "\nLinking systemd user units..."
-    create_symlink "$DOTFILES_DIR/systemd/user/ship-claude-logs.service" "$HOME/.config/systemd/user/ship-claude-logs.service"
-    create_symlink "$DOTFILES_DIR/systemd/user/ship-claude-logs.timer" "$HOME/.config/systemd/user/ship-claude-logs.timer"
-    create_symlink "$DOTFILES_DIR/systemd/user/ingest-claude-logs.service" "$HOME/.config/systemd/user/ingest-claude-logs.service"
-    create_symlink "$DOTFILES_DIR/systemd/user/ingest-claude-logs.timer" "$HOME/.config/systemd/user/ingest-claude-logs.timer"
-
-    # Directory symlinks
-    echo -e "\nLinking directories..."
-    # ~/.codex/skills is symlinked at ben plugin bootstrap time (in install.sh
-    # and 'dotfiles update'), pointing at Claude Code's marketplace clone ---
-    # can't do it here because the clone doesn't exist until claude has run.
-    link_directory "$DOTFILES_DIR/ghostty" "$HOME/.config/ghostty"
-    link_directory "$DOTFILES_DIR/helix" "$HOME/.config/helix"
-    link_directory "$DOTFILES_DIR/mail/neomutt" "$HOME/.config/neomutt"
-    link_directory "$DOTFILES_DIR/zed/snippets" "$HOME/.config/zed/snippets"
-    link_directory "$DOTFILES_DIR/zellij" "$HOME/.config/zellij"
+    while IFS= read -r entry; do
+        create_symlink "$(manifest_source "$entry")" "$(manifest_target "$entry")"
+    done < <(nb_plugin_links)
 
     echo -e "\n${GREEN}Done!${NC}"
 }

@@ -25,9 +25,11 @@ This repo contains all of the (public) config files that I use on my machines.
 
 All these files are expected to be in specific locations (e.g. @~/.config). The
 @./create_symlinks.sh script links all the files in this repo into their
-expected locations. In many cases the filename in this repo doesn't have the
-preceding dot, but the symlink source does (e.g. `~/.zshrc` is linked to
-`zshrc`).
+expected locations. The full list of links lives in @lib/symlink-manifest.sh ---
+the single source of truth consumed by both @./create_symlinks.sh (to create)
+and `dotfiles doctor` (to verify), so add new links there. In many cases the
+filename in this repo doesn't have the preceding dot, but the symlink source
+does (e.g. `~/.zshrc` is linked to `zshrc`).
 
 Apart from a few one-off config files, these config files and scripts are
 grouped into the following categories.

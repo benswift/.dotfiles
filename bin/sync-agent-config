@@ -8,12 +8,7 @@ set -euo pipefail
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 UPDATE_CLAUDE=false
 
-YELLOW='\033[1;33m'
-GREEN='\033[0;32m'
-NC='\033[0m'
-
-info() { echo -e "${GREEN}[info]${NC} $1"; }
-warn() { echo -e "${YELLOW}[warn]${NC} $1"; }
+source "$DOTFILES_DIR/lib/log.sh"
 
 usage() {
     cat <<EOF
