@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-_script_path = str(Path(__file__).parent.parent / "bin" / "svg_validate.py")
+_script_path = str(Path(__file__).parent.parent / "bin" / "svg-validate")
 _loader = importlib.machinery.SourceFileLoader("svg_validate", _script_path)
 _spec = importlib.util.spec_from_loader("svg_validate", _loader, origin=_script_path)
 assert _spec is not None and _spec.loader is not None
@@ -22,7 +22,7 @@ parse_svg = mod.parse_svg
 CheckResult = mod.CheckResult
 
 
-SCRIPT = Path(__file__).parent.parent / "bin" / "svg_validate.py"
+SCRIPT = Path(__file__).parent.parent / "bin" / "svg-validate"
 
 VALID_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <path d="M10,50 C30,10 70,10 90,50" fill="#b58900" stroke="none"/>

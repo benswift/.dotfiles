@@ -298,11 +298,11 @@ def _main_impl(
 
     Examples:
 
-      styled_image_gen.py "sunrise over a misty valley" --resolution 2K
+      styled-image-gen "sunrise over a misty valley" --resolution 2K
 
-      styled_image_gen.py "studio portrait" --model flux --input-image ref.jpg
+      styled-image-gen "studio portrait" --model flux --input-image ref.jpg
 
-      styled_image_gen.py "abstract pattern" --input-image refs/a.jpg --input-image refs/b.jpg
+      styled-image-gen "abstract pattern" --input-image refs/a.jpg --input-image refs/b.jpg
     """
     if model not in MODELS:
         error_exit(f"Unknown model '{model}'. Choose from: {', '.join(MODELS)}")
