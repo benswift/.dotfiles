@@ -3,6 +3,12 @@
 This directory contains all email-related configuration files for mbsync (IMAP
 sync), msmtp (SMTP), and neomutt (email client).
 
+Note: `mbsyncrc` and `msmtprc` are **macOS-only** as written --- they hardcode
+`/Users/ben/...` paths, macOS Keychain (`security find-generic-password`) for
+secrets, and the macOS CA bundle path (`tls_trust_file /etc/ssl/cert.pem`). The
+symlinks are still created on Linux but the configs won't work there without
+adapting all three.
+
 ## Files
 
 - `mbsyncrc` - IMAP configuration for syncing mail with mbsync
