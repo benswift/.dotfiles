@@ -78,10 +78,6 @@ scratch.el
 .orgids
 flycheck_*
 
-# this is just a symlink, so that the snippets
-# work in the repl as well
-snippets/extempore-repl-mode
-
 # tooling
 
 .python-version

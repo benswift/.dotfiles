@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: tset-ref
-# key: tsetr
-# binding: direct-keybinding
-# --
-(tset! ${1:dat} ${2:index} $0(tref $1 $2))

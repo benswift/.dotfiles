@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: play-note
-# key: playnote
-# --
-(play-note (now) ${1:inst} ${2:60} ${3:80} ${4:44100})

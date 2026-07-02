@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: minted-processing
-# key: mintedp
-# --
-\begin{minted}{processing}
-$0
-\end{minted}

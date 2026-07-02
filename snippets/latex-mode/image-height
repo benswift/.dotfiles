@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: image-height
-# key: imgh
-# --
-\begin{figure}
-  \centering
-  \includegraphics[height=$1\textheight]{${2:filename}}
-\end{figure}

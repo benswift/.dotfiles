@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: todo
-# key: todo
-# binding: direct-keybinding
-# --
-\todo{$1}

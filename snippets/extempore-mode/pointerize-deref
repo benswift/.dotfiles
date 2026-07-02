@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: pointerize-deref
-# key: pd
-# binding: direct-keybinding
-# --
-(pref $0_ptr 0)

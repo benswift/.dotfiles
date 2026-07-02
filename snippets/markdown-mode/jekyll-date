@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: jekyll-date
-# key: date
-# --
-date: "`(format-time-string "%F %T %z" (current-time))`"

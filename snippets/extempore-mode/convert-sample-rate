@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: convert-sample-rate
-# key: csr
-# --
-(convert SR)

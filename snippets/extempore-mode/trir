@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: trir
-# key: trir
-# binding: direct-keybinding
-# --
-(trir ${1:min} ${2:amp} ${3:freq})

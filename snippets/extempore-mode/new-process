@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: new-process
-# key: ipcnew
-# --
-(ipc:new "${1:process-name}" ${2:port})
-(ipc:bind-func "$1" '${3:func_name})
-(ipc:call-async "$1" '$3)

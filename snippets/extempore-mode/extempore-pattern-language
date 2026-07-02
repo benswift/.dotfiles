@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: extempore-pattern-language
-# key: ep
-# --
-(:> ${1:name} ${2:len} 0 (play ${3:inst} @1 ${4:80} dur) `($0))

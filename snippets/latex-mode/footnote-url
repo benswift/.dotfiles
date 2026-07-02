@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: footnote-url
-# key: fnurl
-# binding: direct-keybinding
-# --
-\footnote{\url{$0}}

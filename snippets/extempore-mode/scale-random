@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: scale-random
-# key: scaler
-# --
-(+ ${1:dc} (* ${2:amp} (random)))

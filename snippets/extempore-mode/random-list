@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: random-list
-# key: rlist
-# --
-(random (list $0))

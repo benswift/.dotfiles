@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: osc-create
-# key: osccreate
-# --
-(osc_mc_c ${2:phase})

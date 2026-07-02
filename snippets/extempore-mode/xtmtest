@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: xtmtest
-# key: xtmtest
-# --
-(xtmtest
- '(bind-func test_${1:name}
-    (lambda ($2)
-      $0))
- (test_$1))

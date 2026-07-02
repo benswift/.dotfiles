@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: header-pandoc-metadata
-# key: header
-# --
-% ${1:title}
-% ${2:Ben Swift}
-% ${3:date}

@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: real->integer
-# key: ri
-# binding: direct-keybinding
-# --
-(real->integer$0)

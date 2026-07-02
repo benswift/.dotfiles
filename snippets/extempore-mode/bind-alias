@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: bind-alias
-# key: binda
-# --
-(bind-alias ${1:name} ${2:type})

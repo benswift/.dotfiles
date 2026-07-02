@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: cite-apa-ish
-# key: cite
-# --
-\textbf{${1:author}} (${2:year}). \emph{${3:title}}. ${4:publisher}.

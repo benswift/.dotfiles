@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: dsp
-# key: dsp
-# --
-(bind-func dsp:DSP
-  (lambda (in time chan dat)
-    $0))
-
-${1:(dsp:set! dsp)}

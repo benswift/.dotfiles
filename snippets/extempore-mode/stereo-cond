@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: stereo-cond
-# key: scond
-# --
-(cond ((= chan 0)
-       ${1:out})
-      ((= chan 1)
-       ${1:$(replace-regexp-in-string "l\\\\>" "r" yas-text)})
-      (else 0.0))

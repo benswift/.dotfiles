@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: thanks-name
-# key: t
-# --
-Thanks ${1:`(ben-find-to-firstname)`} :)$0
-
-Ben

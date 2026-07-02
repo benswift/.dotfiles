@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: ipc-define
-# key: ipcdf
-# binding: direct-keybinding
-# --
-(ipc:define "${1:utility}" '${2:func-name} $2)

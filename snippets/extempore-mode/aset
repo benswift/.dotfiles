@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: aset
-# key: aset
-# --
-(aset! ${1:dat} ${2:index} ${3:value})

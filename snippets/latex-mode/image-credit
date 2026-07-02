@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: image-credit
-# key: imgc
-# --
-\makebox[\textwidth][r]{\tiny ${1:$$(replace-regexp-in-string "_" "\\_" yas-text)}}

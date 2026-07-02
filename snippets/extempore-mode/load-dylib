@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: load-dylib
-# key: loaddylib
-# binding: direct-keybinding
-# --
-(define ${1:libname} (sys:load-dylib "$1$0"))

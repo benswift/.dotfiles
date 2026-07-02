@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: pc:quantize
-# key: pcquant
-# --
-(pc:quantize ${1:pitch} ${2:pcscale}$0)

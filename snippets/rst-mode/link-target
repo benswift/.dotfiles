@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: link-target
-# key: target
-# --
-.. _${1:$$(replace-regexp-in-string " " "-" yas-text)}:

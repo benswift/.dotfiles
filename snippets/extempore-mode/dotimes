@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: dotimes
-# key: dotimes
-# --
-(dotimes (${1:i} ${2:start-opt num})
-  $0)

@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: minted
-# key: minted
-# --
-\begin{minted}{${2:asm}}
-$0
-\end{minted}

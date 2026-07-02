@@ -1,5 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: next-mod
-# key: nm
-# --
-(- ${1:mod} (modulo (+ beat dur) $1))

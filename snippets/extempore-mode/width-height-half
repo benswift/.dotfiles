@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: width-height-half
-# key: wh2
-# --
-(* width .5) (* height .5)

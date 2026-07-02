@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: pc:scale
-# key: pcscale
-# --
-(pc:scale ${1:0} '${2:$$(yas-choose-value '("pentatonic" "wholetone" "chromatic" "octatonic" "messiaen1" "messiaen2" "messiaen3" "messiaen4" "messiaen5" "messiaen6" "messiaen7" "ionian" "dorian" "phrygian" "lydian" "lydian-dominant" "lydian-mixolydian" "mixolydian" "aeolian" "locrian"))})

@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: ipc-bind-func
-# key: ipcbf
-# --
-(ipc:bind-func "${1:utility}" '${2:func_name})

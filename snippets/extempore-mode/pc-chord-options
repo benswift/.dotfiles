@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: pc:chord-options
-# key: pcopt
-# --
-(pc:chord-options ${1:root} '${2:^} ${3:pc}$0)

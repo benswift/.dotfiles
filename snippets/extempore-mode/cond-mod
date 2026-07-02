@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: cond-mod
-# key: cm
-# --
-(let ((bar (/ (modulo beat ${1:hypermetre}) ${2:bar-length})))
-  (cond $0((< bar ${3:1}) $4)
-        (else $4)))

@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: map-1
-# key: map1
-# --
-(map (lambda (${1:x}) ($0$1)))

@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: osc
-# key: osccall
-# --
-(osc ${1:chan} ${2:amp} ${3:freq})

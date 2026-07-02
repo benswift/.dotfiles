@@ -1,9 +1,0 @@
-## -*- mode: snippet -*-
-# name: phoenix-function-component
-# key: fc
-# --
-def $1(assigns) do
-  ~H"""
-  $0
-  """
-end

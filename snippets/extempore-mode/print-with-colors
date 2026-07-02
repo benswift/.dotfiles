@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: print-with-colors
-# key: pwc
-# binding: direct-keybinding
-# --
-(print-with-colors '${1:$$(yas-choose-value '("none" "default" "white" "cyan" "magenta" "blue" "yellow" "green" "red" "black"))} '${2:default} ${3:#f} (print "$0"))

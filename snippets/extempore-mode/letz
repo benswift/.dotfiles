@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: letz
-# key: letz
-# binding: direct-keybinding
-# --
-(letz (($0)))

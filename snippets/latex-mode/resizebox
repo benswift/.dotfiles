@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: resizebox
-# key: resizebox
-# --
-\resizebox{!}{${1:.15}\textheight}{$0}

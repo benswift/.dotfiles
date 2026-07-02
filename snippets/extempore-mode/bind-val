@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: bind-val
-# key: bindv
-# --
-(bind-val ${1:name} ${2:type} ${3:value})

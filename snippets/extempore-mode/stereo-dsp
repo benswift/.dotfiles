@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: stereo-dsp
-# key: sdsp
-# --
-($1l ($2_c$3))
-($1r ($2_c$3))

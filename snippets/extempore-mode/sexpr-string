@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: sexpr->string
-# key: ss
-# binding: direct-keybinding
-# --
-(sexpr->string$0)

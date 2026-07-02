@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: liquid-tag
-# key: lt
-# --
-{% $0 %}

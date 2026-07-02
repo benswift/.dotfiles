@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: pc-diatonic
-# key: pcdia
-# --
-(pc:diatonic ${1:root} '${2:^-} '${3:$$(yas-choose-value (extempore-yas-get-chord-sym (intern-soft (yas-field-value 2))))})

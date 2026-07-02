@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: revealjs-impact-slide
-# key: impact
-# --
-{% include slides/impact.html %}$0

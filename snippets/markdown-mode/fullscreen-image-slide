@@ -1,4 +1,0 @@
-# key: fsimage
-# name: fullscreen-image-slide
-# --
-## ${1:title} {.text-hl data-background-image="assets/`(yas-choose-value (directory-files "assets"))`"}

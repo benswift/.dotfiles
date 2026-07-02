@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: ref
-# key: ref
-# --
-:ref:\`$0 <$1>\`

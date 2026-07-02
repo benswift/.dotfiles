@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: cos-iter-var
-# key: cosi
-# --
-(cos_iter ${1:[phase_offset]} ${2:i} ${3:n})

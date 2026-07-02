@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: defn
-# key: df
-# binding: direct-keybinding
-# --
-(defn ${fn-name} [$0])

@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: call-instrument
-# key: inst
-# --
-(${1:inst-name} in time chan dat)

@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: bind-func
-# key: bf
-# --
-(bind-func ${1:func-name}
-  (lambda ($2)
-    $0))

@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: href
-# key: href
-# --
-\href{${1:link}}{\textbf{${2:label}}}

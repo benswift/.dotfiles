@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: column-major
-# key: colmaj
-# --
-(+ ${1:r} (* ${2:c} ${3:num_rows}))

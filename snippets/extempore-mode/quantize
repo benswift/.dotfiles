@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: quantize
-# key: quant
-# --
-(- ${1:val} (% $1 ${2:step}))

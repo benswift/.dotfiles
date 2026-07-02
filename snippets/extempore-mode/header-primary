@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: header-primary
-# key: headerp
-# --
-(sys:load "`default-directory`setup.xtm")

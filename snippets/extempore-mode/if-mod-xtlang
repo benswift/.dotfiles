@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: if-mod-xtlang
-# key: imx
-# --
-(if (${1:=} (modulo time ${2:(convert SR)}) ${3:0})$0)

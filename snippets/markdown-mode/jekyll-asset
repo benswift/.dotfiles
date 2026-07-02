@@ -1,4 +1,0 @@
-# -*- mode: snippet -*-
-# key: asset
-# --
-{% asset `(yas-choose-value (jekyll-list-asset-filenames))` @pic alt="$1" %}

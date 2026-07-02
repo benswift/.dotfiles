@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: load
-# key: load
-# --
-(sys:load "`(f-relative (yas-choose-value (directory-files-recursively extempore-path "\.xtm$")) extempore-path)`")

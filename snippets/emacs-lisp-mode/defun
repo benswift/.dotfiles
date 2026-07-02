@@ -1,7 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: defun
-# key: df
-# binding: direct-keybinding
-# --
-(defun ${1:function-name} ($2)
-  $0)

@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: analogue-set-filter
-# key: afilter
-# --
-(set_filter ${1:inst} ${2:freq} ${3:res} ${4:drive} ${5:24} ${6:env-amt} ${7:track-freq} ${8:track-amp})

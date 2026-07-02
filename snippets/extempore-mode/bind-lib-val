@@ -1,6 +1,0 @@
-# -*- mode: snippet; require-final-newline: nil -*-
-# name: bind-lib-val
-# key: bindlv
-# binding: direct-keybinding
-# --
-(bind-lib-val ${1:lib_name} ${2:val_name} ${3:type})

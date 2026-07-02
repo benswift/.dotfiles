@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: pref
-# key: pref
-# binding: direct-keybinding
-# --
-(pref ${1:dat} ${2:index})

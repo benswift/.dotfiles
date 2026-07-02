@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: play-drum
-# key: playd
-# --
-(play ${1:kit} ${2:$$(yas-choose-value (list "*gm-mute-surdo*" "*gm-open-triangle*" "*gm-mute-triangle*" "*gm-open-cuica*" "*gm-mute-cuica*" "*gm-low-wood-block*" "*gm-hi-wood-block*" "*gm-claves*" "*gm-long-guiro*" "*gm-short-guiro*" "*gm-long-whistle*" "*gm-short-whistle*" "*gm-maracas*" "*gm-cabasa*" "*gm-low-agogo*" "*gm-hi-agogo*" "*gm-low-timbale*" "*gm-hi-timbale*" "*gm-low-conga*" "*gm-hi-conga*" "*gm-mute-hi-conga*" "*gm-low-bongo*" "*gm-hi-bongo*" "*gm-ride-2*" "*gm-vibraslap*" "*gm-crash-2*" "*gm-cowbell*" "*gm-splash*" "*gm-tambourine*" "*gm-ride-bell*" "*gm-chinese*" "*gm-ride*" "*gm-hi-tom*" "*gm-crash*" "*gm-hi-mid-tom*" "*gm-low-mid-tom*" "*gm-open-hi-hat*" "*gm-low-tom*" "*gm-pedal-hi-hat*" "*gm-hi-floor-tom*" "*gm-closed-hi-hat*" "*gm-low-floor-tom*" "*gm-snare-2*" "*gm-hand-clap*" "*gm-snare*" "*gm-side-stick*" "*gm-kick-2*" "*gm-kick*" "*gm-open-surdo*"))} ${3:80} ${4:.1})
