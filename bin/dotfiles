@@ -110,11 +110,15 @@ check_core() {
         check_fail "zoxide not installed"
     fi
 
-    # 1Password CLI (backend for fnox; brew/apt install, not mise)
+    # 1Password CLI (backend for fnox; brew/apt install, not mise). On Linux
+    # boxes secrets live in ~/.config/mise/config.local.toml instead, so op
+    # is optional there.
     if command_exists op; then
         check_pass "op (1Password CLI) installed"
-    else
+    elif [[ "$OSTYPE" == darwin* ]]; then
         check_fail "op (1Password CLI) not installed"
+    else
+        check_warn "op (1Password CLI) not installed"
     fi
 }
 
@@ -184,6 +188,40 @@ check_tools() {
             check_pass "mbsync XOAUTH2 (SASL) support"
         else
             check_fail "mbsync lacks SASL --- run 'brew install benswift/tap/isync'"
+        fi
+    fi
+}
+
+check_script_deps() {
+    section "Checking script dependencies..."
+
+    # Hard requirements of bin/ scripts: jq (teams, sync-agent-config),
+    # uv (mail utils and the python scripts), ast-grep (the preferred
+    # code-search tool per claude/CLAUDE.md). Fall back to 'mise which'
+    # so mise-managed tools resolve even when the parent shell hasn't
+    # activated mise.
+    local tool
+    for tool in jq uv ast-grep; do
+        if command_exists "$tool" || { command_exists mise && mise which "$tool" &>/dev/null; }; then
+            check_pass "$tool"
+        else
+            check_fail "$tool not installed"
+        fi
+    done
+
+    # agent-browser drives the teams script (installed as a Claude plugin)
+    if command_exists agent-browser; then
+        check_pass "agent-browser"
+    else
+        check_warn "agent-browser not installed (bin/teams needs it)"
+    fi
+
+    # bin/agenda is a swift script (macOS only)
+    if [[ "$OSTYPE" == darwin* ]]; then
+        if command_exists swift; then
+            check_pass "swift (bin/agenda)"
+        else
+            check_warn "swift not installed (bin/agenda needs it)"
         fi
     fi
 }
@@ -258,7 +296,11 @@ check_secrets() {
     fi
 
     if ! command_exists op; then
-        check_fail "op (1Password CLI) not installed --- secrets won't resolve"
+        if [[ "$OSTYPE" == darwin* ]]; then
+            check_fail "op (1Password CLI) not installed --- secrets won't resolve"
+        else
+            check_warn "op not installed --- fnox secrets won't resolve (Linux boxes use mise config.local.toml)"
+        fi
         return
     fi
 
@@ -376,6 +418,7 @@ doctor() {
     check_core
     check_symlinks
     check_tools
+    check_script_deps
     check_mise_tools
     check_directories
     check_secrets
