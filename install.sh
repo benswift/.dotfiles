@@ -136,7 +136,9 @@ install_agent_skills() {
     mkdir -p "$HOME/.agents"
 
     info "Installing agent-browser skill..."
-    bunx skills add vercel-labs/agent-browser
+    # mise exec rather than bare bunx: in this non-interactive shell mise's
+    # activation hook never fires, so mise-managed bun isn't on PATH yet
+    mise exec -- bunx skills add vercel-labs/agent-browser
 }
 
 sync_agent_config() {
@@ -190,6 +192,8 @@ main() {
     echo "Next steps:"
     echo "  1. Restart your shell or run: source ~/.zshrc"
     echo "  2. Run 'dotfiles doctor' to verify setup"
+    echo "     (note: gitconfig rewrites github https URLs to ssh, so add this"
+    echo "      machine's ssh key to GitHub before running 'dotfiles update')"
     if [[ "$platform" == "macos" ]]; then
         echo "  3. Install additional tools as needed with 'brew install' or 'mise use'"
     else
