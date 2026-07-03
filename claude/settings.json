@@ -96,14 +96,14 @@
       "source": {
         "source": "git",
         "url": "https://github.com/benswift/astromotion.git",
-        "ref": "v0.7.2"
+        "ref": "v0.8.0"
       }
     },
     "astro-theme-anu": {
       "source": {
         "source": "git",
         "url": "https://gitlab.anu.edu.au/u2548636/astro-theme-anu.git",
-        "ref": "astro-theme-anu@v0.6.4"
+        "ref": "astro-theme-anu@v0.7.0"
       }
     }
   },
