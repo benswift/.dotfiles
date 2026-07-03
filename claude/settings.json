@@ -96,7 +96,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/benswift/astromotion.git",
-        "ref": "v0.6.1"
+        "ref": "v0.7.2"
       }
     },
     "astro-theme-anu": {
