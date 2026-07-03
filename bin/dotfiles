@@ -298,7 +298,6 @@ check_agent_config() {
     section "Checking AI agent configuration..."
 
     local ben_skills="$HOME/.claude/plugins/marketplaces/ben/skills"
-    local codex_skills="$HOME/.codex/skills"
 
     if command_exists claude; then
         check_pass "claude installed"
@@ -306,42 +305,11 @@ check_agent_config() {
         check_fail "claude not installed"
     fi
 
-    if command_exists codex; then
-        check_pass "codex installed"
-    else
-        check_fail "codex not installed"
-    fi
-
     if [[ -d "$ben_skills" ]]; then
         check_pass "ben marketplace skills cloned"
         check_skill_yaml "$ben_skills"
-        if [[ -d "$ben_skills/.system" ]]; then
-            check_fail "Codex .system skills are inside ben marketplace clone"
-        else
-            check_pass "ben marketplace has no Codex .system skills"
-        fi
     else
         check_fail "ben marketplace skills missing"
-    fi
-
-    if [[ -d "$codex_skills" && ! -L "$codex_skills" ]]; then
-        check_pass "codex skills directory is local"
-    elif [[ -L "$codex_skills" ]]; then
-        check_fail "codex skills is a whole-directory symlink"
-    else
-        check_fail "codex skills directory missing"
-    fi
-
-    if [[ -L "$codex_skills/project-manager-backlog" && -e "$codex_skills/project-manager-backlog/SKILL.md" ]]; then
-        check_pass "codex sees ben personal skills"
-    else
-        check_fail "codex personal skill links missing"
-    fi
-
-    if [[ -d "$codex_skills/.system" ]]; then
-        check_pass "codex owns .system skills"
-    else
-        check_warn "codex .system skills not present yet"
     fi
 
     if [[ -f "$HOME/.agents/skills/agent-browser/SKILL.md" ]]; then

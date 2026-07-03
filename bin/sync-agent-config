@@ -145,4 +145,5 @@ sync_codex_skills() {
 }
 
 sync_claude_plugins
-sync_codex_skills
+# sync_codex_skills intentionally not called --- Codex is unused at the moment.
+# Restore the call to re-link ~/.codex/skills from the ben marketplace clone.
