@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-# pull ANU password out of 1Password, pipe it to stdin
-op read "op://Personal/ANU Identity/password" |
+# ANU password comes from the environment (typically an untracked [env] block
+# in ~/.config/mise/config.local.toml, which mise exports into every shell).
+printf '%s\n' "${ANU_PASSWORD:?ANU_PASSWORD not set (add it to ~/.config/mise/config.local.toml)}" |
     # start the VPN
     sudo openconnect --user=u2548636 --protocol=gp --passwd-on-stdin https://staff-access.anu.edu.au

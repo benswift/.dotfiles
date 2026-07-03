@@ -37,7 +37,6 @@ SYMLINK_MANIFEST=(
     "claude/CLAUDE.md:~/.codex/instructions.md"
     # tools
     "mise/config.toml:~/.config/mise/config.toml"
-    "fnox/config.toml:~/.config/fnox/config.toml"
     # systemd user units (linked individually because
     # ~/.config/systemd/user/ holds units from several repos). Run
     # `systemctl --user daemon-reload && systemctl --user enable --now

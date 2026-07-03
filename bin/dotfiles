@@ -109,17 +109,6 @@ check_core() {
     else
         check_fail "zoxide not installed"
     fi
-
-    # 1Password CLI (backend for fnox; brew/apt install, not mise). On Linux
-    # boxes secrets live in ~/.config/mise/config.local.toml instead, so op
-    # is optional there.
-    if command_exists op; then
-        check_pass "op (1Password CLI) installed"
-    elif [[ "$OSTYPE" == darwin* ]]; then
-        check_fail "op (1Password CLI) not installed"
-    else
-        check_warn "op (1Password CLI) not installed"
-    fi
 }
 
 check_symlinks() {
@@ -279,41 +268,6 @@ check_directories() {
     done
 }
 
-check_secrets() {
-    section "Checking fnox secrets..."
-
-    # fnox is mise-managed, so it's not on PATH for a bash script unless mise
-    # has been activated. Resolve via 'mise which' so the check works whether
-    # or not the parent shell activated mise.
-    local fnox_bin
-    if command_exists fnox; then
-        fnox_bin="fnox"
-    elif command_exists mise && fnox_bin=$(mise which fnox 2>/dev/null); then
-        :
-    else
-        check_fail "fnox not installed (run 'mise install')"
-        return
-    fi
-
-    if ! command_exists op; then
-        if [[ "$OSTYPE" == darwin* ]]; then
-            check_fail "op (1Password CLI) not installed --- secrets won't resolve"
-        else
-            check_warn "op not installed --- fnox secrets won't resolve (Linux boxes use mise config.local.toml)"
-        fi
-        return
-    fi
-
-    # Run fnox check from the dotfiles dir so it picks up fnox.toml + the
-    # global ~/.config/fnox/config.toml. Resolves every op:// reference.
-    local output
-    if output=$(cd "$DOTFILES_DIR" && "$fnox_bin" check 2>&1); then
-        check_pass "all dotfiles secrets resolve"
-    else
-        check_fail "fnox check failed: $(echo "$output" | head -1)"
-    fi
-}
-
 check_skill_yaml() {
     local skills_dir="$1"
 
@@ -421,7 +375,6 @@ doctor() {
     check_script_deps
     check_mise_tools
     check_directories
-    check_secrets
     check_agent_config
 
     echo ""

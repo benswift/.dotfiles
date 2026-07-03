@@ -82,9 +82,10 @@ in a project with its own `mise.toml`.
 
 Machine-local config (per-host env vars, secrets not safe for git) goes in
 `~/.config/mise/config.local.toml` --- mise auto-merges it with the global
-config, so any `[env]` entries get exported into every shell. Use this for
-credentials on headless boxes where the 1Password CLI desktop integration isn't
-available (e.g. `PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for `notify-pushover`).
+config, so any `[env]` entries get exported into every shell. This is the sole
+home for credentials (e.g. `PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for
+`notify-pushover`, `ANU_PASSWORD` for `vpn`, `REPLICATE_API_TOKEN` for
+`styled-image-gen`); the file is untracked, so nothing secret lands in git.
 
 ### Package installation hierarchy
 

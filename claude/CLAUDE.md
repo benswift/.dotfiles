@@ -111,8 +111,7 @@ fixed point, so later edits diff clean.
 ### Security
 
 Never put raw credentials, passwords, API keys, or tokens in code or config
-files. For project secrets, use fnox with the 1Password CLI backend on macOS:
-reference values as `op://Vault/Item/field` in `fnox.toml` and load through a
-fnox profile, never inline. On Linux it's ok to have things in an untracked mise
-env block. Warn if you encounter raw credentials during modifications and don't
-commit files that likely contain secrets.
+files. Keep secrets in an untracked mise env block --- an `[env]` table in
+`~/.config/mise/config.local.toml`, which mise exports into every shell ---
+never inline in a tracked file. Warn if you encounter raw credentials during
+modifications and don't commit files that likely contain secrets.

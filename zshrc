@@ -151,7 +151,6 @@ else
 fi
 
 eval "$(mise activate zsh)"
-command -v fnox &>/dev/null && eval "$(command fnox activate zsh)"
 # LS_COLORS via vivid, cached because the output is static per theme
 # (delete the cache file after changing theme)
 _lscolors_cache=~/.cache/vivid-lscolors

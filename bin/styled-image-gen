@@ -57,25 +57,13 @@ def error_exit(message: str) -> NoReturn:
 
 def get_api_token() -> str:
     token = os.environ.get("REPLICATE_API_TOKEN")
-    if token:
-        return token
-    try:
-        result = subprocess.run(
-            ["fnox", "-P", "lazy", "get", "REPLICATE_API_TOKEN"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except FileNotFoundError:
+    if not token:
         raise KeyError(
-            "REPLICATE_API_TOKEN not set and fnox not installed. "
-            "Get your token at https://replicate.com/account/api-tokens"
+            "REPLICATE_API_TOKEN not set. Add it to an [env] block in "
+            "~/.config/mise/config.local.toml. Get a token at "
+            "https://replicate.com/account/api-tokens"
         )
-    except subprocess.CalledProcessError as e:
-        raise KeyError(
-            f"fnox could not resolve REPLICATE_API_TOKEN: {e.stderr.strip()}"
-        )
-    return result.stdout.strip()
+    return token
 
 
 def slugify(text: str, max_words: int = 6) -> str:

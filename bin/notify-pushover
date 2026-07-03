@@ -3,10 +3,8 @@
 # Reads message from stdin or --message. Title from --title.
 # Optional --priority and --url.
 #
-# Credentials: PUSHOVER_TOKEN and PUSHOVER_USER_KEY env vars if set
-# (typically declared in ~/.config/mise/config.local.toml on headless boxes),
-# otherwise read from 1Password
-# (op://Personal/pushover.net/{Claude Code app token,user key}).
+# Credentials: PUSHOVER_TOKEN and PUSHOVER_USER_KEY env vars, typically
+# declared in an untracked [env] block in ~/.config/mise/config.local.toml.
 
 set -euo pipefail
 
@@ -51,12 +49,8 @@ TOKEN="${PUSHOVER_TOKEN:-}"
 USER_KEY="${PUSHOVER_USER_KEY:-}"
 
 if [[ -z "$TOKEN" || -z "$USER_KEY" ]]; then
-    if ! command -v op >/dev/null 2>&1; then
-        echo "notify-pushover: PUSHOVER_TOKEN/PUSHOVER_USER_KEY not set and 'op' not available" >&2
-        exit 1
-    fi
-    [[ -z "$TOKEN" ]] && TOKEN=$(op read 'op://Personal/pushover.net/Claude Code app token')
-    [[ -z "$USER_KEY" ]] && USER_KEY=$(op read 'op://Personal/pushover.net/user key')
+    echo "notify-pushover: PUSHOVER_TOKEN/PUSHOVER_USER_KEY not set (add them to ~/.config/mise/config.local.toml)" >&2
+    exit 1
 fi
 
 CURL_ARGS=(

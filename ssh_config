@@ -77,7 +77,3 @@ Host daysy
 Host strproxy
   User u2548636
   Hostname strproxy.comp.anu.edu.au
-
-# macOS: route through the 1Password SSH agent. Guarded so it's a no-op on Linux.
-Match host * exec "uname -s | grep -q Darwin"
-  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
