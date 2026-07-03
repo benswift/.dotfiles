@@ -20,10 +20,10 @@ fmt() {
     command -v "$1" &>/dev/null || return 0
     local tmp
     tmp="$(mktemp)"
-    trap 'rm -f "$tmp"' RETURN
     if "$@" <"$f" >"$tmp" 2>/dev/null && ! cmp -s "$tmp" "$f"; then
         cat "$tmp" >"$f"
     fi
+    rm -f "$tmp"
 }
 
 # mix format needs the project's .formatter.exs; walk up to the mix root.
@@ -41,6 +41,24 @@ fmt_mix() {
     done
 }
 
+# rustfmt formats via stdin like Helix's rust-analyzer does on save, but
+# rustfmt from stdin defaults to edition 2015; match cargo fmt by reading
+# the crate edition from the nearest Cargo.toml (default 2021 if absent).
+fmt_rust() {
+    command -v rustfmt &>/dev/null || return 0
+    local dir ed=2021 found
+    dir="$(dirname "$f")"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/Cargo.toml" ]]; then
+            found="$(grep -oP '^\s*edition\s*=\s*"\K[0-9]+' "$dir/Cargo.toml" | head -1 || true)"
+            [[ -n "$found" ]] && ed="$found"
+            break
+        fi
+        dir="$(dirname "$dir")"
+    done
+    fmt rustfmt --edition "$ed" --emit stdout
+}
+
 case "$f" in
 *.deck.mdx | */decks/*.mdx) ;; # astromotion decks: auto-format = false
 *.md | *.markdown | *.deck.svx) fmt oxfmt-helix --stdin-filepath file.md ;;
@@ -51,6 +69,7 @@ case "$f" in
 *.kdl) fmt kdlfmt format - ;;
 *.py) fmt ruff format --stdin-filename "$f" - ;;
 *.ex | *.exs | *.heex) fmt_mix ;;
+*.rs) fmt_rust ;;
 esac
 
 exit 0
