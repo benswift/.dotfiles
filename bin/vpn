@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ANU password comes from the environment (typically an untracked [env] block
-# in ~/.config/mise/config.local.toml, which mise exports into every shell).
-printf '%s\n' "${ANU_PASSWORD:?ANU_PASSWORD not set (add it to ~/.config/mise/config.local.toml)}" |
-    # start the VPN
+# ANU account password for the GlobalProtect VPN. Prefer $ANU_PASSWORD from the
+# environment (e.g. an untracked [env] block in ~/.config/mise/config.local.toml);
+# otherwise pull it from 1Password. This is the one script that still reaches for
+# `op` --- it's infrequent and interactive, so the 1Password prompt is fine.
+password="${ANU_PASSWORD:-}"
+[[ -n "$password" ]] || password="$(op read "op://Personal/ANU Identity/password")"
+
+printf '%s\n' "$password" |
     sudo openconnect --user=u2548636 --protocol=gp --passwd-on-stdin https://staff-access.anu.edu.au
