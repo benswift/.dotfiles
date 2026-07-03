@@ -57,10 +57,12 @@ sync_claude_plugins() {
     info "Synchronising Claude plugins..."
     # Build one `marketplace add` spec per entry: GitHub repos pin a ref with
     # @ref, plain git URLs with #ref (package marketplaces pin release tags).
+    # Serial on purpose: each add writes settings.json back, and parallel adds
+    # race on that write (losing refs from other entries).
     jq -r '.extraKnownMarketplaces // {} | to_entries[] | .value.source |
         if .repo then .repo + (if .ref then "@" + .ref else "" end)
         else .url + (if .ref then "#" + .ref else "" end) end' "$settings" |
-        xargs -P 4 -I {} claude plugin marketplace add {} >/dev/null 2>&1 || true
+        xargs -I {} claude plugin marketplace add {} >/dev/null 2>&1 || true
     jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "$settings" |
         xargs -P 4 -I {} claude plugin install --scope user {} >/dev/null 2>&1 || true
 
