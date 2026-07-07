@@ -77,6 +77,12 @@ def slugify(text: str, max_words: int = 6) -> str:
     return slug if slug else "untitled"
 
 
+# Generous read timeout: the Replicate client's sync run holds one long-lived
+# request open until the prediction finishes, and slower models (e.g.
+# gpt-image-2 via the proxy) routinely outlast a short timeout.
+HTTP_TIMEOUT = httpx.Timeout(300.0, connect=10.0)
+
+
 def download_image(url: str, target_dir: Path, base_name: str) -> Path:
     ext = Path(urlparse(url).path).suffix.lower()
     if ext == ".jpeg":
@@ -84,7 +90,7 @@ def download_image(url: str, target_dir: Path, base_name: str) -> Path:
     elif ext not in (".jpg", ".png", ".webp", ".svg"):
         ext = ".jpg"
     target_path = target_dir / f"{base_name}{ext}"
-    response = httpx.get(url, timeout=60.0, follow_redirects=True)
+    response = httpx.get(url, timeout=HTTP_TIMEOUT, follow_redirects=True)
     response.raise_for_status()
     target_path.write_bytes(response.content)
     return target_path
@@ -325,7 +331,7 @@ def _main_impl(
         target_dir = output_dir / timestamp
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    client = replicate.Client(api_token=api_token)
+    client = replicate.Client(api_token=api_token, timeout=HTTP_TIMEOUT)
 
     if model == "recraft":
         output_format = "svg"
