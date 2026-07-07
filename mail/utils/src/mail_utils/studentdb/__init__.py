@@ -61,6 +61,7 @@ class StudentDB:
             email=person.email,
             uid=student.uid,
             status=student.status,
+            school=student.school,
             commencement_date=student.commencement_date,
             supervisor=self._get_person(student.primary_supervisor_id),
             panel=[self._get_person(pid) for pid in student.panel_ids],
@@ -69,10 +70,14 @@ class StudentDB:
             ),
         )
 
-    def students(self, status: str | None = None) -> list[DenormalisedStudent]:
+    def students(
+        self, status: str | None = None, school: str | None = None
+    ) -> list[DenormalisedStudent]:
         results = []
         for student in self._db.students:
             if status and student.status != status:
+                continue
+            if school and student.school != school:
                 continue
             results.append(self._denormalise(student))
         return results

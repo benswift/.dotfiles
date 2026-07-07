@@ -47,6 +47,7 @@ VALID_DATABASE = {
             "primary_supervisor_id": "carol_supervisor",
             "panel_ids": ["dan_panel"],
             "status": "confirmed",
+            "school": "SOCY",
             "commencement_date": "2024-01-15",
             "crp_chair_id": "eve_chair",
         },
@@ -56,6 +57,7 @@ VALID_DATABASE = {
             "primary_supervisor_id": "carol_supervisor",
             "panel_ids": ["dan_panel", "eve_chair"],
             "status": "pre-confirmation",
+            "school": "SOCO",
         },
     ],
 }
@@ -254,6 +256,20 @@ class TestStudentDB:
         preconf = db.students(status="pre-confirmation")
         assert len(preconf) == 1
         assert preconf[0].name == "Bob Student"
+
+    def test_students_filters_by_school(self, db: StudentDB):
+        socy = db.students(school="SOCY")
+        assert len(socy) == 1
+        assert socy[0].name == "Alice Student"
+        assert socy[0].school == "SOCY"
+
+        soco = db.students(school="SOCO")
+        assert len(soco) == 1
+        assert soco[0].name == "Bob Student"
+
+    def test_students_filters_by_status_and_school(self, db: StudentDB):
+        assert len(db.students(status="confirmed", school="SOCY")) == 1
+        assert len(db.students(status="confirmed", school="SOCO")) == 0
 
     def test_students_returns_empty_for_unknown_status(self, db: StudentDB):
         students = db.students(status="completed")

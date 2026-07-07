@@ -61,6 +61,13 @@ def students(
             help="Filter by status (e.g., confirmed, pre-confirmation)",
         ),
     ] = None,
+    school: Annotated[
+        str | None,
+        typer.Option(
+            "--school",
+            help="Filter by school (e.g., SOCY, SOCO)",
+        ),
+    ] = None,
     file: Annotated[
         Path | None,
         typer.Option(
@@ -70,7 +77,7 @@ def students(
 ) -> None:
     """List students with denormalised supervisor/panel information."""
     db = load_db(file)
-    results = db.students(status=status)
+    results = db.students(status=status, school=school)
 
     output = [s.model_dump(exclude_none=True) for s in results]
     json.dump(output, sys.stdout, indent=2)

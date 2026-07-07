@@ -16,6 +16,7 @@ class Student(BaseModel):
     primary_supervisor_id: str
     panel_ids: list[str]
     status: str
+    school: str | None = None
     commencement_date: str | None = None
     crp_chair_id: str | None = None
 
@@ -70,6 +71,7 @@ class DenormalisedStudent(BaseModel):
     email: str | None
     uid: str
     status: str
+    school: str | None = None
     commencement_date: str | None
     supervisor: Person
     panel: list[Person]
