@@ -60,6 +60,11 @@ Create Near
 Sync All
 Expunge Both
 SyncState *
+# Skip messages larger than Office365's ~35MB IMAP APPEND limit. Exchange
+# rejects oversized mail on receipt too, so nothing this large can legitimately
+# live on the server --- MaxSize only suppresses doomed local->server uploads
+# (e.g. huge image threads archived locally in neomutt), never a real download.
+MaxSize 35m
 
 ###################################
 # PhD Convenor (delegated mailbox) #
