@@ -26,7 +26,10 @@ HOME_PREFIX_RE = re.compile(r"^/(Users|home)/[^/]+")
 SCHEMA = """
 DROP TABLE IF EXISTS sessions;
 CREATE TABLE sessions (
-    session_uuid      TEXT PRIMARY KEY,
+    -- A session file can appear under several project dirs on one host
+    -- (worktree sessions, resumes from a different cwd), so the uuid alone
+    -- is not unique.
+    session_uuid      TEXT NOT NULL,
     host              TEXT NOT NULL,
     project_dir       TEXT NOT NULL,
     project_canonical TEXT,
@@ -37,7 +40,8 @@ CREATE TABLE sessions (
     ended_at          TEXT,
     message_count     INTEGER NOT NULL,
     file_size         INTEGER NOT NULL,
-    ingested_at       TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ingested_at       TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (session_uuid, host, project_dir)
 );
 CREATE INDEX sessions_host ON sessions(host);
 CREATE INDEX sessions_project ON sessions(project_dir);
