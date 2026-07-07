@@ -179,12 +179,12 @@ def cmd_run(name: str) -> int:
 
 def cmd_run_due() -> int:
     now = datetime.now()
+    # Sync unconditionally: this timer is also the notebook's sync heartbeat
+    # on weddle (there is no separate nb-sync cron job).
+    subprocess.run(["nb", "sync"], capture_output=True)
     due = [t for t in load_tasks() if is_due(t, now)]
     if not due:
         return 0
-    # Pull before and push after: tasks write notes, and the notebook syncs
-    # across machines.
-    subprocess.run(["nb", "sync"], capture_output=True)
     rc = 0
     for task in due:
         rc |= run_task(task)

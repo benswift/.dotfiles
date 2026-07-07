@@ -186,6 +186,17 @@ there; @bin/sync-agent-config propagates it to Codex on the next
 marketplace clone (for Claude Code) and the per-skill Codex symlinks (for Codex)
 cover everything.
 
+### Claude Code session logs (analytics)
+
+Every host ships `~/.claude/projects` to `weddle:claude-logs/<host>/` via
+@bin/ship-claude-logs --- a 15-minute systemd timer on weddle, a launchd agent
+on macOS hosts (@launchd/, install instructions in each plist header), with a
+metered-network guard so laptops never ship over a phone hotspot. On weddle,
+@bin/ingest-claude-logs (hourly timer) rebuilds `~/claude-logs/analytics.db`
+(one `sessions` row per session file, keyed by uuid + host + project dir).
+Purpose: cross-machine introspection of Claude Code usage --- e.g. a recurring
+agent proposing patterns worth reifying into skills.
+
 ### Codex CLI
 
 Codex CLI uses `~/.codex/instructions.md` for global instructions (symlinked to
