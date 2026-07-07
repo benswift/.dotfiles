@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS counterpart of systemd/user/ship-claude-logs.timer: ship
+  ~/.claude/projects to weddle:claude-logs/<hostname> every 15 minutes.
+
+  Install (not in the symlink manifest because ~/Library only exists on
+  macOS):
+
+    cp ~/.dotfiles/launchd/com.benswift.ship-claude-logs.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.benswift.ship-claude-logs.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.benswift.ship-claude-logs</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/ben/.dotfiles/bin/ship-claude-logs</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>StartInterval</key>
+    <integer>900</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/ben/Library/Logs/ship-claude-logs.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/ben/Library/Logs/ship-claude-logs.log</string>
+</dict>
+</plist>
