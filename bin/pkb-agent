@@ -1,0 +1,209 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""Run scheduled 'EA' agent tasks against the personal knowledge base.
+
+Tasks are markdown files in ~/.nb/home/tasks/, each with a `schedule:` field
+in systemd OnCalendar syntax; the body is the prompt for a headless claude
+session run from the notebook directory (so it picks up the notebook's
+CLAUDE.md and writes results back as notes). One systemd timer fires
+`pkb-agent run-due` every 15 minutes and this script decides what is due ---
+adding a task is just adding a file, no systemd changes.
+
+  pkb-agent list        show tasks, schedules, last run and next due time
+  pkb-agent run <task>  run one task now, regardless of schedule
+  pkb-agent run-due     run every task whose next elapse has passed
+
+Due-ness delegates to `systemd-analyze calendar`, so anything OnCalendar
+accepts works (`Mon 06:30`, `daily`, `*-*-01 09:00`). A task with no
+last-run stamp is due immediately. Stamps live in ~/.local/state/pkb-agent/,
+per-run logs under logs/<task>/ alongside them. The timer should be enabled
+on ONE machine only (weddle) --- stamps are machine-local, so two machines
+would each run every task.
+"""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+
+NOTEBOOK = Path.home() / ".nb" / "home"
+TASKS_DIR = NOTEBOOK / "tasks"
+STATE_DIR = Path.home() / ".local" / "state" / "pkb-agent"
+LOG_DIR = STATE_DIR / "logs"
+DEFAULT_MODEL = "sonnet"
+TASK_TIMEOUT_S = 3600
+
+
+@dataclass
+class Task:
+    name: str
+    schedule: str
+    model: str
+    prompt: str
+
+
+def parse_task(path: Path) -> Task | None:
+    """Parse a task file: YAML-ish frontmatter (flat key: value only) + body."""
+    lines = path.read_text().splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None
+    fields: dict[str, str] = {}
+    body_start = 0
+    for i, line in enumerate(lines[1:], start=1):
+        if line.strip() == "---":
+            body_start = i + 1
+            break
+        if ":" in line:
+            key, _, value = line.partition(":")
+            fields[key.strip()] = value.strip()
+    schedule = fields.get("schedule")
+    if not schedule:
+        return None
+    return Task(
+        name=path.stem,
+        schedule=schedule,
+        model=fields.get("model", DEFAULT_MODEL),
+        prompt="\n".join(lines[body_start:]).strip(),
+    )
+
+
+def load_tasks() -> list[Task]:
+    if not TASKS_DIR.is_dir():
+        return []
+    tasks = [parse_task(p) for p in sorted(TASKS_DIR.glob("*.md"))]
+    return [t for t in tasks if t is not None]
+
+
+def stamp_path(task: Task) -> Path:
+    return STATE_DIR / f"{task.name}.last"
+
+
+def last_run(task: Task) -> datetime | None:
+    path = stamp_path(task)
+    if not path.exists():
+        return None
+    return datetime.fromisoformat(path.read_text().strip())
+
+
+def next_elapse(task: Task, base: datetime) -> datetime:
+    """Next time the schedule fires after `base`, via systemd-analyze."""
+    out = subprocess.run(
+        [
+            "systemd-analyze",
+            "calendar",
+            f"--base-time={base:%Y-%m-%d %H:%M:%S}",
+            task.schedule,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    for line in out.splitlines():
+        if "Next elapse:" in line:
+            # e.g. "    Next elapse: Mon 2026-07-13 06:30:00 AEST"
+            value = line.split("Next elapse:")[1].strip()
+            return datetime.strptime(" ".join(value.split()[1:3]), "%Y-%m-%d %H:%M:%S")
+    raise RuntimeError(f"could not parse systemd-analyze output for {task.name!r}:\n{out}")
+
+
+def is_due(task: Task, now: datetime) -> bool:
+    last = last_run(task)
+    if last is None:
+        return True
+    return next_elapse(task, last) <= now
+
+
+def run_task(task: Task) -> int:
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    log_dir = LOG_DIR / task.name
+    log_dir.mkdir(parents=True, exist_ok=True)
+    now = datetime.now()
+    log_file = log_dir / f"{now:%Y%m%d-%H%M%S}.log"
+
+    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+    print(f"pkb-agent: running {task.name} (model={task.model}) -> {log_file}")
+    with log_file.open("w") as log:
+        result = subprocess.run(
+            [
+                "claude",
+                "--dangerously-skip-permissions",
+                "--model",
+                task.model,
+                "-p",
+                task.prompt,
+            ],
+            cwd=NOTEBOOK,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            env=env,
+            timeout=TASK_TIMEOUT_S,
+        )
+    stamp_path(task).write_text(now.isoformat())
+    status = "ok" if result.returncode == 0 else f"exit {result.returncode}"
+    print(f"pkb-agent: {task.name} finished ({status})")
+    return result.returncode
+
+
+def cmd_list() -> int:
+    now = datetime.now()
+    tasks = load_tasks()
+    if not tasks:
+        print(f"No tasks in {TASKS_DIR}")
+        return 0
+    for t in tasks:
+        last = last_run(t)
+        if last is None:
+            status = "never run (due now)"
+        elif is_due(t, now):
+            status = f"last {last:%Y-%m-%d %H:%M}, due now"
+        else:
+            status = f"last {last:%Y-%m-%d %H:%M}, next {next_elapse(t, last):%a %Y-%m-%d %H:%M}"
+        print(f"{t.name:24} {t.schedule:16} {status}")
+    return 0
+
+
+def cmd_run(name: str) -> int:
+    tasks = {t.name: t for t in load_tasks()}
+    if name not in tasks:
+        print(f"pkb-agent: no task {name!r} in {TASKS_DIR}", file=sys.stderr)
+        return 1
+    return run_task(tasks[name])
+
+
+def cmd_run_due() -> int:
+    now = datetime.now()
+    due = [t for t in load_tasks() if is_due(t, now)]
+    if not due:
+        return 0
+    # Pull before and push after: tasks write notes, and the notebook syncs
+    # across machines.
+    subprocess.run(["nb", "sync"], capture_output=True)
+    rc = 0
+    for task in due:
+        rc |= run_task(task)
+    subprocess.run(["nb", "sync"], capture_output=True)
+    return rc
+
+
+def main() -> int:
+    match sys.argv[1:]:
+        case ["list"]:
+            return cmd_list()
+        case ["run", name]:
+            return cmd_run(name)
+        case ["run-due"]:
+            return cmd_run_due()
+        case _:
+            print(__doc__, file=sys.stderr)
+            return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

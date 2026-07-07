@@ -1,0 +1,11 @@
+[Unit]
+Description=Run due pkb-agent EA tasks (headless claude over the notebook)
+Documentation=file:///home/ben/.dotfiles/bin/pkb-agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ben/.dotfiles/bin/pkb-agent run-due
+TimeoutStartSec=2h

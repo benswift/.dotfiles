@@ -70,6 +70,9 @@ etc.). Key scripts:
   agents
 - `agenda` --- read/create ANU Exchange calendar events via EventKit
 - `teams` --- read/send Teams DMs by driving the web client
+- `pkb-agent` --- run scheduled "EA" tasks (headless claude over the notebook);
+  task definitions live in `~/.nb/home/tasks/`, one systemd timer
+  (`pkb-agent.timer`, weddle only) fires everything due
 
 See the "Microsoft 365 (calendar and Teams)" section below for this tooling and
 why it sidesteps Microsoft Graph.

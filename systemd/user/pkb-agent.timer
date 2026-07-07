@@ -1,0 +1,12 @@
+[Unit]
+Description=Check for due pkb-agent tasks every 15 minutes
+Requires=pkb-agent.service
+
+[Timer]
+OnCalendar=*:0/15
+RandomizedDelaySec=1min
+Persistent=true
+Unit=pkb-agent.service
+
+[Install]
+WantedBy=timers.target

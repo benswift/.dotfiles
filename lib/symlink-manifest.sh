@@ -45,6 +45,10 @@ SYMLINK_MANIFEST=(
     "systemd/user/ship-claude-logs.timer:~/.config/systemd/user/ship-claude-logs.timer"
     "systemd/user/ingest-claude-logs.service:~/.config/systemd/user/ingest-claude-logs.service"
     "systemd/user/ingest-claude-logs.timer:~/.config/systemd/user/ingest-claude-logs.timer"
+    # pkb-agent: enable the timer on weddle ONLY (run stamps are
+    # machine-local, so a second machine would re-run every task)
+    "systemd/user/pkb-agent.service:~/.config/systemd/user/pkb-agent.service"
+    "systemd/user/pkb-agent.timer:~/.config/systemd/user/pkb-agent.timer"
     # whole-directory configs
     "ghostty:~/.config/ghostty"
     "helix:~/.config/helix"
