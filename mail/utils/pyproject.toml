@@ -16,6 +16,7 @@ dependencies = [
 [project.scripts]
 mail-copy-path = "mail_utils.cli.copy_path:main"
 mail-copy-attachment-name = "mail_utils.cli.copy_attachment_name:main"
+mail-urls = "mail_utils.cli.urls:main"
 mail-dedupe = "mail_utils.cli.dedupe:app"
 mail-analyze = "mail_utils.cli.analyze:app"
 mail-compose = "mail_utils.cli.compose:app"

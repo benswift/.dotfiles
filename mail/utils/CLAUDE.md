@@ -17,6 +17,7 @@ mail-analyze --help
 | Command            | Description                                           |
 | ------------------ | ----------------------------------------------------- |
 | `mail-copy-path`   | Copy message file path to clipboard (uses mu to find) |
+| `mail-urls`        | Extract URLs from a piped message and pick one in fzf |
 | `mail-compose`     | Compose and send emails with Jinja2 templating        |
 | `mail-dedupe`      | Deduplicate messages by Message-ID                    |
 | `mail-analyze`     | Analyze maildir format and identify issues            |
@@ -51,6 +52,14 @@ uv run --group dev pytest -x      # stop on first failure
 The following neomutt macros use this package:
 
 - `,p` - copy file path to clipboard
+- `,b` - extract URLs and open one in the browser (`mail-urls`)
+
+`mail-urls` reads the raw RFC822 message on stdin (the macro clears
+`pipe_decode` first so the full MIME structure is preserved), parses the HTML
+with an actual parser to pull real `href`/`src`/anchor-text, dedupes, and hands
+the list to fzf. Enter opens the selection in the default browser, Tab
+multi-selects, and Ctrl-Y copies instead. This replaced `urlscan`, whose
+regex-over-decoded-text approach missed most links in HTML mail.
 
 ## Compose LSP
 
