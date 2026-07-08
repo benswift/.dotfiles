@@ -54,6 +54,35 @@ if [[ "$HOST" == "weddle" ]]; then
   exit 0
 fi
 
+# Don't ship over a metered connection (e.g. tethered to the phone's personal
+# hotspot). macOS redacts the SSID from headless processes, so we can't match
+# on network name; instead check (a) NWPath.isExpensive, Apple's own metered
+# flag, and (b) the default gateway --- an iPhone hotspot always NATs through
+# 172.20.10.1 whether tethered over Wi-Fi, USB, or Bluetooth.
+if [[ "$OSTYPE" == darwin* ]]; then
+  expensive="$(swift - 2>/dev/null <<'EOF' || echo unknown
+import Network
+import Foundation
+let m = NWPathMonitor()
+let sem = DispatchSemaphore(value: 0)
+var expensive = false
+m.pathUpdateHandler = { p in expensive = p.isExpensive; sem.signal() }
+m.start(queue: DispatchQueue.global())
+_ = sem.wait(timeout: .now() + 5)
+print(expensive ? "expensive" : "ok")
+EOF
+)"
+  if [[ "$expensive" == "expensive" ]]; then
+    echo "On a metered network (NWPath.isExpensive) --- skipping ship."
+    exit 0
+  fi
+  gateway="$(route -n get default 2>/dev/null | awk '/gateway:/{print $2}')"
+  if [[ "$gateway" == 172.20.10.* ]]; then
+    echo "On a personal hotspot (gateway $gateway) --- skipping ship."
+    exit 0
+  fi
+fi
+
 RCLONE_ARGS=(copy --progress)
 [[ "$DRY_RUN" == "true" ]] && RCLONE_ARGS+=(--dry-run)
 
