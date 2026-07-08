@@ -37,6 +37,12 @@ SYMLINK_MANIFEST=(
     "claude/CLAUDE.md:~/.codex/instructions.md"
     # tools
     "mise/config.toml:~/.config/mise/config.toml"
+    # tree-sitter: config.json names the grammar checkouts (populated by
+    # bin/ts-grammars, not by this repo) and carries the highlight theme
+    "tree-sitter/config.json:~/.config/tree-sitter/config.json"
+    # yazi: linked file-by-file rather than as a directory, because
+    # ~/.config/yazi/plugins is owned by `ya pkg`
+    "yazi/yazi.toml:~/.config/yazi/yazi.toml"
     # systemd user units (linked individually because
     # ~/.config/systemd/user/ holds units from several repos). Run
     # `systemctl --user daemon-reload && systemctl --user enable --now
@@ -60,6 +66,8 @@ SYMLINK_MANIFEST=(
 SYMLINK_MANIFEST_WITH_BACKUP=(
     "codex/config.toml:~/.codex/config.toml"
     "gemini/settings.json:~/.gemini/settings.json"
+    # `ya pkg add` rewrites this to record each plugin's rev and hash
+    "yazi/package.toml:~/.config/yazi/package.toml"
 )
 
 # nb plugins are globbed rather than listed: one link per *.nb-plugin file,

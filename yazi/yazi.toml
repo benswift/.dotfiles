@@ -1,0 +1,13 @@
+[plugin]
+# Replace yazi's built-in `code` previewer, which highlights with syntect and
+# so has no Astro grammar and no idea that the `---` fence atop a markdown
+# file is YAML. bin/ts-cat highlights with tree-sitter instead, which follows
+# language injections. piper.yazi is the shim that lets a previewer be an
+# arbitrary shell command; install it with `ya pkg install`.
+#
+# Note piper renders anything the command writes to *stderr* in place of the
+# preview, so ts-cat is careful to stay silent there.
+prepend_previewers = [
+  { mime = "text/*", run = 'piper -- ts-cat "$1"' },
+  { mime = "application/{json,javascript,x-sh,toml,xml,x-yaml,x-ndjson}", run = 'piper -- ts-cat "$1"' },
+]

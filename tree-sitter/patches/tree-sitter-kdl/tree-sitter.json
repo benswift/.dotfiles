@@ -1,0 +1,22 @@
+{
+  "grammars": [
+    {
+      "name": "kdl",
+      "camelcase": "Kdl",
+      "scope": "source.kdl",
+      "path": ".",
+      "file-types": ["kdl"],
+      "injection-regex": "^kdl$",
+      "highlights": ["queries/highlights.scm"]
+    }
+  ],
+  "metadata": { "version": "1.1.0", "license": "MIT" },
+  "bindings": {
+    "c": false,
+    "go": false,
+    "node": false,
+    "python": false,
+    "rust": false,
+    "swift": false
+  }
+}

@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#
+# ts-cat --- print a file to stdout with tree-sitter syntax highlighting.
+#
+# Written for yazi's preview pane (see yazi/yazi.toml, which pipes it through
+# piper.yazi), but it works as a standalone `cat` too. Unlike yazi's built-in
+# previewer --- and unlike bat --- this understands language injections, so
+# YAML frontmatter in a markdown file and the TypeScript fence at the top of
+# an .astro component get highlighted as YAML and TypeScript.
+#
+# Two constraints come from piper, and both are load-bearing:
+#
+#   1. Anything this script writes to stderr *replaces* the preview. The
+#      tree-sitter CLI warns loudly on stdout-empty files it has no grammar
+#      for, so all stderr is discarded and we detect that case by the empty
+#      stdout instead.
+#   2. piper kills us once it has read enough lines to fill the pane, so
+#      exiting non-zero on SIGPIPE is normal and must not be treated as an
+#      error.
+#
+# Grammars are installed by bin/ts-grammars and found via the
+# parser-directories list in ~/.config/tree-sitter/config.json.
+
+set -uo pipefail
+
+file="${1:-}"
+[[ -n "$file" && -r "$file" ]] || exit 0
+
+# Parsing a whole 100k-line file to render 40 visible lines is wasted work,
+# and tree-sitter is error-tolerant enough that a truncated tail is harmless.
+MAX_LINES="${TS_CAT_MAX_LINES:-5000}"
+
+# tree-sitter picks a grammar from the file extension. These are the ones
+# where that lookup misses but an existing grammar is the right answer
+# anyway: .mdx is markdown-with-JSX, and zsh is close enough to bash.
+scope=""
+case "$file" in
+*.mdx | *.markdown | *.mdown | *.mkd) scope="text.markdown" ;;
+*.zsh | *.zshrc | *.zshenv | .zshrc | .zshenv) scope="source.bash" ;;
+*.jsonc) scope="source.json" ;;
+esac
+
+fallback() {
+    # bat is `batcat` on Debian/Ubuntu, `bat` under Homebrew. Plain cat is the
+    # floor: an unhighlighted preview beats an empty one.
+    if command -v bat >/dev/null 2>&1; then
+        bat --color=always --style=plain --paging=never -- "$file" 2>/dev/null
+    elif command -v batcat >/dev/null 2>&1; then
+        batcat --color=always --style=plain --paging=never -- "$file" 2>/dev/null
+    else
+        cat -- "$file" 2>/dev/null
+    fi
+    exit 0
+}
+
+command -v tree-sitter >/dev/null 2>&1 || fallback
+
+# Truncate into a scratch file that keeps the original name, so the extension
+# still drives grammar selection.
+src="$file"
+tmp=""
+if [[ "$(wc -l <"$file" 2>/dev/null || echo 0)" -gt "$MAX_LINES" ]]; then
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    src="$tmp/$(basename -- "$file")"
+    head -n "$MAX_LINES" -- "$file" >"$src" 2>/dev/null || fallback
+fi
+
+# Buffered rather than streamed: we only learn that no grammar matched by
+# seeing empty stdout, and by then a streaming write would have committed us.
+# Preview-sized files make the buffer cheap (~30ms on a typical source file).
+if [[ -n "$scope" ]]; then
+    out="$(tree-sitter highlight --scope "$scope" -- "$src" 2>/dev/null)"
+else
+    out="$(tree-sitter highlight -- "$src" 2>/dev/null)"
+fi
+
+[[ -n "$out" ]] || fallback
+
+printf '%s\n' "$out"

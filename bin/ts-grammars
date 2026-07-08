@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+#
+# ts-grammars --- clone and update the tree-sitter grammars that bin/ts-cat
+# (and hence yazi's preview pane) highlights with.
+#
+# Grammars are build artefacts, not config, so they live under
+# ~/.local/share rather than in this repo. The tree-sitter CLI discovers them
+# via the parser-directories list in tree-sitter/config.json, compiles each
+# one on first use, and caches the shared object in ~/.cache/tree-sitter.
+#
+# Some upstreams predate the CLI's tree-sitter.json manifest (kdl, scss,
+# astro) or leave it empty with the queries nested a level down (typst).
+# tree-sitter/patches/<repo>/ is overlaid onto each checkout after every
+# clone or fetch: it supplies a manifest for those four, and for astro also
+# an injections query that highlights a plain <style> block as CSS, which
+# upstream doesn't.
+
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+GRAMMAR_DIR="${TS_GRAMMAR_DIR:-$HOME/.local/share/tree-sitter/grammars}"
+PATCH_DIR="$DOTFILES_DIR/tree-sitter/patches"
+
+source "$DOTFILES_DIR/lib/log.sh"
+
+# Grammars are keyed by their repo. Each must ship a generated src/parser.c
+# and a highlights query --- latex, for one, ships neither, which is why it
+# isn't here.
+GRAMMARS=(
+    virchau13/tree-sitter-astro
+    tree-sitter/tree-sitter-bash
+    tree-sitter/tree-sitter-c
+    tree-sitter/tree-sitter-css
+    elixir-lang/tree-sitter-elixir
+    tree-sitter/tree-sitter-go
+    phoenixframework/tree-sitter-heex
+    tree-sitter/tree-sitter-html
+    tree-sitter/tree-sitter-javascript
+    tree-sitter/tree-sitter-json
+    tree-sitter-grammars/tree-sitter-kdl
+    tree-sitter-grammars/tree-sitter-lua
+    tree-sitter-grammars/tree-sitter-markdown
+    tree-sitter/tree-sitter-python
+    tree-sitter/tree-sitter-rust
+    tree-sitter-grammars/tree-sitter-scss
+    tree-sitter-grammars/tree-sitter-toml
+    tree-sitter/tree-sitter-typescript
+    uben0/tree-sitter-typst
+    tree-sitter-grammars/tree-sitter-yaml
+)
+
+usage() {
+    cat <<EOF
+Usage: ts-grammars [OPTIONS]
+
+Clone or update the tree-sitter grammars used by ts-cat.
+
+Options:
+  --warm       After syncing, compile every grammar by highlighting a
+               throwaway file of each type (otherwise the first preview of
+               a given language pays the compile cost)
+  -h, --help   Show this help message
+
+Environment variables:
+  TS_GRAMMAR_DIR   where grammars are cloned (default:
+                   ~/.local/share/tree-sitter/grammars)
+EOF
+}
+
+WARM=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --warm)
+        WARM=true
+        shift
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        echo "Unknown option: $1" >&2
+        usage >&2
+        exit 1
+        ;;
+    esac
+done
+
+command -v tree-sitter >/dev/null || {
+    echo "tree-sitter CLI not found (mise install tree-sitter)" >&2
+    exit 1
+}
+
+mkdir -p "$GRAMMAR_DIR"
+
+for repo in "${GRAMMARS[@]}"; do
+    name="${repo##*/}"
+    dest="$GRAMMAR_DIR/$name"
+
+    if [[ -d "$dest/.git" ]]; then
+        # Hard reset rather than pull: these are disposable read-only
+        # checkouts, and copying a patch over a tracked tree-sitter.json (as
+        # typst needs) leaves the tree dirty, which a pull refuses to touch.
+        if git -C "$dest" fetch -q --depth 1 origin 2>/dev/null; then
+            git -C "$dest" reset -q --hard FETCH_HEAD 2>/dev/null ||
+                warn "$name: reset failed, keeping existing checkout"
+        else
+            warn "$name: fetch failed, keeping existing checkout"
+        fi
+    else
+        git clone -q --depth 1 "https://github.com/$repo" "$dest" || {
+            warn "$name: clone failed"
+            continue
+        }
+    fi
+
+    if [[ -d "$PATCH_DIR/$name" ]]; then
+        cp -R "$PATCH_DIR/$name/." "$dest/"
+    fi
+done
+
+# tree-sitter-typescript's manifest points its highlight and injection queries
+# at node_modules/tree-sitter-javascript, which only npm would create. A
+# symlink to the sibling checkout satisfies it without a package install.
+ts_dir="$GRAMMAR_DIR/tree-sitter-typescript"
+if [[ -d "$ts_dir" && -d "$GRAMMAR_DIR/tree-sitter-javascript" ]]; then
+    mkdir -p "$ts_dir/node_modules"
+    ln -sfn ../../tree-sitter-javascript "$ts_dir/node_modules/tree-sitter-javascript"
+fi
+
+info "Synced ${#GRAMMARS[@]} grammars into $GRAMMAR_DIR"
+
+if [[ "$WARM" == "true" ]]; then
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    count=0
+    while IFS= read -r ext; do
+        [[ -n "$ext" ]] || continue
+        probe="$tmp/warm.$ext"
+        : >"$probe"
+        tree-sitter highlight --quiet "$probe" >/dev/null 2>&1 || true
+        count=$((count + 1))
+    done < <(
+        for m in "$GRAMMAR_DIR"/*/tree-sitter.json; do
+            jq -r '.grammars[]? | (.["file-types"] // [])[0] // empty' "$m" 2>/dev/null
+        done | sort -u
+    )
+    info "Compiled grammars for $count file types (cached in ~/.cache/tree-sitter)"
+fi
