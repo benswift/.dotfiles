@@ -2,6 +2,7 @@
 
 from email.message import EmailMessage
 
+from mail_utils.cli.urls import _mailto_address
 from mail_utils.urls import extract_links
 
 
@@ -96,6 +97,22 @@ class TestDedup:
         )
         urls = [link.url for link in extract_links(msg)]
         assert urls == ["https://b.example.com", "https://a.example.com"]
+
+
+class TestMailtoAddress:
+    def test_plain_address(self):
+        assert _mailto_address("mailto:foo@example.com") == "foo@example.com"
+
+    def test_strips_query_params(self):
+        url = "mailto:foo@example.com?subject=Hello&body=Hi%20there"
+        assert _mailto_address(url) == "foo@example.com"
+
+    def test_url_decodes_address(self):
+        assert _mailto_address("mailto:a%2Bb@example.com") == "a+b@example.com"
+
+    def test_multiple_recipients(self):
+        url = "mailto:a@example.com,b@example.com"
+        assert _mailto_address(url) == "a@example.com,b@example.com"
 
 
 class TestHtmlInPlainPart:

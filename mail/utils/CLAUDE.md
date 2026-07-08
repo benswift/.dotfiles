@@ -52,14 +52,23 @@ uv run --group dev pytest -x      # stop on first failure
 The following neomutt macros use this package:
 
 - `,p` - copy file path to clipboard
-- `,b` - extract URLs and open one in the browser (`mail-urls`)
+- `,b` - extract URLs; open in browser or compose a mailto (`mail-urls`)
 
 `mail-urls` reads the raw RFC822 message on stdin (the macro clears
 `pipe_decode` first so the full MIME structure is preserved), parses the HTML
 with an actual parser to pull real `href`/`src`/anchor-text, dedupes, and hands
-the list to fzf. Enter opens the selection in the default browser, Tab
-multi-selects, and Ctrl-Y copies instead. This replaced `urlscan`, whose
+the list to fzf. Enter opens the selected web link(s) in the default browser,
+Tab multi-selects, and Ctrl-Y copies instead. This replaced `urlscan`, whose
 regex-over-decoded-text approach missed most links in HTML mail.
+
+A selected `mailto:` link is composed in neomutt itself rather than handed to a
+GUI mail client: `mail-urls` writes `push "<mail>ADDR<enter>"` to
+`/tmp/neomutt-urls-commands`, which the `,b` macro sources after the pipe
+returns (the same command-file pattern as the markdown-compose macro). The file
+is always rewritten --- empty when there's nothing for neomutt to do --- so the
+`source` is a harmless no-op otherwise. Only the address is carried across (any
+`?subject=`/`?body=` in the mailto is dropped); the compose lands at the
+`Subject:` prompt.
 
 ## Compose LSP
 
