@@ -125,7 +125,6 @@ def run_fd_for_attach(query: str, max_results: int = 50) -> list[str]:
             capture_output=True,
             text=True,
             timeout=5,
-            stderr=subprocess.DEVNULL,
         )
         files = [f for f in result.stdout.strip().split("\n") if f]
         return files[:max_results]

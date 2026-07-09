@@ -1,5 +1,7 @@
 """Tests for mutt-compose LSP functionality."""
 
+from pathlib import Path
+
 import pytest
 
 from mail_utils.lsp import (
@@ -15,6 +17,7 @@ from mail_utils.lsp import (
     is_attach_header,
     parse_contacts,
     parse_to_header,
+    run_fd_for_attach,
 )
 
 
@@ -204,3 +207,37 @@ class TestGreetingCompletions:
         lines = ["From: me@example.com", ""]
         items = greeting_completions(lines, "hey")
         assert items == []
+
+
+class TestRunFdForAttach:
+    """Exercises fd for real --- a mocked subprocess would not have caught the
+    capture_output/stderr conflict that made every lookup raise ValueError."""
+
+    @pytest.fixture
+    def attach_dir(self, tmp_path):
+        (tmp_path / "report.pdf").write_bytes(b"x" * 16)
+        (tmp_path / "notes.txt").write_bytes(b"y" * 16)
+        return tmp_path
+
+    def test_lists_files_in_a_directory(self, attach_dir):
+        found = run_fd_for_attach(str(attach_dir))
+        assert sorted(Path(p).name for p in found) == ["notes.txt", "report.pdf"]
+
+    def test_matches_a_filename_prefix(self, attach_dir):
+        found = run_fd_for_attach(str(attach_dir / "rep"))
+        assert [Path(p).name for p in found] == ["report.pdf"]
+
+    def test_honours_max_results(self, attach_dir):
+        assert len(run_fd_for_attach(str(attach_dir), max_results=1)) == 1
+
+    @pytest.mark.parametrize(
+        "query",
+        [
+            "",
+            "relative/path",
+            "/nonexistent_directory_zz/x",
+            "~nosuchuser_zz/x",
+        ],
+    )
+    def test_returns_empty_rather_than_raising(self, query: str):
+        assert run_fd_for_attach(query) == []
