@@ -207,11 +207,9 @@ Three directories are involved --- note the differences:
   `sync-agent-config --update-claude`, i.e. every `dotfiles update`) deletes and
   re-clones the marketplace from GitHub, discarding local-only commits. If that
   happens, the tree at the last-installed commit survives as a snapshot under
-  `~/.claude/plugins/cache/ben/ben/<sha>/`. Codex gets per-skill symlinks into
-  that clone, while its generated `.system/` skills stay under
-  `~/.codex/skills/.system`. Skills appear to the model as `ben:<skill-name>`
-  (e.g. `ben:pkb`). The same bootstrap pattern handles the `impeccable` and
-  `agent-browser` plugins.
+  `~/.claude/plugins/cache/ben/ben/<sha>/`. Skills appear to the model as
+  `ben:<skill-name>` (e.g. `ben:pkb`). The same bootstrap pattern handles the
+  `impeccable` and `agent-browser` plugins.
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Contents are gitignored by default (`.claude/*` globally), but
   individual repos can opt-in to tracking specific subdirectories via a local
@@ -233,10 +231,8 @@ directory at `~/.claude/plugins/marketplaces/ben/skills/<name>/SKILL.md` inside
 Claude Code's marketplace clone, and is namespaced as `ben:<name>` when the
 model loads it through the plugin mechanism. To add or edit a skill, work in
 that clone (`~/.claude/plugins/marketplaces/ben/`), then commit and push from
-there; @bin/sync-agent-config propagates it to Codex on the next
-`dotfiles update`. No symlink wiring in @create_symlinks.sh is involved --- the
-marketplace clone (for Claude Code) and the per-skill Codex symlinks (for Codex)
-cover everything.
+there. No symlink wiring in @create_symlinks.sh is involved --- the marketplace
+clone covers everything.
 
 ### Claude Code session logs (analytics)
 
@@ -255,9 +251,15 @@ Codex CLI uses `~/.codex/instructions.md` for global instructions (symlinked to
 @claude/CLAUDE.md). Project-level instructions are read from `CLAUDE.md` via its
 `project_doc_fallback_filenames` setting. Codex doesn't understand Claude Code's
 plugin mechanism, but it reads the raw skill directories fine.
-@bin/sync-agent-config keeps `~/.codex/skills` as a Codex-owned directory and
-symlinks each personal skill from `~/.claude/plugins/marketplaces/ben/skills/`
-into it.
+
+Personal skills are **not** currently synced into `~/.codex/skills`. The
+`sync_codex_skills` function in @bin/sync-agent-config still does the work ---
+it keeps `~/.codex/skills` as a Codex-owned directory, symlinks each personal
+skill from `~/.claude/plugins/marketplaces/ben/skills/` into it, and leaves
+Codex's generated `.system/` skills alone --- but the call is commented out at
+the bottom of the script because Codex is unused at the moment. Whatever sits in
+`~/.codex/skills` today is a stale snapshot from when it last ran. Restore the
+call to bring the sync back.
 
 `~/.codex/config.toml` is symlinked to @codex/config.toml, which holds only
 portable defaults (model, reasoning effort, personality, project doc fallback).
