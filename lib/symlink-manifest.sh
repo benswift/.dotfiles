@@ -37,9 +37,6 @@ SYMLINK_MANIFEST=(
     "claude/CLAUDE.md:~/.codex/instructions.md"
     # tools
     "mise/config.toml:~/.config/mise/config.toml"
-    # tree-sitter: config.json names the grammar checkouts (populated by
-    # bin/ts-grammars, not by this repo) and carries the highlight theme
-    "tree-sitter/config.json:~/.config/tree-sitter/config.json"
     # yazi: linked file-by-file rather than as a directory, because
     # ~/.config/yazi/plugins is owned by `ya pkg`
     "yazi/yazi.toml:~/.config/yazi/yazi.toml"
@@ -68,6 +65,10 @@ SYMLINK_MANIFEST_WITH_BACKUP=(
     "gemini/settings.json:~/.gemini/settings.json"
     # `ya pkg add` rewrites this to record each plugin's rev and hash
     "yazi/package.toml:~/.config/yazi/package.toml"
+    # the tree-sitter CLI writes a default config here the first time it runs,
+    # so a real file is usually sitting in the way. Ours names the grammar
+    # checkouts (populated by bin/ts-grammars) and carries the highlight theme.
+    "tree-sitter/config.json:~/.config/tree-sitter/config.json"
 )
 
 # nb plugins are globbed rather than listed: one link per *.nb-plugin file,
