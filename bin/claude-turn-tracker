@@ -1,18 +1,26 @@
 #!/usr/bin/env bash
-# Claude Code hook handler that sends Pushover notifications.
+# Claude Code hook handler that sends Pushover notifications and records each
+# agent's state for bin/zj-switch.
 # Reads the hook payload (JSON) from stdin and dispatches by subcommand:
-#   start    record turn-start time              (UserPromptSubmit hook)
-#   stop     notify if turn ran >= threshold     (Stop hook)
+#   session-start  register the agent as idle      (SessionStart hook)
+#   start          record turn-start time          (UserPromptSubmit hook)
+#   stop           notify if turn ran >= threshold (Stop hook)
+#   notify         agent wants attention           (Notification hook)
+#   session-end    deregister the agent            (SessionEnd hook)
 #
 # Threshold defaults to 300s (5 min); override with CLAUDE_NOTIFY_THRESHOLD.
 # Notifications are tagged "host:project" using $ZELLIJ_SESSION_NAME when
 # running inside zellij, falling back to the cwd basename from the payload.
+#
+# Nothing here may fail loudly: a hook that exits non-zero surfaces as an
+# error inside Claude Code, so every state write is best-effort.
 
 set -euo pipefail
 
 cmd="${1:-}"
 threshold_seconds="${CLAUDE_NOTIFY_THRESHOLD:-300}"
 stamp_dir="${TMPDIR:-/tmp}"
+state_dir="${XDG_RUNTIME_DIR:-/tmp}/claude-agent-state"
 
 input=$(cat)
 sid=$(echo "$input" | jq -r '.session_id // empty')
@@ -29,11 +37,57 @@ fi
 host=$(hostname -s)
 stamp_file="$stamp_dir/claude-turn-$sid"
 
+# --- agent state, consumed by bin/zj-switch ---------------------------------
+#
+# Claude Code's own lifecycle hooks are the only honest source of "what is
+# this agent doing". The alternative --- reading the pane's title or its
+# screen --- infers state from a UI that changes without notice. One file per
+# agent, filed under the zellij session that owns it.
+
+# The pid of the claude process this hook was spawned from, stored alongside
+# the state so zj-switch can discard entries whose agent was killed outright
+# and never fired session-end.
+claude_pid() {
+    local p="$PPID" args
+    while [[ -n "$p" && "$p" != 1 ]]; do
+        args="$(ps -o args= -p "$p" 2>/dev/null)" || return 0
+        [[ "$args" == claude* ]] && {
+            printf '%s' "$p"
+            return 0
+        }
+        p="$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ')" || return 0
+    done
+}
+
+write_state() {
+    [[ -n "${ZELLIJ_SESSION_NAME:-}" ]] || return 0
+    local dir="$state_dir/$ZELLIJ_SESSION_NAME"
+    mkdir -p "$dir" 2>/dev/null || return 0
+    printf '%s %s\n' "$1" "$(claude_pid)" >"$dir/$sid" 2>/dev/null || return 0
+}
+
+clear_state() {
+    [[ -n "${ZELLIJ_SESSION_NAME:-}" ]] || return 0
+    rm -f "$state_dir/$ZELLIJ_SESSION_NAME/$sid"
+    rmdir "$state_dir/$ZELLIJ_SESSION_NAME" 2>/dev/null || true
+}
+
 case "$cmd" in
+    session-start)
+        write_state idle
+        ;;
+    session-end)
+        clear_state
+        ;;
+    notify)
+        write_state blocked
+        ;;
     start)
+        write_state working
         date +%s > "$stamp_file"
         ;;
     stop)
+        write_state idle
         [[ -f "$stamp_file" ]] || exit 0
         start=$(cat "$stamp_file")
         rm -f "$stamp_file"
@@ -50,7 +104,7 @@ case "$cmd" in
         echo "$msg" | notify-pushover --title "Claude done: $host:$proj" || true
         ;;
     *)
-        echo "Usage: $(basename "$0") {start|stop}" >&2
+        echo "Usage: $(basename "$0") {session-start|start|stop|notify|session-end}" >&2
         exit 1
         ;;
 esac
