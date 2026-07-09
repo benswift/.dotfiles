@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-
+#
 # Usage: codex-zellij [--new] [session-name] [working-dir]
 # If no args provided, uses current directory
 # --new: force creation of a new session (append number if name exists)
 
+set -euo pipefail
+
 FORCE_NEW=false
 
 # Parse --new flag
-if [[ "$1" == "--new" ]]; then
+if [[ "${1:-}" == "--new" ]]; then
     FORCE_NEW=true
     shift
 fi
@@ -33,7 +35,7 @@ if [[ "$FORCE_NEW" == true ]]; then
     COUNTER=1
     while session_exists "$FINAL_SESSION_NAME"; do
         FINAL_SESSION_NAME="${SESSION_NAME}-${COUNTER}"
-        ((COUNTER++))
+        COUNTER=$((COUNTER + 1))
     done
     SESSION_NAME="$FINAL_SESSION_NAME"
 fi
@@ -41,5 +43,5 @@ fi
 if session_exists "$SESSION_NAME"; then
     zellij attach "$SESSION_NAME"
 else
-    zellij -s "$SESSION_NAME" -- $SHELL -lic 'codex --dangerously-bypass-approvals-and-sandbox'
+    zellij -s "$SESSION_NAME" -- "$SHELL" -lic 'codex --dangerously-bypass-approvals-and-sandbox'
 fi

@@ -6,7 +6,7 @@
 # Bookmarks are imported from nb-inbox/bookmarks.txt (one URL per line)
 # All items are tagged with #inbox
 
-set -e
+set -euo pipefail
 
 INBOX_DIR="/Users/ben/Library/Mobile Documents/com~apple~CloudDocs/nb-inbox"
 NOTES_DIR="${INBOX_DIR}/notes"
@@ -41,9 +41,11 @@ if [[ -d "${NOTES_DIR}" ]]; then
         
         echo "  Importing: ${basename}"
         
-        # Read content and extract title from first line
-        content=$(cat "${file}")
-        title=$(echo "${content}" | head -1)
+        # Read content and extract title from first line. Both without a pipe:
+        # under pipefail, `echo "$content" | head -1` fails on SIGPIPE once the
+        # note is bigger than a pipe buffer.
+        content=$(<"${file}")
+        title="${content%%$'\n'*}"
         
         # Create temporary markdown file
         temp_md="/tmp/$(basename "${file}" .txt).md"
@@ -82,7 +84,7 @@ if [[ -f "${BOOKMARKS_FILE}" ]]; then
         done < "${BOOKMARKS_FILE}"
         
         # Clear the bookmarks file
-        > "${BOOKMARKS_FILE}"
+        : > "${BOOKMARKS_FILE}"
         echo "  Cleared bookmarks.txt"
     fi
 fi
