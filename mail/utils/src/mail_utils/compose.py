@@ -35,7 +35,9 @@ def parse_reply_info(message_path: Path) -> dict:
         references = f"{existing_refs} {message_id}"
     else:
         in_reply_to = _unfold(msg.get("In-Reply-To", "")) or ""
-        references = f"{in_reply_to} {message_id}".strip() if in_reply_to else message_id
+        references = (
+            f"{in_reply_to} {message_id}".strip() if in_reply_to else message_id
+        )
 
     subject = _unfold(msg.get("Subject", "")) or ""
     if not subject.lower().startswith("re:"):
@@ -66,7 +68,9 @@ def choose_reply_target(reply_info: dict, self_from_addr: str) -> str | None:
         return (parseaddr(header or "")[1] or "").lower()
 
     self_addr = _addr(self_from_addr)
-    from_addrs = {addr.lower() for _, addr in getaddresses([reply_info["from_"] or ""]) if addr}
+    from_addrs = {
+        addr.lower() for _, addr in getaddresses([reply_info["from_"] or ""]) if addr
+    }
     if self_addr and self_addr in from_addrs:
         return reply_info["to"]
     return reply_info.get("reply_to_header") or reply_info["from_"]

@@ -310,9 +310,14 @@ class TestParseReplyInfo:
             },
         )
         info = parse_reply_info(eml)
-        assert info["references"] == "<first@example.com> <second@example.com> <third@example.com>"
+        assert (
+            info["references"]
+            == "<first@example.com> <second@example.com> <third@example.com>"
+        )
 
-    def test_builds_references_from_in_reply_to_when_no_references(self, tmp_path: Path):
+    def test_builds_references_from_in_reply_to_when_no_references(
+        self, tmp_path: Path
+    ):
         eml = _write_eml(
             tmp_path / "orig.eml",
             From="Alice <alice@example.com>",
@@ -378,7 +383,10 @@ class TestChooseReplyTarget:
             "to": "Bob <bob@example.com>",
             "reply_to_header": None,
         }
-        assert choose_reply_target(info, "Bob <bob@example.com>") == "Alice <alice@example.com>"
+        assert (
+            choose_reply_target(info, "Bob <bob@example.com>")
+            == "Alice <alice@example.com>"
+        )
 
     def test_own_sent_mail_continues_thread(self):
         """Replying to our own sent message should go to its original To,
@@ -388,7 +396,10 @@ class TestChooseReplyTarget:
             "to": "Alice <alice@example.com>",
             "reply_to_header": None,
         }
-        assert choose_reply_target(info, "Bob <bob@example.com>") == "Alice <alice@example.com>"
+        assert (
+            choose_reply_target(info, "Bob <bob@example.com>")
+            == "Alice <alice@example.com>"
+        )
 
     def test_reply_to_header_overrides_from(self):
         info = {
@@ -407,7 +418,10 @@ class TestChooseReplyTarget:
             "to": "Alice <alice@example.com>",
             "reply_to_header": None,
         }
-        assert choose_reply_target(info, "Bob <bob@example.com>") == "Alice <alice@example.com>"
+        assert (
+            choose_reply_target(info, "Bob <bob@example.com>")
+            == "Alice <alice@example.com>"
+        )
 
 
 class TestBuildEmailReply:
@@ -453,7 +467,17 @@ class TestComposeCLIReplyTo:
         )
         result = self.runner.invoke(
             app,
-            ["-f", "personal", "--reply-to", str(eml), "--to", "alice@example.com", "-b", "Sounds good", "--dry-run"],
+            [
+                "-f",
+                "personal",
+                "--reply-to",
+                str(eml),
+                "--to",
+                "alice@example.com",
+                "-b",
+                "Sounds good",
+                "--dry-run",
+            ],
         )
         assert result.exit_code == 0
         assert "Re: Meeting" in result.stdout
@@ -471,7 +495,15 @@ class TestComposeCLIReplyTo:
         )
         result = self.runner.invoke(
             app,
-            ["-f", "personal", "--reply-to", str(eml), "-b", "Sounds good", "--dry-run"],
+            [
+                "-f",
+                "personal",
+                "--reply-to",
+                str(eml),
+                "-b",
+                "Sounds good",
+                "--dry-run",
+            ],
         )
         assert result.exit_code == 0
         assert "alice@example.com" in result.stdout
@@ -491,7 +523,15 @@ class TestComposeCLIReplyTo:
         )
         result = self.runner.invoke(
             app,
-            ["-f", "personal", "--reply-to", str(eml), "-b", "Just a nudge", "--dry-run"],
+            [
+                "-f",
+                "personal",
+                "--reply-to",
+                str(eml),
+                "-b",
+                "Just a nudge",
+                "--dry-run",
+            ],
         )
         assert result.exit_code == 0
         assert "alice@example.com" in result.stdout
@@ -506,7 +546,17 @@ class TestComposeCLIReplyTo:
         )
         result = self.runner.invoke(
             app,
-            ["-f", "personal", "--reply-to", str(eml), "--to", "someone-else@example.com", "-b", "Hi", "--dry-run"],
+            [
+                "-f",
+                "personal",
+                "--reply-to",
+                str(eml),
+                "--to",
+                "someone-else@example.com",
+                "-b",
+                "Hi",
+                "--dry-run",
+            ],
         )
         assert result.exit_code == 0
         assert "someone-else@example.com" in result.stdout
