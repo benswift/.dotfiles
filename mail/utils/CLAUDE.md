@@ -72,9 +72,13 @@ than stored, so it cannot drift from the panel it describes.
 
 ```bash
 cd ~/.dotfiles/mail/utils
-uv run --group dev pytest -v      # run tests
-uv run --group dev pytest -x      # stop on first failure
+uv run --group dev pytest -v       # run tests
+uv run --group dev pytest -x       # stop on first failure
+uv run --group dev ty check src/   # type check
+ruff check src/ tests/             # lint (ruff comes from mise, not a dev dep)
 ```
+
+All four are expected to be clean before a commit.
 
 ## Neomutt integration
 
