@@ -6,9 +6,9 @@ Provides completions for:
 - Greetings in the message body with recipient name lookup
 """
 
-import os
 import re
 import subprocess
+from pathlib import Path
 
 from lsprotocol import types
 from pygls.lsp.server import LanguageServer
@@ -102,14 +102,15 @@ def run_fd_for_attach(query: str, max_results: int = 50) -> list[str]:
     if not (query.startswith("/") or query.startswith("~") or query.startswith(".")):
         return []
     try:
-        expanded = os.path.expanduser(query)
-        if os.path.isdir(expanded):
+        # Path.expanduser() raises RuntimeError on an unknown user ("~nobody").
+        expanded = Path(query).expanduser()
+        if expanded.is_dir():
             search_dir = expanded
             pattern = "."
         else:
-            search_dir = os.path.dirname(expanded) or "."
-            pattern = os.path.basename(expanded) or "."
-        if not os.path.isdir(search_dir):
+            search_dir = expanded.parent
+            pattern = expanded.name or "."
+        if not search_dir.is_dir():
             return []
         result = subprocess.run(
             [
@@ -120,7 +121,7 @@ def run_fd_for_attach(query: str, max_results: int = 50) -> list[str]:
                 f"-{MAX_ATTACHMENT_SIZE_MB}M",
                 "-a",
                 pattern,
-                search_dir,
+                str(search_dir),
             ],
             capture_output=True,
             text=True,
@@ -128,7 +129,7 @@ def run_fd_for_attach(query: str, max_results: int = 50) -> list[str]:
         )
         files = [f for f in result.stdout.strip().split("\n") if f]
         return files[:max_results]
-    except (subprocess.TimeoutExpired, FileNotFoundError):
+    except (subprocess.TimeoutExpired, FileNotFoundError, RuntimeError):
         return []
 
 
@@ -143,11 +144,11 @@ def format_file_size(size_bytes: int) -> str:
 
 def files_to_completion_items(files: list[str]) -> list[types.CompletionItem]:
     items = []
-    home = os.path.expanduser("~")
+    home = str(Path.home())
     for path in files:
         display = path.replace(home, "~", 1) if path.startswith(home) else path
         try:
-            size = os.path.getsize(path)
+            size = Path(path).stat().st_size
             detail = format_file_size(size)
         except OSError:
             detail = None
