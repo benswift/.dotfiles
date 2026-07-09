@@ -35,4 +35,4 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 [dependency-groups]
-dev = ["pytest>=8.0.0", "pytest-xdist>=3.5.0"]
+dev = ["pytest>=8.0.0"]
