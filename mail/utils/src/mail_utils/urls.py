@@ -97,7 +97,9 @@ def _part_text(part: EmailMessage) -> str:
             return content
     except (LookupError, ValueError):
         pass
-    payload = part.get_payload(decode=True) or b""
+    payload = part.get_payload(decode=True)
+    if not isinstance(payload, bytes):
+        return ""
     charset = part.get_content_charset() or "utf-8"
     return payload.decode(charset, errors="replace")
 

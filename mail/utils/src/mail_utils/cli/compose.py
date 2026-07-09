@@ -3,7 +3,7 @@
 import json
 import sys
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from jinja2 import Environment, StrictUndefined
@@ -31,7 +31,7 @@ app = typer.Typer(
 JINJA_ENV = Environment(undefined=StrictUndefined)
 
 
-def substitute_template(template: str, data: dict) -> str:
+def substitute_template(template: str, data: dict[str, Any]) -> str:
     """Render a Jinja2 template with data."""
     return JINJA_ENV.from_string(template).render(data)
 
@@ -138,14 +138,20 @@ def main(
             data_text = data.read_text()
 
         try:
-            records = json.loads(data_text)
+            parsed = json.loads(data_text)
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON: {e}[/red]")
             raise typer.Exit(1)
 
-        if not isinstance(records, list):
+        if not isinstance(parsed, list):
             console.print("[red]JSON data must be an array[/red]")
             raise typer.Exit(1)
+
+        if not all(isinstance(record, dict) for record in parsed):
+            console.print("[red]JSON data must be an array of objects[/red]")
+            raise typer.Exit(1)
+
+        records: list[dict[str, Any]] = parsed
 
         if not records:
             console.print("No records to process")

@@ -206,6 +206,50 @@ class TestComposeCLI:
         assert "test@example.com" in result.stdout
         assert "Hello Test User" in result.stdout
 
+    def test_batch_rejects_an_array_of_non_objects(self):
+        result = self.runner.invoke(
+            app,
+            [
+                "-f",
+                "personal",
+                "--data",
+                "-",
+                "--to",
+                "{{email}}",
+                "--subject",
+                "Hi",
+                "--body",
+                "Test body",
+                "--dry-run",
+            ],
+            input=json.dumps([1, 2]),
+        )
+
+        assert result.exit_code == 1
+        assert "array of objects" in result.stdout
+
+    def test_batch_rejects_a_json_object(self):
+        result = self.runner.invoke(
+            app,
+            [
+                "-f",
+                "personal",
+                "--data",
+                "-",
+                "--to",
+                "{{email}}",
+                "--subject",
+                "Hi",
+                "--body",
+                "Test body",
+                "--dry-run",
+            ],
+            input=json.dumps({"email": "x@example.com"}),
+        )
+
+        assert result.exit_code == 1
+        assert "must be an array" in result.stdout
+
     def test_batch_reads_data_from_file(self, tmp_path: Path):
         data_file = tmp_path / "data.json"
         data_file.write_text('[{"email": "file@example.com", "name": "File User"}]')
