@@ -202,11 +202,16 @@ Three directories are involved --- note the differences:
   and installs enabled plugins via the `claude` CLI; @claude/settings.json then
   enables them via `enabledPlugins`. Claude Code maintains its own clone at
   `~/.claude/plugins/marketplaces/ben/`. That clone is the **single source of
-  truth** --- edit skills there, commit and push from there. Codex gets
-  per-skill symlinks into that clone, while its generated `.system/` skills stay
-  under `~/.codex/skills/.system`. Skills appear to the model as
-  `ben:<skill-name>` (e.g. `ben:pkb`). The same bootstrap pattern handles the
-  `impeccable` and `agent-browser` plugins.
+  truth** --- edit skills there, commit and push from there. **Push immediately
+  after committing**: `claude plugin marketplace update` (run by
+  `sync-agent-config --update-claude`, i.e. every `dotfiles update`) deletes and
+  re-clones the marketplace from GitHub, discarding local-only commits. If that
+  happens, the tree at the last-installed commit survives as a snapshot under
+  `~/.claude/plugins/cache/ben/ben/<sha>/`. Codex gets per-skill symlinks into
+  that clone, while its generated `.system/` skills stay under
+  `~/.codex/skills/.system`. Skills appear to the model as `ben:<skill-name>`
+  (e.g. `ben:pkb`). The same bootstrap pattern handles the `impeccable` and
+  `agent-browser` plugins.
 - `.claude/` (with dot) --- project-local working directory auto-created by
   Claude Code. Contents are gitignored by default (`.claude/*` globally), but
   individual repos can opt-in to tracking specific subdirectories via a local
