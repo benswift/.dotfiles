@@ -18,6 +18,7 @@ This repo contains all of the (public) config files that I use on my machines.
 - `dotfiles doctor` --- check if everything is set up correctly
 - `dotfiles update` --- pull latest and re-run symlinks
 - `dotfiles edit` --- open dotfiles in editor
+- `dotfiles cd` --- print the dotfiles directory (for `cd "$(dotfiles cd)"`)
 - `./install.sh` --- bootstrap a new machine (also works via curl)
 - `./create_symlinks.sh` --- create/update symlinks only
 
@@ -33,6 +34,13 @@ does (e.g. `~/.zshrc` is linked to `zshrc`).
 
 Apart from a few one-off config files, these config files and scripts are
 grouped into the following categories.
+
+Four paths hold no symlink targets and so appear nowhere in the manifest: @lib/
+(bash helpers sourced by the scripts --- `log.sh` and the manifest itself),
+@tests/ (uv single-file tests for the `bin/` scripts, run directly:
+`./tests/test_svg_validate.py`), `backlog/` (Backlog.md task files), and
+@oxfmtrc.json (the shared markdown/TOML format config, used by `prettify-md` and
+@bin/oxfmt-helix).
 
 ## Shell
 
