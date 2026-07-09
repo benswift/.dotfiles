@@ -111,7 +111,9 @@ fixed point, so later edits diff clean.
 ### Security
 
 Never put raw credentials, passwords, API keys, or tokens in code or config
-files. Keep secrets in an untracked mise env block --- an `[env]` table in
+files. Secrets default to fnox: `fnox.toml` entries with `op://` references
+backed by 1Password. Low-stakes API tokens used by agent subprocesses may
+instead live in the untracked `[env]` table in
 `~/.config/mise/config.local.toml`, which mise exports into every shell ---
 never inline in a tracked file. Warn if you encounter raw credentials during
 modifications and don't commit files that likely contain secrets.

@@ -85,12 +85,17 @@ Global tool versions are defined in @mise/config.toml. This file is symlinked to
 `~/.config/mise/config.toml` and provides fallback versions for tools when not
 in a project with its own `mise.toml`.
 
-Machine-local config (per-host env vars, secrets not safe for git) goes in
+Machine-local config (per-host env vars) goes in
 `~/.config/mise/config.local.toml` --- mise auto-merges it with the global
-config, so any `[env]` entries get exported into every shell. This is the sole
-home for credentials (e.g. `PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for
-`notify-pushover`, `ANU_PASSWORD` for `vpn`, `REPLICATE_API_TOKEN` for
-`styled-image-gen`); the file is untracked, so nothing secret lands in git.
+config, so any `[env]` entries get exported into every shell.
+
+Secrets default to fnox: resolve them through `fnox.toml` entries with `op://`
+references backed by 1Password. Low-stakes API tokens consumed by agent
+subprocesses (e.g. `PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for `notify-pushover`,
+`REPLICATE_API_TOKEN` for `styled-image-gen`) may live plaintext in
+`config.local.toml` instead --- the file is untracked, so nothing secret lands
+in git --- but higher-stakes credentials (e.g. `ANU_PASSWORD`) belong behind
+fnox/1Password. Either way, nothing secret goes in a tracked file.
 
 ### Package installation hierarchy
 
