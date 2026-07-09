@@ -53,7 +53,14 @@ fallback() {
     exit 0
 }
 
-command -v tree-sitter >/dev/null 2>&1 || fallback
+# mise only puts tree-sitter on PATH from .zshrc, so a yazi launched outside an
+# interactive shell wouldn't find it and every preview would silently drop to
+# bat. Ask mise directly in that case (mise itself is on PATH from .zshenv).
+ts_bin="$(command -v tree-sitter 2>/dev/null)"
+if [[ -z "$ts_bin" ]] && command -v mise >/dev/null 2>&1; then
+    ts_bin="$(mise which tree-sitter 2>/dev/null)"
+fi
+[[ -n "$ts_bin" ]] || fallback
 
 # Truncate into a scratch file that keeps the original name, so the extension
 # still drives grammar selection.
@@ -70,9 +77,9 @@ fi
 # seeing empty stdout, and by then a streaming write would have committed us.
 # Preview-sized files make the buffer cheap (~30ms on a typical source file).
 if [[ -n "$scope" ]]; then
-    out="$(tree-sitter highlight --scope "$scope" -- "$src" 2>/dev/null)"
+    out="$("$ts_bin" highlight --scope "$scope" -- "$src" 2>/dev/null)"
 else
-    out="$(tree-sitter highlight -- "$src" 2>/dev/null)"
+    out="$("$ts_bin" highlight -- "$src" 2>/dev/null)"
 fi
 
 [[ -n "$out" ]] || fallback
