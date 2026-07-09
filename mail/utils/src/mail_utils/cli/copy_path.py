@@ -7,7 +7,7 @@ from mail_utils.email import get_message_id, read_email_from_stdin
 from mail_utils.mu import find_message_path
 
 
-def main():
+def main() -> None:
     msg = read_email_from_stdin()
     message_id = get_message_id(msg)
 

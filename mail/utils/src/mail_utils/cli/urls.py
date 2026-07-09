@@ -35,7 +35,7 @@ from mail_utils.urls import Link, extract_links
 NEOMUTT_CMD_FILE = "/tmp/neomutt-urls-commands"
 
 
-def _parse(data: bytes):
+def _parse(data: bytes) -> list[Link]:
     for parser in (read_email_from_bytes, read_email_from_bytes_lenient):
         try:
             return extract_links(parser(data))

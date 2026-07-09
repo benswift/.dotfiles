@@ -1,6 +1,8 @@
 """Deduplicate email messages in a maildir folder based on Message-ID headers."""
 
+import mailbox
 from collections import defaultdict
+from collections.abc import Iterator
 from pathlib import Path
 
 import typer
@@ -20,7 +22,7 @@ app = typer.Typer()
 
 
 def find_duplicates(
-    mbox, show_progress: bool = True
+    mbox: mailbox.Maildir, show_progress: bool = True
 ) -> tuple[dict[str, list[str]], int]:
     """Find duplicate messages in a maildir folder."""
     message_id_to_keys: dict[str, list[str]] = defaultdict(list)
@@ -30,7 +32,7 @@ def find_duplicates(
     if total_messages == 0:
         return message_id_to_keys, 0
 
-    def process_keys():
+    def process_keys() -> Iterator[None]:
         for key in keys:
             try:
                 msg = mbox[key]
@@ -164,7 +166,7 @@ def dedupe_command(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Show detailed information about duplicates"
     ),
-):
+) -> None:
     """Deduplicate email messages in a maildir folder based on Message-ID headers.
 
     Keeps the first copy (by maildir key sort order) and removes the rest.
@@ -198,7 +200,7 @@ def dedupe_command(
         raise typer.Exit(code=130)
 
 
-def main():
+def main() -> None:
     app()
 
 

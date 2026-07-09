@@ -283,7 +283,7 @@ def completions(params: types.CompletionParams) -> types.CompletionList | None:
     return None
 
 
-def main():
+def main() -> None:
     server.start_io()
 
 

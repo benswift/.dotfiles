@@ -25,7 +25,7 @@ NB_NOTE_ID = "data/student-db.json"
 
 
 class StudentDB:
-    def __init__(self, db: StudentDatabase):
+    def __init__(self, db: StudentDatabase) -> None:
         self._db = db
 
     @classmethod

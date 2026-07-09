@@ -14,7 +14,7 @@ def _shell_escape(path: str) -> str:
     return _SHELL_META.sub(r"\\\1", path)
 
 
-def main():
+def main() -> None:
     from mail_utils.email import read_email_from_bytes_lenient
 
     data = sys.stdin.buffer.read()

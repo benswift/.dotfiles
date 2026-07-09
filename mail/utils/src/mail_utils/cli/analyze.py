@@ -111,7 +111,7 @@ def analyze_maildir(maildir_path: Path) -> dict[str, Any]:
 def compare(
     maildir1: Path = typer.Argument(..., help="First maildir path to compare"),
     maildir2: Path = typer.Argument(..., help="Second maildir path to compare"),
-):
+) -> None:
     """Compare two maildir folders to identify format differences."""
     console.print("[bold]Analyzing maildir formats...[/bold]\n")
 
@@ -173,7 +173,7 @@ def single(
         dir_okay=True,
         resolve_path=True,
     ),
-):
+) -> None:
     """Analyze a single maildir folder."""
     if not is_maildir(maildir_path):
         console.print(
@@ -208,7 +208,7 @@ def single(
             console.print(f"  {fn}")
 
 
-def main():
+def main() -> None:
     app()
 
 
