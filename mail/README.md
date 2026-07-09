@@ -16,8 +16,8 @@ adapting all three.
 - `neomutt/` - neomutt email client configuration
 - `mutt_oauth2.py` - OAuth2 authentication script (from mutt source)
 - `keychain-store.sh` - Helper script to store OAuth tokens in macOS Keychain
-- `reauth-oauth.sh` - Script to re-authenticate Office365 OAuth
-- `oauth2_keychain_stub` - Token stub file for Office365
+- `reauth-anu-oauth.sh` - Script to re-authenticate Office365 OAuth
+- `anu_oauth2_keychain_stub` - Token stub file for Office365
 
 ## Markdown email composition
 
@@ -64,7 +64,7 @@ To sync Office365 email with mbsync using OAuth2 authentication:
    - Use devicecode flow for initial authentication (localhostauthcode doesn't
      work with Thunderbird)
    - Store tokens securely in macOS Keychain using `keychain-store.sh` wrapper
-   - Run `./reauth-oauth.sh` from the mail directory to re-authenticate
+   - Run `./reauth-anu-oauth.sh` from the mail directory to re-authenticate
 
 3. **Configure mbsync** (`mbsyncrc`):
    - Set `AuthMech XOAUTH2`
@@ -77,5 +77,5 @@ To sync Office365 email with mbsync using OAuth2 authentication:
    - Use same OAuth token from keychain
    - See `msmtprc` for configuration
 
-See `reauth-oauth.sh`, `keychain-store.sh`, and `mutt_oauth2.py` in this
+See `reauth-anu-oauth.sh`, `keychain-store.sh`, and `mutt_oauth2.py` in this
 directory for working examples.
