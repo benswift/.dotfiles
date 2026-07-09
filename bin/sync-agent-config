@@ -113,7 +113,8 @@ sync_codex_skills() {
         if [[ ! -e "$codex_skills/.system" ]]; then
             mv "$claude_skills/.system" "$codex_skills/.system"
         else
-            local backup="$codex_parent/skills.system-from-claude.$(date +%Y%m%d%H%M%S)"
+            local backup
+            backup="$codex_parent/skills.system-from-claude.$(date +%Y%m%d%H%M%S)"
             mv "$claude_skills/.system" "$backup"
             warn "Moved duplicate Claude .system skills to $backup"
         fi

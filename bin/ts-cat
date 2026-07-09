@@ -33,10 +33,13 @@ MAX_LINES="${TS_CAT_MAX_LINES:-5000}"
 # tree-sitter picks a grammar from the file extension. These are the ones
 # where that lookup misses but an existing grammar is the right answer
 # anyway: .mdx is markdown-with-JSX, and zsh is close enough to bash.
+#
+# `*.zshrc` already covers `~/.zshrc`, since `*` matches the empty string. The
+# bare `zshrc`/`zshenv` are this repo's own copies, which carry no leading dot.
 scope=""
 case "$file" in
 *.mdx | *.markdown | *.mdown | *.mkd) scope="text.markdown" ;;
-*.zsh | *.zshrc | *.zshenv | .zshrc | .zshenv) scope="source.bash" ;;
+*.zsh | *.zshrc | *.zshenv | zshrc | zshenv) scope="source.bash" ;;
 *.jsonc) scope="source.json" ;;
 esac
 
