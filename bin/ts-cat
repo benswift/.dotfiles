@@ -41,12 +41,11 @@ case "$file" in
 esac
 
 fallback() {
-    # bat is `batcat` on Debian/Ubuntu, `bat` under Homebrew. Plain cat is the
-    # floor: an unhighlighted preview beats an empty one.
+    # bat comes from mise (see mise/config.toml), so it's `bat` on both
+    # platforms rather than Debian's `batcat`. Plain cat is the floor: an
+    # unhighlighted preview beats an empty one.
     if command -v bat >/dev/null 2>&1; then
         bat --color=always --style=plain --paging=never -- "$file" 2>/dev/null
-    elif command -v batcat >/dev/null 2>&1; then
-        batcat --color=always --style=plain --paging=never -- "$file" 2>/dev/null
     else
         cat -- "$file" 2>/dev/null
     fi
