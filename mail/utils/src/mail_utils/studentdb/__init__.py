@@ -4,9 +4,16 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .models import DenormalisedStudent, Person, Student, StudentDatabase
+from .models import (
+    ACTIVE_STATUSES,
+    DenormalisedStudent,
+    Person,
+    Student,
+    StudentDatabase,
+)
 
 __all__ = [
+    "ACTIVE_STATUSES",
     "StudentDB",
     "StudentDatabase",
     "Student",
@@ -60,10 +67,17 @@ class StudentDB:
             legal_name=person.legal_name,
             preferred_name=person.preferred_name,
             email=person.email,
+            alt_email=person.alt_email,
             uid=student.uid,
+            program=student.program,
             status=student.status,
             school=student.school,
             commencement_date=student.commencement_date,
+            completion_date=student.completion_date,
+            ben_role=student.ben_role(),
+            thesis_title=student.thesis_title,
+            source=student.source,
+            notes=student.notes,
             supervisor=self._get_person(student.primary_supervisor_id),
             panel_chair=(
                 self._get_person(student.panel_chair_id)
@@ -77,14 +91,29 @@ class StudentDB:
         )
 
     def students(
-        self, status: str | None = None, school: str | None = None
+        self,
+        status: str | None = None,
+        school: str | None = None,
+        ben_role: str | None = None,
+        active_only: bool = False,
     ) -> list[DenormalisedStudent]:
+        """Filter students. All filters are independent and all default to off.
+
+        The convenor-facing defaults (SOCY, active only) live in the CLI, not
+        here --- callers of the library get everything unless they ask.
+        """
         results = []
         for student in self._db.students:
             if status and student.status != status:
                 continue
+            if active_only and student.status not in ACTIVE_STATUSES:
+                continue
             if school and student.school != school:
                 continue
+            if ben_role:
+                role = student.ben_role()
+                if role is None or (ben_role != "any" and role != ben_role):
+                    continue
             results.append(self._denormalise(student))
         return results
 

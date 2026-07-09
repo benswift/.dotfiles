@@ -16,19 +16,29 @@ app = typer.Typer(
 
     Outputs JSON to stdout, designed to pipe into jq or mail-compose.
 
+    `students` DEFAULTS TO THE CONVENOR COHORT: SOCY students still in
+    candidature. That covers the common case (emailing the school's current
+    HDR cohort) but silently omits completed students and Ben's students in
+    other schools. Pass --all to see every student in the database.
+
     Examples:
 
-        # List all confirmed students
-        student-db students --status confirmed
+        # The current SOCY cohort (the default)
+        student-db students
+
+        # Everything: all schools, all statuses
+        student-db students --all
+
+        # Students Ben supervises, chairs, or sits on the panel for
+        student-db students --all --ben-role any
+
+        # ...only the ones where he's primary supervisor
+        student-db students --all --ben-role primary
 
         # Pipe to mail-compose for batch emails
         student-db students --status confirmed | \\
             mail-compose -f phdconvenor --data - --to '{{email}}' \\
             --subject 'Hello {{preferred_name}}' --template body.md --send
-
-        # Filter with jq before emailing
-        student-db students | jq '[.[] | select(.supervisor.name == "Ben Swift")]' | \\
-            mail-compose -f phdconvenor --data - --to '{{email}}' ...
 
         # List all people (supervisors, panel members, contacts)
         student-db people
@@ -58,16 +68,33 @@ def students(
         typer.Option(
             "--status",
             "-s",
-            help="Filter by status (e.g., confirmed, pre-confirmation)",
+            help="Filter by status (e.g., confirmed, completed). Implies --include-inactive.",
         ),
     ] = None,
     school: Annotated[
+        str,
+        typer.Option("--school", help="Filter by school (e.g., SOCY, SOCO, RSCS)"),
+    ] = "SOCY",
+    ben_role: Annotated[
         str | None,
         typer.Option(
-            "--school",
-            help="Filter by school (e.g., SOCY, SOCO)",
+            "--ben-role",
+            help="Only students Ben is involved with: any, primary, panel-chair, associate, crp-chair",
         ),
     ] = None,
+    all_: Annotated[
+        bool,
+        typer.Option(
+            "--all", "-a", help="No default filters: every school, every status"
+        ),
+    ] = False,
+    all_schools: Annotated[
+        bool, typer.Option("--all-schools", help="Ignore the SOCY school default")
+    ] = False,
+    include_inactive: Annotated[
+        bool,
+        typer.Option("--include-inactive", help="Include completed and withdrawn"),
+    ] = False,
     file: Annotated[
         Path | None,
         typer.Option(
@@ -75,9 +102,20 @@ def students(
         ),
     ] = None,
 ) -> None:
-    """List students with denormalised supervisor/panel information."""
+    """List students with denormalised supervisor/panel information.
+
+    Defaults to SOCY students still in candidature --- see `student-db --help`.
+    """
     db = load_db(file)
-    results = db.students(status=status, school=school)
+    # An explicit --status is itself a status filter, so don't also apply the
+    # active-only default on top of it and quietly return nothing for
+    # `--status completed`.
+    results = db.students(
+        status=status,
+        school=None if (all_ or all_schools) else school,
+        ben_role=ben_role,
+        active_only=not (all_ or include_inactive or status),
+    )
 
     output = [s.model_dump(exclude_none=True) for s in results]
     json.dump(output, sys.stdout, indent=2)

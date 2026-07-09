@@ -39,6 +39,35 @@ from mail_utils.maildir import open_maildir, is_maildir
 from mail_utils.mu import find_message_path
 ```
 
+## Student database
+
+`student-db` reads the single normalised database at
+`~/.nb/home/data/student-db.json` --- every student Ben has a stake in, whether
+as SOCY convenor or as a supervisor in another school. There is no second file;
+`ben-phd-students.json` was merged away because the ten students it duplicated
+were the only place the two records ever disagreed.
+
+The CLI's `students` command **defaults to the convenor cohort**:
+`--school SOCY` and active statuses only. It's the right default for batch
+convenor email but it hides completed students and Ben's non-SOCY students, so
+`--all` is the honest starting point for anything else. The library
+(`StudentDB.students(...)`) applies no defaults --- every filter is off unless
+asked for, and the convenor defaults live only in the CLI layer.
+
+Two schema points that are easy to get wrong:
+
+- `panel_ids` holds the **associate supervisors only** --- panel minus primary
+  minus chair. The Chair of Panel goes in `panel_chair_id` (often, but not
+  always, the primary supervisor), and the separate Confirmation Review Panel
+  chair in `crp_chair_id`.
+- `Person.name` is the display name and the only one that belongs in prose.
+  `legal_name` is what ANU's systems hold, which is sometimes a name nobody uses
+  (Sui Jackson is "Paul Jackson" in Dynamics) --- use it to search HORUS or
+  Wattle, never to address someone.
+
+`ben_role` on the denormalised output is derived from the ID references rather
+than stored, so it cannot drift from the panel it describes.
+
 ## Development
 
 ```bash

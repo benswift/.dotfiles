@@ -1,5 +1,21 @@
 from pydantic import BaseModel, field_validator
 
+# Ben's own person_id, used to derive `ben_role` on the denormalised output.
+BEN_PERSON_ID = "ben_swift"
+
+VALID_STATUSES = {
+    "pre-confirmation",
+    "confirmed",
+    "submitted",
+    "paused",
+    "completed",
+    "withdrawn",
+}
+
+# A student still in candidature. `submitted` counts --- the thesis is under
+# examination but they're still enrolled --- as does `paused`.
+ACTIVE_STATUSES = VALID_STATUSES - {"completed", "withdrawn"}
+
 
 class Person(BaseModel):
     # `name` is the display full name ("Sui Jackson"); `legal_name` is what ANU's
@@ -9,6 +25,7 @@ class Person(BaseModel):
     legal_name: str | None = None
     preferred_name: str | None = None
     email: str | None = None
+    alt_email: str | None = None
 
     def display_name(self) -> str:
         return self.preferred_name or self.name
@@ -17,6 +34,7 @@ class Person(BaseModel):
 class Student(BaseModel):
     person_id: str
     uid: str
+    program: str = "PhD"
     primary_supervisor_id: str
     # Chair of Panel, who may or may not be the primary supervisor. `panel_ids`
     # holds the associate supervisors only --- panel minus primary minus chair.
@@ -25,21 +43,33 @@ class Student(BaseModel):
     status: str
     school: str | None = None
     commencement_date: str | None = None
+    completion_date: str | None = None
     crp_chair_id: str | None = None
+    thesis_title: str | None = None
+    source: str | None = None
+    notes: str | None = None
+
+    def ben_role(self) -> str | None:
+        """Ben's role on this candidature, derived rather than stored.
+
+        Ordered most- to least-involved: he can be both primary and chair
+        (Sui Jackson), and the strongest role is the one worth reporting.
+        """
+        if self.primary_supervisor_id == BEN_PERSON_ID:
+            return "primary"
+        if self.panel_chair_id == BEN_PERSON_ID:
+            return "panel-chair"
+        if BEN_PERSON_ID in self.panel_ids:
+            return "associate"
+        if self.crp_chair_id == BEN_PERSON_ID:
+            return "crp-chair"
+        return None
 
     @field_validator("status")
     @classmethod
     def validate_status(cls, v: str) -> str:
-        valid = {
-            "pre-confirmation",
-            "confirmed",
-            "submitted",
-            "paused",
-            "completed",
-            "withdrawn",
-        }
-        if v not in valid:
-            raise ValueError(f"status must be one of {valid}, got {v!r}")
+        if v not in VALID_STATUSES:
+            raise ValueError(f"status must be one of {VALID_STATUSES}, got {v!r}")
         return v
 
 
@@ -82,11 +112,18 @@ class DenormalisedStudent(BaseModel):
     legal_name: str | None = None
     preferred_name: str | None
     email: str | None
+    alt_email: str | None = None
     uid: str
+    program: str = "PhD"
     status: str
     school: str | None = None
     commencement_date: str | None
+    completion_date: str | None = None
+    ben_role: str | None = None
     supervisor: Person
     panel_chair: Person | None = None
     panel: list[Person]
     crp_chair: Person | None = None
+    thesis_title: str | None = None
+    source: str | None = None
+    notes: str | None = None
