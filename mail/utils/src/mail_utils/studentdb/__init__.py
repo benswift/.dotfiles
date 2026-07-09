@@ -57,6 +57,7 @@ class StudentDB:
         person = self._get_person(student.person_id)
         return DenormalisedStudent(
             name=person.name,
+            legal_name=person.legal_name,
             preferred_name=person.preferred_name,
             email=person.email,
             uid=student.uid,
@@ -64,6 +65,11 @@ class StudentDB:
             school=student.school,
             commencement_date=student.commencement_date,
             supervisor=self._get_person(student.primary_supervisor_id),
+            panel_chair=(
+                self._get_person(student.panel_chair_id)
+                if student.panel_chair_id
+                else None
+            ),
             panel=[self._get_person(pid) for pid in student.panel_ids],
             crp_chair=(
                 self._get_person(student.crp_chair_id) if student.crp_chair_id else None

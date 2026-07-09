@@ -2,7 +2,11 @@ from pydantic import BaseModel, field_validator
 
 
 class Person(BaseModel):
+    # `name` is the display full name ("Sui Jackson"); `legal_name` is what ANU's
+    # systems hold ("Paul Jackson"), for looking people up in Dynamics/Wattle/HORUS.
+    # Never put `legal_name` in prose --- that's what `name` is for.
     name: str
+    legal_name: str | None = None
     preferred_name: str | None = None
     email: str | None = None
 
@@ -14,6 +18,9 @@ class Student(BaseModel):
     person_id: str
     uid: str
     primary_supervisor_id: str
+    # Chair of Panel, who may or may not be the primary supervisor. `panel_ids`
+    # holds the associate supervisors only --- panel minus primary minus chair.
+    panel_chair_id: str | None = None
     panel_ids: list[str]
     status: str
     school: str | None = None
@@ -52,6 +59,11 @@ class StudentDatabase(BaseModel):
                     f"student {student.person_id} references unknown supervisor: "
                     f"{student.primary_supervisor_id}"
                 )
+            if student.panel_chair_id and student.panel_chair_id not in self.people:
+                errors.append(
+                    f"student {student.person_id} references unknown panel_chair: "
+                    f"{student.panel_chair_id}"
+                )
             for panel_id in student.panel_ids:
                 if panel_id not in self.people:
                     errors.append(
@@ -67,6 +79,7 @@ class StudentDatabase(BaseModel):
 
 class DenormalisedStudent(BaseModel):
     name: str
+    legal_name: str | None = None
     preferred_name: str | None
     email: str | None
     uid: str
@@ -74,5 +87,6 @@ class DenormalisedStudent(BaseModel):
     school: str | None = None
     commencement_date: str | None
     supervisor: Person
+    panel_chair: Person | None = None
     panel: list[Person]
     crp_chair: Person | None = None
