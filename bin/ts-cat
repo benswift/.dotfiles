@@ -26,6 +26,13 @@ set -uo pipefail
 file="${1:-}"
 [[ -n "$file" && -r "$file" ]] || exit 0
 
+# Launched from a non-interactive shell (a yazi started by anything other than
+# a prompt), only .zshenv has run: no `brew shellenv`, no `mise activate`. That
+# hides both mise and bat on macOS, where they live under Homebrew. Append the
+# usual prefixes so tree-sitter and the fallback are still findable; appending
+# rather than prepending leaves an interactive PATH's choices intact.
+PATH="$PATH:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin"
+
 # Parsing a whole 100k-line file to render 40 visible lines is wasted work,
 # and tree-sitter is error-tolerant enough that a truncated tail is harmless.
 MAX_LINES="${TS_CAT_MAX_LINES:-5000}"
@@ -53,12 +60,17 @@ fallback() {
     exit 0
 }
 
-# mise only puts tree-sitter on PATH from .zshrc, so a yazi launched outside an
-# interactive shell wouldn't find it and every preview would silently drop to
-# bat. Ask mise directly in that case (mise itself is on PATH from .zshenv).
+# mise exports tree-sitter's bin dir from .zshrc, so a non-interactive shell
+# won't have it on PATH and every preview would silently drop to bat. Ask mise
+# itself in that case, and fall back to its install layout when even the mise
+# binary is missing (on macOS `mise` is often only a shell function).
 ts_bin="$(command -v tree-sitter 2>/dev/null)"
 if [[ -z "$ts_bin" ]] && command -v mise >/dev/null 2>&1; then
     ts_bin="$(mise which tree-sitter 2>/dev/null)"
+fi
+if [[ -z "$ts_bin" ]]; then
+    installed="$HOME/.local/share/mise/installs/tree-sitter/latest/tree-sitter"
+    [[ -x "$installed" ]] && ts_bin="$installed"
 fi
 [[ -n "$ts_bin" ]] || fallback
 
