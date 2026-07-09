@@ -5,13 +5,17 @@
 #
 # Keep the dispatch table in sync with ~/.dotfiles/helix/languages.toml ---
 # same commands, same args, same exclusions (e.g. astromotion decks are
-# auto-format = false in Helix, so they're skipped here too).
+# auto-format = false in Helix, so they're skipped here too). The one place
+# this hook does more than Helix is oxfmt's ignorePatterns --- see fmt_oxfmt.
 #
 # Reads the hook JSON payload on stdin and extracts the file path.
 set -euo pipefail
 
 f="$(jq -r '.tool_input.file_path // .tool_response.filePath // empty')"
 [[ -n "$f" && -f "$f" ]] || exit 0
+
+# Absolute, so the oxfmt probe below can cd to the project root and still read it.
+f="$(cd "$(dirname "$f")" && pwd -P)/$(basename "$f")"
 
 # Run a stdin->stdout formatter exactly as Helix would; write back only on
 # success and only if the output differs (cat > preserves inode/permissions).
@@ -59,13 +63,69 @@ fmt_rust() {
     fmt rustfmt --edition "$ed" --emit stdout
 }
 
+# Nearest .oxfmtrc.json at or above $1; echoes the directory holding it.
+oxfmt_project_root() {
+    local dir="$1"
+    while :; do
+        [[ -f "$dir/.oxfmtrc.json" ]] && {
+            printf '%s\n' "$dir"
+            return 0
+        }
+        [[ "$dir" == "/" ]] && return 1
+        dir="$(dirname "$dir")"
+    done
+}
+
+# Does the project's .oxfmtrc.json exclude $f? Ask oxfmt rather than reimplement
+# its globs. ignorePatterns are anchored to the config file's own directory, so
+# the probe runs from the project root with a project-relative path. --check
+# only reports; it never writes. Any other outcome (no config, nothing ignored,
+# unparseable config, a missing svelte dep, an extension oxfmt can't infer)
+# means "not ignored", so the worst case is the pre-existing behaviour.
+oxfmt_ignored() {
+    local proj out
+    command -v oxfmt &>/dev/null || return 1
+    proj="$(oxfmt_project_root "$(dirname "$f")")" || return 1
+    jq -e '(.ignorePatterns // []) | length > 0' "$proj/.oxfmtrc.json" &>/dev/null || return 1
+    out="$(cd "$proj" && oxfmt --check --threads=1 "${f#"$proj"/}" 2>&1)" || true
+    [[ "$out" == *"excluded by ignore rules"* ]]
+}
+
+# A project's .oxfmtrc.json can exclude paths via ignorePatterns (backlog/ task
+# files, .claude/, generated dirs). Helix passes formatter args verbatim and
+# can't interpolate the buffer name, so oxfmt-helix pins a synthetic
+# --stdin-filepath and -c to the global config -- oxfmt never learns the real
+# path, and the exclusions never apply. Both Helix and this hook therefore
+# reformat files the project excludes; a one-line Edit to a backlog task lands
+# as a whole-file reflow.
+#
+# Helix can't be fixed from here, but this hook knows the real path, so skip the
+# file when the project excludes it. Formatting itself is untouched: options
+# still come from the global config via oxfmt-helix, because several project
+# configs are bare ({} or {"svelte": true}) and lean on the global
+# proseWrap/printWidth -- adopting the project config wholesale would unwrap
+# their markdown.
+#
+# The probe costs an oxfmt run, so it gates the *write*, not the format: a file
+# the formatter wouldn't change needs no verdict on whether it's excluded.
+fmt_oxfmt() {
+    local fallback="$1" tmp
+    command -v oxfmt-helix &>/dev/null || return 0
+    tmp="$(mktemp)"
+    if oxfmt-helix --stdin-filepath "$fallback" <"$f" >"$tmp" 2>/dev/null &&
+        ! cmp -s "$tmp" "$f" && ! oxfmt_ignored; then
+        cat "$tmp" >"$f"
+    fi
+    rm -f "$tmp"
+}
+
 case "$f" in
 *.deck.mdx | */decks/*.mdx) ;; # astromotion decks: auto-format = false
-*.md | *.markdown | *.deck.svx) fmt oxfmt-helix --stdin-filepath file.md ;;
-*.mdx) fmt oxfmt-helix --stdin-filepath file.mdx ;;
+*.md | *.markdown | *.deck.svx) fmt_oxfmt file.md ;;
+*.mdx) fmt_oxfmt file.mdx ;;
 *.typ) fmt typstyle --wrap-text ;;
 *.tex) fmt tex-fmt --stdin ;;
-*.toml) fmt oxfmt-helix --stdin-filepath file.toml ;;
+*.toml) fmt_oxfmt file.toml ;;
 *.kdl) fmt kdlfmt format - ;;
 *.py) fmt ruff format --stdin-filename "$f" - ;;
 *.ex | *.exs | *.heex) fmt_mix ;;
