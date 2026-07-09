@@ -14,6 +14,9 @@ typst = "latest"
 ast-grep = "latest"
 jq = "latest"
 fd = "latest"
+# bin/zj-switch's picker. Via mise rather than apt/brew so both platforms get
+# the same (and a current) fzf --- Debian ships 0.44, from 2023.
+fzf = "latest"
 # bin/ts-cat's fallback previewer. Via mise rather than brew/apt so the binary
 # is called `bat` on both platforms (Debian's package installs it as `batcat`).
 bat = "latest"

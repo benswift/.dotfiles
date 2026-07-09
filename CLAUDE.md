@@ -76,6 +76,9 @@ etc.). Key scripts:
 - `mailsync` --- sync all email accounts
 - `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI
   agents
+- `zj-switch` --- `Alt s` session switcher (live sessions only, most-recently
+  used first, annotated with each session's Claude agents and their state). See
+  "Session switching" below
 - `agenda` --- read/create ANU Exchange calendar events via EventKit
 - `teams` --- read/send Teams DMs by driving the web client
 - `pkb-agent` --- run scheduled "EA" tasks (headless claude over the notebook);
@@ -145,8 +148,43 @@ My Helix config is in the @helix/ folder. This includes:
 
 My Zellij config is in the @zellij/ folder. This includes:
 
-- @zellij/config.kdl - main configuration (theme only, uses default keybindings)
+- @zellij/config.kdl - theme, plus a full `clear-defaults=true` keybind block
 - @zellij/layouts/dev.kdl - dev layout (hx + claude-yolo + terminal)
+
+`config.kdl` is a fixed point of `kdlfmt format -`, the same command
+@bin/claude-format and Helix run on save. Keep it that way, or a one-line
+keybind change lands as a 500-line reflow.
+
+#### Session switching
+
+`Alt s` runs @bin/zj-switch in a floating pane. It lists only **live** sessions,
+most-recently-used first, so `Alt s` then Enter returns to the previous session
+the way cmd-tab does. Zellij's built-in session manager --- which also creates
+sessions and resurrects dead ones --- stays on `Ctrl o` then `w`.
+
+Each row is annotated with the Claude Code agents in that session (`⏳` working,
+`⚠` blocked, `✓` idle, `·` unknown). The two halves come from different places
+on purpose:
+
+- **how many agents**: the process tree. Each session's server runs as
+  `zellij --server <sockdir>/<session>` and every agent chains up to one, so a
+  single `ps` is authoritative about who's alive.
+- **what they're doing**: state files under
+  `$XDG_RUNTIME_DIR/claude-agent-state/<session>/<claude-session-id>`, written
+  by @bin/claude-turn-tracker from Claude Code's `SessionStart`,
+  `UserPromptSubmit`, `Stop`, `Notification` and `SessionEnd` hooks.
+
+State is therefore **reported, never inferred** --- nothing parses a pane's
+title or its screen. That matters because Claude Code writes an OSC title
+carrying an animated spinner glyph, so any title-scraping scheme breaks the next
+time its UI changes. Each state file records the agent's pid, and `zj-switch`
+drops entries whose pid is gone, so an agent killed without firing `SessionEnd`
+doesn't linger.
+
+The MRU stack lives at `$XDG_STATE_HOME/zj-switch/mru` and is maintained solely
+by `zj-switch`: it pushes the current session on launch and the chosen one on
+exit. A session first entered via `za`/`zs` shows up once you press `Alt s`
+there, so the stack self-heals.
 
 ## File manager (yazi)
 

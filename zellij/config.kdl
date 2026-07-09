@@ -391,10 +391,18 @@ keybinds clear-defaults=true {
         bind "Alt Shift p" {
             ToggleGroupMarking
         }
+        // bin/zj-switch: live sessions only, most-recently-used first, so
+        // Alt s then Enter returns to the previous session. The built-in
+        // session manager --- which creates sessions and resurrects dead
+        // ones --- stays on `Ctrl o` then `w`.
         bind "Alt s" {
-            LaunchOrFocusPlugin "session-manager" {
+            Run "zj-switch" {
                 floating true
-                move_to_focused_tab true
+                close_on_exit true
+                width "50%"
+                height "40%"
+                x "25%"
+                y "30%"
             }
         }
         bind "Ctrl q" {

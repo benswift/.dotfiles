@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+#
+# zj-switch --- a fast LIFO session switcher for zellij.
+#
+# Bound to `Alt s` (see zellij/config.kdl), which runs it in a floating pane.
+# It lists only *live* sessions, most-recently-used first, so `Alt s` then
+# Enter returns to the previous session the way cmd-tab does. The built-in
+# session manager --- which also creates sessions and resurrects dead ones ---
+# stays where zellij puts it, on `Ctrl o` then `w`.
+#
+# Each row is annotated with the Claude Code agents running in that session
+# and what they are doing. Two independent sources, deliberately:
+#
+#   - how many agents: the process tree. Every session's server runs as
+#     `zellij --server <sockdir>/<session>`, and each agent chains up to one
+#     of them, so a single `ps` says who is alive. This is authoritative.
+#   - what they are doing: state files written by bin/claude-turn-tracker
+#     from Claude Code's own lifecycle hooks. Reported, never inferred ---
+#     nothing here parses a pane's contents or its title.
+#
+# An agent killed outright leaves a stale state file, so entries whose
+# recorded pid is gone are dropped. Agents that are running but have no
+# state file yet (started before the hook existed) show as unknown rather
+# than being silently omitted.
+
+set -uo pipefail
+
+STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/claude-agent-state"
+MRU_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/zj-switch/mru"
+MRU_DEPTH=50
+CURRENT="${ZELLIJ_SESSION_NAME:-}"
+
+# Live sessions only. `list-sessions` marks dead-but-resurrectable ones
+# "(EXITED - attach to resurrect)"; those are the session manager's business.
+live_sessions() {
+    zellij list-sessions --no-formatting 2>/dev/null |
+        grep -v '(EXITED' | awk 'NF {print $1}'
+}
+
+# Emit "<session> <agent-count>" per session with at least one agent.
+# Nested agents (a `claude` whose ancestor is also `claude`) are not counted
+# separately; only the one that owns the pane is.
+agent_counts() {
+    ps -eo pid=,ppid=,args= | awk '
+        {
+            pid = $1; ppid = $2
+            args = substr($0, index($0, $3))
+            A[pid] = args; P[pid] = ppid
+            if (args ~ /zellij --server /) { n = split(args, seg, "/"); S[pid] = seg[n] }
+        }
+        END {
+            for (p in A) {
+                if (A[p] !~ /^claude( |$)/) continue
+                q = P[p]; nested = 0
+                while (q != "" && q != 1 && !(q in S)) {
+                    if (A[q] ~ /^claude( |$)/) { nested = 1; break }
+                    q = P[q]
+                }
+                if (!nested && (q in S)) C[S[q]]++
+            }
+            for (s in C) print s, C[s]
+        }'
+}
+
+# Summarise a session's agent states as a compact badge, e.g. "2 ⏳1 ✓1".
+# Takes the session name and its authoritative agent count.
+badge() {
+    local session="$1" total="$2" dir="$STATE_DIR/$1"
+    local working=0 idle=0 blocked=0 accounted=0
+    local f state pid
+
+    ((total)) || return 0
+
+    if [[ -d "$dir" ]]; then
+        for f in "$dir"/*; do
+            [[ -f "$f" ]] || continue
+            read -r state pid <"$f" || continue
+            # drop entries whose agent died without firing SessionEnd
+            [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null || { rm -f "$f"; continue; }
+            case "$state" in
+            working) ((working++)) ;;
+            blocked) ((blocked++)) ;;
+            idle) ((idle++)) ;;
+            *) continue ;;
+            esac
+            ((accounted++))
+        done
+    fi
+
+    local out="$total"
+    ((blocked)) && out+=" ⚠${blocked}"
+    ((working)) && out+=" ⏳${working}"
+    ((idle)) && out+=" ✓${idle}"
+    ((total > accounted)) && out+=" ·$((total - accounted))"
+    printf '%s' "$out"
+}
+
+mru_push() {
+    local name="$1" tmp
+    [[ -n "$name" ]] || return 0
+    mkdir -p "${MRU_FILE%/*}"
+    tmp="$(mktemp)"
+    {
+        printf '%s\n' "$name"
+        [[ -f "$MRU_FILE" ]] && grep -vxF "$name" "$MRU_FILE"
+    } | head -n "$MRU_DEPTH" >"$tmp"
+    mv "$tmp" "$MRU_FILE"
+}
+
+# Live sessions, most-recently-used first, current session excluded. Anything
+# live but absent from the MRU (attached outside this script) is appended.
+ordered_sessions() {
+    local -A is_live=()
+    local -a out=()
+    local s
+
+    while read -r s; do [[ -n "$s" ]] && is_live[$s]=1; done < <(live_sessions)
+    [[ -n "$CURRENT" ]] && unset "is_live[$CURRENT]"
+
+    if [[ -f "$MRU_FILE" ]]; then
+        while read -r s; do
+            if [[ -n "${is_live[$s]:-}" ]]; then
+                out+=("$s")
+                unset "is_live[$s]"
+            fi
+        done <"$MRU_FILE"
+    fi
+    for s in "${!is_live[@]}"; do out+=("$s"); done
+
+    ((${#out[@]})) && printf '%s\n' "${out[@]}"
+}
+
+main() {
+    local dry_run=false
+    [[ "${1:-}" == "--dry-run" ]] && dry_run=true
+
+    # Record the session we're leaving, so it is the default target next time.
+    [[ "$dry_run" == true ]] || mru_push "$CURRENT"
+
+    local -A counts=()
+    local s n
+    while read -r s n; do [[ -n "$s" ]] && counts[$s]=$n; done < <(agent_counts)
+
+    local -a rows=()
+    local b
+    while read -r s; do
+        [[ -n "$s" ]] || continue
+        b="$(badge "$s" "${counts[$s]:-0}")"
+        if [[ -n "$b" ]]; then
+            rows+=("$(printf '%-24s %s' "$s" "$b")")
+        else
+            rows+=("$s")
+        fi
+    done < <(ordered_sessions)
+
+    if ((${#rows[@]} == 0)); then
+        echo "No other live zellij sessions." >&2
+        sleep 1
+        exit 0
+    fi
+
+    # --dry-run: print the rows exactly as fzf would receive them, and stop.
+    if [[ "$dry_run" == true ]]; then
+        printf '%s\n' "${rows[@]}"
+        exit 0
+    fi
+
+    local sel
+    sel="$(printf '%s\n' "${rows[@]}" |
+        fzf --layout=reverse --height=100% --info=inline --no-multi \
+            --prompt='switch to > ' \
+            --header='⏳ working   ⚠ blocked   ✓ idle   · unknown')" || exit 0
+
+    local name="${sel%% *}"
+    [[ -n "$name" ]] || exit 0
+    mru_push "$name"
+
+    # Inside a session, hand the client over; outside, plain attach.
+    if [[ -n "$CURRENT" ]]; then
+        zellij action switch-session "$name"
+    else
+        zellij attach "$name"
+    fi
+}
+
+main "$@"
