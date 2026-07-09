@@ -82,14 +82,17 @@ def parse_email_date(date_string: str) -> datetime | None:
     if not date_string:
         return None
 
+    # parsedate_to_datetime raises ValueError on a malformed header; dateutil
+    # raises ParserError (a ValueError) or OverflowError on an absurd year.
+    # Anything else is a bug in us, so let it bubble.
     try:
         return parsedate_to_datetime(date_string)
-    except Exception:
+    except (TypeError, ValueError):
         pass
 
     try:
         return date_parser.parse(date_string, fuzzy=True)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         pass
 
     return None
