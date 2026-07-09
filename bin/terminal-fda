@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 # terminal-fda --- manage Full Disk Access for Terminal.app
 #
 # Terminal is used (instead of Ghostty) for work that needs access to
@@ -21,7 +21,7 @@ BUNDLE_ID="com.apple.Terminal"
 PROBE="$HOME/Library/Safari/History.db"
 
 usage() {
-  print -u2 "Usage: $(basename "$0") {status|grant|revoke}"
+  echo "Usage: $(basename "$0") {status|grant|revoke}" >&2
   exit 1
 }
 
@@ -33,20 +33,20 @@ probe_fda() {
 case "${1:-status}" in
   status)
     if probe_fda; then
-      print "FDA: granted (probe can read ~/Library/Safari/History.db)"
+      echo "FDA: granted (probe can read ~/Library/Safari/History.db)"
     else
-      print "FDA: not granted (probe cannot read ~/Library/Safari/History.db)"
+      echo "FDA: not granted (probe cannot read ~/Library/Safari/History.db)"
     fi
     ;;
   grant)
-    print "Opening System Settings --- Privacy & Security --- Full Disk Access."
-    print "Toggle Terminal on (add via + if not listed), then restart Terminal."
+    echo "Opening System Settings --- Privacy & Security --- Full Disk Access."
+    echo "Toggle Terminal on (add via + if not listed), then restart Terminal."
     open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
     ;;
   revoke)
-    print "Revoking FDA for $BUNDLE_ID..."
+    echo "Revoking FDA for $BUNDLE_ID..."
     tccutil reset SystemPolicyAllFiles "$BUNDLE_ID"
-    print "Done. Restart Terminal so running shells pick up the change."
+    echo "Done. Restart Terminal so running shells pick up the change."
     ;;
   *)
     usage
