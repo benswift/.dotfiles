@@ -72,11 +72,13 @@ badge() {
     ((total)) || return 0
 
     if [[ -d "$dir" ]]; then
+        # One file per agent, named for its pid (see bin/claude-turn-tracker).
         for f in "$dir"/*; do
             [[ -f "$f" ]] || continue
-            read -r state pid <"$f" || continue
+            pid="${f##*/}"
+            read -r state _ <"$f" || continue
             # drop entries whose agent died without firing SessionEnd
-            [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null || { rm -f "$f"; continue; }
+            kill -0 "$pid" 2>/dev/null || { rm -f "$f"; continue; }
             case "$state" in
             working) ((working++)) ;;
             blocked) ((blocked++)) ;;

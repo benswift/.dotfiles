@@ -59,16 +59,23 @@ claude_pid() {
     done
 }
 
+# Files are named for the agent's pid, not its Claude session id: the id
+# changes when a session is resumed or compacted, which would leave a second
+# file behind for the same still-running agent. One agent is one process.
 write_state() {
     [[ -n "${ZELLIJ_SESSION_NAME:-}" ]] || return 0
-    local dir="$state_dir/$ZELLIJ_SESSION_NAME"
+    local dir="$state_dir/$ZELLIJ_SESSION_NAME" pid
+    pid="$(claude_pid)"
+    [[ -n "$pid" ]] || return 0
     mkdir -p "$dir" 2>/dev/null || return 0
-    printf '%s %s\n' "$1" "$(claude_pid)" >"$dir/$sid" 2>/dev/null || return 0
+    printf '%s %s\n' "$1" "$sid" >"$dir/$pid" 2>/dev/null || return 0
 }
 
 clear_state() {
     [[ -n "${ZELLIJ_SESSION_NAME:-}" ]] || return 0
-    rm -f "$state_dir/$ZELLIJ_SESSION_NAME/$sid"
+    local pid
+    pid="$(claude_pid)"
+    [[ -n "$pid" ]] && rm -f "$state_dir/$ZELLIJ_SESSION_NAME/$pid"
     rmdir "$state_dir/$ZELLIJ_SESSION_NAME" 2>/dev/null || true
 }
 

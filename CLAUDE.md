@@ -170,9 +170,11 @@ on purpose:
   `zellij --server <sockdir>/<session>` and every agent chains up to one, so a
   single `ps` is authoritative about who's alive.
 - **what they're doing**: state files under
-  `$XDG_RUNTIME_DIR/claude-agent-state/<session>/<claude-session-id>`, written
-  by @bin/claude-turn-tracker from Claude Code's `SessionStart`,
-  `UserPromptSubmit`, `Stop`, `Notification` and `SessionEnd` hooks.
+  `$XDG_RUNTIME_DIR/claude-agent-state/<session>/<agent-pid>`, written by
+  @bin/claude-turn-tracker from Claude Code's `SessionStart`,
+  `UserPromptSubmit`, `Stop`, `Notification` and `SessionEnd` hooks. Keyed by
+  pid, not by Claude session id --- the id changes on resume or compaction,
+  which would leave a second file behind for the same still-running agent.
 
 State is therefore **reported, never inferred** --- nothing parses a pane's
 title or its screen. That matters because Claude Code writes an OSC title
