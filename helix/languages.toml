@@ -53,6 +53,22 @@ language-servers = ["marksman", "nb-lsp"]
 file-types = [{ glob = "*.deck.mdx" }, { glob = "**/decks/**/*.mdx" }]
 auto-format = false
 
+# Backlog.md task files: skip auto-format because the `backlog` CLI owns their
+# serialisation --- it writes single-quoted YAML dates and unwrapped prose, so
+# formatting one reflows the whole file and rewrites the quoting, turning a
+# one-line edit into a 30-line diff the CLI will churn back. Every repo using
+# Backlog.md already excludes `backlog/` in its .oxfmtrc.json, so this only
+# teaches Helix what `pnpm format` and the claude-format hook already know.
+# Highlighting/injections inherit from markdown via
+# ~/.config/helix/runtime/queries/backlog-task/
+[[language]]
+name = "backlog-task"
+scope = "source.markdown"
+grammar = "markdown"
+language-servers = ["marksman", "nb-lsp"]
+file-types = [{ glob = "**/backlog/**/*.md" }]
+auto-format = false
+
 # mdx: separate from markdown so oxfmt sees the .mdx extension via
 # --stdin-filepath and uses its MDX parser. Without this, oxfmt treats MDX
 # expression containers as markdown emphasis and mangles single-line MDX

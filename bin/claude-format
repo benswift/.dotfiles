@@ -121,6 +121,7 @@ fmt_oxfmt() {
 
 case "$f" in
 *.deck.mdx | */decks/*.mdx) ;; # astromotion decks: auto-format = false
+*/backlog/*.md) ;;             # Backlog.md CLI owns these files' serialisation
 *.md | *.markdown | *.deck.svx) fmt_oxfmt file.md ;;
 *.mdx) fmt_oxfmt file.mdx ;;
 *.typ) fmt typstyle --wrap-text ;;
