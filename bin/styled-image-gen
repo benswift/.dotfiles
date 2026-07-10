@@ -287,7 +287,7 @@ def _main_impl(
     resolution: Annotated[
         str,
         typer.Option(help="Resolution: 1K, 2K, or 4K"),
-    ] = "4K",
+    ] = "2K",
     jpg: Annotated[
         bool,
         typer.Option("--jpg", help="Keep original JPG instead of converting to AVIF"),
