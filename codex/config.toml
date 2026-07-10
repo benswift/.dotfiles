@@ -2,3 +2,6 @@ model = "gpt-5.5"
 model_reasoning_effort = "high"
 personality = "pragmatic"
 project_doc_fallback_filenames = ["CLAUDE.md"]
+
+[projects."/Users/ben/projects/comp4020-repos/strproxy"]
+trust_level = "trusted"
