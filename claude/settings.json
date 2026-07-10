@@ -88,7 +88,6 @@
     "ast-grep@ast-grep-marketplace": true,
     "modern-web-guidance@googlechrome": true,
     "ben@ben": true,
-    "astromotion@astromotion": true,
     "astro-theme-anu@astro-theme-anu": true
   },
   "extraKnownMarketplaces": {
@@ -120,13 +119,6 @@
       "source": {
         "source": "github",
         "repo": "GoogleChrome/modern-web-guidance"
-      }
-    },
-    "astromotion": {
-      "source": {
-        "source": "git",
-        "url": "https://github.com/ANUcybernetics/astromotion.git",
-        "ref": "v0.10.1"
       }
     },
     "astro-theme-anu": {
