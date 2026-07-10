@@ -181,6 +181,21 @@ time its UI changes. Each state file records the agent's pid, and `zj-switch`
 drops entries whose pid is gone, so an agent killed without firing `SessionEnd`
 doesn't linger.
 
+#### Pane naming while blocked
+
+The same hook renames the agent's own pane (via `ZELLIJ_PANE_ID`, so it never
+touches whichever pane is focused) --- but **only** while the agent is blocked.
+`Notification` renames it to `⚠ <why it wants you>`; the next `UserPromptSubmit`
+calls `undo-rename-pane` and hands the title back.
+
+The restraint is the point. A zellij rename is sticky: it overrides every
+subsequent OSC title until undone. Claude Code's own title --- an animated
+spinner plus the task in progress --- is more informative than any state glyph
+while it's working, so the title is only taken over once the agent has gone
+quiet and stopped saying anything. Zellij keeps tracking the program's title
+underneath, so the undo restores whatever Claude Code most recently set, not the
+stale value from before the rename.
+
 The MRU stack lives at `$XDG_STATE_HOME/zj-switch/mru` and is maintained solely
 by `zj-switch`: it pushes the current session on launch and the chosen one on
 exit. A session first entered via `za`/`zs` shows up once you press `Alt s`

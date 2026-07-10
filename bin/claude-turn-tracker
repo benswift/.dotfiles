@@ -72,17 +72,48 @@ clear_state() {
     rmdir "$state_dir/$ZELLIJ_SESSION_NAME" 2>/dev/null || true
 }
 
+# --- pane naming, but only while the agent is blocked ------------------------
+#
+# A zellij rename is sticky: it overrides every subsequent OSC title until
+# undone. Claude Code sets an OSC title continuously --- an animated spinner
+# plus the task in progress --- and that is strictly more informative than any
+# state glyph we could substitute. So the title is taken over only once the
+# agent has gone quiet and stopped saying anything, and handed straight back
+# when work resumes. Zellij keeps tracking the program's title underneath, so
+# undo-rename-pane restores whatever Claude Code most recently set.
+#
+# ZELLIJ_PANE_ID is exported into the pane and inherited by claude, so this
+# targets the agent's own pane rather than whichever pane happens to be
+# focused.
+rename_pane() {
+    [[ -n "${ZELLIJ_PANE_ID:-}" ]] || return 0
+    command -v zellij &>/dev/null || return 0
+    zellij action rename-pane --pane-id "$ZELLIJ_PANE_ID" "$1" &>/dev/null || return 0
+}
+
+restore_pane() {
+    [[ -n "${ZELLIJ_PANE_ID:-}" ]] || return 0
+    command -v zellij &>/dev/null || return 0
+    zellij action undo-rename-pane --pane-id "$ZELLIJ_PANE_ID" &>/dev/null || return 0
+}
+
 case "$cmd" in
     session-start)
         write_state idle
         ;;
     session-end)
+        restore_pane
         clear_state
         ;;
     notify)
         write_state blocked
+        # Notification carries why it wants you (a permission request, or that
+        # it's been waiting); prefer that over a generic marker.
+        reason=$(echo "$input" | jq -r '.message // empty' | head -c 48)
+        rename_pane "⚠ ${reason:-needs you}"
         ;;
     start)
+        restore_pane
         write_state working
         date +%s > "$stamp_file"
         ;;
