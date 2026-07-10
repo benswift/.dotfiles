@@ -110,6 +110,11 @@ gsy() {
     return 1
   fi
 }
+# Shed a stale GIT_SSH_COMMAND pointing at the long-deleted weddle-gh key.
+# The value survives in the env of any zellij server started before the key
+# was removed (July 2026); this guard is inert once those servers are gone.
+[[ "$GIT_SSH_COMMAND" == *weddle-gh* ]] && unset GIT_SSH_COMMAND
+
 # zellij shortcuts
 zs() { zellij --session "${PWD##*/}" "$@"; }
 alias za="zellij attach"
