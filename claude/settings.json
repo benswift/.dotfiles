@@ -125,7 +125,7 @@
       "source": {
         "source": "git",
         "url": "https://gitlab.anu.edu.au/u2548636/astro-theme-anu.git",
-        "ref": "astro-theme-anu@v0.9.0"
+        "ref": "astro-theme-anu@v0.9.1"
       }
     }
   },
