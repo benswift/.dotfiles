@@ -121,66 +121,44 @@ sync_codex_profile() {
 
 sync_codex_skills() {
     local claude_skills="$HOME/.claude/plugins/marketplaces/ben/skills"
-    local codex_skills="$HOME/.codex/skills"
-    local codex_parent
-    codex_parent="$(dirname "$codex_skills")"
+    local agent_skills="$HOME/.agents/skills"
+    local legacy_codex_skills="$HOME/.codex/skills"
 
     if [[ ! -d "$claude_skills" ]]; then
         warn "ben marketplace skills missing at $claude_skills"
         return
     fi
 
-    mkdir -p "$codex_parent"
-
-    if [[ -L "$codex_skills" ]]; then
-        local link_target
-        link_target="$(readlink "$codex_skills")"
-        if [[ "$link_target" == "$claude_skills" ]]; then
-            local tmp_skills="$codex_parent/skills.tmp.$$"
-            mkdir -p "$tmp_skills"
-            if [[ -d "$claude_skills/.system" ]]; then
-                mv "$claude_skills/.system" "$tmp_skills/.system"
-            fi
-            rm "$codex_skills"
-            mv "$tmp_skills" "$codex_skills"
-        else
-            warn "$codex_skills is a symlink to $link_target, leaving it alone"
-            return
-        fi
-    elif [[ -e "$codex_skills" && ! -d "$codex_skills" ]]; then
-        warn "$codex_skills exists but is not a directory"
+    if [[ -e "$agent_skills" && ! -d "$agent_skills" ]]; then
+        warn "$agent_skills exists but is not a directory"
         return
-    else
-        mkdir -p "$codex_skills"
     fi
-
-    if [[ -d "$claude_skills/.system" ]]; then
-        if [[ ! -e "$codex_skills/.system" ]]; then
-            mv "$claude_skills/.system" "$codex_skills/.system"
-        else
-            local backup
-            backup="$codex_parent/skills.system-from-claude.$(date +%Y%m%d%H%M%S)"
-            mv "$claude_skills/.system" "$backup"
-            warn "Moved duplicate Claude .system skills to $backup"
-        fi
-    fi
+    mkdir -p "$agent_skills"
 
     local skill name dest existing
     for skill in "$claude_skills"/*; do
         [[ -d "$skill" ]] || continue
         name="$(basename "$skill")"
         [[ "$name" == .* ]] && continue
-        dest="$codex_skills/$name"
+        dest="$agent_skills/$name"
         if [[ -L "$dest" ]]; then
-            ln -sfn "$skill" "$dest"
+            local target
+            target="$(readlink "$dest")"
+            if [[ "$target" == "$claude_skills"/* ]]; then
+                ln -sfn "$skill" "$dest"
+            else
+                warn "Agent skill $dest links outside the ben marketplace, leaving it alone"
+            fi
         elif [[ -e "$dest" ]]; then
-            warn "Codex skill $dest already exists and is not a symlink"
+            warn "Agent skill $dest already exists and is not a symlink"
         else
             ln -s "$skill" "$dest"
         fi
     done
 
-    for existing in "$codex_skills"/*; do
+    # Remove stale links created by this sync, without touching independently
+    # installed skills such as agent-browser or dogfood.
+    for existing in "$agent_skills"/*; do
         [[ -L "$existing" ]] || continue
         local target
         target="$(readlink "$existing")"
@@ -189,10 +167,22 @@ sync_codex_skills() {
         fi
     done
 
-    info "Synchronised Codex personal skills from $claude_skills"
+    # Migrate links made by the previous implementation. Codex owns everything
+    # else in ~/.codex/skills, especially its generated .system directory.
+    if [[ -d "$legacy_codex_skills" ]]; then
+        for existing in "$legacy_codex_skills"/*; do
+            [[ -L "$existing" ]] || continue
+            local target
+            target="$(readlink "$existing")"
+            if [[ "$target" == "$claude_skills"/* ]]; then
+                rm "$existing"
+            fi
+        done
+    fi
+
+    info "Exposed Claude personal skills to Codex in $agent_skills"
 }
 
 sync_claude_plugins
 sync_codex_profile
-# sync_codex_skills intentionally not called --- Codex is unused at the moment.
-# Restore the call to re-link ~/.codex/skills from the ben marketplace clone.
+sync_codex_skills

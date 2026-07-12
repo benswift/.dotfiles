@@ -7,9 +7,9 @@
 # Entries are "repo-relative-source:target"; a leading ~ in the target is
 # expanded to $HOME by the consumer. Sources may be files or directories.
 #
-# Not listed here: ~/.codex/skills. bin/sync-agent-config can populate it
-# per-skill from the ben marketplace clone (which doesn't exist until claude
-# has run), but that call is currently disabled --- Codex is unused.
+# Not listed here: ~/.agents/skills. bin/sync-agent-config populates it per-skill
+# from the ben marketplace clone (which doesn't exist until claude has run),
+# while preserving skills installed independently by other tools.
 
 SYMLINK_MANIFEST=(
     # home directory dotfiles

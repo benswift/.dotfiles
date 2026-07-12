@@ -79,10 +79,10 @@ loaded as a Claude Code plugin. The setup:
   use. That directory is the single source of truth --- edit skills there,
   commit and push from there.
 - **Codex reads the same personal skills** via per-skill symlinks inside
-  `~/.codex/skills`. Codex keeps its generated `.system/` skills in its own
-  directory, so they do not dirty the private Claude marketplace clone.
-- **Skills appear to the model** as `ben:<skill-name>` (e.g.
-  `ben:pkb`).
+  `~/.agents/skills`, Codex's supported user-level skill directory. Existing
+  independently installed skills in that directory are left alone.
+- **Skills appear to Claude** as `ben:<skill-name>` (e.g. `ben:pkb`) and to
+  Codex by their unnamespaced skill name.
 
 To propagate changes across machines: push from the marketplace clone, then run
 `dotfiles update` elsewhere. That refreshes Claude plugins and re-syncs Codex

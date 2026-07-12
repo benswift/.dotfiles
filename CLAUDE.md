@@ -315,14 +315,13 @@ Codex CLI uses `~/.codex/instructions.md` for global instructions (symlinked to
 `project_doc_fallback_filenames` setting. Codex doesn't understand Claude Code's
 plugin mechanism, but it reads the raw skill directories fine.
 
-Personal skills are **not** currently synced into `~/.codex/skills`. The
-`sync_codex_skills` function in @bin/sync-agent-config still does the work ---
-it keeps `~/.codex/skills` as a Codex-owned directory, symlinks each personal
-skill from `~/.claude/plugins/marketplaces/ben/skills/` into it, and leaves
-Codex's generated `.system/` skills alone --- but the call is commented out at
-the bottom of the script because Codex is unused at the moment. Whatever sits in
-`~/.codex/skills` today is a stale snapshot from when it last ran. Restore the
-call to bring the sync back.
+Personal skills are shared with Codex by @bin/sync-agent-config. It symlinks
+each skill from `~/.claude/plugins/marketplaces/ben/skills/` into the supported
+user-level directory `~/.agents/skills`, leaving independently installed skills
+there alone. The marketplace clone remains the single source of truth: adding
+or removing a `ben` skill is reflected on the next `dotfiles update` without a
+second manifest. The sync also removes its legacy links from
+`~/.codex/skills`, while leaving Codex's generated `.system/` skills untouched.
 
 `~/.codex/config.toml` is Codex-owned, machine-local state: trusted project
 paths, dismissed notices, desktop/TUI state, and host-specific settings. It is
