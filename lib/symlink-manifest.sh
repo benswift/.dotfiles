@@ -61,7 +61,9 @@ SYMLINK_MANIFEST=(
 # Targets that tools rewrite in place (so a real file may already exist
 # there): back up the existing file before linking.
 SYMLINK_MANIFEST_WITH_BACKUP=(
-    "codex/config.toml:~/.codex/config.toml"
+    # Codex writes trust records and UI state to config.toml. The portable
+    # layer is a profile, selected by the zsh aliases and codex-zellij.
+    "codex/config.toml:~/.codex/dotfiles.config.toml"
     "gemini/settings.json:~/.gemini/settings.json"
     # `ya pkg add` rewrites this to record each plugin's rev and hash
     "yazi/package.toml:~/.config/yazi/package.toml"

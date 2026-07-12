@@ -285,7 +285,7 @@ The @claude/ folder includes:
 - @claude/CLAUDE.md - global agent instructions (symlinked to both
   `~/.claude/CLAUDE.md` and `~/.codex/instructions.md`)
 - @claude/settings.json - Claude Code settings
-- @codex/config.toml - portable Codex defaults
+- @codex/config.toml - portable Codex profile defaults
 - @gemini/settings.json - portable Gemini context settings
 
 Every personal skill lives in the ben plugin --- that is the single, exclusive
@@ -324,14 +324,21 @@ the bottom of the script because Codex is unused at the moment. Whatever sits in
 `~/.codex/skills` today is a stale snapshot from when it last ran. Restore the
 call to bring the sync back.
 
-`~/.codex/config.toml` is symlinked to @codex/config.toml, which holds only
-portable defaults (model, reasoning effort, personality, project doc fallback).
-Codex itself rewrites this file when it dismisses notices or records trusted
-projects, so expect occasional uncommitted churn in the repo --- discard with
-`git checkout codex/config.toml`, or run
-`git update-index --skip-worktree codex/config.toml` per-machine if it gets
-noisy. Machine-specific blocks (`[notice]`, `[tui.*]`, `[projects."..."]`)
-should not be committed.
+`~/.codex/config.toml` is Codex-owned, machine-local state: trusted project
+paths, dismissed notices, desktop/TUI state, and host-specific settings. It is
+deliberately not symlinked or tracked. The portable configuration instead lives
+in @codex/config.toml, symlinked to
+`~/.codex/dotfiles.config.toml` and loaded with `--profile dotfiles`.
+The `codex` and `oy` zsh aliases and @bin/codex-zellij add that flag, while
+@bin/sync-agent-config migrates the old `config.toml` symlink by retaining only
+machine-owned state.
+
+Put cross-platform defaults in the profile: model, reasoning effort,
+personality, project-instruction fallbacks, and any other setting that makes
+sense on every host. Keep absolute paths, provider/auth setup, per-project
+trust, and UI/onboarding state in the local base config. If a TUI preference is
+deliberately shared (for example a keymap), it may go in the profile; generated
+`[tui.*]` state stays local.
 
 ### Gemini CLI
 

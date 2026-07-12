@@ -2,9 +2,3 @@ model = "gpt-5.6-terra"
 model_reasoning_effort = "xhigh"
 personality = "pragmatic"
 project_doc_fallback_filenames = ["CLAUDE.md"]
-
-[projects."/Users/ben/projects/comp4020-repos/strproxy"]
-trust_level = "trusted"
-
-[projects."/Users/ben/projects/comp4020-agentic-coding-studio"]
-trust_level = "trusted"

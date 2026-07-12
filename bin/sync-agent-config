@@ -74,6 +74,51 @@ sync_claude_plugins() {
     fi
 }
 
+sync_codex_profile() {
+    local codex_parent="$HOME/.codex"
+    local base_config="$codex_parent/config.toml"
+    local legacy_profile="$DOTFILES_DIR/codex/config.toml"
+
+    mkdir -p "$codex_parent"
+
+    # Before the profile migration, config.toml was a symlink to the tracked
+    # defaults. Preserve only state Codex owns when replacing that old link
+    # with the local base configuration.
+    if [[ -L "$base_config" ]]; then
+        local link_target
+        link_target="$(readlink "$base_config")"
+        if [[ "$link_target" != "$legacy_profile" ]]; then
+            warn "$base_config is a symlink to $link_target, leaving it alone"
+            return
+        fi
+
+        local tmp_config
+        tmp_config="$(mktemp "$codex_parent/config.toml.migrate.XXXXXX")"
+        awk '
+            # Codex-generated tables that belong to this host, rather than
+            # its portable profile. Keep the complete TOML table, including
+            # nested subtables and comments.
+            function is_local_header(header) {
+                return header ~ /^\[projects\./ ||
+                    header ~ /^\[notice(\.|\])/ ||
+                    header ~ /^\[tui(\.|\])/ ||
+                    header ~ /^\[desktop(\.|\])/ ||
+                    header ~ /^\[external_config_migration_prompts(\.|\])/
+            }
+
+            /^\[/ { keep = is_local_header($0) }
+            keep { print }
+        ' "$base_config" > "$tmp_config"
+
+        rm "$base_config"
+        mv "$tmp_config" "$base_config"
+        info "Migrated Codex machine-local state to $base_config"
+    elif [[ ! -e "$base_config" ]]; then
+        : > "$base_config"
+        info "Created local Codex state file at $base_config"
+    fi
+}
+
 sync_codex_skills() {
     local claude_skills="$HOME/.claude/plugins/marketplaces/ben/skills"
     local codex_skills="$HOME/.codex/skills"
@@ -148,5 +193,6 @@ sync_codex_skills() {
 }
 
 sync_claude_plugins
+sync_codex_profile
 # sync_codex_skills intentionally not called --- Codex is unused at the moment.
 # Restore the call to re-link ~/.codex/skills from the ben marketplace clone.

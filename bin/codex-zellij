@@ -43,5 +43,5 @@ fi
 if session_exists "$SESSION_NAME"; then
     zellij attach "$SESSION_NAME"
 else
-    zellij -s "$SESSION_NAME" -- "$SHELL" -lic 'codex --dangerously-bypass-approvals-and-sandbox'
+    zellij -s "$SESSION_NAME" -- "$SHELL" -lic 'command codex --profile dotfiles --dangerously-bypass-approvals-and-sandbox'
 fi

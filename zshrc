@@ -35,7 +35,10 @@ alias zp="zed-preview"
 alias ay="claude --dangerously-skip-permissions --model opus"
 alias aym="claude --dangerously-skip-permissions --model opus --effort max"
 alias ayf="claude --dangerously-skip-permissions --model fable --effort high"
-alias oy="codex --dangerously-bypass-approvals-and-sandbox"
+# Codex keeps per-machine trust and UI state in ~/.codex/config.toml. Its
+# portable defaults live in the dotfiles profile, layered on every invocation.
+alias codex="command codex --profile dotfiles"
+alias oy="command codex --profile dotfiles --dangerously-bypass-approvals-and-sandbox"
 alias gyolo="gemini --yolo"
 sysup() {
   if [[ "$OSTYPE" == darwin* ]]; then
