@@ -162,9 +162,10 @@ most-recently-used first, so `Alt s` then Enter returns to the previous session
 the way cmd-tab does. Zellij's built-in session manager --- which also creates
 sessions and resurrects dead ones --- stays on `Ctrl o` then `w`.
 
-Each row is annotated with the Claude Code agents in that session (`⏳` working,
-`⚠` blocked, `✓` idle, `·` unknown). The two halves come from different places
-on purpose:
+Each row is annotated with the Claude Code agents in that session: the total
+count, then per-state counts colour-coded to match `hud`'s catppuccin palette
+(red blocked, yellow working, green idle, dim unknown). The two halves come from
+different places on purpose:
 
 - **how many agents**: the process tree. Each session's server runs as
   `zellij --server <sockdir>/<session>` and every agent chains up to one, so a
@@ -318,19 +319,18 @@ plugin mechanism, but it reads the raw skill directories fine.
 Personal skills are shared with Codex by @bin/sync-agent-config. It symlinks
 each skill from `~/.claude/plugins/marketplaces/ben/skills/` into the supported
 user-level directory `~/.agents/skills`, leaving independently installed skills
-there alone. The marketplace clone remains the single source of truth: adding
-or removing a `ben` skill is reflected on the next `dotfiles update` without a
-second manifest. The sync also removes its legacy links from
-`~/.codex/skills`, while leaving Codex's generated `.system/` skills untouched.
+there alone. The marketplace clone remains the single source of truth: adding or
+removing a `ben` skill is reflected on the next `dotfiles update` without a
+second manifest. The sync also removes its legacy links from `~/.codex/skills`,
+while leaving Codex's generated `.system/` skills untouched.
 
 `~/.codex/config.toml` is Codex-owned, machine-local state: trusted project
 paths, dismissed notices, desktop/TUI state, and host-specific settings. It is
 deliberately not symlinked or tracked. The portable configuration instead lives
-in @codex/config.toml, symlinked to
-`~/.codex/dotfiles.config.toml` and loaded with `--profile dotfiles`.
-The `codex` and `oy` zsh aliases and @bin/codex-zellij add that flag, while
-@bin/sync-agent-config migrates the old `config.toml` symlink by retaining only
-machine-owned state.
+in @codex/config.toml, symlinked to `~/.codex/dotfiles.config.toml` and loaded
+with `--profile dotfiles`. The `codex` and `oy` zsh aliases and
+@bin/codex-zellij add that flag, while @bin/sync-agent-config migrates the old
+`config.toml` symlink by retaining only machine-owned state.
 
 Put cross-platform defaults in the profile: model, reasoning effort,
 personality, project-instruction fallbacks, and any other setting that makes

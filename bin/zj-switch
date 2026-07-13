@@ -30,6 +30,16 @@ MRU_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/zj-switch/mru"
 MRU_DEPTH=50
 CURRENT="${ZELLIJ_SESSION_NAME:-}"
 
+# Agent states are colour-coded rather than glyph-coded --- easier to read at
+# a glance. Catppuccin mocha, matching bin/hud's palette. Rendered by fzf via
+# --ansi; fzf strips the codes from the selected line on output, so the
+# session-name extraction below never sees them.
+C_BLOCKED=$'\e[1;38;2;243;139;168m' # red, bold: needs you
+C_WORKING=$'\e[38;2;249;226;175m'   # yellow
+C_IDLE=$'\e[38;2;166;227;161m'      # green
+C_UNKNOWN=$'\e[38;2;108;112;134m'   # dim grey: no state file
+C_RESET=$'\e[0m'
+
 # Live sessions only. `list-sessions` marks dead-but-resurrectable ones
 # "(EXITED - attach to resurrect)"; those are the session manager's business.
 live_sessions() {
@@ -62,8 +72,10 @@ agent_counts() {
         }'
 }
 
-# Summarise a session's agent states as a compact badge, e.g. "2 ⏳1 ✓1".
-# Takes the session name and its authoritative agent count.
+# Summarise a session's agent states as a compact badge: the total agent
+# count, then one colour-coded count per state (blocked red, working yellow,
+# idle green, unknown dim). Takes the session name and its authoritative
+# agent count.
 badge() {
     local session="$1" total="$2" dir="$STATE_DIR/$1"
     local working=0 idle=0 blocked=0 accounted=0
@@ -90,10 +102,10 @@ badge() {
     fi
 
     local out="$total"
-    ((blocked)) && out+=" ⚠${blocked}"
-    ((working)) && out+=" ⏳${working}"
-    ((idle)) && out+=" ✓${idle}"
-    ((total > accounted)) && out+=" ·$((total - accounted))"
+    ((blocked)) && out+=" ${C_BLOCKED}${blocked}${C_RESET}"
+    ((working)) && out+=" ${C_WORKING}${working}${C_RESET}"
+    ((idle)) && out+=" ${C_IDLE}${idle}${C_RESET}"
+    ((total > accounted)) && out+=" ${C_UNKNOWN}$((total - accounted))${C_RESET}"
     printf '%s' "$out"
 }
 
@@ -169,9 +181,9 @@ main() {
 
     local sel
     sel="$(printf '%s\n' "${rows[@]}" |
-        fzf --layout=reverse --height=100% --info=inline --no-multi \
+        fzf --ansi --layout=reverse --height=100% --info=inline --no-multi \
             --prompt='switch to > ' \
-            --header='⏳ working   ⚠ blocked   ✓ idle   · unknown')" || exit 0
+            --header="${C_BLOCKED}blocked${C_RESET}   ${C_WORKING}working${C_RESET}   ${C_IDLE}idle${C_RESET}   ${C_UNKNOWN}unknown${C_RESET}")" || exit 0
 
     local name="${sel%% *}"
     [[ -n "$name" ]] || exit 0
