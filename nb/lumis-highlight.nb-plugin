@@ -42,16 +42,32 @@ if command -v lumis &> /dev/null; then
       return 0
     fi
 
+    # The same language overrides as bin/ts-cat, for the extensions lumis
+    # doesn't map itself: .mdx is markdown-with-JSX, and xtlang is close
+    # enough to scheme for display.
+    local _lang=
+    case "${_path:-${_extension}}" in
+      *.mdx | mdx) _lang="markdown" ;;
+      *.xtm | xtm) _lang="scheme" ;;
+    esac
+
     # lumis accepts extensions as language ids (md, py, ...) and passes
     # content through as plain text when it has no matching parser, so no
     # capability probe is needed. The explicit fallback only catches lumis
-    # itself failing (e.g. a parser cache miss with no network).
+    # itself failing (e.g. a parser cache miss with no network). The branches
+    # are spelled out rather than built with ${_lang:+...} because nb runs
+    # with IFS=$'\n\t', which would leave "--language scheme" as one word.
     if [[ -n "${_path:-}" ]]; then
-      lumis highlight --theme catppuccin_mocha "${_path}" 2>/dev/null ||
-        cat "${_path}"
+      if [[ -n "${_lang:-}" ]]; then
+        lumis highlight --language "${_lang}" --theme catppuccin_mocha \
+          "${_path}" 2>/dev/null || cat "${_path}"
+      else
+        lumis highlight --theme catppuccin_mocha "${_path}" 2>/dev/null ||
+          cat "${_path}"
+      fi
     else
-      lumis highlight --language "${_extension}" --theme catppuccin_mocha \
-        2>/dev/null || cat
+      lumis highlight --language "${_lang:-${_extension}}" \
+        --theme catppuccin_mocha 2>/dev/null || cat
     fi
   }
 fi

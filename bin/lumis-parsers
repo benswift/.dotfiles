@@ -37,6 +37,7 @@ PARSERS=(
     markdown_inline
     python
     rust
+    scheme
     scss
     toml
     typescript

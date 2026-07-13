@@ -37,8 +37,10 @@ THEME="${TS_CAT_THEME:-catppuccin_mocha}"
 
 # lumis picks a language from the file extension (falling back to shebang).
 # These are the cases where that lookup misses but an existing parser is the
-# right answer anyway: .mdx is markdown-with-JSX, and jsonc is JSON that the
-# error-tolerant parser copes with.
+# right answer anyway: .mdx is markdown-with-JSX, jsonc is JSON that the
+# error-tolerant parser copes with, and xtlang is close enough to scheme for
+# a preview (comments, strings, numbers, parens; no extempore parser exists
+# in lumis's registry).
 #
 # `*.zshrc` already covers `~/.zshrc`, since `*` matches the empty string. The
 # bare `zshrc`/`zshenv` are this repo's own copies, which carry no leading dot.
@@ -47,6 +49,7 @@ case "$file" in
 *.mdx | *.markdown | *.mdown | *.mkd) lang="markdown" ;;
 *.zsh | *.zshrc | *.zshenv | zshrc | zshenv) lang="zsh" ;;
 *.jsonc) lang="json" ;;
+*.xtm) lang="scheme" ;;
 esac
 
 fallback() {
