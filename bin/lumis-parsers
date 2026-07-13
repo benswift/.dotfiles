@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+#
+# lumis-parsers --- pre-fetch the tree-sitter WASM parsers that bin/ts-cat
+# (and hence yazi's preview pane, and the nb lumis plugin) highlights with.
+#
+# lumis downloads any missing parser on first use, so this list is a warm-up,
+# not a gate: it covers the languages previewed often enough that a first
+# preview shouldn't wait on the network, plus the injection targets they pull
+# in (markdown needs markdown_inline; astro needs css and typescript). The
+# cache lives in ~/.local/share/lumis and is shared with every other lumis
+# consumer.
+#
+# Run by install.sh and `dotfiles update`. Idempotent: fetch skips parsers
+# already cached; --update re-downloads the cached ones to pick up new
+# versions.
+
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+
+source "$DOTFILES_DIR/lib/log.sh"
+
+PARSERS=(
+    astro
+    bash
+    c
+    css
+    elixir
+    go
+    heex
+    html
+    javascript
+    json
+    kdl
+    lua
+    markdown
+    markdown_inline
+    python
+    rust
+    scss
+    toml
+    typescript
+    typst
+    yaml
+    zsh
+)
+
+usage() {
+    cat <<EOF
+Usage: lumis-parsers [OPTIONS]
+
+Pre-fetch the tree-sitter WASM parsers used by ts-cat.
+
+Options:
+  --update     Also re-download every cached parser to get new versions
+  -h, --help   Show this help message
+EOF
+}
+
+UPDATE=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --update)
+        UPDATE=true
+        shift
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        echo "Unknown option: $1" >&2
+        usage >&2
+        exit 1
+        ;;
+    esac
+done
+
+command -v lumis >/dev/null || {
+    echo "lumis not found (mise install)" >&2
+    exit 1
+}
+
+if [[ "$UPDATE" == "true" ]]; then
+    lumis parsers update --all >/dev/null || warn "parser update failed"
+fi
+
+lumis parsers fetch "${PARSERS[@]}" >/dev/null
+info "Fetched ${#PARSERS[@]} parsers into lumis's cache"

@@ -8,18 +8,20 @@
 # YAML frontmatter in a markdown file and the TypeScript fence at the top of
 # an .astro component get highlighted as YAML and TypeScript.
 #
+# Highlighting is done by lumis (tree-sitter parsing with nvim-treesitter
+# queries; https://lumis.sh), installed via mise. Its parsers are WASM files
+# cached in ~/.local/share/lumis --- bin/lumis-parsers pre-fetches the common
+# set, and lumis silently downloads any other parser on first use. A file it
+# has no parser for is passed through as plain text, so no output-sniffing is
+# needed to detect that case.
+#
 # Two constraints come from piper, and both are load-bearing:
 #
-#   1. Anything this script writes to stderr *replaces* the preview. The
-#      tree-sitter CLI warns loudly on stdout-empty files it has no grammar
-#      for, so all stderr is discarded and we detect that case by the empty
-#      stdout instead.
+#   1. Anything this script writes to stderr *replaces* the preview, so all
+#      stderr is discarded.
 #   2. piper kills us once it has read enough lines to fill the pane, so
 #      exiting non-zero on SIGPIPE is normal and must not be treated as an
 #      error.
-#
-# Grammars are installed by bin/ts-grammars and found via the
-# parser-directories list in ~/.config/tree-sitter/config.json.
 
 set -uo pipefail
 
@@ -30,17 +32,21 @@ file="${1:-}"
 # and tree-sitter is error-tolerant enough that a truncated tail is harmless.
 MAX_LINES="${TS_CAT_MAX_LINES:-5000}"
 
-# tree-sitter picks a grammar from the file extension. These are the ones
-# where that lookup misses but an existing grammar is the right answer
-# anyway: .mdx is markdown-with-JSX, and zsh is close enough to bash.
+# Matches the theme Helix and zj-switch use.
+THEME="${TS_CAT_THEME:-catppuccin_mocha}"
+
+# lumis picks a language from the file extension (falling back to shebang).
+# These are the cases where that lookup misses but an existing parser is the
+# right answer anyway: .mdx is markdown-with-JSX, and jsonc is JSON that the
+# error-tolerant parser copes with.
 #
 # `*.zshrc` already covers `~/.zshrc`, since `*` matches the empty string. The
 # bare `zshrc`/`zshenv` are this repo's own copies, which carry no leading dot.
-scope=""
+lang=""
 case "$file" in
-*.mdx | *.markdown | *.mdown | *.mkd) scope="text.markdown" ;;
-*.zsh | *.zshrc | *.zshenv | zshrc | zshenv) scope="source.bash" ;;
-*.jsonc) scope="source.json" ;;
+*.mdx | *.markdown | *.mdown | *.mkd) lang="markdown" ;;
+*.zsh | *.zshrc | *.zshenv | zshrc | zshenv) lang="zsh" ;;
+*.jsonc) lang="json" ;;
 esac
 
 fallback() {
@@ -55,10 +61,10 @@ fallback() {
     exit 0
 }
 
-command -v tree-sitter >/dev/null 2>&1 || fallback
+command -v lumis >/dev/null 2>&1 || fallback
 
 # Truncate into a scratch file that keeps the original name, so the extension
-# still drives grammar selection.
+# still drives language selection.
 src="$file"
 tmp=""
 if [[ "$(wc -l <"$file" 2>/dev/null || echo 0)" -gt "$MAX_LINES" ]]; then
@@ -68,13 +74,13 @@ if [[ "$(wc -l <"$file" 2>/dev/null || echo 0)" -gt "$MAX_LINES" ]]; then
     head -n "$MAX_LINES" -- "$file" >"$src" 2>/dev/null || fallback
 fi
 
-# Buffered rather than streamed: we only learn that no grammar matched by
-# seeing empty stdout, and by then a streaming write would have committed us.
-# Preview-sized files make the buffer cheap (~30ms on a typical source file).
-if [[ -n "$scope" ]]; then
-    out="$(tree-sitter highlight --scope "$scope" -- "$src" 2>/dev/null)"
+# Buffered rather than streamed, so a lumis failure (e.g. a parser cache miss
+# with no network) can still fall back to bat instead of committing a partial
+# preview.
+if [[ -n "$lang" ]]; then
+    out="$(lumis highlight --language "$lang" --theme "$THEME" "$src" 2>/dev/null)"
 else
-    out="$(tree-sitter highlight -- "$src" 2>/dev/null)"
+    out="$(lumis highlight --theme "$THEME" "$src" 2>/dev/null)"
 fi
 
 [[ -n "$out" ]] || fallback

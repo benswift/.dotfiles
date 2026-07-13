@@ -84,8 +84,8 @@ etc.). Key scripts:
 - `pkb-agent` --- run scheduled "EA" tasks (headless claude over the notebook);
   task definitions live in `~/.nb/home/tasks/`, one systemd timer
   (`pkb-agent.timer`, weddle only) fires everything due
-- `ts-cat`, `ts-grammars` --- tree-sitter syntax highlighting for yazi's preview
-  pane (see "File manager (yazi)" below)
+- `ts-cat`, `lumis-parsers` --- tree-sitter syntax highlighting for yazi's
+  preview pane (see "File manager (yazi)" below)
 
 See the "Microsoft 365 (calendar and Teams)" section below for this tooling and
 why it sidesteps Microsoft Graph.
@@ -216,33 +216,33 @@ So previews are routed through tree-sitter instead, which does follow
 injections: @yazi/yazi.toml prepends a previewer that pipes every text mime
 through `piper.yazi` into @bin/ts-cat.
 
-- @bin/ts-cat --- highlights a file to stdout with `tree-sitter highlight`,
-  falling back to bat and then plain `cat` when no grammar matches. Two
+- @bin/ts-cat --- highlights a file to stdout with `lumis highlight`
+  (https://lumis.sh: tree-sitter parsing with nvim-treesitter queries, built-in
+  catppuccin_mocha theme, mise-installed), falling back to bat and then plain
+  `cat` when lumis is missing or fails. lumis passes files it has no parser for
+  through as plain text, so no output-sniffing is needed for that case. Two
   constraints come from piper and are load-bearing: anything written to stderr
-  _replaces_ the preview (so all stderr is discarded, and the no-grammar case is
-  detected by empty stdout), and piper kills the process once the pane is full.
-  Also useful standalone as a `cat` that understands injections.
-- @bin/ts-grammars --- clones the ~20 grammars into
-  `~/.local/share/tree-sitter/grammars` (build artefacts, so not tracked here).
-  Run by `install.sh` and `dotfiles update`; `--warm` pre-compiles them.
-- @tree-sitter/config.json --- names the grammar directory and carries the
-  catppuccin-mocha theme. The tree-sitter CLI derives its recognised capture
-  names from the theme's keys, so a capture missing from that file renders
-  unstyled.
-- @tree-sitter/patches/ --- overlaid onto each checkout after every fetch. Four
-  grammars need it: kdl, scss and astro predate the CLI's `tree-sitter.json`
-  manifest, and typst ships an empty one with its queries nested a level down.
-  The astro patch also adds an injections rule so a plain `<style>` block
-  highlights as CSS (upstream only handles `lang="scss"`).
+  _replaces_ the preview (so all stderr is discarded), and piper kills the
+  process once the pane is full. Also useful standalone as a `cat` that
+  understands injections.
+- @bin/lumis-parsers --- pre-fetches the ~20 common WASM parsers into lumis's
+  cache (`~/.local/share/lumis`, build artefacts, so not tracked here). Run by
+  `install.sh` and `dotfiles update` (the latter with `--update` to pick up new
+  parser versions). This is a warm-up, not a gate: lumis silently downloads any
+  missing parser from unpkg on first use.
+
+The same engine backs `nb show` via @nb/lumis-highlight.nb-plugin, which
+overrides nb's internal bat-based highlighting function (plugins are sourced
+after nb's own definitions, so the redefinition wins).
 
 The plugin itself is pinned in @yazi/package.toml and installed with
 `ya pkg install`. Note `~/.config/yazi/plugins` is owned by `ya pkg`, which is
 why the yazi configs are symlinked file-by-file rather than as a directory.
 
-Adding a language means appending its repo to the `GRAMMARS` array in
-@bin/ts-grammars. If the extension doesn't match the grammar's declared
-`file-types` (as with `.mdx`), add a scope override to the `case` in
-@bin/ts-cat.
+Adding a language means nothing at all if lumis publishes a parser for it
+(auto-download covers it); append it to the `PARSERS` array in
+@bin/lumis-parsers if it's previewed often. If the extension doesn't map to a
+parser (as with `.mdx`), add a language override to the `case` in @bin/ts-cat.
 
 ## AI coding agents
 

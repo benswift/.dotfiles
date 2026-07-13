@@ -67,10 +67,6 @@ SYMLINK_MANIFEST_WITH_BACKUP=(
     "gemini/settings.json:~/.gemini/settings.json"
     # `ya pkg add` rewrites this to record each plugin's rev and hash
     "yazi/package.toml:~/.config/yazi/package.toml"
-    # the tree-sitter CLI writes a default config here the first time it runs,
-    # so a real file is usually sitting in the way. Ours names the grammar
-    # checkouts (populated by bin/ts-grammars) and carries the highlight theme.
-    "tree-sitter/config.json:~/.config/tree-sitter/config.json"
 )
 
 # nb plugins are globbed rather than listed: one link per *.nb-plugin file,

@@ -102,12 +102,12 @@ install_mise_tools() {
 }
 
 setup_previewers() {
-    info "Installing yazi plugins and tree-sitter grammars..."
+    info "Installing yazi plugins and tree-sitter parsers..."
     eval "$(mise activate bash)"
     # piper.yazi, pinned in yazi/package.toml; yazi/yazi.toml routes previews
     # through it into bin/ts-cat
     ya pkg install || warn "ya pkg install failed --- yazi previews will use the built-in previewer"
-    "$DOTFILES_DIR/bin/ts-grammars" --warm || warn "grammar sync failed --- ts-cat will fall back to bat"
+    "$DOTFILES_DIR/bin/lumis-parsers" || warn "parser fetch failed --- ts-cat will fall back to bat"
 }
 
 install_claude() {

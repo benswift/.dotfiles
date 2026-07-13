@@ -362,7 +362,7 @@ update() {
     git -C "$DOTFILES_DIR" pull --rebase
     "$DOTFILES_DIR/create_symlinks.sh"
     "$DOTFILES_DIR/bin/sync-agent-config" --update-claude
-    "$DOTFILES_DIR/bin/ts-grammars" || echo "grammar sync failed --- yazi previews fall back to bat"
+    "$DOTFILES_DIR/bin/lumis-parsers" --update || echo "parser sync failed --- yazi previews fall back to bat"
     echo "Done!"
 }
 
