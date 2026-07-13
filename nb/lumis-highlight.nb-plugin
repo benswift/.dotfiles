@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+###############################################################################
+# lumis-highlight.nb-plugin
+#
+# Highlight `nb show` (and everything else that renders note content) with
+# lumis instead of bat, by overriding nb's _highlight_syntax_if_available().
+# lumis follows tree-sitter language injections, so the YAML frontmatter atop
+# a note gets highlighted as YAML and fenced code blocks as their own
+# language --- the same engine bin/ts-cat uses for yazi's preview pane.
+#
+# Overriding an internal function is possible because nb sources plugins
+# after its own definitions, and it's inherently coupled to nb's interface:
+# the argument is either a path (contains a slash) or a bare extension, with
+# stdin holding the content in the extension case. If an nb update changes
+# that contract, delete this plugin and nb falls back to bat unharmed ---
+# which is also what happens when lumis isn't installed, since the override
+# is only applied when it is.
+#
+# Installation: symlinked into ~/.nb/.plugins by create_symlinks.sh.
+###############################################################################
+
+if command -v lumis &> /dev/null; then
+  _highlight_syntax_if_available() {
+    local _extension=
+    local _path=
+
+    if [[ "${1:-}" =~ / ]]; then
+      _path="${1}"
+    elif [[ -n "${1:-}" ]]; then
+      _extension="${1}"
+    else
+      _extension="md"
+    fi
+
+    if ! ((_COLOR_ENABLED)); then
+      if [[ -n "${_path:-}" ]]; then
+        cat "${_path}"
+      else
+        cat
+      fi
+
+      return 0
+    fi
+
+    # lumis accepts extensions as language ids (md, py, ...) and passes
+    # content through as plain text when it has no matching parser, so no
+    # capability probe is needed. The explicit fallback only catches lumis
+    # itself failing (e.g. a parser cache miss with no network).
+    if [[ -n "${_path:-}" ]]; then
+      lumis highlight --theme catppuccin_mocha "${_path}" 2>/dev/null ||
+        cat "${_path}"
+    else
+      lumis highlight --language "${_extension}" --theme catppuccin_mocha \
+        2>/dev/null || cat
+    fi
+  }
+fi
