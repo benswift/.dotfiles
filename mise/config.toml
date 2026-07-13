@@ -21,6 +21,10 @@ fzf = "latest"
 # bin/ts-cat's fallback previewer. Via mise rather than brew/apt so the binary
 # is called `bat` on both platforms (Debian's package installs it as `batcat`).
 bat = "latest"
+# bin/ts-cat's highlighter (tree-sitter with nvim-treesitter queries; WASM
+# parsers cached in ~/.local/share/lumis by bin/lumis-parsers). Release tags
+# are cargo-lumis-cli/vX.Y.Z, which the ubi backend resolves fine.
+"ubi:leandrocp/lumis" = "latest"
 # Editor tooling invoked as bare binaries (helix LSP/formatters and the
 # bin/claude-format hook), never via `uv run`, so they must be on PATH globally.
 ruff = "latest"
@@ -37,7 +41,6 @@ oxipng = "latest"
 flyctl = "latest"
 oxfmt = "latest"
 typstyle = "latest"
-tree-sitter = "latest"
 # headless-terminal MCP server (drives neomutt and other TUIs from Claude
 # Code). Release ships bare per-target binaries, so pin the exe name.
 "github:memextech/ht-mcp" = { version = "latest", exe = "ht-mcp" }
