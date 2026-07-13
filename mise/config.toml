@@ -35,6 +35,9 @@ flyctl = "latest"
 oxfmt = "latest"
 typstyle = "latest"
 tree-sitter = "latest"
+# headless-terminal MCP server (drives neomutt and other TUIs from Claude
+# Code). Release ships bare per-target binaries, so pin the exe name.
+"github:memextech/ht-mcp" = { version = "latest", exe = "ht-mcp" }
 
 [settings]
 idiomatic_version_file_enable_tools = []
