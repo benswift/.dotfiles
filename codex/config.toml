@@ -1,5 +1,9 @@
 personality = "pragmatic"
 project_doc_fallback_filenames = ["CLAUDE.md"]
 
+[tui]
+alternate_screen = "never"
+
 [tui.model_availability_nux]
-"gpt-5.6-sol" = 2
+"gpt-5.6-sol" = 3
+
