@@ -47,14 +47,23 @@ stamp_file="$stamp_dir/claude-turn-$sid"
 # The pid of the claude process this hook was spawned from, stored alongside
 # the state so zj-switch can discard entries whose agent was killed outright
 # and never fired session-end.
+#
+# The claude ancestor only counts if it chains on up to a `zellij --server`
+# process --- the same test zj-switch's ps pass applies when counting agents.
+# Claude Code's daemon-hosted background sessions (`claude bg-pty-host` under
+# `claude daemon run`, a child of init) inherit ZELLIJ_* from the pane that
+# spawned them but own no pane, and recording them would leave a session's
+# state files disagreeing with the process tree.
 claude_pid() {
-    local p="$PPID" args
+    local p="$PPID" args agent=""
     while [[ -n "$p" && "$p" != 1 ]]; do
         args="$(ps -o args= -p "$p" 2>/dev/null)" || return 0
-        [[ "$args" == claude* ]] && {
-            printf '%s' "$p"
+        if [[ -z "$agent" && "$args" == claude* ]]; then
+            agent="$p"
+        elif [[ -n "$agent" && "$args" == *"zellij --server"* ]]; then
+            printf '%s' "$agent"
             return 0
-        }
+        fi
         p="$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ')" || return 0
     done
 }
