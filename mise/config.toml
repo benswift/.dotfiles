@@ -27,10 +27,13 @@ ruff = "latest"
 ty = "latest"
 marksman = "latest"
 rclone = "latest"
+# mergiraf is Codeberg-only (no GitHub releases, not in mise's registry), so
+# it's the one formatter here with no cross-platform prebuilt binary --- cargo
+# compiles it everywhere. The rest below pull prebuilt release binaries.
 "cargo:mergiraf" = "latest"
-"cargo:oxipng" = "latest"
-"cargo:tex-fmt" = "latest"
-"cargo:kdlfmt" = "latest"
+oxipng = "latest"
+"github:WGUNDERWOOD/tex-fmt" = { version = "latest", exe = "tex-fmt" }
+"github:hougesen/kdlfmt" = { version = "latest", exe = "kdlfmt" }
 flyctl = "latest"
 oxfmt = "latest"
 typstyle = "latest"
