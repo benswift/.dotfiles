@@ -4,6 +4,7 @@ title: Contribute extempore language support upstream to lumis
 status: To Do
 assignee: []
 created_date: '2026-07-13 22:54'
+updated_date: '2026-07-14 00:42'
 labels:
   - upstream
 dependencies: []
@@ -23,3 +24,9 @@ lumis (https://lumis.sh) now powers ts-cat / yazi previews and nb show highlight
 - [ ] #3 lumis highlight file.xtm renders xtlang-aware highlighting (bind-func etc.), verified locally before the PR is opened
 - [ ] #4 once released, the scheme fallback mappings for .xtm in bin/ts-cat and nb/lumis-highlight.nb-plugin are removed
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Grammar freshened 2026-07-14 (rev cd9f1b5): s7 reader-model fixes (string escapes, signed radix literals, sharp_constant fallback, comments between quote mark and datum, scanner brace fix) plus queries/indents.scm added 2026-06-25. The lumis PR should pin rev cd9f1b5 or later. Related: MDX feasibility issue filed at https://github.com/leandrocp/lumis/issues/1011 with prototype branch benswift/lumis@mdx-prototype — the maintainer's response there will also signal appetite for the extempore addition, and the prototype's languages.toml/queries/feature-flag wiring is the template to follow.
+<!-- SECTION:NOTES:END -->
