@@ -262,7 +262,7 @@ write_files:
       Type=simple
       Environment="WAYLAND_DISPLAY=wayland-0"
       ExecStartPre=/bin/bash -c 'while [ ! -S "/run/user/$(id -u)/${WAYLAND_DISPLAY}" ]; do sleep 0.5; done'
-      ExecStart=/bin/bash -c 'URL=$(cat /boot/firmware/kiosk-url.txt 2>/dev/null || echo "@URL@"); BROWSER=$(command -v chromium || command -v chromium-browser); exec "$BROWSER" --kiosk --no-first-run --noerrdialogs --disable-infobars --disable-pinch --disable-component-update --autoplay-policy=no-user-gesture-required --check-for-update-interval=31536000 --ozone-platform=wayland "$URL"'
+      ExecStart=/bin/bash -c 'URL=$(cat /boot/firmware/kiosk-url.txt 2>/dev/null || echo "@URL@"); BROWSER=$(command -v chromium || command -v chromium-browser); exec "$BROWSER" --kiosk --password-store=basic --no-first-run --noerrdialogs --disable-infobars --disable-pinch --disable-component-update --autoplay-policy=no-user-gesture-required --check-for-update-interval=31536000 --ozone-platform=wayland "$URL"'
       Restart=always
       RestartSec=5
 
