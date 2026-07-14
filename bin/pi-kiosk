@@ -375,7 +375,9 @@ EOF
     local wifi_cmds=""
     if [[ -n "$wifi_ssid" ]]; then
         wifi_cmds="  - rfkill unblock wifi || true
-  - raspi-config nonint do_wifi_country @WIFI_COUNTRY@ || true"
+  - raspi-config nonint do_wifi_country @WIFI_COUNTRY@ || true
+  # pick up connection files written after NetworkManager started
+  - nmcli connection reload || true"
     fi
 
     local tailscale_cmds=""
