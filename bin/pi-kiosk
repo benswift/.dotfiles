@@ -1,0 +1,544 @@
+#!/usr/bin/env bash
+#
+# pi-kiosk --- flash an SD card that boots a Raspberry Pi straight into a
+# fullscreen Chromium kiosk at a given URL, joined to Tailscale.
+#
+# The heavy lifting is done by cloud-init, which ships on every Raspberry Pi
+# OS image since the Trixie release (Nov 2025): flash the stock desktop image,
+# then drop `user-data` and `network-config` onto the FAT32 boot partition.
+# First boot creates the user, joins the wifi, installs Tailscale, and wires
+# up a labwc session whose only job is running Chromium in kiosk mode. No SDM,
+# no chroot image surgery --- this replaces the SDM pipeline in the panic and
+# imaginative-restoration repos, from which the kiosk session config is ported.
+#
+#   pi-kiosk --url https://example.com --hostname lobby-pi \
+#            --wifi-ssid MyNet --wifi-password secret \
+#            --tailscale-authkey tskey-auth-...
+#
+# The kiosk URL lives at /kiosk-url.txt on the boot partition, so it can be
+# changed later by mounting the card on any machine, or on the running Pi
+# with `sudo kiosk-set-url <url>` (e.g. over `tailscale ssh`).
+#
+# Notes:
+#   - Pi 4/5 are the supported targets. The image boots a Pi 3, but 1 GB of
+#     RAM plus a known Chromium-on-Pi-3 regression make that best-effort.
+#   - Tailscale is installed on first boot, so the Pi needs network then
+#     (it's an online kiosk; it needs network anyway).
+#   - Tailscale auth keys expire (90 days max). For kiosks that should never
+#     drop off the tailnet, use a key that tags the device (tagged nodes
+#     never expire) or disable key expiry in the admin console after join.
+
+set -euo pipefail
+# Bash 5.2+ expands & in ${var//pat/repl} replacements to the matched pattern,
+# which would corrupt any substituted value containing & (shell commands in
+# the templates, passwords, auth keys). Restore literal replacement.
+shopt -u patsub_replacement 2>/dev/null || true
+
+readonly IMAGE_URL="${PI_KIOSK_IMAGE_URL:-https://downloads.raspberrypi.com/raspios_arm64_latest}"
+readonly CACHE_DIR="${PI_KIOSK_CACHE_DIR:-$HOME/.cache/raspios-images}"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+info() { echo -e "${GREEN}$*${NC}"; }
+warn() { echo -e "${YELLOW}$*${NC}"; }
+die() {
+    echo -e "${RED}Error: $*${NC}" >&2
+    exit 1
+}
+
+usage() {
+    cat <<EOF
+Usage: pi-kiosk [OPTIONS]
+
+Flash an SD card with Raspberry Pi OS configured as a Chromium web kiosk.
+
+Required:
+    --url <url>                  URL to display in kiosk mode
+
+Identity:
+    --hostname <name>            Hostname (default: pi-kiosk)
+    --username <user>            Admin account name (default: kiosk)
+    --password <pass>            Admin account password (default: kiosk)
+    --ssh-key <path>             SSH public key for passwordless login
+
+Network:
+    --wifi-ssid <ssid>           WiFi network name
+    --wifi-password <pass>       WiFi password (WPA2-PSK)
+    --wifi-enterprise-user <u>   Enterprise (802.1X) WiFi username
+    --wifi-enterprise-pass <p>   Enterprise (802.1X) WiFi password
+    --wifi-country <cc>          WiFi regulatory country (default: AU)
+    --tailscale-authkey <key>    Tailscale auth key for automatic join
+
+Other:
+    --device <dev>               SD card device (default: auto-detect)
+    --test                       Generate config into a temp dir; don't flash
+
+Examples:
+    pi-kiosk --url https://panic.fly.dev/ --hostname panic-lobby \\
+        --wifi-ssid MyNet --wifi-password secret \\
+        --tailscale-authkey tskey-auth-... --ssh-key ~/.ssh/id_ed25519.pub
+EOF
+    exit "${1:-1}"
+}
+
+check_required_tools() {
+    local missing=() cmd
+    for cmd in curl xz dd lsblk openssl mktemp; do
+        command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+    done
+    ((${#missing[@]} == 0)) || die "missing required tools: ${missing[*]}"
+}
+
+# ---------------------------------------------------------------------------
+# SD card detection (ported from panic/rpi/pi-setup.sh). sd* devices must be
+# removable; mmcblk* readers are accepted regardless, because built-in SD
+# readers often report removable=0. Size-gated to 2--256GB either way, which
+# excludes system disks.
+find_sd_card() {
+    local devices=() device_info=() path name device removable size size_gb model
+
+    for path in /sys/block/*; do
+        name="${path##*/}"
+        [[ "$name" =~ ^(sd[a-z]+|mmcblk[0-9]+)$ ]] || continue
+        device="/dev/$name"
+        removable=$(cat "$path/removable" 2>/dev/null || echo 0)
+        [[ "$name" == sd* && "$removable" != 1 ]] && continue
+        size=$(lsblk -b -d -n -o SIZE "$device" 2>/dev/null || echo 0)
+        size_gb=$((size / 1024 / 1024 / 1024))
+        ((size_gb >= 2 && size_gb <= 256)) || continue
+        model=$(lsblk -d -n -o MODEL "$device" 2>/dev/null | tr -s ' ' || echo Unknown)
+        devices+=("$device")
+        device_info+=("${size_gb}GB - ${model:-Unknown}")
+    done
+
+    ((${#devices[@]} > 0)) || die "no SD card found --- insert one and re-run (or pass --device)"
+
+    if ((${#devices[@]} == 1)); then
+        warn "Found SD card: ${devices[0]} (${device_info[0]})" >&2
+        echo "${devices[0]}"
+        return 0
+    fi
+
+    warn "Multiple candidate devices:" >&2
+    local i
+    for i in "${!devices[@]}"; do
+        echo "  $((i + 1))) ${devices[$i]} - ${device_info[$i]}" >&2
+    done
+    local selection
+    read -r -p "Select device (1-${#devices[@]}): " selection
+    if ! [[ "$selection" =~ ^[0-9]+$ ]] || ((selection < 1 || selection > ${#devices[@]})); then
+        die "invalid selection"
+    fi
+    echo "${devices[$((selection - 1))]}"
+}
+
+# ---------------------------------------------------------------------------
+# Image download. IMAGE_URL is Raspberry Pi's "latest" redirect; resolve it so
+# the cache is keyed by the real release filename and a new release triggers a
+# fresh download. Only the .xz is cached --- flashing decompresses on the fly.
+fetch_image() {
+    local resolved filename cached
+    resolved=$(curl -fsSIL -o /dev/null -w '%{url_effective}' "$IMAGE_URL") ||
+        die "could not resolve image URL: $IMAGE_URL"
+    filename=$(basename "$resolved")
+    cached="$CACHE_DIR/$filename"
+
+    if [[ -f "$cached" ]]; then
+        warn "Using cached image: $filename" >&2
+    else
+        warn "Downloading $filename ..." >&2
+        mkdir -p "$CACHE_DIR"
+        curl -fL -o "$cached.partial" "$resolved" >&2 || {
+            rm -f "$cached.partial"
+            die "download failed: $resolved"
+        }
+        mv "$cached.partial" "$cached"
+    fi
+
+    xz -t "$cached" 2>/dev/null || {
+        rm -f "$cached"
+        die "cached image is not valid xz (removed; re-run to re-download)"
+    }
+    echo "$cached"
+}
+
+flash_image() {
+    local image="$1" device="$2" part
+
+    # Unmount anything auto-mounted from a previous life of this card.
+    for part in "$device"?*; do
+        [[ -b "$part" ]] || continue
+        sudo umount "$part" 2>/dev/null || true
+    done
+
+    warn "Flashing $(basename "$image") -> $device (this takes a few minutes)..."
+    xz -dc "$image" | sudo dd of="$device" bs=4M status=progress conv=fsync
+    sudo partprobe "$device" 2>/dev/null || true
+    sleep 2
+    info "✓ Image written"
+}
+
+boot_partition() {
+    local device="$1"
+    if [[ "$device" == *[0-9] ]]; then
+        echo "${device}p1"
+    else
+        echo "${device}1"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# cloud-init config generation. Templates use @TOKEN@ placeholders substituted
+# with bash string replacement, so no value ever meets a shell-quoting or
+# sed-delimiter edge case.
+
+# The kiosk session, ported from panic/rpi/pi-setup.sh: labwc autostarts a
+# systemd user service that reads the URL from the boot partition on every
+# start, restarts Chromium on crash, and restarts it nightly. The GPU-forcing
+# Chromium flags (--ignore-gpu-blocklist etc.) are deliberately absent ---
+# imaginative-restoration traced Pi 5 lockups to them.
+generate_user_data() {
+    local out="$1"
+    local ud
+
+    IFS= read -r -d '' ud <<'EOF' || true
+#cloud-config
+hostname: @HOSTNAME@
+manage_etc_hosts: true
+
+users:
+  - name: @USERNAME@
+    gecos: Kiosk
+    shell: /bin/bash
+    groups: [adm, sudo, video, render, input, audio, tty, netdev, gpio, i2c, spi]
+    lock_passwd: false
+    passwd: "@PASSWD_HASH@"
+    sudo: ALL=(ALL) NOPASSWD:ALL
+@SSH_KEYS@
+
+ssh_pwauth: true
+timezone: @TIMEZONE@
+
+write_files:
+  - path: /home/@USERNAME@/.config/labwc/autostart
+    owner: "@USERNAME@:@USERNAME@"
+    permissions: "0755"
+    defer: true
+    content: |
+      systemctl --user start chromium-kiosk.service &
+
+  - path: /home/@USERNAME@/.config/labwc/rc.xml
+    owner: "@USERNAME@:@USERNAME@"
+    permissions: "0644"
+    defer: true
+    content: |
+      <?xml version="1.0"?>
+      <labwc_config>
+        <core>
+          <decoration>no</decoration>
+          <gap>0</gap>
+        </core>
+        <keyboard>
+          <keybind key="Super-q">
+            <action name="Exit"/>
+          </keybind>
+        </keyboard>
+      </labwc_config>
+
+  - path: /home/@USERNAME@/.config/systemd/user/chromium-kiosk.service
+    owner: "@USERNAME@:@USERNAME@"
+    permissions: "0644"
+    defer: true
+    content: |
+      [Unit]
+      Description=Chromium kiosk browser
+      After=graphical-session.target
+      Requires=graphical-session.target
+
+      [Service]
+      Type=simple
+      Environment="WAYLAND_DISPLAY=wayland-0"
+      ExecStartPre=/bin/bash -c 'while [ ! -S "/run/user/$(id -u)/${WAYLAND_DISPLAY}" ]; do sleep 0.5; done'
+      ExecStart=/bin/bash -c 'URL=$(cat /boot/firmware/kiosk-url.txt 2>/dev/null || echo "@URL@"); BROWSER=$(command -v chromium || command -v chromium-browser); exec "$BROWSER" --kiosk --no-first-run --noerrdialogs --disable-infobars --disable-pinch --disable-component-update --autoplay-policy=no-user-gesture-required --check-for-update-interval=31536000 --ozone-platform=wayland "$URL"'
+      Restart=always
+      RestartSec=5
+
+      [Install]
+      WantedBy=default.target
+
+  - path: /home/@USERNAME@/.config/systemd/user/chromium-restart.service
+    owner: "@USERNAME@:@USERNAME@"
+    permissions: "0644"
+    defer: true
+    content: |
+      [Unit]
+      Description=Restart Chromium kiosk browser
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/systemctl --user restart chromium-kiosk.service
+
+  - path: /home/@USERNAME@/.config/systemd/user/chromium-restart.timer
+    owner: "@USERNAME@:@USERNAME@"
+    permissions: "0644"
+    defer: true
+    content: |
+      [Unit]
+      Description=Restart Chromium kiosk nightly
+
+      [Timer]
+      OnCalendar=daily
+      RandomizedDelaySec=30
+
+      [Install]
+      WantedBy=timers.target
+
+  - path: /usr/local/bin/kiosk-set-url
+    owner: "root:root"
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      # Show or update the kiosk URL (takes effect on next Chromium restart).
+      f=/boot/firmware/kiosk-url.txt
+      if [ $# -eq 0 ]; then
+          echo "Usage: sudo kiosk-set-url <url>"
+          echo "Current URL: $(cat "$f" 2>/dev/null || echo "not set")"
+          exit 1
+      fi
+      echo "$1" > "$f"
+      echo "✓ URL updated. Restart the browser (or reboot) to apply:"
+      echo "  systemctl --user restart chromium-kiosk.service"
+@ENTERPRISE_WIFI@
+
+runcmd:
+  - systemctl enable --now ssh
+  - rm -f /etc/xdg/autostart/piwiz.desktop
+  # autologin to the graphical desktop (B4 targets the first regular user)
+  - raspi-config nonint do_boot_behaviour B4
+@WIFI_CMDS@
+  # enable the kiosk user units without a running user manager
+  - install -d -o @USERNAME@ -g @USERNAME@ /home/@USERNAME@/.config/systemd/user/default.target.wants /home/@USERNAME@/.config/systemd/user/timers.target.wants
+  - ln -sf ../chromium-kiosk.service /home/@USERNAME@/.config/systemd/user/default.target.wants/chromium-kiosk.service
+  - ln -sf ../chromium-restart.timer /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-restart.timer
+  - chown -h @USERNAME@:@USERNAME@ /home/@USERNAME@/.config/systemd/user/default.target.wants/chromium-kiosk.service /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-restart.timer
+  # hide the cursor: no Wayland-native option, so blank the theme's pointer
+  - if [ -f /usr/share/icons/PiXflat/cursors/left_ptr ]; then mv /usr/share/icons/PiXflat/cursors/left_ptr /usr/share/icons/PiXflat/cursors/left_ptr.bak; fi
+@TAILSCALE_CMDS@
+
+final_message: "pi-kiosk setup complete after $UPTIME seconds"
+EOF
+
+    # --- conditional sections -------------------------------------------
+    local ssh_keys=""
+    if [[ -n "$ssh_key_file" ]]; then
+        ssh_keys=$'    ssh_authorized_keys:\n      - '"$(cat "$ssh_key_file")"
+    fi
+
+    local enterprise_wifi=""
+    if [[ -n "$wifi_enterprise_user" ]]; then
+        IFS= read -r -d '' enterprise_wifi <<'EOF' || true
+
+  - path: /etc/NetworkManager/system-connections/@WIFI_SSID@.nmconnection
+    owner: "root:root"
+    permissions: "0600"
+    content: |
+      [connection]
+      id=@WIFI_SSID@
+      type=wifi
+      interface-name=wlan0
+      autoconnect=true
+
+      [wifi]
+      mode=infrastructure
+      ssid=@WIFI_SSID@
+
+      [wifi-security]
+      key-mgmt=wpa-eap
+
+      [802-1x]
+      eap=peap
+      identity=@WIFI_ENTERPRISE_USER@
+      password=@WIFI_ENTERPRISE_PASS@
+      phase2-auth=mschapv2
+
+      [ipv4]
+      method=auto
+
+      [ipv6]
+      method=auto
+EOF
+    fi
+
+    local wifi_cmds=""
+    if [[ -n "$wifi_ssid" ]]; then
+        wifi_cmds="  - rfkill unblock wifi || true
+  - raspi-config nonint do_wifi_country @WIFI_COUNTRY@ || true"
+    fi
+
+    local tailscale_cmds=""
+    if [[ -n "$tailscale_authkey" ]]; then
+        IFS= read -r -d '' tailscale_cmds <<'EOF' || true
+  # Tailscale: install needs the network, which wifi may still be joining ---
+  # retry for up to 5 minutes rather than failing the whole first boot
+  - for i in $(seq 1 30); do curl -fsSL https://tailscale.com/install.sh | sh && break; sleep 10; done
+  - tailscale up --authkey=@TAILSCALE_AUTHKEY@ --ssh --hostname=@HOSTNAME@ --accept-dns=false
+EOF
+        tailscale_cmds="${tailscale_cmds%$'\n'}"
+    fi
+
+    # --- substitution ----------------------------------------------------
+    ud="${ud//@SSH_KEYS@/$ssh_keys}"
+    ud="${ud//@ENTERPRISE_WIFI@/$enterprise_wifi}"
+    ud="${ud//@WIFI_CMDS@/$wifi_cmds}"
+    ud="${ud//@TAILSCALE_CMDS@/$tailscale_cmds}"
+    ud="${ud//@HOSTNAME@/$hostname}"
+    ud="${ud//@USERNAME@/$username}"
+    ud="${ud//@PASSWD_HASH@/$passwd_hash}"
+    ud="${ud//@TIMEZONE@/$timezone}"
+    ud="${ud//@URL@/$url}"
+    ud="${ud//@WIFI_SSID@/$wifi_ssid}"
+    ud="${ud//@WIFI_ENTERPRISE_USER@/$wifi_enterprise_user}"
+    ud="${ud//@WIFI_ENTERPRISE_PASS@/$wifi_enterprise_pass}"
+    ud="${ud//@WIFI_COUNTRY@/$wifi_country}"
+    ud="${ud//@TAILSCALE_AUTHKEY@/$tailscale_authkey}"
+
+    printf '%s\n' "$ud" >"$out"
+}
+
+# WPA2-PSK wifi goes in network-config (netplan v2); enterprise wifi is
+# handled by the nmconnection file in user-data instead. Without wifi the
+# stock file is left alone --- ethernet DHCP works out of the box.
+generate_network_config() {
+    local out="$1"
+    [[ -n "$wifi_ssid" && -z "$wifi_enterprise_user" ]] || return 0
+    local nc
+    IFS= read -r -d '' nc <<'EOF' || true
+version: 2
+wifis:
+  wlan0:
+    dhcp4: true
+    optional: true
+    access-points:
+      "@WIFI_SSID@":
+        password: "@WIFI_PASSWORD@"
+EOF
+    nc="${nc//@WIFI_SSID@/$wifi_ssid}"
+    nc="${nc//@WIFI_PASSWORD@/$wifi_password}"
+    printf '%s\n' "$nc" >"$out"
+}
+
+# ---------------------------------------------------------------------------
+
+main() {
+    local url="" hostname="pi-kiosk" username="kiosk" password="kiosk"
+    local wifi_ssid="" wifi_password="" wifi_enterprise_user="" wifi_enterprise_pass=""
+    local wifi_country="AU" tailscale_authkey="" ssh_key_file="" device="" test_mode=false
+
+    (($# > 0)) || usage 0
+    while (($# > 0)); do
+        case "$1" in
+        --url) url="$2"; shift 2 ;;
+        --hostname) hostname="$2"; shift 2 ;;
+        --username) username="$2"; shift 2 ;;
+        --password) password="$2"; shift 2 ;;
+        --ssh-key) ssh_key_file="$2"; shift 2 ;;
+        --wifi-ssid) wifi_ssid="$2"; shift 2 ;;
+        --wifi-password) wifi_password="$2"; shift 2 ;;
+        --wifi-enterprise-user) wifi_enterprise_user="$2"; shift 2 ;;
+        --wifi-enterprise-pass) wifi_enterprise_pass="$2"; shift 2 ;;
+        --wifi-country) wifi_country="$2"; shift 2 ;;
+        --tailscale-authkey) tailscale_authkey="$2"; shift 2 ;;
+        --device) device="$2"; shift 2 ;;
+        --test) test_mode=true; shift ;;
+        -h | --help) usage 0 ;;
+        *) die "unknown option: $1 (see --help)" ;;
+        esac
+    done
+
+    # --- validation ------------------------------------------------------
+    [[ "$OSTYPE" == linux-gnu* ]] || die "Linux only (needs lsblk/dd on raw devices)"
+    [[ -n "$url" ]] || die "--url is required"
+    [[ "$url" =~ ^https?:// ]] || die "invalid URL: $url"
+    if [[ -n "$wifi_ssid" ]]; then
+        if [[ -n "$wifi_enterprise_user" || -n "$wifi_enterprise_pass" ]]; then
+            [[ -n "$wifi_enterprise_user" && -n "$wifi_enterprise_pass" ]] ||
+                die "enterprise wifi needs both --wifi-enterprise-user and --wifi-enterprise-pass"
+        else
+            [[ -n "$wifi_password" ]] || die "--wifi-password required for WPA2-PSK"
+        fi
+    fi
+    [[ -z "$ssh_key_file" || -f "$ssh_key_file" ]] || die "SSH key not found: $ssh_key_file"
+    check_required_tools
+
+    local passwd_hash timezone
+    passwd_hash=$(openssl passwd -6 "$password")
+    timezone=$(timedatectl show --property=Timezone --value 2>/dev/null || echo UTC)
+
+    # --- show config -----------------------------------------------------
+    info "pi-kiosk"
+    echo "  URL:       $url"
+    echo "  Hostname:  $hostname"
+    echo "  User:      $username"
+    echo "  Timezone:  $timezone"
+    if [[ -n "$wifi_ssid" ]]; then
+        echo "  WiFi:      $wifi_ssid ($([[ -n "$wifi_enterprise_user" ]] && echo "802.1X as $wifi_enterprise_user" || echo WPA2-PSK), country $wifi_country)"
+    else
+        echo "  WiFi:      none (ethernet)"
+    fi
+    echo "  Tailscale: $([[ -n "$tailscale_authkey" ]] && echo yes || echo no)"
+    echo "  SSH key:   ${ssh_key_file:-none}"
+    echo
+
+    # --- generate config -------------------------------------------------
+    local work
+    work=$(mktemp -d -t pi-kiosk-XXXXX)
+    generate_user_data "$work/user-data"
+    generate_network_config "$work/network-config"
+    printf '%s\n' "$url" >"$work/kiosk-url.txt"
+
+    if [[ "$test_mode" == true ]]; then
+        warn "TEST MODE: config generated in $work (not flashing)"
+        ls -l "$work"
+        exit 0
+    fi
+
+    # --- flash -----------------------------------------------------------
+    [[ -n "$device" ]] || device=$(find_sd_card)
+    [[ -b "$device" ]] || die "not a block device: $device"
+
+    warn "WARNING: this will ERASE all data on $device"
+    lsblk -d -o NAME,SIZE,MODEL "$device"
+    local confirm
+    read -r -p "Continue? (yes/no): " confirm
+    [[ "$confirm" == yes ]] || { echo "Aborted."; rm -rf "$work"; exit 0; }
+
+    local image
+    image=$(fetch_image)
+    flash_image "$image" "$device"
+
+    # --- drop cloud-init config on the boot partition ---------------------
+    local part mnt
+    part=$(boot_partition "$device")
+    mnt=$(mktemp -d -t pi-kiosk-boot-XXXXX)
+    sudo mount "$part" "$mnt"
+    sudo cp "$work/user-data" "$mnt/user-data"
+    [[ -f "$work/network-config" ]] && sudo cp "$work/network-config" "$mnt/network-config"
+    sudo cp "$work/kiosk-url.txt" "$mnt/kiosk-url.txt"
+    sudo umount "$mnt"
+    rmdir "$mnt"
+    rm -rf "$work"
+    sync
+
+    info "✓ SD card ready --- eject it and boot the Pi."
+    echo
+    echo "First boot takes a few minutes (cloud-init + Tailscale install)."
+    if [[ -n "$tailscale_authkey" ]]; then
+        echo "Then: tailscale ssh $username@$hostname"
+    fi
+    echo "Change the URL later with: sudo kiosk-set-url <url>  (or edit kiosk-url.txt on the card)"
+}
+
+main "$@"

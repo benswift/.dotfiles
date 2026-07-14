@@ -86,6 +86,12 @@ etc.). Key scripts:
   (`pkb-agent.timer`, weddle only) fires everything due
 - `ts-cat`, `lumis-parsers` --- tree-sitter syntax highlighting for yazi's
   preview pane (see "File manager (yazi)" below)
+- `pi-kiosk` --- flash an SD card that boots a Raspberry Pi into a fullscreen
+  Chromium web kiosk at a given URL, with wifi and Tailscale baked in. Built on
+  the cloud-init support in Raspberry Pi OS (Trixie onward): flashes the stock
+  desktop image, then writes `user-data`/`network-config` to the boot partition.
+  Supersedes the SDM-based `rpi/pi-setup.sh` scripts in the panic and
+  imaginative-restoration repos
 
 See the "Microsoft 365 (calendar and Teams)" section below for this tooling and
 why it sidesteps Microsoft Graph.
