@@ -328,6 +328,14 @@ runcmd:
   - if [ -f /usr/share/icons/PiXflat/cursors/left_ptr ]; then mv /usr/share/icons/PiXflat/cursors/left_ptr /usr/share/icons/PiXflat/cursors/left_ptr.bak; fi
 @TAILSCALE_CMDS@
 
+# The kiosk pieces (autologin, deferred user files, unit enablement) land
+# after the first-boot desktop session has already logged in, so the browser
+# only autostarts from the next boot --- reboot into a working kiosk rather
+# than leaving a bare desktop up.
+power_state:
+  mode: reboot
+  message: pi-kiosk first-boot config complete; rebooting into the kiosk
+
 final_message: "pi-kiosk setup complete after $UPTIME seconds"
 EOF
 
@@ -383,9 +391,12 @@ EOF
     local tailscale_cmds=""
     if [[ -n "$tailscale_authkey" ]]; then
         IFS= read -r -d '' tailscale_cmds <<'EOF' || true
-  # Tailscale: install needs the network, which wifi may still be joining ---
-  # retry for up to 5 minutes rather than failing the whole first boot
-  - for i in $(seq 1 30); do curl -fsSL https://tailscale.com/install.sh | sh && break; sleep 10; done
+  # a cold Pi's clock is stuck at the image build date, which makes TLS cert
+  # validation fail --- wait for NTP before fetching the installer
+  - timeout 300 sh -c 'until timedatectl show -p NTPSynchronized --value | grep -q yes; do sleep 2; done' || true
+  # download to a file, then run: `curl | sh` reports success on an empty
+  # download, which would break out of the retry loop with nothing installed
+  - for i in $(seq 1 30); do curl -fsSL https://tailscale.com/install.sh -o /tmp/tailscale-install.sh && sh /tmp/tailscale-install.sh && break; sleep 10; done
   - tailscale up --authkey=@TAILSCALE_AUTHKEY@ --ssh --hostname=@HOSTNAME@ --accept-dns=false
 EOF
         tailscale_cmds="${tailscale_cmds%$'\n'}"
