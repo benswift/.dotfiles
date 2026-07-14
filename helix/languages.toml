@@ -153,6 +153,15 @@ indent = { tab-width = 2, unit = "  " }
 name = "extempore"
 source = { git = "https://github.com/extemporelang/tree-sitter-extempore", rev = "cd9f1b5771be070fb3d2e8e16971bb5f9c031b53" }
 
+# helix 25.07.1 pins gotmpl to dannylongeuay/tree-sitter-go-template, which has
+# been deleted from GitHub, so `hx --grammar fetch` fails and the build dies
+# with a misleading C-compiler error. Helix master already switched to the repo
+# it was forked from; this override (same repo, same rev) is redundant once a
+# release ships that fix.
+[[grammar]]
+name = "gotmpl"
+source = { git = "https://github.com/ngalaiko/tree-sitter-go-template", rev = "aa71f63de226c5592dfbfc1f29949522d7c95fac" }
+
 [[grammar]]
 name = "mutt-compose"
 source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "c0558cc601b8407fe84907f230a7595fdece1836" }
