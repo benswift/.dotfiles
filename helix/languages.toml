@@ -151,7 +151,7 @@ indent = { tab-width = 2, unit = "  " }
 
 [[grammar]]
 name = "extempore"
-source = { git = "https://github.com/extemporelang/tree-sitter-extempore", rev = "8a8a878" }
+source = { git = "https://github.com/extemporelang/tree-sitter-extempore", rev = "cd9f1b5771be070fb3d2e8e16971bb5f9c031b53" }
 
 [[grammar]]
 name = "mutt-compose"
