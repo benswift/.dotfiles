@@ -33,5 +33,5 @@ machine. This replaces manual backups with automated sync solution.
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Implemented as bin/rclone-backup.sh (syncs ~/Documents and ~/Maildir to weddle:backup/mitch/). Scripts in bin/ are on PATH via zshenv. AC #5 (scheduled execution) intentionally not set up --- user prefers manual invocation.
+Implemented as bin/backup (originally bin/rclone-backup; syncs ~/Documents and ~/Maildir to weddle:backup/mitch/). Scripts in bin/ are on PATH via zshenv. AC #5 (scheduled execution) intentionally not set up --- user prefers manual invocation.
 <!-- SECTION:NOTES:END -->
