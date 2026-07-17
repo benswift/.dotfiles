@@ -76,7 +76,7 @@ done
 # host would happily empty the target. Checked after argument parsing so
 # `--help` still works here.
 if [[ "$(hostname -s)" == "weddle" ]]; then
-  echo "rclone-backup: weddle is the backup destination --- run this from a laptop/desktop instead." >&2
+  echo "backup: weddle is the backup destination --- run this from a laptop/desktop instead." >&2
   exit 1
 fi
 
