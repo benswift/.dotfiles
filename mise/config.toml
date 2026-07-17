@@ -23,8 +23,8 @@ fzf = "latest"
 bat = "latest"
 # bin/ts-cat's highlighter (tree-sitter with nvim-treesitter queries; WASM
 # parsers cached in ~/.local/share/lumis by bin/lumis-parsers). Release tags
-# are cargo-lumis-cli/vX.Y.Z, which the ubi backend resolves fine.
-"ubi:leandrocp/lumis" = "latest"
+# are cargo-lumis-cli/vX.Y.Z, which the github backend resolves fine.
+"github:leandrocp/lumis" = "latest"
 # Editor tooling invoked as bare binaries (helix LSP/formatters and the
 # bin/claude-format hook), never via `uv run`, so they must be on PATH globally.
 ruff = "latest"
