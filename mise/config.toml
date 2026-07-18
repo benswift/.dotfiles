@@ -44,6 +44,10 @@ typstyle = "latest"
 # headless-terminal MCP server (drives neomutt and other TUIs from Claude
 # Code). Release ships bare per-target binaries, so pin the exe name.
 "github:memextech/ht-mcp" = { version = "latest", exe = "ht-mcp" }
+# linting for this repo's own bash scripts (bin/*, lib/*)
+shellcheck = "latest"
+# bin/check-secrets' scanner
+gitleaks = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = []
