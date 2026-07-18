@@ -35,12 +35,13 @@ does (e.g. `~/.zshrc` is linked to `zshrc`).
 Apart from a few one-off config files, these config files and scripts are
 grouped into the following categories.
 
-Four paths hold no symlink targets and so appear nowhere in the manifest: @lib/
-(bash helpers sourced by the scripts --- `log.sh` and the manifest itself),
-@tests/ (uv single-file tests for the `bin/` scripts, run directly:
-`./tests/test_svg_validate.py`), `backlog/` (Backlog.md task files), and
-@oxfmtrc.json (the shared markdown/TOML format config, used by `prettify-md` and
-@bin/oxfmt-helix).
+Six paths hold no symlink targets and so appear nowhere in the manifest: @bin/
+(on `PATH` directly via @zshenv), @launchd/ (plists installed by hand;
+instructions in each header), @lib/ (bash helpers sourced by the scripts ---
+`log.sh` and the manifest itself), @tests/ (uv single-file tests for the `bin/`
+scripts, run directly: `./tests/test_svg_validate.py`), `backlog/` (Backlog.md
+task files), and @oxfmtrc.json (the shared markdown/TOML format config, used by
+`prettify-md` and @bin/oxfmt-helix).
 
 ## Shell
 
