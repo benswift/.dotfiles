@@ -1,4 +1,5 @@
 # shellcheck shell=bash
+# shellcheck disable=SC2034  # colours are consumed by sourcing scripts
 #
 # Shared colour codes and logging helpers for the dotfiles scripts.
 # install.sh deliberately does NOT source this --- it runs via curl | bash

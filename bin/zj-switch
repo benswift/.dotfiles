@@ -77,7 +77,7 @@ agent_counts() {
 # idle green, unknown dim). Takes the session name and its authoritative
 # agent count.
 badge() {
-    local session="$1" total="$2" dir="$STATE_DIR/$1"
+    local total="$2" dir="$STATE_DIR/$1"
     local working=0 idle=0 blocked=0 accounted=0
     local f state pid
 

@@ -1,4 +1,5 @@
 # shellcheck shell=bash
+# shellcheck disable=SC2034  # the manifest arrays are consumed by sourcing scripts
 #
 # Single source of truth for every symlink this repo installs. Sourced by
 # create_symlinks.sh (which creates them) and bin/dotfiles (whose doctor
