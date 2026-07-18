@@ -1,7 +1,9 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12,<3.14"
-# dependencies = ["lxml>=5.0", "typer>=0.12"]
+# # lxml-stubs isn't needed at runtime, but scripts have no dev-dep group and
+# # without it ty can't see into the lxml.etree C extension
+# dependencies = ["lxml>=5.0", "lxml-stubs", "typer>=0.12"]
 # ///
 """Validate SVG illustrations: well-formedness + design invariants.
 
@@ -107,8 +109,17 @@ def check_viewbox(root: etree._Element) -> CheckResult:
     return CheckResult("ok", "viewbox", f'viewBox="{vb}"')
 
 
+def _elements_by_local_name(root: etree._Element, name: str) -> list[etree._Element]:
+    # xpath() is typed as returning the full XPath result union (numbers,
+    # strings, node lists); a local-name() element selector only ever yields
+    # elements, so narrow here rather than casting at every call site.
+    result = root.xpath(f'.//*[local-name()="{name}"]')
+    assert isinstance(result, list)
+    return [el for el in result if isinstance(el, etree._Element)]
+
+
 def check_no_script(root: etree._Element) -> CheckResult:
-    scripts = root.xpath('.//*[local-name()="script"]')
+    scripts = _elements_by_local_name(root, "script")
     if scripts:
         return CheckResult("err", "script", f"{len(scripts)} <script> element(s) present")
     return CheckResult("ok", "script", "no <script> elements")
@@ -163,7 +174,7 @@ def check_external_hrefs(root: etree._Element) -> CheckResult:
 
 
 def check_embedded_raster(root: etree._Element) -> CheckResult:
-    images = root.xpath('.//*[local-name()="image"]')
+    images = _elements_by_local_name(root, "image")
     if images:
         return CheckResult("warn", "raster", f"{len(images)} embedded <image> element(s)")
     return CheckResult("ok", "raster", "no embedded raster images")
@@ -178,7 +189,7 @@ def check_node_count(root: etree._Element, limit: int) -> CheckResult:
 
 
 def check_duplicate_paths(root: etree._Element) -> CheckResult:
-    paths = root.xpath('.//*[local-name()="path"]')
+    paths = _elements_by_local_name(root, "path")
     seen: dict[tuple, int] = {}
     for p in paths:
         key = (
