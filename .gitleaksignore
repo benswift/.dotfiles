@@ -1,0 +1,9 @@
+# Known false positives for bin/check-secrets (gitleaks fingerprints).
+#
+# himalaya.toml (deleted in 3e55aa6) contained OAuth2 *client ids* --- public
+# identifiers used in a PKCE flow (one is Thunderbird's well-known client id,
+# documented in mail/README.md), not credentials. Nothing to rotate.
+dd66e21e2a28aa1cfad4569264790f758be2fb7f:himalaya.toml:generic-api-key:32
+3c4e2913cdb3e8590a9314b191a3c4cd7d522c79:himalaya.toml:generic-api-key:32
+05483f11b8225a5d00aefb52a1ea53a3f1b43aef:himalaya.toml:generic-api-key:33
+05483f11b8225a5d00aefb52a1ea53a3f1b43aef:himalaya.toml:generic-api-key:48
