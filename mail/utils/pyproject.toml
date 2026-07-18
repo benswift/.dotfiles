@@ -31,11 +31,9 @@ build-backend = "hatchling.build"
 packages = ["src/mail_utils"]
 
 [tool.pytest.ini_options]
+addopts = "-n auto"
 testpaths = ["tests"]
 pythonpath = ["src"]
 
 [dependency-groups]
-dev = [
-    "pytest>=8.0.0",
-    "ty>=0.0.57",
-]
+dev = ["pytest>=8.0.0", "pytest-xdist>=3.8.0", "ty>=0.0.57"]
