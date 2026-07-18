@@ -1,7 +1,11 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["mail-utils @ file:///Users/ben/.dotfiles/mail/utils"]
+# dependencies = ["mail-utils"]
+#
+# [tool.uv.sources]
+# # resolved relative to this script, so it works from /Users and /home alike
+# mail-utils = { path = "../mail/utils" }
 # ///
 """Generate AI draft replies for multiple emails."""
 
