@@ -88,7 +88,8 @@
     "ast-grep@ast-grep-marketplace": true,
     "modern-web-guidance@googlechrome": true,
     "ben@ben": true,
-    "astro-theme-anu@astro-theme-anu": true
+    "astro-theme-anu@astro-theme-anu": true,
+    "comp4020@comp4020": true
   },
   "extraKnownMarketplaces": {
     "ben": {
@@ -126,6 +127,12 @@
         "source": "git",
         "url": "https://gitlab.anu.edu.au/u2548636/astro-theme-anu.git",
         "ref": "astro-theme-anu@v0.9.1"
+      }
+    },
+    "comp4020": {
+      "source": {
+        "source": "github",
+        "repo": "comp4020-agentic-coding-studio/core"
       }
     }
   },
