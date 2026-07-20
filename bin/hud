@@ -221,7 +221,9 @@ def collect_processes() -> dict:
                             )
                             break
 
-                if cpu >= CPU_HOG_THRESHOLD:
+                # skip ourselves: scanning every process costs enough CPU
+                # that hud reliably lands in its own hog list
+                if cpu >= CPU_HOG_THRESHOLD and p.pid != os.getpid():
                     label = display_name
                     if name == "zellij":
                         session = zellij_session_name(p)
