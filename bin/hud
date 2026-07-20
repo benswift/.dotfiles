@@ -111,22 +111,8 @@ def fit_path(path: str, budget: int) -> str:
     return "…" + path[-(budget - 1) :]
 
 
-def cmd_basename(p: psutil.Process) -> str:
-    try:
-        cmdline = p.cmdline()
-        if cmdline:
-            return os.path.basename(cmdline[0])
-    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-        pass
-    return ""
-
-
-def zellij_session_name(p: psutil.Process) -> str | None:
-    """Return the session name if p is a `zellij --server <socket>` invocation."""
-    try:
-        cmdline = p.cmdline()
-    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-        return None
+def zellij_session_name(cmdline: list[str]) -> str | None:
+    """Return the session name if cmdline is a `zellij --server <socket>` invocation."""
     if not cmdline or os.path.basename(cmdline[0]) != "zellij":
         return None
     if "--server" not in cmdline:
@@ -142,6 +128,52 @@ def safe_cwd(p: psutil.Process) -> str:
         return shorten_path(p.cwd())
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
         return ""
+
+
+# Facts that never change for the lifetime of a process, keyed by pid and
+# validated against create_time so a recycled pid is re-inspected. cmdline()
+# is the expensive sysctl on macOS and psutil doesn't cache it, so caching
+# here means a steady-state refresh pays only the cpu_percent sweep; the one
+# thing this can miss is a process rewriting its own argv after first sight.
+_proc_facts: dict[int, dict] = {}
+
+
+def proc_facts(p: psutil.Process) -> dict:
+    ctime = p.create_time()
+    facts = _proc_facts.get(p.pid)
+    if facts is not None and facts["create_time"] == ctime:
+        return facts
+
+    try:
+        cmdline = p.cmdline()
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        cmdline = []
+    name = os.path.basename(cmdline[0]) if cmdline else ""
+    display_name = name or p.name()
+
+    stray_label = None
+    cmdline_str = " ".join(cmdline)
+    if cmdline_str:
+        for label, pattern in STRAY_PATTERNS:
+            if re.search(pattern, cmdline_str):
+                stray_label = label
+                break
+
+    hog_label = display_name
+    if name == "zellij":
+        session = zellij_session_name(cmdline)
+        if session:
+            hog_label = f"zl:{session}"
+
+    facts = {
+        "create_time": ctime,
+        "name": name,
+        "display_name": display_name,
+        "stray_label": stray_label,
+        "hog_label": hog_label,
+    }
+    _proc_facts[p.pid] = facts
+    return facts
 
 
 def collect_processes() -> dict:
@@ -161,16 +193,17 @@ def collect_processes() -> dict:
     mail_clients: list[dict] = []
     servers: list[dict] = []
 
-    for p in psutil.process_iter(["pid", "ppid"]):
+    seen_pids: set[int] = set()
+
+    for p in psutil.process_iter():
         try:
             with p.oneshot():
-                name = cmd_basename(p)
-                display_name = name or p.name()
+                facts = proc_facts(p)
+                seen_pids.add(p.pid)
+                name = facts["name"]
                 pid = str(p.pid)
                 cpu = p.cpu_percent()
                 cpu_str = f"{cpu:.1f}"
-                mem_str = f"{p.memory_percent():.1f}"
-                elapsed = fmt_elapsed(p.create_time())
 
                 if name in AGENT_STYLES:
                     agents.append(
@@ -178,8 +211,8 @@ def collect_processes() -> dict:
                             "agent": name,
                             "pid": pid,
                             "cpu": cpu_str,
-                            "mem": mem_str,
-                            "elapsed": elapsed,
+                            "mem": f"{p.memory_percent():.1f}",
+                            "elapsed": fmt_elapsed(facts["create_time"]),
                             "cwd": safe_cwd(p),
                         }
                     )
@@ -189,53 +222,35 @@ def collect_processes() -> dict:
                         {
                             "pid": pid,
                             "cpu": cpu_str,
-                            "mem": mem_str,
-                            "elapsed": elapsed,
+                            "mem": f"{p.memory_percent():.1f}",
+                            "elapsed": fmt_elapsed(facts["create_time"]),
                             "cwd": safe_cwd(p),
                         }
                     )
 
-                try:
-                    cmdline_str = " ".join(p.cmdline())
-                except (
-                    psutil.NoSuchProcess,
-                    psutil.AccessDenied,
-                    psutil.ZombieProcess,
-                ):
-                    cmdline_str = ""
-                if cmdline_str:
-                    for label, pattern in STRAY_PATTERNS:
-                        if re.search(pattern, cmdline_str):
-                            ppid = p.ppid()
-                            strays.append(
-                                {
-                                    "label": label,
-                                    "pid": pid,
-                                    "cpu": cpu_str,
-                                    "mem": mem_str,
-                                    "elapsed": elapsed,
-                                    "status": "orphaned"
-                                    if ppid == 1
-                                    else f"ppid={ppid}",
-                                }
-                            )
-                            break
+                if facts["stray_label"] is not None:
+                    ppid = p.ppid()
+                    strays.append(
+                        {
+                            "label": facts["stray_label"],
+                            "pid": pid,
+                            "cpu": cpu_str,
+                            "mem": f"{p.memory_percent():.1f}",
+                            "elapsed": fmt_elapsed(facts["create_time"]),
+                            "status": "orphaned" if ppid == 1 else f"ppid={ppid}",
+                        }
+                    )
 
                 # skip ourselves: scanning every process costs enough CPU
                 # that hud reliably lands in its own hog list
                 if cpu >= CPU_HOG_THRESHOLD and p.pid != os.getpid():
-                    label = display_name
-                    if name == "zellij":
-                        session = zellij_session_name(p)
-                        if session:
-                            label = f"zl:{session}"
                     cpu_hogs.append(
                         {
-                            "name": label[:20],
+                            "name": facts["hog_label"][:20],
                             "pid": pid,
                             "cpu": cpu,
-                            "mem": mem_str,
-                            "elapsed": elapsed,
+                            "mem": f"{p.memory_percent():.1f}",
+                            "elapsed": fmt_elapsed(facts["create_time"]),
                             "cwd": safe_cwd(p),
                         }
                     )
@@ -249,6 +264,7 @@ def collect_processes() -> dict:
                 ):
                     conns = []
                 if conns:
+                    display_name = facts["display_name"]
                     if display_name.lower() in LISTENER_NAMES:
                         ports = [c.laddr.port for c in conns if c.status == "LISTEN"]
                     else:
@@ -264,13 +280,16 @@ def collect_processes() -> dict:
                                 "pid": pid,
                                 "port": str(ports[0]),
                                 "cpu": cpu_str,
-                                "mem": mem_str,
-                                "elapsed": elapsed,
+                                "mem": f"{p.memory_percent():.1f}",
+                                "elapsed": fmt_elapsed(facts["create_time"]),
                                 "cwd": safe_cwd(p),
                             }
                         )
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
+
+    for stale in set(_proc_facts) - seen_pids:
+        del _proc_facts[stale]
 
     cpu_hogs.sort(key=lambda h: h["cpu"], reverse=True)
     return {
@@ -307,7 +326,7 @@ def lookup_pid(data: dict, pid_str: str) -> tuple[int, str] | None:
 
 def kill_process(pid: int) -> str:
     try:
-        session_name = zellij_session_name(psutil.Process(pid))
+        session_name = zellij_session_name(psutil.Process(pid).cmdline())
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
         session_name = None
 
