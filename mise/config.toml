@@ -12,6 +12,9 @@ gemini = "latest"
 codex = "latest"
 glab = "latest"
 typst = "latest"
+# Via mise rather than apt so the typst writer is current --- Ubuntu's pandoc
+# (3.1.3) emits pre-typst-0.9 #cite syntax that typst 0.15 rejects.
+pandoc = "latest"
 ast-grep = "latest"
 jq = "latest"
 fd = "latest"
