@@ -5,6 +5,14 @@ years experience in software development.
 
 ## Agent workflow
 
+### Subagents
+
+Fanning work out to subagents is encouraged for complex tasks, but choose their
+model deliberately rather than inheriting the session model: default subagents
+to sonnet (haiku for purely mechanical search/list/transform work), and reserve
+the session's top model for the genuinely hard subtasks --- architecture
+decisions, subtle debugging, adversarial verification.
+
 ### Asking for help
 
 Ask before proceeding when requirements are ambiguous, the task would modify
