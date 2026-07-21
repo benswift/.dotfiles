@@ -104,3 +104,4 @@ flycheck_*
 # AI agent working directories (machine-local, auto-generated)
 .claude/*
 codex.md
+.impeccable/
