@@ -79,6 +79,27 @@ install_mail_sync() {
     brew install benswift/tap/isync
 }
 
+# mosh: mitigates high-latency SSH (predictive echo, frame sync, roaming).
+# No prebuilt binaries exist, so it can't come from mise --- platform package
+# manager on both OSes (installs both the client and mosh-server).
+install_mosh() {
+    if command_exists mosh; then
+        info "mosh already installed"
+        return
+    fi
+
+    info "Installing mosh..."
+    if [[ "$platform" == "macos" ]]; then
+        brew install mosh
+    elif command_exists apt-get; then
+        sudo apt-get install -y mosh
+    elif command_exists dnf; then
+        sudo dnf install -y mosh
+    else
+        warn "no known package manager --- install mosh manually"
+    fi
+}
+
 clone_dotfiles() {
     if [[ -d "$DOTFILES_DIR" ]]; then
         info "Dotfiles already exist at $DOTFILES_DIR"
@@ -165,6 +186,7 @@ main() {
         install_homebrew
     fi
     install_mail_sync
+    install_mosh
     install_mise
     clone_dotfiles
     setup_symlinks

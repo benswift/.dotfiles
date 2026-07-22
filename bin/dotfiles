@@ -148,7 +148,7 @@ check_tools() {
     section "Checking tools..."
 
     local required_tools=(helix:hx tmux)
-    local optional_tools=(neomutt mu mbsync msmtp rclone fzf)
+    local optional_tools=(neomutt mu mbsync msmtp rclone fzf mosh)
 
     for tool in "${required_tools[@]}"; do
         local name="${tool%%:*}"
