@@ -66,3 +66,27 @@
 	includeIssuesSection = true
 [url "git@github.com:"]
 	insteadOf = https://github.com/
+
+# COMP4020 crit agents (weddle only; TASK-28.1 AC#3/#4): interactive sessions
+# inside an agent's directory commit as that agent, not as Ben. Scheduled runs
+# don't read this file at all (they run with HOME=<agent dir>); these entries
+# cover the convenor's own sessions. Trailing / makes the match recursive, and
+# the entries are inert on machines without these directories.
+[includeIf "gitdir:~/projects/comp4020/agents/shitao/"]
+	path = ~/projects/comp4020/agents/shitao/.gitconfig
+[includeIf "gitdir:~/projects/comp4020/agents/bada/"]
+	path = ~/projects/comp4020/agents/bada/.gitconfig
+[includeIf "gitdir:~/projects/comp4020/agents/baishi/"]
+	path = ~/projects/comp4020/agents/baishi/.gitconfig
+[includeIf "gitdir:~/projects/comp4020/agents/dachi/"]
+	path = ~/projects/comp4020/agents/dachi/.gitconfig
+[includeIf "gitdir:~/projects/comp4020/agents/yunlin/"]
+	path = ~/projects/comp4020/agents/yunlin/.gitconfig
+[includeIf "gitdir:~/projects/comp4020/agents/liuru/"]
+	path = ~/projects/comp4020/agents/liuru/.gitconfig
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
