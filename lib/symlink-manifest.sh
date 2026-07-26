@@ -53,6 +53,11 @@ SYMLINK_MANIFEST=(
     # machine-local, so a second machine would re-run every task)
     "systemd/user/pkb-agent.service:~/.config/systemd/user/pkb-agent.service"
     "systemd/user/pkb-agent.timer:~/.config/systemd/user/pkb-agent.timer"
+    # unit-oncall: template units, instanced by any timer that wants a failure
+    # to reach the notebook. Never enabled themselves --- a job opts in with
+    # OnFailure=unit-oncall@%n.service / OnSuccess=unit-oncall-clear@%n.service
+    "systemd/user/unit-oncall@.service:~/.config/systemd/user/unit-oncall@.service"
+    "systemd/user/unit-oncall-clear@.service:~/.config/systemd/user/unit-oncall-clear@.service"
     # whole-directory configs
     "ghostty:~/.config/ghostty"
     "helix:~/.config/helix"

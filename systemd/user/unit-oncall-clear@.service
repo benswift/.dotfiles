@@ -1,0 +1,9 @@
+[Unit]
+Description=Clear the oncall failure marker for recovered unit %i
+Documentation=file:///home/ben/.dotfiles/bin/unit-oncall
+
+[Service]
+Type=oneshot
+Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ben/.dotfiles/bin/unit-oncall clear %i
+TimeoutStartSec=1min
