@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# wait-for-network: block until DNS actually resolves, then exit.
+#
+# `network-online.target` is a *system* target. A user unit that declares
+# `After=network-online.target` / `Wants=network-online.target` gets neither
+# ordering nor a dependency --- systemd cannot find the unit, `Wants=` on a
+# missing unit is not an error, and the whole thing is a silent no-op. The
+# failure mode is invisible until a reboot: timers with `Persistent=true` fire
+# their catch-up runs seconds after the user manager starts, race DNS, and die.
+# (2026-07-27: four jobs failed this way twelve seconds after boot, with
+# `ssh: Could not resolve hostname github.com` in the oncall log.)
+#
+# So do the check the target would have done, from inside the unit:
+#
+#   [Service]
+#   ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
+#
+# Resolution is the right probe --- it is what actually failed, it needs no
+# outbound connection of its own, and every one of these jobs reaches a named
+# host (github.com, an API, a tailnet peer) as its first real act.
+#
+# Exits non-zero if the network never arrives, so a genuinely offline box still
+# fails loudly through the normal OnFailure= path rather than hanging until
+# TimeoutStartSec or, worse, proceeding into a confusing mid-script error.
+#
+# Usage: wait-for-network [host]          (default: github.com)
+#        WAIT_FOR_NETWORK_TIMEOUT=<secs>  (default: 120)
+
+set -uo pipefail
+
+host="${1:-github.com}"
+timeout="${WAIT_FOR_NETWORK_TIMEOUT:-120}"
+interval=2
+
+deadline=$(($(date +%s) + timeout))
+
+if getent hosts "$host" >/dev/null 2>&1; then
+	exit 0
+fi
+
+echo "wait-for-network: $host does not resolve yet; waiting up to ${timeout}s"
+
+while [[ $(date +%s) -lt $deadline ]]; do
+	sleep "$interval"
+	if getent hosts "$host" >/dev/null 2>&1; then
+		echo "wait-for-network: $host resolved after $((timeout - (deadline - $(date +%s))))s"
+		exit 0
+	fi
+done
+
+echo "wait-for-network: $host still does not resolve after ${timeout}s --- giving up" >&2
+exit 1
