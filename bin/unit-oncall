@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# unit-oncall: turn a failed systemd user unit into a pkb todo.
+#
+# Scheduled jobs fail silently by default: the journal records it, but nothing
+# reaches Ben unless he goes looking. This is the backchannel --- a failure
+# files an open todo in the notebook (with the tail of the unit's journal) and
+# syncs, so it shows up wherever the notebook does.
+#
+# Wired via a drop-in on the job's unit, so no job script knows about it:
+#
+#   [Unit]
+#   OnFailure=unit-oncall@%n.service
+#   OnSuccess=unit-oncall-clear@%n.service
+#
+# Usage: unit-oncall fail  <unit>   # file a todo (deduped, see below)
+#        unit-oncall clear <unit>   # the unit succeeded; re-arm
+#
+# DEDUP: a unit that fails every 15 minutes must not file 96 todos a day. The
+# first failure files one and drops a marker; later failures append to the
+# marker instead. A success clears it. A marker older than REARM_HOURS files a
+# fresh todo anyway, so a failure that persists past a ticked-off todo does not
+# go quiet.
+
+set -euo pipefail
+
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/unit-oncall"
+LOG="$STATE/unit-oncall.log"
+LOCK="$STATE/nb.lock"
+JOURNAL_LINES="${JOURNAL_LINES:-40}"
+REARM_HOURS="${REARM_HOURS:-24}"
+
+mkdir -p "$STATE"
+
+say() { printf '[%s] %s\n' "$(date -Is)" "$*" >>"$LOG"; }
+
+usage() {
+	echo "usage: unit-oncall (fail|clear) <unit>" >&2
+	exit 2
+}
+
+[[ $# -eq 2 ]] || usage
+action="$1"
+unit="$2"
+marker="$STATE/${unit}.failed"
+
+case "$action" in
+clear)
+	if [[ -f "$marker" ]]; then
+		rm -f "$marker"
+		say "$unit: recovered; marker cleared"
+	fi
+	exit 0
+	;;
+fail) ;;
+*) usage ;;
+esac
+
+# Marker still fresh? Record the repeat and stay quiet.
+if [[ -f "$marker" ]]; then
+	age_h=$(((($(date +%s) - $(stat -c %Y "$marker")) / 3600)))
+	if [[ $age_h -lt $REARM_HOURS ]]; then
+		printf 'repeat failure %s\n' "$(date -Is)" >>"$marker"
+		say "$unit: repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new todo"
+		exit 0
+	fi
+	say "$unit: still failing ${age_h}h on; re-arming"
+fi
+
+result="$(systemctl --user show -p Result --value "$unit" 2>/dev/null || echo unknown)"
+status="$(systemctl --user show -p ExecMainStatus --value "$unit" 2>/dev/null || echo '?')"
+tail_out="$(journalctl --user -u "$unit" -n "$JOURNAL_LINES" --no-pager -o short-iso 2>&1 || echo '(journal unavailable)')"
+
+title="$unit failed on weddle (result=$result, exit=$status) --- check the journal"
+description="$(
+	cat <<EOF
+Filed automatically by unit-oncall at $(date -Is).
+
+  systemctl --user status $unit
+  journalctl --user -u $unit -n 200
+
+Last $JOURNAL_LINES journal lines:
+
+$tail_out
+EOF
+)"
+
+# nb writes to a git working tree, and pkb-agent and the daily sync touch the
+# same one. Serialise so a concurrent handler cannot land mid-commit.
+exec 9>"$LOCK"
+flock 9
+
+if nb todo add "$title" --description "$description" --tags oncall >/dev/null 2>>"$LOG"; then
+	printf 'first failure %s\n' "$(date -Is)" >"$marker"
+	say "$unit: filed a todo"
+else
+	say "$unit: FAILED to file a todo --- the journal is the only record"
+	exit 1
+fi
+
+# Best effort: the todo is already on disk, and the 00:00 `nb sync --all`
+# will carry it if this one cannot (offline, remote unreachable).
+if nb sync >/dev/null 2>>"$LOG"; then
+	say "$unit: synced"
+else
+	say "$unit: nb sync failed --- todo is local until the next sync"
+fi
