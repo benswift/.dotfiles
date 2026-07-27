@@ -1,0 +1,12 @@
+[Unit]
+Description=Sync all nb notebooks
+# No `After=network-online.target` here: that is a system target, so in the
+# user manager it silently resolves to nothing and orders nothing. The real
+# guard is the ExecStartPre below. (2026-07-27)
+
+[Service]
+Type=oneshot
+ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
+Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/local/bin/nb sync --all
+TimeoutStartSec=15min

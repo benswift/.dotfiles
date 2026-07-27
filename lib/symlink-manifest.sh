@@ -49,6 +49,8 @@ SYMLINK_MANIFEST=(
     "systemd/user/ship-claude-logs.timer:~/.config/systemd/user/ship-claude-logs.timer"
     "systemd/user/ingest-claude-logs.service:~/.config/systemd/user/ingest-claude-logs.service"
     "systemd/user/ingest-claude-logs.timer:~/.config/systemd/user/ingest-claude-logs.timer"
+    "systemd/user/nb-sync.service:~/.config/systemd/user/nb-sync.service"
+    "systemd/user/nb-sync.timer:~/.config/systemd/user/nb-sync.timer"
     # pkb-agent: enable the timer on weddle ONLY (run stamps are
     # machine-local, so a second machine would re-run every task)
     "systemd/user/pkb-agent.service:~/.config/systemd/user/pkb-agent.service"

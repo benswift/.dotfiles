@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync all nb notebooks daily
+Requires=nb-sync.service
+
+[Timer]
+OnCalendar=00:00
+Persistent=true
+Unit=nb-sync.service
+
+[Install]
+WantedBy=timers.target
