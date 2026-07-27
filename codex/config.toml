@@ -1,5 +1,8 @@
 personality = "pragmatic"
 project_doc_fallback_filenames = ["CLAUDE.md"]
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+service_tier = "default"
 
 [tui]
 alternate_screen = "never"
@@ -8,5 +11,11 @@ alternate_screen = "never"
 "gpt-5.6-sol" = 4
 
 [projects."/home/ben/.dotfiles"]
+trust_level = "trusted"
+
+[projects."/home/ben/projects/comp4020"]
+trust_level = "trusted"
+
+[projects."/home/ben/projects/slop-university"]
 trust_level = "trusted"
 
