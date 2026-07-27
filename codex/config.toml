@@ -21,4 +21,5 @@ trust_level = "trusted"
 
 [projects."/Users/ben/projects/comp4020"]
 trust_level = "trusted"
-
+[projects."/home/ben/projects/llms-unplugged"]
+trust_level = "trusted"
