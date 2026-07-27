@@ -75,6 +75,11 @@ replacements.
 Prefer simple, clean, maintainable solutions. Pure functions processing built-in
 data structures is good practice. Match the style of surrounding code.
 
+### Publishing
+
+"Push" means push the current branch only. Do not create a branch or PR unless
+I explicitly ask for one.
+
 ### Testing
 
 Prefer integration tests over unit tests when both provide similar confidence.
