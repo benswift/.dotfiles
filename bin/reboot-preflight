@@ -117,14 +117,20 @@ scan_scope() {
 
 # Enabled but stopped: `enable` writes a timers.target.wants symlink, so a
 # reboot ARMS these again. A timer someone stopped by hand to park a project
-# quietly comes back to life on the next boot; mask it if that is not wanted.
+# quietly comes back to life on the next boot.
+#
+# To keep one parked, delete its timers.target.wants symlink. NOT `mask` and
+# not bare `disable`: units here are symlinked into ~/.config/systemd/user/
+# from their own repos, and mask cannot write its /dev/null symlink over an
+# existing path, while disable removes the repo symlink too --- leaving the
+# unit not-found rather than merely disarmed.
 scan_parked_timers() {
   local t
   while read -r t _rest; do
     [ -n "$t" ] || continue
     [ "$(systemctl --user is-enabled "$t" 2>/dev/null)" = enabled ] || continue
     [ "$(systemctl --user is-active "$t" 2>/dev/null)" = active ] && continue
-    WARNINGS+=("$t is enabled but stopped --- a reboot will re-arm it (mask it to keep it parked)")
+    WARNINGS+=("$t is enabled but stopped --- a reboot will re-arm it (rm ~/.config/systemd/user/timers.target.wants/$t to keep it parked)")
   done < <(systemctl --user list-units --type=timer --all --plain --no-legend --no-pager 2>/dev/null)
 }
 
