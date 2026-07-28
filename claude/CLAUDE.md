@@ -77,8 +77,8 @@ data structures is good practice. Match the style of surrounding code.
 
 ### Publishing
 
-"Push" means push the current branch only. Do not create a branch or PR unless
-I explicitly ask for one.
+"Push" means push the current branch only. Do not create a branch or PR unless I
+explicitly ask for one.
 
 ### Testing
 
@@ -110,16 +110,20 @@ to me as a deliberate step.
 A PostToolUse `Write|Edit` hook (`~/.dotfiles/bin/claude-format`) reformats
 every file I edit, running the same per-type formatter Helix runs on save so the
 two never fight over formatting (`oxfmt-helix` for markdown/toml, `ruff format`
-for Python, `typstyle --wrap-text` for Typst, and so on). The catch: the first
-edit to a file that isn't already a fixed point of its formatter reflows the
-whole file, so a one-line change can land as a 100--300 line diff mixing the
-reflow with the real edit. Don't bundle the two. Reproduce the pure reflow from
-HEAD with the file's EXACT dispatch-table command (never a guessed flag --- a
-mismatched invocation formats differently and fights the hook), commit that
-reflow alone, then commit the semantic change on top and check the second diff
-shows only your edit. If matching the hook is impractical, commit the working
-(hook-formatted) file and note the bundled reflow --- it still lands as a fresh
-fixed point, so later edits diff clean.
+for Python, `typstyle --wrap-text` for Typst, and so on). Matching Helix means
+matching it in both directions: an extensionless file with a `python` or
+`uv run --script` shebang is Python, which Helix formats on save and so does the
+hook; and a path excluded in `ruff.toml` is skipped by both, since Helix formats
+Python through the ruff LSP and the hook passes `--force-exclude`. The catch:
+the first edit to a file that isn't already a fixed point of its formatter
+reflows the whole file, so a one-line change can land as a 100--300 line diff
+mixing the reflow with the real edit. Don't bundle the two. Reproduce the pure
+reflow from HEAD with the file's EXACT dispatch-table command (never a guessed
+flag --- a mismatched invocation formats differently and fights the hook),
+commit that reflow alone, then commit the semantic change on top and check the
+second diff shows only your edit. If matching the hook is impractical, commit
+the working (hook-formatted) file and note the bundled reflow --- it still lands
+as a fresh fixed point, so later edits diff clean.
 
 ### Security
 

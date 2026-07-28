@@ -119,6 +119,31 @@ fmt_oxfmt() {
     rm -f "$tmp"
 }
 
+# Is this a Python file wearing no extension? The tools in bin/ are executable
+# and extensionless, and Helix detects them as Python from the shebang and
+# formats them on save --- so without this the hook and the editor disagree,
+# and whether a script is formatted depends on which one touched it last. That
+# is exactly the drift this hook exists to prevent.
+#
+# Bounded read: only the first line of the first 200 bytes, so pointing this at
+# a large binary costs nothing.
+is_python_shebang() {
+    local first
+    first="$(head -c 200 -- "$f" 2>/dev/null | head -1)"
+    case "$first" in
+    '#!'*python*) return 0 ;;      # #!/usr/bin/env python3
+    '#!'*'uv run'*) return 0 ;;    # #!/usr/bin/env -S uv run --script
+    *) return 1 ;;
+    esac
+}
+
+# --force-exclude makes ruff honour the exclude list in ruff.toml even though
+# the path arrives via --stdin-filename. Without it the hook reformats files
+# the config says to leave alone --- mail/mutt_oauth2.py, which is vendored
+# from mutt. On an excluded path ruff echoes its input back unchanged, so fmt's
+# cmp finds no difference and writes nothing.
+fmt_ruff() { fmt ruff format --force-exclude --stdin-filename "$f" -; }
+
 case "$f" in
 *.deck.mdx | */decks/*.mdx) ;; # astromotion decks: auto-format = false
 */backlog/*.md) ;;             # Backlog.md CLI owns these files' serialisation
@@ -128,9 +153,16 @@ case "$f" in
 *.tex) fmt tex-fmt --stdin ;;
 *.toml) fmt_oxfmt file.toml ;;
 *.kdl) fmt kdlfmt format - ;;
-*.py) fmt ruff format --stdin-filename "$f" - ;;
+*.py) fmt_ruff ;;
 *.ex | *.exs | *.heex) fmt_mix ;;
 *.rs) fmt_rust ;;
+*)
+    # No extension this table knows. Python hides here; everything else
+    # (bash, swift, plain text) falls through untouched, as before.
+    if is_python_shebang; then
+        fmt_ruff
+    fi
+    ;;
 esac
 
 exit 0
