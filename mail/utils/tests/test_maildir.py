@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-
 from mail_utils.maildir import (
     extract_flags,
     extract_hostname,

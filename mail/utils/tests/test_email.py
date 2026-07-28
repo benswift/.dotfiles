@@ -2,7 +2,6 @@
 
 from email.message import EmailMessage
 
-
 from mail_utils.email import (
     get_message_id,
     parse_email_date,

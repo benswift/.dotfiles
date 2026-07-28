@@ -22,6 +22,7 @@ Usage from a shell for debugging:
 
 import subprocess
 import sys
+from email.errors import MessageError
 from urllib.parse import unquote
 
 from mail_utils.clipboard import copy_to_clipboard
@@ -39,7 +40,10 @@ def _parse(data: bytes) -> list[Link]:
     for parser in (read_email_from_bytes, read_email_from_bytes_lenient):
         try:
             return extract_links(parser(data))
-        except Exception:
+        except (ValueError, LookupError, MessageError):
+            # This parser couldn't make sense of the bytes --- that is what the
+            # fallback chain is for, so try the next one. LookupError covers a
+            # part declaring a charset Python doesn't know.
             continue
     return []
 
@@ -91,6 +95,7 @@ def _pick(links: list[Link]) -> tuple[str, list[str]]:
         input=lines,
         capture_output=True,
         text=True,
+        check=False,
     )
     # 130 = cancelled with Esc/Ctrl-C; anything non-zero means no selection.
     if result.returncode not in (0, 1):

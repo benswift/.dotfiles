@@ -3,7 +3,6 @@
 import base64
 from unittest.mock import MagicMock, mock_open, patch
 
-
 from mail_utils.clipboard import copy_to_clipboard
 
 

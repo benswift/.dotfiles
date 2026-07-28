@@ -90,6 +90,7 @@ def run_mu_cfind(query: str, max_results: int = 50) -> str:
             capture_output=True,
             text=True,
             timeout=5,
+            check=False,
         )
         return result.stdout if result.returncode == 0 else ""
     except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -99,7 +100,7 @@ def run_mu_cfind(query: str, max_results: int = 50) -> str:
 def run_fd_for_attach(query: str, max_results: int = 50) -> list[str]:
     if not query:
         return []
-    if not (query.startswith("/") or query.startswith("~") or query.startswith(".")):
+    if not (query.startswith(("/", "~", "."))):
         return []
     try:
         # Path.expanduser() raises RuntimeError on an unknown user ("~nobody").
@@ -126,6 +127,7 @@ def run_fd_for_attach(query: str, max_results: int = 50) -> list[str]:
             capture_output=True,
             text=True,
             timeout=5,
+            check=False,
         )
         files = [f for f in result.stdout.strip().split("\n") if f]
         return files[:max_results]

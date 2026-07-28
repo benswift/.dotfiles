@@ -1,5 +1,6 @@
 """Analyze maildir format differences."""
 
+import mailbox
 import re
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -48,7 +49,7 @@ def analyze_maildir(maildir_path: Path) -> dict[str, Any]:
 
     try:
         mbox = open_maildir(maildir_path)
-    except Exception as e:
+    except (OSError, mailbox.Error) as e:
         console.print(f"[red]Error opening maildir: {e}[/red]")
         return result
 
@@ -90,7 +91,9 @@ def analyze_maildir(maildir_path: Path) -> dict[str, Any]:
                                         "email_date": date_header,
                                     }
                                 )
-            except Exception:
+            except (KeyError, ValueError, OSError, mailbox.Error):
+                # A message that won't load, or a Date: header that won't
+                # yield a year --- this scan is best-effort, so skip it.
                 pass
 
     if len(keys) > 1000:

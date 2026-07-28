@@ -1,0 +1,54 @@
+# Shared ruff config for every Python file in this repo --- the mail/utils
+# package and the single-file `uv run --script` tools in bin/. mail/utils has
+# no [tool.ruff] of its own, so ruff walks up and finds this one, and the whole
+# repo is checked with `ruff check .` from the root.
+#
+# The rule selection is deliberately ruff's own default set. As of ruff 0.16
+# that's 413 rules rather than the previous 59, which is where the tuning below
+# comes from --- these are the only two places the new defaults are wrong about
+# this code, rather than the code being wrong.
+
+# The bin/ tools are executable and extensionless, so a directory scan skips
+# them. They have to be listed one by one: extend-include forces every match
+# through the Python parser regardless of shebang, so a glob like "bin/*"
+# doesn't pick out the Python ones --- it drags in all the bash and swift
+# scripts alongside them and reports several thousand syntax errors.
+#
+# Adding a `uv run --script` tool to bin/ means adding it here too, or it is
+# silently never linted. Regenerate the list with:
+#   grep -rl '^#!/usr/bin/env -S uv run' bin | sort
+# Vendored verbatim from the mutt source (GPL, "version 2020-08-07" in its
+# header). Reformatting it to this repo's taste would only make the next
+# re-vendoring harder to diff, so it is upstream's to lint, not ours.
+# The tree-sitter grammar checkouts under helix/runtime/grammars/ are vendored
+# too, but they are gitignored and ruff honours that on its own.
+extend-exclude = ["mail/mutt_oauth2.py"]
+
+extend-include = [
+  "bin/ai-draft-batch",
+  "bin/batch-email-collect",
+  "bin/hud",
+  "bin/icloud-export",
+  "bin/ingest-claude-logs",
+  "bin/pkb-agent",
+  "bin/s2",
+  "bin/styled-image-gen",
+  "bin/svg-validate",
+  "bin/xtm-send",
+]
+
+[lint.per-file-ignores]
+# Every open() in this file is `stack.enter_context(open(...))`, handed to an
+# ExitStack that the caller opens with `with`. That is context management ---
+# ruff's SIM115 just doesn't model enter_context as such, so all five reports
+# are false. Scoped to the one file rather than silenced repo-wide, so a real
+# leaked handle elsewhere is still caught.
+"bin/styled-image-gen" = ["SIM115"]
+
+[lint.flake8-bugbear]
+# B008 forbids function calls in argument defaults, to catch the mutable-default
+# trap. `def cmd(path: Path = typer.Argument(...))` is how typer declares a CLI
+# argument --- the call builds an immutable descriptor that typer reads off the
+# signature, so there's nothing to share between invocations. Without this,
+# every typer command in the repo is a false positive.
+extend-immutable-calls = ["typer.Option", "typer.Argument"]

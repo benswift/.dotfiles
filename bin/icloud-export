@@ -69,7 +69,7 @@ def mac_seconds_to_utc(mac_seconds: float) -> datetime:
     return datetime.fromtimestamp(mac_seconds + MAC_EPOCH_OFFSET, tz=timezone.utc)
 
 
-def mac_date_column_to_utc(raw: int | float | None) -> datetime | None:
+def mac_date_column_to_utc(raw: float | None) -> datetime | None:
     if not raw:
         return None
     # iOS 13+/macOS 10.15+ stores nanoseconds; older rows store seconds. The
@@ -386,12 +386,18 @@ def extract_calendar(
 
 
 def _event_to_dict(ev: Any) -> dict[str, Any]:
+    # Every field below is optional, and EventKit exposes them as selectors that
+    # may simply not exist on a given event: PyObjC raises AttributeError for a
+    # missing selector, which is what these guards are for. The coordinate
+    # unpacking also has to survive a structuredLocation carrying a geoLocation
+    # with nothing usable in it, hence the wider tuple there. Anything else is a
+    # real bug and should reach the caller rather than be swallowed.
     lat: float | None = None
     lon: float | None = None
     structured = None
     try:
         structured = ev.structuredLocation()
-    except Exception:
+    except AttributeError:
         pass
     if structured is not None:
         try:
@@ -400,13 +406,13 @@ def _event_to_dict(ev: Any) -> dict[str, Any]:
                 coord = geo.coordinate()
                 lat = float(coord.latitude)
                 lon = float(coord.longitude)
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             pass
 
     attendees: list[dict[str, str | None]] = []
     try:
         raw_attendees = ev.attendees() or []
-    except Exception:
+    except AttributeError:
         raw_attendees = []
     for a in raw_attendees:
         name = str(a.name()) if a.name() else None
@@ -417,7 +423,7 @@ def _event_to_dict(ev: Any) -> dict[str, Any]:
                 s = str(url)
                 if s.startswith("mailto:"):
                     email = s[len("mailto:") :]
-        except Exception:
+        except AttributeError:
             pass
         attendees.append({"name": name, "email": email})
 
@@ -426,7 +432,7 @@ def _event_to_dict(ev: Any) -> dict[str, Any]:
         organizer = ev.organizer()
         if organizer is not None and organizer.name():
             organizer_name = str(organizer.name())
-    except Exception:
+    except AttributeError:
         pass
 
     cal = ev.calendar()

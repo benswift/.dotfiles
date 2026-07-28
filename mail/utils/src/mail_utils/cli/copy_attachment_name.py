@@ -33,6 +33,7 @@ def main() -> None:
             input="\n".join(filenames),
             capture_output=True,
             text=True,
+            check=False,
         )
         if result.returncode != 0:
             sys.exit(1)

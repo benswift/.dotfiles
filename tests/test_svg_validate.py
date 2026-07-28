@@ -348,10 +348,10 @@ class TestStrictFlag:
             '<path d="M0,0" fill="#aaa"/><path d="M0,0" fill="#aaa"/></svg>'
         )
         # Default exits 0 despite warnings.
-        r1 = subprocess.run([str(SCRIPT), str(p)], capture_output=True)
+        r1 = subprocess.run([str(SCRIPT), str(p)], capture_output=True, check=False)
         assert r1.returncode == 0
         # --strict exits 1.
-        r2 = subprocess.run([str(SCRIPT), str(p), "--strict"], capture_output=True)
+        r2 = subprocess.run([str(SCRIPT), str(p), "--strict"], capture_output=True, check=False)
         assert r2.returncode == 1
 
 
@@ -363,7 +363,7 @@ class TestOutputStreams:
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
             '<image href="data:image/png;base64,iVBORw0KGgo=" width="10" height="10"/></svg>'
         )
-        r = subprocess.run([str(SCRIPT), str(p)], capture_output=True, text=True)
+        r = subprocess.run([str(SCRIPT), str(p)], capture_output=True, text=True, check=False)
         assert r.returncode == 0
         # OK lines on stdout:
         assert "✓ xml" in r.stdout
@@ -375,7 +375,7 @@ class TestOutputStreams:
     def test_error_on_stderr(self, tmp_path: Path):
         p = tmp_path / "err.svg"
         p.write_text("<html/>")
-        r = subprocess.run([str(SCRIPT), str(p)], capture_output=True, text=True)
+        r = subprocess.run([str(SCRIPT), str(p)], capture_output=True, text=True, check=False)
         assert r.returncode == 1
         assert "✗" in r.stderr
         assert "✗" not in r.stdout

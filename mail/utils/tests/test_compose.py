@@ -4,8 +4,6 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from typer.testing import CliRunner
-
 from mail_utils.accounts import Account, get_account_config
 from mail_utils.cli.compose import app
 from mail_utils.compose import (
@@ -16,6 +14,7 @@ from mail_utils.compose import (
     send_email,
     strip_frontmatter,
 )
+from typer.testing import CliRunner
 
 
 class TestBuildEmail:

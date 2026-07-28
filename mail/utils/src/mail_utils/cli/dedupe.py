@@ -3,6 +3,7 @@
 import mailbox
 from collections import defaultdict
 from collections.abc import Iterator
+from email.errors import MessageError
 from pathlib import Path
 
 import typer
@@ -39,7 +40,7 @@ def find_duplicates(
                 msg_id = msg.get("Message-ID")
                 if msg_id:
                     message_id_to_keys[msg_id.strip()].append(key)
-            except Exception as e:
+            except (KeyError, OSError, mailbox.Error, MessageError) as e:
                 console.print(
                     f"[yellow]Warning: Could not read message {key}: {e}[/yellow]"
                 )
@@ -73,7 +74,7 @@ def deduplicate(
 
     try:
         mbox = open_maildir(maildir_path)
-    except Exception as e:
+    except (OSError, mailbox.Error) as e:
         console.print(f"[red]Error opening maildir: {e}[/red]")
         return 0, 0, 0
 
@@ -130,7 +131,7 @@ def deduplicate(
             try:
                 mbox.remove(key)
                 deleted_count += 1
-            except Exception as e:
+            except (KeyError, OSError, mailbox.Error) as e:
                 console.print(f"[red]Failed to delete message {key}: {e}[/red]")
                 failed_count += 1
             progress.update(task, advance=1)
@@ -190,7 +191,7 @@ def dedupe_command(
             )
             raise typer.Exit(code=1)
 
-        total, unique, removed = deduplicate(maildir_path, dry_run, verbose)
+        total, _unique, _removed = deduplicate(maildir_path, dry_run, verbose)
 
         if total == 0:
             raise typer.Exit(code=1)

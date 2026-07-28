@@ -13,7 +13,7 @@ https://www.semanticscholar.org/product/api#api-key-form).
 
 import os
 import sys
-from typing import Annotated, Optional
+from typing import Annotated
 
 import httpx
 import typer
@@ -70,7 +70,7 @@ def format_paper(p: dict) -> str:
 def search(
     query: Annotated[str, typer.Argument(help="Search query")],
     limit: Annotated[int, typer.Option(help="Max results")] = 10,
-    year: Annotated[Optional[str], typer.Option(help="Year or range, e.g. 2020 or 2020-2024")] = None,
+    year: Annotated[str | None, typer.Option(help="Year or range, e.g. 2020 or 2020-2024")] = None,
     open_access: Annotated[bool, typer.Option("--oa", help="Open access only")] = False,
 ):
     """Search for papers."""

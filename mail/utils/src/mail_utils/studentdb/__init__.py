@@ -14,11 +14,11 @@ from .models import (
 
 __all__ = [
     "ACTIVE_STATUSES",
+    "DenormalisedStudent",
+    "Person",
+    "Student",
     "StudentDB",
     "StudentDatabase",
-    "Student",
-    "Person",
-    "DenormalisedStudent",
 ]
 
 NB_NOTE_ID = "data/student-db.json"

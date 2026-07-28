@@ -165,6 +165,7 @@ Professional but friendly tone, concise. Australian English spelling."""
         ["claude", "--dangerously-skip-permissions", "-p", prompt],
         capture_output=True,
         text=True,
+        check=False,
     )
     if result.returncode == 0:
         return result.stdout.strip()
@@ -214,7 +215,7 @@ def main():
         instructions_path = temp_path / "instructions.md"
         instructions_path.write_text(generate_instructions_template(messages))
 
-        subprocess.run(["hx", str(instructions_path)])
+        subprocess.run(["hx", str(instructions_path)], check=False)
 
         content = instructions_path.read_text()
         general_instructions, specific_instructions = parse_instructions(

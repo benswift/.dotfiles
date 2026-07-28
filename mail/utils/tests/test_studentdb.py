@@ -4,16 +4,14 @@ import json
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
-
 from mail_utils.studentdb import (
     DenormalisedStudent,
     Person,
     Student,
-    StudentDB,
     StudentDatabase,
+    StudentDB,
 )
-
+from pydantic import ValidationError
 
 VALID_DATABASE = {
     "people": {

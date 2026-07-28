@@ -80,8 +80,7 @@ _cpu_primed = False
 
 def fmt_elapsed(create_time: float) -> str:
     elapsed = int(time.time() - create_time)
-    if elapsed < 0:
-        elapsed = 0
+    elapsed = max(elapsed, 0)
     days, remainder = divmod(elapsed, 86400)
     hours, remainder = divmod(remainder, 3600)
     mins = remainder // 60
@@ -337,6 +336,7 @@ def kill_process(pid: int) -> str:
                 capture_output=True,
                 text=True,
                 timeout=5,
+                check=False,
             )
             if result.returncode == 0:
                 return f"zellij kill-session {session_name}"
@@ -495,7 +495,7 @@ def build_display(
     message: str = "",
     width: int = 120,
 ) -> Group:
-    now = datetime.now().strftime("%H:%M:%S")
+    now = datetime.now().astimezone().strftime("%H:%M:%S")
     header = Text()
     header.append("hud", style=Style(color="#cdd6f4", bold=True))
     header.append("  ")

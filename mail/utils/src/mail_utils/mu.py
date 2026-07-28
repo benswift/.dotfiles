@@ -12,6 +12,7 @@ def find_message_path(message_id: str) -> str | None:
         ["mu", "find", "-f", "l", f"msgid:{message_id}"],
         capture_output=True,
         text=True,
+        check=False,
     )
 
     if result.returncode == 0 and result.stdout.strip():

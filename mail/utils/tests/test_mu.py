@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-
 from mail_utils.mu import find_message_path
 
 

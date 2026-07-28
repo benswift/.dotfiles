@@ -148,6 +148,7 @@ def send_email(
         ["msmtp", "-t", "-a", config.msmtp],
         input=msg.as_bytes(),
         capture_output=True,
+        check=False,
     )
 
     if result.returncode == 0:
@@ -190,7 +191,7 @@ def open_neomutt_compose(
     env["TERM"] = "xterm-direct"
 
     try:
-        subprocess.run(cmd, env=env)
+        subprocess.run(cmd, env=env, check=False)
     finally:
         draft_path.unlink(missing_ok=True)
 

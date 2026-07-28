@@ -2,13 +2,12 @@
 
 from email.message import EmailMessage
 
+from mail_utils.cli.copy_attachment_name import _shell_escape
 from mail_utils.email import (
     get_attachment_filenames,
     get_attachment_filenames_raw,
     read_email_from_bytes_lenient,
 )
-
-from mail_utils.cli.copy_attachment_name import _shell_escape
 
 
 def _make_email_with_attachments(*filenames: str) -> EmailMessage:

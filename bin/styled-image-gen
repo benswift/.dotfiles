@@ -32,12 +32,12 @@ import sys
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Annotated, Any, NoReturn
+from urllib.parse import urlparse
 
 import httpx
 import replicate
 import typer
 from replicate.exceptions import ReplicateError
-from urllib.parse import urlparse
 
 MODELS: dict[str, str] = {
     "banana": "google/nano-banana-pro",
@@ -85,9 +85,7 @@ HTTP_TIMEOUT = httpx.Timeout(300.0, connect=10.0)
 
 def download_image(url: str, target_dir: Path, base_name: str) -> Path:
     ext = Path(urlparse(url).path).suffix.lower()
-    if ext == ".jpeg":
-        ext = ".jpg"
-    elif ext not in (".jpg", ".png", ".webp", ".svg"):
+    if ext == ".jpeg" or ext not in (".jpg", ".png", ".webp", ".svg"):
         ext = ".jpg"
     target_path = target_dir / f"{base_name}{ext}"
     response = httpx.get(url, timeout=HTTP_TIMEOUT, follow_redirects=True)
@@ -272,14 +270,14 @@ def _main_impl(
         "styled_image_gen_output"
     ),
     input_image: Annotated[
-        list[Path],
+        list[Path] | None,
         typer.Option(
             "--input-image",
             help="Input image(s) for reference (repeat for multiple)",
             exists=True,
             dir_okay=False,
         ),
-    ] = [],
+    ] = None,
     aspect_ratio: Annotated[
         str,
         typer.Option(help="Aspect ratio for generated images"),
@@ -315,6 +313,8 @@ def _main_impl(
 
       styled-image-gen "abstract pattern" --input-image refs/a.jpg --input-image refs/b.jpg
     """
+    if input_image is None:
+        input_image = []
     if model not in MODELS:
         error_exit(f"Unknown model '{model}'. Choose from: {', '.join(MODELS)}")
 

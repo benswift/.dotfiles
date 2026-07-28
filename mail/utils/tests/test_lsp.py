@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pytest
-
 from mail_utils.lsp import (
     extract_query,
     find_body_start,

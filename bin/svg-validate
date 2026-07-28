@@ -99,7 +99,7 @@ def check_root_svg(root: etree._Element) -> CheckResult:
     name = _local_name(root)
     if name != "svg":
         return CheckResult("err", "root", f"root element is <{name}>, not <svg>")
-    return CheckResult("ok", "root", f"root is <svg>")
+    return CheckResult("ok", "root", "root is <svg>")
 
 
 def check_viewbox(root: etree._Element) -> CheckResult:
@@ -229,7 +229,7 @@ def check_palette(root: etree._Element, palette_rgb: list[tuple[int, int, int]])
         v = raw.strip().lower()
         if v in ("none", "currentcolor", "inherit", "transparent"):
             continue
-        if v.startswith("url(") or v.startswith("var("):
+        if v.startswith(("url(", "var(")):
             continue
         rgb = parse_hex(v)
         if rgb is None:

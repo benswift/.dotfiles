@@ -89,7 +89,9 @@ def last_run(task: Task) -> datetime | None:
     path = stamp_path(task)
     if not path.exists():
         return None
-    return datetime.fromisoformat(path.read_text().strip())
+    # Stamps written before this was tz-aware parse as naive; astimezone()
+    # reads those as local time and leaves newer, offset-carrying ones alone.
+    return datetime.fromisoformat(path.read_text().strip()).astimezone()
 
 
 def next_elapse(task: Task, base: datetime) -> datetime:
@@ -109,7 +111,10 @@ def next_elapse(task: Task, base: datetime) -> datetime:
         if "Next elapse:" in line:
             # e.g. "    Next elapse: Mon 2026-07-13 06:30:00 AEST"
             value = line.split("Next elapse:")[1].strip()
-            return datetime.strptime(" ".join(value.split()[1:3]), "%Y-%m-%d %H:%M:%S")
+            # systemd prints in local time; attach that zone rather than
+            # comparing a naive value against an aware `now`.
+            stamp = " ".join(value.split()[1:3])
+            return datetime.strptime(stamp, "%Y-%m-%d %H:%M:%S").astimezone()
     raise RuntimeError(f"could not parse systemd-analyze output for {task.name!r}:\n{out}")
 
 
@@ -124,7 +129,7 @@ def run_task(task: Task) -> int:
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     log_dir = LOG_DIR / task.name
     log_dir.mkdir(parents=True, exist_ok=True)
-    now = datetime.now()
+    now = datetime.now().astimezone()
     log_file = log_dir / f"{now:%Y%m%d-%H%M%S}.log"
 
     env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
@@ -144,6 +149,7 @@ def run_task(task: Task) -> int:
             stderr=subprocess.STDOUT,
             env=env,
             timeout=TASK_TIMEOUT_S,
+            check=False,
         )
     stamp_path(task).write_text(now.isoformat())
     status = "ok" if result.returncode == 0 else f"exit {result.returncode}"
@@ -152,7 +158,7 @@ def run_task(task: Task) -> int:
 
 
 def cmd_list() -> int:
-    now = datetime.now()
+    now = datetime.now().astimezone()
     tasks = load_tasks()
     if not tasks:
         print(f"No tasks in {TASKS_DIR}")
@@ -178,17 +184,17 @@ def cmd_run(name: str) -> int:
 
 
 def cmd_run_due() -> int:
-    now = datetime.now()
+    now = datetime.now().astimezone()
     due = [t for t in load_tasks() if is_due(t, now)]
     if not due:
         return 0
     # Pull before tasks write and push their results afterwards. Routine sync
     # is owned separately by nb-sync.timer.
-    subprocess.run(["nb", "sync"], capture_output=True)
+    subprocess.run(["nb", "sync"], capture_output=True, check=False)
     rc = 0
     for task in due:
         rc |= run_task(task)
-    subprocess.run(["nb", "sync"], capture_output=True)
+    subprocess.run(["nb", "sync"], capture_output=True, check=False)
     return rc
 
 

@@ -1,6 +1,7 @@
 """CLI for querying the student database."""
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Annotated
@@ -56,7 +57,7 @@ def load_db(file: Path | None) -> StudentDB:
     except ValueError as e:
         console.print(f"[red]Error loading database: {e}[/red]")
         raise typer.Exit(1)
-    except Exception as e:
+    except (OSError, subprocess.CalledProcessError) as e:
         console.print(f"[red]Failed to load database: {e}[/red]")
         raise typer.Exit(1)
 

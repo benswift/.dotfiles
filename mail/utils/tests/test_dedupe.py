@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-
 from mail_utils.cli.dedupe import deduplicate, find_duplicates
 from mail_utils.maildir import open_maildir
 
@@ -45,7 +44,7 @@ class TestDeduplicate:
         assert len(list(mbox.keys())) == 4
 
     def test_removes_duplicates(self, maildir_with_duplicates: Path):
-        total, unique, removed = deduplicate(
+        _total, _unique, removed = deduplicate(
             maildir_with_duplicates, dry_run=False, verbose=False
         )
 
