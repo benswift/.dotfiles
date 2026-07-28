@@ -131,6 +131,19 @@ setup_previewers() {
     "$DOTFILES_DIR/bin/lumis-parsers" || warn "parser fetch failed --- ts-cat will fall back to bat"
 }
 
+install_python_tools() {
+    info "Installing Python tools from mail/utils..."
+    eval "$(mise activate bash)"
+    # Puts mail-compose, mail-dedupe, student-db, mutt-compose-lsp and the rest
+    # on PATH. Editable, so the checkout stays the live source. Not optional:
+    # helix/languages.toml configures mutt-compose-lsp as a language server, so
+    # without this a fresh machine has a broken editor integration and no
+    # obvious sign of why. --force makes it idempotent and picks up dependency
+    # changes on re-runs.
+    uv tool install --force -e "$DOTFILES_DIR/mail/utils" ||
+        warn "mail-utils install failed --- mail-* commands and mutt-compose-lsp will be missing"
+}
+
 install_claude() {
     if command_exists claude; then
         info "Claude Code already installed"
@@ -192,6 +205,7 @@ main() {
     setup_symlinks
     install_mise_tools
     setup_previewers
+    install_python_tools
     install_claude
     install_agent_skills
     sync_agent_config

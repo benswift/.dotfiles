@@ -4,7 +4,11 @@ A Python package for working with maildir folders and email.
 
 ## Quick reference
 
-Commands are available on PATH via `uv tool install -e ~/.dotfiles/mail/utils`:
+`install.sh` and `dotfiles update` both run
+`uv tool install --force -e ~/.dotfiles/mail/utils`, so the commands are on PATH
+on any machine with the repo cloned --- no manual step. The install is editable,
+so the checkout is the live source; re-run that command by hand only to pick up
+a dependency change without a full `dotfiles update`.
 
 ```bash
 mail-compose --help

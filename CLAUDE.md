@@ -43,6 +43,30 @@ scripts, run directly: `./tests/test_svg_validate.py`), `backlog/` (Backlog.md
 task files), and @oxfmtrc.json (the shared markdown/TOML format config, used by
 `prettify-md` and @bin/oxfmt-helix).
 
+## Python
+
+Python lives in two places, and they are provisioned differently.
+
+The `uv run --script` tools in @bin/ carry PEP 723 inline metadata and a
+committed `bin/<name>.lock` beside each one, so a fresh clone resolves the same
+versions rather than whatever the index happens to hold that week. After editing
+a script's dependency block, re-run `uv lock --script bin/<name>` and commit the
+lock. `bin/ai-draft-batch` depends on `mail-utils` by relative path, which the
+lock records as `../mail/utils` --- no absolute path, so the same lock works on
+`/Users/ben` and `/home/ben`.
+
+@mail/utils is a real package, installed editable by `install.sh` and re-run by
+`dotfiles update`. That is not cosmetic: @helix/languages.toml configures
+`mutt-compose-lsp` as a language server, so a machine without it has a quietly
+broken editor.
+
+@ruff.toml covers both halves --- `mail/utils` has no `[tool.ruff]`, so ruff
+walks up to the root and finds it. The `bin/` tools have to be listed there one
+by one, because `extend-include` forces every match through the Python parser
+regardless of shebang; a glob would drag in the bash and swift scripts too.
+Adding a `uv run --script` tool means adding it to that list, or it is silently
+never linted.
+
 ## Shell
 
 Shell config stuff is in the top-level. I mostly use zsh (on macOS), so I have

@@ -363,6 +363,11 @@ update() {
     "$DOTFILES_DIR/create_symlinks.sh"
     "$DOTFILES_DIR/bin/sync-agent-config" --update-claude
     "$DOTFILES_DIR/bin/lumis-parsers" --update || echo "parser sync failed --- yazi previews fall back to bat"
+    # Editable, so code changes are already live --- this re-resolves after a
+    # dependency change in mail/utils/pyproject.toml, and installs the commands
+    # outright on a machine provisioned before install.sh grew this step.
+    uv tool install --force -e "$DOTFILES_DIR/mail/utils" >/dev/null ||
+        echo "mail-utils install failed --- mail-* commands and mutt-compose-lsp will be missing"
     echo "Done!"
 }
 
