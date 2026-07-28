@@ -286,7 +286,14 @@ Three directories are involved --- note the differences:
   individual repos can opt-in to tracking specific subdirectories via a local
   `!.claude/<path>/` rule (e.g. project-local skills). The directory typically
   contains machine-specific state like `settings.local.json`, plans, and session
-  data.
+  data. This repo takes that opt-in for one file: `.claude/settings.json` is
+  tracked, and disables the `impeccable` plugin here. Impeccable is a frontend
+  design plugin with nothing to review in a repo of shell and Python config, but
+  its `PostToolUse` hook fires on every `Write|Edit` regardless and drops
+  `.impeccable/hook.cache.json` wherever it decides the project root is ---
+  including inside `mail/utils/src/`, from where the cache shipped in the built
+  wheel. The plugin stays enabled globally in @claude/settings.json for the
+  repos that actually have a frontend.
 
 The @claude/ folder includes:
 

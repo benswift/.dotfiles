@@ -12,8 +12,12 @@ helix/runtime/grammars/
 # Python bytecode
 __pycache__/
 
-# Claude Code project-local directory (machine-specific)
-.claude/
+# Claude Code project-local directory (machine-specific), except the
+# settings file: it switches off the impeccable design hook, which has
+# nothing to do here and scatters .impeccable/ caches through the tree.
+# That decision belongs on every machine, so it's tracked.
+.claude/*
+!.claude/settings.json
 
 # Agent runtime state and obsolete project-level shims
 .agents
