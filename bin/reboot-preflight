@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+# reboot-preflight: is it safe to reboot this box right now?
+#
+# weddle runs a few dozen systemd *user* timers across several projects, and
+# the cost of rebooting through one is not uniform. A job that is mid-run gets
+# SIGTERMed with no OnFailure= backchannel (shutdown cancels the job that would
+# have filed the todo), and because its timer's last-trigger stamp is already
+# written, Persistent=true will NOT re-run it --- that firing is simply gone.
+# For a crit sweep, whose whole value is being anchored to a cutoff, "gone" is
+# missing marking evidence rather than a late log line.
+#
+# So this answers the two questions worth asking before `reboot`:
+#
+#   1. is a timer-triggered job in flight?          -> wait for it
+#   2. does a firing land in the next N minutes     -> wait, or accept the loss
+#      that a reboot would destroy rather than defer?
+#
+# Usage: reboot-preflight [--within MINUTES] [--no-system] [--quiet]
+#
+# Exit 0 = nothing in the way; exit 1 = at least one blocker. Warnings never
+# change the exit code: they are things to eyeball, not reasons to wait.
+
+set -euo pipefail
+
+WINDOW_MIN=30      # a firing this close is worth waiting out
+CHECK_SYSTEM=1     # also report on system-scope timers (advisory only)
+QUIET=0            # suppress the all-clear detail, keep blockers/warnings
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --within) WINDOW_MIN="${2:?--within needs MINUTES}"; shift 2 ;;
+    --no-system) CHECK_SYSTEM=0; shift ;;
+    --quiet|-q) QUIET=1; shift ;;
+    -h|--help) sed -n '2,${/^#/!q;s/^# \{0,1\}//;p}' "$0"; exit 0 ;;
+    *) echo "reboot-preflight: unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
+
+if [ -t 1 ]; then
+  RED=$'\033[31m'; YEL=$'\033[33m'; GRN=$'\033[32m'; DIM=$'\033[2m'; OFF=$'\033[0m'
+else
+  RED=; YEL=; GRN=; DIM=; OFF=
+fi
+
+BLOCKERS=()
+WARNINGS=()
+
+now=$(date +%s)
+horizon=$(( now + WINDOW_MIN * 60 ))
+
+# scan_scope <label> [--user]
+#
+# Walks every loaded timer in one systemd scope and classifies it. Timers are
+# the entry point rather than services because a timer knows both what it
+# triggers (Unit=) and whether a missed firing is recoverable (Persistent=).
+scan_scope() {
+  local label="$1"; shift
+  local sc=("$@")   # empty for system scope, or --user
+  local t svc persist next k v state sub next_epoch mins
+
+  while read -r t _rest; do
+    [ -n "$t" ] || continue
+
+    svc=; persist=; next=
+    while IFS='=' read -r k v; do
+      case "$k" in
+        Unit) svc="$v" ;;
+        Persistent) persist="$v" ;;
+        NextElapseUSecRealtime) next="$v" ;;
+      esac
+    done < <(systemctl "${sc[@]}" show "$t" -p Unit -p Persistent -p NextElapseUSecRealtime 2>/dev/null)
+
+    [ -n "$svc" ] || continue
+
+    # --- 1. in flight? ---
+    #
+    # ActiveState=activating covers a Type=oneshot mid-run (the shape every
+    # scheduled job here uses). SubState=running catches a Type=simple job that
+    # is genuinely still working. A oneshot that finished with
+    # RemainAfterExit=yes reads active/exited and is correctly ignored.
+    state=; sub=
+    while IFS='=' read -r k v; do
+      case "$k" in ActiveState) state="$v" ;; SubState) sub="$v" ;; esac
+    done < <(systemctl "${sc[@]}" show "$svc" -p ActiveState -p SubState 2>/dev/null)
+
+    if [ "$state" = activating ] || [ "$sub" = running ]; then
+      local since
+      since=$(systemctl "${sc[@]}" show "$svc" -p ExecMainStartTimestamp --value 2>/dev/null)
+      if [ "$label" = user ]; then
+        BLOCKERS+=("$svc is running now (started ${since:-unknown}) --- rebooting kills it mid-run, and its timer will not re-fire it")
+      else
+        WARNINGS+=("[system] $svc is running now (started ${since:-unknown})")
+      fi
+    fi
+
+    # --- 2. firing soon? ---
+    #
+    # Persistent=yes means a firing lost to a reboot is caught up at boot, so
+    # it is a warning. Persistent=no means the firing is destroyed outright ---
+    # for the crit sweeps that is deliberate (a late capture is not cutoff
+    # evidence), which is exactly why it has to block instead of going quiet.
+    [ -n "$next" ] || continue
+    next_epoch=$(date -d "$next" +%s 2>/dev/null) || continue
+    [ "$next_epoch" -le "$horizon" ] || continue
+    [ "$next_epoch" -ge "$now" ] || continue
+    mins=$(( (next_epoch - now + 59) / 60 ))
+
+    if [ "$persist" = yes ]; then
+      WARNINGS+=("${label:+[$label] }$t fires in ${mins}m ($next) --- Persistent=yes, so a reboot only delays it")
+    elif [ "$label" = user ]; then
+      BLOCKERS+=("$t fires in ${mins}m ($next) --- Persistent=no, so a reboot destroys that firing entirely")
+    else
+      WARNINGS+=("[system] $t fires in ${mins}m ($next), Persistent=no")
+    fi
+  done < <(systemctl "${sc[@]}" list-units --type=timer --all --plain --no-legend --no-pager 2>/dev/null)
+}
+
+# Enabled but stopped: `enable` writes a timers.target.wants symlink, so a
+# reboot ARMS these again. A timer someone stopped by hand to park a project
+# quietly comes back to life on the next boot; mask it if that is not wanted.
+scan_parked_timers() {
+  local t
+  while read -r t _rest; do
+    [ -n "$t" ] || continue
+    [ "$(systemctl --user is-enabled "$t" 2>/dev/null)" = enabled ] || continue
+    [ "$(systemctl --user is-active "$t" 2>/dev/null)" = active ] && continue
+    WARNINGS+=("$t is enabled but stopped --- a reboot will re-arm it (mask it to keep it parked)")
+  done < <(systemctl --user list-units --type=timer --all --plain --no-legend --no-pager 2>/dev/null)
+}
+
+# Units already failed before the reboot, so afterwards you can tell a
+# pre-existing failure from one the reboot caused.
+scan_failed() {
+  local u
+  while read -r u _rest; do
+    [ -n "$u" ] || continue
+    WARNINGS+=("$u is ALREADY failed (pre-existing --- not caused by the reboot)")
+  done < <(systemctl --user list-units --state=failed --plain --no-legend --no-pager 2>/dev/null | awk '{print $1}')
+}
+
+scan_scope user --user
+scan_parked_timers
+scan_failed
+[ "$CHECK_SYSTEM" -eq 1 ] && scan_scope system
+
+if [ ${#BLOCKERS[@]} -gt 0 ]; then
+  printf '%sNOT SAFE TO REBOOT%s (%d blocker(s))\n' "$RED" "$OFF" "${#BLOCKERS[@]}"
+  for b in "${BLOCKERS[@]}"; do printf '  %s- %s%s\n' "$RED" "$b" "$OFF"; done
+else
+  [ "$QUIET" -eq 1 ] || printf '%ssafe to reboot%s: no user job in flight, nothing unrecoverable due within %dm\n' \
+    "$GRN" "$OFF" "$WINDOW_MIN"
+fi
+
+if [ ${#WARNINGS[@]} -gt 0 ] && [ "$QUIET" -eq 0 ]; then
+  printf '\n%sworth knowing%s\n' "$YEL" "$OFF"
+  for w in "${WARNINGS[@]}"; do printf '  %s- %s%s\n' "$DIM" "$w" "$OFF"; done
+fi
+
+[ ${#BLOCKERS[@]} -eq 0 ]
