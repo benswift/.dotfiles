@@ -1,9 +1,18 @@
 [Unit]
-Description=Sync all nb notebooks daily
+Description=Sync all nb notebooks hourly
 Requires=nb-sync.service
 
 [Timer]
-OnCalendar=00:00
+# Hourly, matching launchd/com.xwmx.nb-sync.plist on the macOS hosts. A daily
+# sync left this host nineteen commits behind by mid-afternoon and diverged by
+# evening, with each side merging the other's day. (2026-07-28)
+#
+# Seven past, not on the hour: pkb-agent.timer fires on the :00/:15/:30/:45
+# grid (plus up to a minute of RandomizedDelaySec) and runs `nb sync` either
+# side of a due task. Two syncs of one repo at once is how the working tree
+# ends up dirty mid-push, which nb reports as the same unhelpful "Sync
+# failed". An offset clear of that grid costs nothing and avoids the race.
+OnCalendar=*:07
 Persistent=true
 Unit=nb-sync.service
 

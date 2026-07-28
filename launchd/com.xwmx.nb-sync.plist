@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Daily nb sync on macOS hosts (the notebook's ~/.nb/home/CLAUDE.md Sync
-  section refers to this). On weddle the pkb-agent timer syncs instead.
+  Hourly nb sync on macOS hosts (the notebook's ~/.nb/home/CLAUDE.md Sync
+  section refers to this). weddle runs the same cadence from nb-sync.timer.
+
+  Hourly rather than daily because the notebook is written from several hosts
+  at once: a daily sync left weddle nineteen commits behind by mid-afternoon
+  and diverged by evening, so each side kept merging the other's day.
+  (2026-07-28. pkb-agent also syncs, but only on a tick that has a due task,
+  so it is not a cadence to rely on.)
 
   StartCalendarInterval is not a wall-clock guarantee: on a laptop asleep at
   00:00, launchd defers the run until the machine wakes and then fires it
@@ -35,10 +41,11 @@
         <key>PATH</key>
         <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
     </dict>
+    <!-- Minute alone, with no Hour key, means every hour on the hour. A run
+         missed while the machine slept is coalesced into a single run at
+         wake, not replayed once per hour skipped. -->
     <key>StartCalendarInterval</key>
     <dict>
-        <key>Hour</key>
-        <integer>0</integer>
         <key>Minute</key>
         <integer>0</integer>
     </dict>
