@@ -173,7 +173,9 @@ _TYPEDSTREAM_TOKENS = frozenset(
     }
 )
 
-_UTF8_RUN = re.compile(rb"[\x20-\x7e\t\n\r](?:[\x09\x0a\x0d\x20-\x7e]|[\xc2-\xf4][\x80-\xbf]+){2,}")
+_UTF8_RUN = re.compile(
+    rb"[\x20-\x7e\t\n\r](?:[\x09\x0a\x0d\x20-\x7e]|[\xc2-\xf4][\x80-\xbf]+){2,}"
+)
 
 
 def _decode_length_prefixed_string(data: bytes, idx: int) -> str | None:
@@ -328,7 +330,9 @@ def _request_calendar_access(store: Any) -> bool:
 def _nsdate_to_iso(d: Any) -> str | None:
     if d is None:
         return None
-    return datetime.fromtimestamp(d.timeIntervalSince1970(), tz=timezone.utc).isoformat()
+    return datetime.fromtimestamp(
+        d.timeIntervalSince1970(), tz=timezone.utc
+    ).isoformat()
 
 
 def extract_calendar(
@@ -361,9 +365,10 @@ def extract_calendar(
     chunk_start = ns_start
     year = timedelta(days=365)
     while chunk_start.timeIntervalSince1970() < ns_end.timeIntervalSince1970():
-        chunk_end_dt = datetime.fromtimestamp(
-            chunk_start.timeIntervalSince1970(), tz=timezone.utc
-        ) + year
+        chunk_end_dt = (
+            datetime.fromtimestamp(chunk_start.timeIntervalSince1970(), tz=timezone.utc)
+            + year
+        )
         chunk_end_ts = min(chunk_end_dt.timestamp(), ns_end.timeIntervalSince1970())
         chunk_end = NSDate.dateWithTimeIntervalSince1970_(chunk_end_ts)
         predicate = store.predicateForEventsWithStartDate_endDate_calendars_(

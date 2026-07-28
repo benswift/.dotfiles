@@ -32,6 +32,7 @@ def decode_mime_header(header: str | None) -> str:
             parts.append(data)
     return " ".join(parts)
 
+
 ACCOUNT_DOMAINS = {
     "anu.edu.au": Account.anu,
     "benswift.me": Account.personal,

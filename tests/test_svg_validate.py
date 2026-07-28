@@ -55,7 +55,7 @@ class TestCheckRootSvg:
         assert result.check == "root"
 
     def test_non_svg_root_errors(self):
-        root, _ = parse_svg('<html><body/></html>')
+        root, _ = parse_svg("<html><body/></html>")
         result = check_root_svg(root)
         assert result.level == "err"
         assert "html" in result.message.lower()
@@ -173,8 +173,12 @@ class TestCheckNodeCount:
         assert "limit 500" in result.message
 
     def test_above_limit_warns(self):
-        paths = "".join(f'<rect x="{i}" y="0" width="1" height="1"/>' for i in range(50))
-        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 1">{paths}</svg>'
+        paths = "".join(
+            f'<rect x="{i}" y="0" width="1" height="1"/>' for i in range(50)
+        )
+        svg = (
+            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 1">{paths}</svg>'
+        )
         root, _ = parse_svg(svg)
         result = check_node_count(root, limit=10)
         assert result.level == "warn"
@@ -206,13 +210,13 @@ delta_e_76 = mod.delta_e_76
 
 class TestPaletteHelpers:
     def test_parse_hex_long_form(self):
-        assert parse_hex("#b58900") == (0xb5, 0x89, 0x00)
+        assert parse_hex("#b58900") == (0xB5, 0x89, 0x00)
 
     def test_parse_hex_short_form(self):
-        assert parse_hex("#abc") == (0xaa, 0xbb, 0xcc)
+        assert parse_hex("#abc") == (0xAA, 0xBB, 0xCC)
 
     def test_parse_hex_no_hash(self):
-        assert parse_hex("b58900") == (0xb5, 0x89, 0x00)
+        assert parse_hex("b58900") == (0xB5, 0x89, 0x00)
 
     def test_parse_hex_invalid_returns_none(self):
         assert parse_hex("not-a-colour") is None
@@ -229,20 +233,24 @@ class TestPaletteHelpers:
 
     def test_delta_e_similar_small(self):
         # Two near-identical solarized yellows.
-        c1 = srgb_to_lab((181, 137, 0))     # #b58900
+        c1 = srgb_to_lab((181, 137, 0))  # #b58900
         c2 = srgb_to_lab((183, 138, 2))
         assert delta_e_76(c1, c2) < 3.0
 
     def test_delta_e_distant_large(self):
         c1 = srgb_to_lab((181, 137, 0))
-        c2 = srgb_to_lab((38, 139, 210))    # #268bd2 (blue)
+        c2 = srgb_to_lab((38, 139, 210))  # #268bd2 (blue)
         assert delta_e_76(c1, c2) > 30.0
 
 
 check_palette = mod.check_palette
 
 
-SOLARIZED_WARM = [(181, 137, 0), (203, 75, 22), (220, 50, 47)]  # #b58900 #cb4b16 #dc322f
+SOLARIZED_WARM = [
+    (181, 137, 0),
+    (203, 75, 22),
+    (220, 50, 47),
+]  # #b58900 #cb4b16 #dc322f
 
 
 class TestCheckPalette:
@@ -263,7 +271,10 @@ class TestCheckPalette:
         root, _ = parse_svg(svg)
         result = check_palette(root, SOLARIZED_WARM)
         assert result.level == "warn"
-        assert "#00ff00" in result.message.lower() or "off-palette" in result.message.lower()
+        assert (
+            "#00ff00" in result.message.lower()
+            or "off-palette" in result.message.lower()
+        )
 
     def test_none_and_currentcolor_pass(self):
         svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path fill="none" stroke="currentColor"/></svg>'
@@ -288,7 +299,9 @@ pretty_print = mod.pretty_print
 
 class TestPrettyPrint:
     def test_uses_2_space_indent(self):
-        root, _ = parse_svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><g><rect width="1" height="1"/></g></svg>')
+        root, _ = parse_svg(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><g><rect width="1" height="1"/></g></svg>'
+        )
         out = pretty_print(root)
         # Root is unindented; first child is 2 spaces; grandchild is 4.
         assert "\n  <g" in out
@@ -320,7 +333,18 @@ class TestRunChecks:
     def test_includes_all_invariant_checks_on_clean_svg(self):
         results = run_checks(VALID_SVG)
         checks = {r.check for r in results}
-        expected = {"xml", "root", "viewbox", "script", "href", "external-href", "raster", "nodes", "duplicates", "palette"}
+        expected = {
+            "xml",
+            "root",
+            "viewbox",
+            "script",
+            "href",
+            "external-href",
+            "raster",
+            "nodes",
+            "duplicates",
+            "palette",
+        }
         assert expected.issubset(checks)
 
     def test_malformed_returns_only_xml_error(self):
@@ -351,7 +375,9 @@ class TestStrictFlag:
         r1 = subprocess.run([str(SCRIPT), str(p)], capture_output=True, check=False)
         assert r1.returncode == 0
         # --strict exits 1.
-        r2 = subprocess.run([str(SCRIPT), str(p), "--strict"], capture_output=True, check=False)
+        r2 = subprocess.run(
+            [str(SCRIPT), str(p), "--strict"], capture_output=True, check=False
+        )
         assert r2.returncode == 1
 
 
@@ -363,7 +389,9 @@ class TestOutputStreams:
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
             '<image href="data:image/png;base64,iVBORw0KGgo=" width="10" height="10"/></svg>'
         )
-        r = subprocess.run([str(SCRIPT), str(p)], capture_output=True, text=True, check=False)
+        r = subprocess.run(
+            [str(SCRIPT), str(p)], capture_output=True, text=True, check=False
+        )
         assert r.returncode == 0
         # OK lines on stdout:
         assert "✓ xml" in r.stdout
@@ -375,7 +403,9 @@ class TestOutputStreams:
     def test_error_on_stderr(self, tmp_path: Path):
         p = tmp_path / "err.svg"
         p.write_text("<html/>")
-        r = subprocess.run([str(SCRIPT), str(p)], capture_output=True, text=True, check=False)
+        r = subprocess.run(
+            [str(SCRIPT), str(p)], capture_output=True, text=True, check=False
+        )
         assert r.returncode == 1
         assert "✗" in r.stderr
         assert "✗" not in r.stdout
@@ -383,4 +413,5 @@ class TestOutputStreams:
 
 if __name__ == "__main__":
     import pytest
+
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

@@ -115,7 +115,9 @@ def next_elapse(task: Task, base: datetime) -> datetime:
             # comparing a naive value against an aware `now`.
             stamp = " ".join(value.split()[1:3])
             return datetime.strptime(stamp, "%Y-%m-%d %H:%M:%S").astimezone()
-    raise RuntimeError(f"could not parse systemd-analyze output for {task.name!r}:\n{out}")
+    raise RuntimeError(
+        f"could not parse systemd-analyze output for {task.name!r}:\n{out}"
+    )
 
 
 def is_due(task: Task, now: datetime) -> bool:

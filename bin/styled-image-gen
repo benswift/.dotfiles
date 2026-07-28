@@ -206,12 +206,16 @@ def build_model_input(
         }
         mapped = gpt_ratio_map.get(aspect_ratio, "1:1")
         if mapped != aspect_ratio:
-            warn(f"gpt model does not support aspect ratio {aspect_ratio}; using {mapped}")
+            warn(
+                f"gpt model does not support aspect ratio {aspect_ratio}; using {mapped}"
+            )
         params["aspect_ratio"] = mapped
         params["output_format"] = "jpeg" if output_format == "jpg" else output_format
         quality_map = {"1K": "medium", "2K": "high", "4K": "high"}
         params["quality"] = quality_map.get(resolution, "high")
-        params["moderation"] = "low" if safety_filter_level == "block_only_high" else "auto"
+        params["moderation"] = (
+            "low" if safety_filter_level == "block_only_high" else "auto"
+        )
         if image_paths:
             params["input_images"] = [
                 stack.enter_context(open(p, "rb")) for p in image_paths
@@ -264,7 +268,9 @@ def _main_impl(
     prompt: Annotated[str, typer.Argument(help="Image prompt")],
     model: Annotated[
         str,
-        typer.Option(help="Model to use: banana, qwen, imagen, flux, seedream, gpt, recraft"),
+        typer.Option(
+            help="Model to use: banana, qwen, imagen, flux, seedream, gpt, recraft"
+        ),
     ] = "banana",
     output_dir: Annotated[Path, typer.Option(help="Output directory")] = Path(
         "styled_image_gen_output"

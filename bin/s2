@@ -70,7 +70,9 @@ def format_paper(p: dict) -> str:
 def search(
     query: Annotated[str, typer.Argument(help="Search query")],
     limit: Annotated[int, typer.Option(help="Max results")] = 10,
-    year: Annotated[str | None, typer.Option(help="Year or range, e.g. 2020 or 2020-2024")] = None,
+    year: Annotated[
+        str | None, typer.Option(help="Year or range, e.g. 2020 or 2020-2024")
+    ] = None,
     open_access: Annotated[bool, typer.Option("--oa", help="Open access only")] = False,
 ):
     """Search for papers."""
@@ -111,7 +113,9 @@ def citations(
 ):
     """List papers that cite this paper."""
     with client() as c:
-        data = api_get(c, f"/paper/{paper_id}/citations", {"fields": FIELDS, "limit": limit}).get("data", [])
+        data = api_get(
+            c, f"/paper/{paper_id}/citations", {"fields": FIELDS, "limit": limit}
+        ).get("data", [])
     if not data:
         print("No citations found.")
         raise typer.Exit()
@@ -127,7 +131,9 @@ def references(
 ):
     """List papers referenced by this paper."""
     with client() as c:
-        data = api_get(c, f"/paper/{paper_id}/references", {"fields": FIELDS, "limit": limit}).get("data", [])
+        data = api_get(
+            c, f"/paper/{paper_id}/references", {"fields": FIELDS, "limit": limit}
+        ).get("data", [])
     if not data:
         print("No references found.")
         raise typer.Exit()
@@ -142,7 +148,11 @@ def related(
 ):
     """Find papers recommended based on this paper."""
     with client() as c:
-        data = api_get(c, f"/recommendations/v1/papers/forpaper/{paper_id}", {"fields": FIELDS, "limit": 10}).get("recommendedPapers", [])
+        data = api_get(
+            c,
+            f"/recommendations/v1/papers/forpaper/{paper_id}",
+            {"fields": FIELDS, "limit": 10},
+        ).get("recommendedPapers", [])
     if not data:
         print("No recommendations found.")
         raise typer.Exit()
