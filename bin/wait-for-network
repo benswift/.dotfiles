@@ -23,6 +23,10 @@
 # fails loudly through the normal OnFailure= path rather than hanging until
 # TimeoutStartSec or, worse, proceeding into a confusing mid-script error.
 #
+# macOS runs the same race from a different scheduler: launchd defers a
+# StartCalendarInterval job on a sleeping laptop until it wakes, and fires it
+# before wifi has associated (see launchd/com.xwmx.nb-sync.plist).
+#
 # Usage: wait-for-network [host]          (default: github.com)
 #        WAIT_FOR_NETWORK_TIMEOUT=<secs>  (default: 120)
 
@@ -32,9 +36,25 @@ host="${1:-github.com}"
 timeout="${WAIT_FOR_NETWORK_TIMEOUT:-120}"
 interval=2
 
+# `getent` is glibc's, so macOS has none --- and the probe must not be chosen
+# by `command -v getent` either, because an interactive Claude Code shell
+# injects a `getent` *function* that only greps /etc/hosts and so never
+# resolves github.com. Dispatch on the OS instead.
+#
+# dig over dscacheutil because dig queries the nameserver directly: a
+# dscacheutil answer can come from mDNSResponder's cache, which would sail
+# through this guard while the interface is still down --- exactly the case
+# the guard exists to catch. Neither command signals failure through its exit
+# status (both exit 0 on an unresolvable name), so test for output.
+if [[ "$OSTYPE" == darwin* ]]; then
+	resolves() { [[ -n "$(dig +short +time=2 +tries=1 "$1" A 2>/dev/null)" ]]; }
+else
+	resolves() { getent hosts "$1" >/dev/null 2>&1; }
+fi
+
 deadline=$(($(date +%s) + timeout))
 
-if getent hosts "$host" >/dev/null 2>&1; then
+if resolves "$host"; then
 	exit 0
 fi
 
@@ -42,7 +62,7 @@ echo "wait-for-network: $host does not resolve yet; waiting up to ${timeout}s"
 
 while [[ $(date +%s) -lt $deadline ]]; do
 	sleep "$interval"
-	if getent hosts "$host" >/dev/null 2>&1; then
+	if resolves "$host"; then
 		echo "wait-for-network: $host resolved after $((timeout - (deadline - $(date +%s))))s"
 		exit 0
 	fi

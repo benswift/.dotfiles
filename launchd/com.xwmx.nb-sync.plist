@@ -4,6 +4,18 @@
   Daily nb sync on macOS hosts (the notebook's ~/.nb/home/CLAUDE.md Sync
   section refers to this). On weddle the pkb-agent timer syncs instead.
 
+  StartCalendarInterval is not a wall-clock guarantee: on a laptop asleep at
+  00:00, launchd defers the run until the machine wakes and then fires it
+  immediately --- before wifi has associated. `nb sync` resolves github.com as
+  its first real act, so it died there, reporting only its generic "Sync
+  failed. Reason unknown, but likely ... Network unavailable." (2026-07-28:
+  twice in twenty runs. The log carried no timestamps to place them, hence the
+  per-run date stamp below.) bin/wait-for-network is the same guard the systemd
+  units use as ExecStartPre, and it fails loudly if the network never arrives.
+
+  Absolute path because PATH below deliberately omits ~/.dotfiles/bin: launchd
+  jobs get no login shell, so nothing sources zshenv.
+
   Install:
     cp ~/.dotfiles/launchd/com.xwmx.nb-sync.plist ~/Library/LaunchAgents/
     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.xwmx.nb-sync.plist
@@ -16,7 +28,7 @@
     <array>
         <string>/bin/sh</string>
         <string>-c</string>
-        <string>nb sync --all</string>
+        <string>printf '=== %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S %z')"; /Users/ben/.dotfiles/bin/wait-for-network &amp;&amp; nb sync --all</string>
     </array>
     <key>EnvironmentVariables</key>
     <dict>
