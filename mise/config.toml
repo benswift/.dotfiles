@@ -52,6 +52,7 @@ typstyle = "latest"
 shellcheck = "latest"
 # bin/check-secrets' scanner
 gitleaks = "latest"
+gh = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = []
