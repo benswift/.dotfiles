@@ -112,7 +112,7 @@ esac
 
 # Marker still fresh? Record the repeat and stay quiet.
 if [[ -f "$marker" ]]; then
-	age_h=$(((($(date +%s) - $(stat -c %Y "$marker")) / 3600)))
+	age_h=$((($(date +%s) - $(stat -c %Y "$marker")) / 3600))
 	if [[ $age_h -lt $REARM_HOURS ]]; then
 		printf 'repeat failure %s\n' "$(date -Is)" >>"$marker"
 		say "$unit: repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new todo"
