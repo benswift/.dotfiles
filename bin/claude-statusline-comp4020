@@ -3,33 +3,25 @@
 # the usual "<host> <dir> <branch>" line, plus the comp4020-statusline
 # plugin's budget segment ("comp4020 $12.34/$500 (2%)").
 #
-# Only repos whose .claude/settings.local.json points statusLine here get the
-# budget segment; everywhere else settings.json's plain claude-statusline
-# stands, so the segment never appears on sessions billed to the Max plan.
-# Plugin enablement is user-global with no per-project scope, which is why the
-# split lives here rather than in enabledPlugins.
+# The plugin is installed at local scope in those repos
+# (claude plugin install comp4020-statusline@comp4020 --scope local), so its
+# SessionStart hook only syncs the script when a session starts there. This
+# wrapper is needed only because settings.json already has a status line: the
+# segment reads nothing from stdin (hence </dev/null), leaving the session JSON
+# to claude-statusline, which consumes all of it.
 #
-# Two sources for the segment, in order. The plugin, once installed, runs a
-# SessionStart hook that syncs its script to ~/.claude/comp4020/statusline.sh
-# --- prefer that. Without the install, fall back to the marketplace checkout,
-# which is that sync's own source and just as fresh; the path is stable, unlike
-# the content-hashed cache path the plugin's header warns off.
-#
-# The segment reads nothing from stdin (hence </dev/null) --- the session JSON
-# belongs to claude-statusline, which consumes all of it.
+# On a machine where the plugin was never installed the segment is simply
+# absent, and the usual line stands.
 
 set -uo pipefail
 
 here="${BASH_SOURCE[0]%/*}"
 line=$("$here/claude-statusline")
 
-for budget in \
-  "$HOME/.claude/comp4020/statusline.sh" \
-  "$HOME/.claude/plugins/marketplaces/comp4020/comp4020-statusline/scripts/statusline.sh"; do
-  [[ -x "$budget" ]] || continue
+budget="$HOME/.claude/comp4020/statusline.sh"
+if [[ -x "$budget" ]]; then
   segment=$("$budget" </dev/null)
   [[ -n "$segment" ]] && line+="  $segment"
-  break
-done
+fi
 
 printf '%s' "$line"
