@@ -40,4 +40,18 @@ out=""
 [[ -n "$short_cwd" ]] && out+="${dir_color}${short_cwd}${reset}"
 [[ -n "$branch" ]] && out+=" ${vcs_color}${branch}${reset}"
 
+# COMP4020 segment: the current model, plus which wallet this session burns ---
+# the weekly strproxy budget on course credits, a dim "own plan" otherwise. The
+# comp4020-statusline plugin's SessionStart hook keeps this copy current, so
+# it's absent until that plugin is installed; skip it silently if so.
+#
+# It needs the session JSON to name the model, hence the pipe rather than the
+# `</dev/null` form. It never fails on purpose, but `set -e` means a bug in it
+# would take this whole line down, so swallow a non-zero exit.
+comp4020="$HOME/.claude/comp4020/statusline.sh"
+if [[ -x "$comp4020" ]]; then
+  segment=$(printf '%s' "$input" | "$comp4020" 2>/dev/null || true)
+  [[ -n "$segment" ]] && out+=" ${segment}"
+fi
+
 printf '%s' "$out"
