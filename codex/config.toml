@@ -1,7 +1,7 @@
 personality = "pragmatic"
 project_doc_fallback_filenames = ["CLAUDE.md"]
-model = "gpt-5.6-terra"
-model_reasoning_effort = "medium"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "max"
 service_tier = "default"
 
 [tui]
