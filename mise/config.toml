@@ -2,6 +2,12 @@
 rust = "latest"
 uv = "latest"
 node = "lts"
+# Machine-level bootstrap only, so `mise exec -- pnpm` resolves in every repo
+# (including ones that deliberately keep pnpm out of their own mise.toml).
+# It does not decide the version: pnpm self-switches to a repo's
+# package.json `packageManager` pin when there is one. Hence "latest" --- a
+# pin here would just be a second, staler answer to a question the repo owns.
+pnpm = "latest"
 bun = "latest"
 yazi = "latest"
 zellij = "latest"
@@ -28,7 +34,9 @@ bat = "latest"
 # parsers cached in ~/.local/share/lumis by bin/lumis-parsers). The supported
 # npm CLI installs the matching prebuilt `lumis` binary for each platform. Pin
 # 0.4.1: the newer npm wrapper requests an as-yet unpublished CLI release.
-"npm:@lumis-sh/cli" = { version = "0.4.1", allow_low_downloads = true, allow_builds = ["@lumis-sh/cli"] }
+"npm:@lumis-sh/cli" = { version = "0.4.1", allow_low_downloads = true, allow_builds = [
+  "@lumis-sh/cli",
+] }
 # Editor tooling invoked as bare binaries (helix LSP/formatters and the
 # bin/claude-format hook), never via `uv run`, so they must be on PATH globally.
 ruff = "latest"
