@@ -131,13 +131,17 @@ Machine-local config (per-host env vars) goes in
 `~/.config/mise/config.local.toml` --- mise auto-merges it with the global
 config, so any `[env]` entries get exported into every shell.
 
-Secrets default to fnox: resolve them through `fnox.toml` entries with `op://`
-references backed by 1Password. Low-stakes API tokens consumed by agent
-subprocesses (e.g. `PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for `notify-pushover`,
-`REPLICATE_API_TOKEN` for `styled-image-gen`) may live plaintext in
-`config.local.toml` instead --- the file is untracked, so nothing secret lands
-in git --- but higher-stakes credentials (e.g. `ANU_PASSWORD`) belong behind
-fnox/1Password. Either way, nothing secret goes in a tracked file.
+That untracked `[env]` table is also the sole home for secrets:
+`PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for `notify-pushover`,
+`REPLICATE_API_TOKEN` for `styled-image-gen`, `ANU_PASSWORD` for `vpn`. The file
+is machine-local and gitignored, so nothing secret lands in a tracked file.
+
+fnox and its 1Password-backed `op://` references were dropped in July 2026: the
+tool is gone from @mise/config.toml, the repo carries no `fnox.toml`, and
+`dotfiles doctor` no longer checks for either. Don't reintroduce them. The one
+remaining `op` call is @bin/vpn, which falls back to
+`op read op://Personal/ANU Identity/password` when `ANU_PASSWORD` is unset ---
+infrequent and interactive, so the 1Password prompt costs nothing.
 
 ### Package installation hierarchy
 

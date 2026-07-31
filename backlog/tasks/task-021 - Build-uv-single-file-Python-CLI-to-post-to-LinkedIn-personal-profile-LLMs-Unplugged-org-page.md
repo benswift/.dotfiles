@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-07-11 22:34'
-updated_date: '2026-07-11 22:56'
+updated_date: '2026-07-31 13:25'
 labels:
   - linkedin
   - tooling
@@ -46,7 +46,7 @@ OAuth 2.0 authorization-code flow. A one-time browser consent (stdlib `http.serv
 
 ## Secrets
 
-client_id/client_secret and the refresh tokens live behind fnox (`op://` refs), read by shelling out to `fnox get`. The access token is cached locally (e.g. under $XDG_STATE_HOME) and refreshed on demand. Nothing secret in a tracked file.
+client_id/client_secret and the refresh token live in the untracked `[env]` table in `~/.config/mise/config.local.toml`, which mise exports into every shell (fnox and `op://` were dropped in July 2026). The access token is cached locally (e.g. under $XDG_STATE_HOME) and refreshed on demand. Nothing secret in a tracked file.
 
 ## CLI surface
 
@@ -62,8 +62,8 @@ Bun is not needed. uv is already available everywhere; no new tool to add. (If i
 - [ ] #1 CLI posts a text update to Ben's personal profile
 - [ ] #2 CLI posts a text update to the LLMs Unplugged org Page
 - [ ] #3 Tokens refresh automatically without re-consent until the 365-day refresh token lapses
-- [ ] #4 client secret and refresh tokens are stored via fnox/1Password; no secrets in a tracked file
-- [ ] #5 One-time browser setup is documented in the script's header comment (and dotfiles CLAUDE.md if warranted)
+- [ ] #4 One-time browser setup is documented in the script's header comment (and dotfiles CLAUDE.md if warranted)
+- [ ] #5 client secret and refresh token are read from the environment (untracked mise [env]); no secrets in a tracked file
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -73,7 +73,7 @@ Bun is not needed. uv is already available everywhere; no new tool to add. (If i
 2. (browser, BLOCKED) Create a LinkedIn developer app; associate it with a Page (can be LLMs Unplugged).
 3. (browser, BLOCKED) Enable products: "Sign In with LinkedIn using OpenID Connect" + "Share on LinkedIn"; apply for "Community Management API" for org posting (has review lead time --- kick off first).
 4. Write bin/linkedin-post: uv single-file shebang + PEP 723 header (httpx), typed, ty-clean.
-5. Implement one-shot OAuth: stdlib http.server localhost catcher -> exchange code -> store refresh token in fnox, cache access token under XDG state.
+5. Implement one-shot OAuth: stdlib http.server localhost catcher -> exchange code -> print the refresh token for Ben to paste into ~/.config/mise/config.local.toml, cache access token under XDG state.
 6. Implement refresh-on-expiry against the LinkedIn token endpoint.
 7. Implement the post command: POST /rest/posts, author URN chosen by the target arg.
 8. Wire the config map for personId + orgId + target aliases.
