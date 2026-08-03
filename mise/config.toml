@@ -9,6 +9,14 @@ node = "lts"
 # pin here would just be a second, staler answer to a question the repo owns.
 pnpm = "latest"
 bun = "latest"
+# Node CLIs via the npm backend rather than `bun install -g`. A bun-global
+# package lands in ~/.bun/bin, which only an interactive shell has on PATH (via
+# zshenv), so a systemd unit declaring an explicit PATH silently misses it ---
+# how a crit sweep recorded a whole group's screenshots as failed with no
+# browser ever launched. The npm backend shims these into mise's own bin dir,
+# which every unit already resolves first.
+"npm:agent-browser" = "latest"
+"npm:backlog.md" = "latest"
 yazi = "latest"
 zellij = "latest"
 zoxide = "latest"
