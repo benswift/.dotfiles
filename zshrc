@@ -34,7 +34,9 @@ alias h="hx ."
 alias zp="zed-preview"
 alias ay="claude --dangerously-skip-permissions --model opus"
 alias aym="claude --dangerously-skip-permissions --model opus --effort max"
-alias ayf="claude --dangerously-skip-permissions --model fable --effort high"
+# --setting-sources skips project .claude/settings.json (comp4020 pins the ANU
+# proxy there), so the Max login is used; local/user settings still load.
+alias ayf="claude --setting-sources user,local --dangerously-skip-permissions --model fable --effort high"
 # Codex keeps per-machine trust and UI state in ~/.codex/config.toml. Its
 # portable defaults live in the dotfiles profile, layered on every invocation.
 alias codex="command codex --profile dotfiles"
