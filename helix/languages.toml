@@ -69,6 +69,26 @@ language-servers = ["marksman", "nb-lsp"]
 file-types = [{ glob = "**/backlog/**/*.md" }]
 auto-format = false
 
+# lucy's packaged starter templates: skip auto-format because they are YAML
+# documents wearing a .md extension --- frontmatter plus a fill-in body --- and
+# oxfmt reads the body as prose. It collapses the scaffolding a student fills
+# in (`- name:` over `comment:` becomes `- name: comment:` in
+# statement-of-originality.md), strips the column alignment of the inline YAML
+# comments in pam.md, and rewrites `*emphasis*` to `_emphasis_`. The harmless
+# half is trailing-space stripping, which is what kept turning up as churn: an
+# unrelated edit reflowed a template and the diff stranded itself in a
+# worktree. lucy excludes the same paths in its .oxfmtrc.json, so this teaches
+# Helix what the claude-format hook already knows.
+# Highlighting/injections inherit from markdown via
+# ~/.config/helix/runtime/queries/lucy-template/
+[[language]]
+name = "lucy-template"
+scope = "source.markdown"
+grammar = "markdown"
+language-servers = ["marksman", "nb-lsp"]
+file-types = [{ glob = "**/lucy/resources/templates/*.md" }]
+auto-format = false
+
 # mdx: separate from markdown so oxfmt sees the .mdx extension via
 # --stdin-filepath and uses its MDX parser. Without this, oxfmt treats MDX
 # expression containers as markdown emphasis and mangles single-line MDX
