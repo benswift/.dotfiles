@@ -1,6 +1,8 @@
 [Unit]
 Description=Sync all nb notebooks hourly
-Requires=nb-sync.service
+# Deliberately no Requires=<service>: in [Unit] that means "start the service
+# when the timer starts", firing a spurious run at every boot. Unit= in
+# [Timer] is what binds the two. (2026-08-06)
 
 [Timer]
 # Hourly, matching launchd/com.xwmx.nb-sync.plist on the macOS hosts. A daily

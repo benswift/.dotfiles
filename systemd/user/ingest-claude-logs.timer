@@ -1,6 +1,8 @@
 [Unit]
 Description=Trigger ingest-claude-logs hourly at :10
-Requires=ingest-claude-logs.service
+# Deliberately no Requires=<service>: in [Unit] that means "start the service
+# when the timer starts", firing a spurious run at every boot. Unit= in
+# [Timer] is what binds the two. (2026-08-06)
 
 [Timer]
 OnCalendar=*:10
