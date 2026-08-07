@@ -144,6 +144,12 @@ is_python_shebang() {
 # cmp finds no difference and writes nothing.
 fmt_ruff() { fmt ruff format --force-exclude --stdin-filename "$f" -; }
 
+# .astro is formatted by the *project's* prettier, not a global one --- see
+# bin/prettier-helix for why. The wrapper is the same one Helix's astro
+# formatter uses, so the two can't drift, and it passes the buffer through
+# untouched in a repo with no prettier installed.
+fmt_prettier() { fmt prettier-helix "$f"; }
+
 case "$f" in
 *.deck.mdx | */decks/*.mdx) ;; # astromotion decks: auto-format = false
 */backlog/*.md) ;;             # Backlog.md CLI owns these files' serialisation
@@ -153,6 +159,7 @@ case "$f" in
 *.tex) fmt tex-fmt --stdin ;;
 *.toml) fmt_oxfmt file.toml ;;
 *.kdl) fmt kdlfmt format - ;;
+*.astro) fmt_prettier ;;
 *.py) fmt_ruff ;;
 *.ex | *.exs | *.heex) fmt_mix ;;
 *.rs) fmt_rust ;;

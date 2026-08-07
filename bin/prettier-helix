@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# prettier-helix --- run a project's own prettier as a stdin->stdout formatter.
+#
+# .astro has no standalone formatter binary. Every Astro repo here formats it
+# with prettier + prettier-plugin-astro, both project-local devDependencies,
+# and prettier v3 resolves the `plugins` entry in .prettierrc.json relative to
+# that config file --- so only the project's own prettier can load it. A single
+# global prettier (mise, npm -g) would skew versions across repos and couldn't
+# see the plugin at all, which is why this walks up instead of installing one.
+#
+# The walk-up mirrors claude-format's fmt_mix (nearest mix.exs) and fmt_rust
+# (nearest Cargo.toml). Nothing to install: pnpm has already put the binary in
+# node_modules/.bin, on macOS and Linux alike.
+#
+# Usage: prettier-helix <buffer-path>   (reads stdin, writes stdout)
+#
+# Referenced as the astro formatter in ~/.dotfiles/helix/languages.toml and
+# mirrored by the *.astro case in ~/.dotfiles/bin/claude-format --- keep the
+# three in sync.
+set -euo pipefail
+
+f="${1:-}"
+[[ -n "$f" ]] || f="$PWD/buffer"
+
+# Helix expands %{buffer_name} to the path as typed, which may be relative to
+# its cwd; the walk-up needs an absolute path.
+case "$f" in
+/*) ;;
+*) f="$PWD/$f" ;;
+esac
+
+# Nearest node_modules/.bin/prettier at or above the buffer's directory.
+dir="$(dirname "$f")"
+while :; do
+    if [[ -x "$dir/node_modules/.bin/prettier" ]]; then
+        # --stdin-filepath drives both parser selection (via the *.astro
+        # override) and config discovery, so no cd is needed.
+        exec "$dir/node_modules/.bin/prettier" --stdin-filepath "$f"
+    fi
+    [[ "$dir" == "/" ]] && break
+    dir="$(dirname "$dir")"
+done
+
+# No project prettier: pass the buffer through untouched, the same silent skip
+# Helix and claude-format do for a formatter that isn't installed.
+exec cat

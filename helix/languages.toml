@@ -125,6 +125,17 @@ name = "kdl"
 auto-format = true
 formatter = { command = "kdlfmt", args = ["format", "-"] }
 
+# astro: every Astro repo here checks `prettier --check '**/*.astro'` in CI,
+# but prettier and prettier-plugin-astro are project-local devDependencies, so
+# there's no global binary to name here. prettier-helix walks up from the
+# buffer to the nearest node_modules/.bin/prettier and passes through when it
+# finds none. Without this block Helix has no astro formatter at all, and
+# every .astro edit ships unformatted and fails CI at the far end.
+[[language]]
+name = "astro"
+auto-format = true
+formatter = { command = "prettier-helix", args = ["%{buffer_name}"] }
+
 [language-server.mutt-compose-lsp]
 command = "mutt-compose-lsp"
 
