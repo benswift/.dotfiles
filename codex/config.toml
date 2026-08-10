@@ -26,3 +26,9 @@ trust_level = "trusted"
 
 [projects."/home/ben/projects/benswift-me"]
 trust_level = "trusted"
+
+[projects."/Users/ben/projects/llms-unplugged"]
+trust_level = "trusted"
+
+[projects."/Users/ben/projects/research-papers"]
+trust_level = "trusted"
