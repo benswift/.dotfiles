@@ -73,6 +73,10 @@ SYMLINK_MANIFEST_WITH_BACKUP=(
     # layer is a profile, selected by the zsh aliases and codex-zellij.
     "codex/config.toml:~/.codex/dotfiles.config.toml"
     "gemini/settings.json:~/.gemini/settings.json"
+    # Matilda writes UI and auth state back on `matilda auth login`, so the
+    # tracked file carries only the portable half (which context files to
+    # read). Split it codex-style if the machine-local writes get noisy.
+    "matilda/settings.json:~/.matilda/settings.json"
     # `ya pkg add` rewrites this to record each plugin's rev and hash
     "yazi/package.toml:~/.config/yazi/package.toml"
 )

@@ -281,10 +281,11 @@ parser (as with `.mdx`), add a language override to the `case` in @bin/ts-cat.
 
 ## AI coding agents
 
-All three AI coding agents (Claude Code, Codex CLI, Gemini CLI) are configured
-to read `CLAUDE.md` as the project-level instructions file. This means a single
-file works across all tools with no symlinks needed. Global instructions and
-base per-tool configuration are tracked here and symlinked into place.
+All four AI coding agents (Claude Code, Codex CLI, Gemini CLI, Matilda Code) are
+configured to read `CLAUDE.md` as the project-level instructions file. This
+means a single file works across all tools with no symlinks needed. Global
+instructions and base per-tool configuration are tracked here and symlinked into
+place.
 
 ### Claude Code
 
@@ -385,6 +386,26 @@ deliberately shared (for example a keymap), it may go in the profile; generated
 
 Gemini CLI uses @gemini/settings.json to read `CLAUDE.md` as a context file (in
 addition to the default `GEMINI.md`).
+
+### Matilda Code
+
+Maincode's coding agent (Matilda, the Australian-built model at
+matilda.maincode.com). Installed from npm via mise, since npm is the only
+channel it publishes to; the entry needs `allow_low_downloads` and
+`allow_builds` or mise's npm backend aborts the install.
+
+It's a Gemini CLI fork, so the shape is familiar: @matilda/settings.json uses
+the same `context.fileName` key to read `CLAUDE.md`, and
+`-p`/`--output-format json` give the same headless mode as `claude -p`. Config
+and credentials live in `~/.matilda/`; sign in with `matilda auth login`
+(browser OAuth, so a headless host needs `MATILDA_OAUTH_SKIP_BROWSER=1` and the
+device code).
+
+There's also an OpenAI-protocol endpoint at
+`https://matilda.maincode.com/api/v1/code` (model `matilda-code-1.0`, keyed by
+`MATILDA_API_KEY`), which is what the CLI itself talks to --- so any
+OpenAI-compatible client can use the same subscription. Its docs
+(matilda.maincode.help/welcome/external-api) sit behind a GitHub Pages login.
 
 ## Email
 
