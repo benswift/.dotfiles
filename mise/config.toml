@@ -80,3 +80,17 @@ trufflehog = "3.96.0"
 
 [settings]
 idiomatic_version_file_enable_tools = []
+
+# Exported into every shell mise touches --- including via the shims, so a
+# systemd unit or other non-interactive caller gets it too.
+[env]
+# Matilda's settings layer three deep: SystemDefaults < User < Workspace.
+# ~/.matilda/settings.json (User) is Matilda's own file --- `auth login` writes
+# the selected provider, the model and the UI name back into it, and an atomic
+# rewrite replaces a symlink with a real file, so tracking it doesn't hold. The
+# portable half instead goes in the lowest layer, which Matilda reads but never
+# writes, and which this points at directly in the repo (no symlink needed).
+# The file ships already stamped "$version": 5 in Matilda's own byte format;
+# an unstamped one gets migrated in place on first run, leaving a modified
+# file and a stray .orig beside it.
+MATILDA_CODE_SYSTEM_DEFAULTS_PATH = "{{env.HOME}}/.dotfiles/matilda/system-defaults.json"

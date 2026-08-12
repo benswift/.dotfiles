@@ -394,12 +394,25 @@ matilda.maincode.com). Installed from npm via mise, since npm is the only
 channel it publishes to; the entry needs `allow_low_downloads` and
 `allow_builds` or mise's npm backend aborts the install.
 
-It's a Gemini CLI fork, so the shape is familiar: @matilda/settings.json uses
-the same `context.fileName` key to read `CLAUDE.md`, and
-`-p`/`--output-format json` give the same headless mode as `claude -p`. Config
-and credentials live in `~/.matilda/`; sign in with `matilda auth login`
-(browser OAuth, so a headless host needs `MATILDA_OAUTH_SKIP_BROWSER=1` and the
-device code).
+It's a Gemini CLI fork, so the shape is familiar: the same `context.fileName`
+key points it at `CLAUDE.md`, and `-p`/`--output-format json` give the same
+headless mode as `claude -p`. Config and credentials live in `~/.matilda/`; sign
+in with `matilda auth login` (browser OAuth, so a headless host needs
+`MATILDA_OAUTH_SKIP_BROWSER=1` and the device code). The personal skills come
+along for nothing: Matilda reads `~/.matilda/skills` and `~/.agents/skills`, and
+@bin/sync-agent-config already populates the latter for Codex.
+
+Settings layer SystemDefaults < User < Workspace, and only the bottom layer is
+ours. `~/.matilda/settings.json` is Matilda's own: `auth login` writes the
+provider block, the selected model and the UI name into it, and the atomic
+rewrite replaces a symlink with a real file --- so it is deliberately neither
+tracked nor linked. @matilda/system-defaults.json holds the portable half
+instead, read in place from the repo via `MATILDA_CODE_SYSTEM_DEFAULTS_PATH`
+(set in @mise/config.toml, and exported by the mise shims too, so a
+non-interactive caller gets it). It ships already stamped `"$version": 5` in
+Matilda's own byte format, missing trailing newline and all: an unstamped file
+is migrated in place on first run, dirtying the repo and leaving a `.orig`
+beside it.
 
 There's also an OpenAI-protocol endpoint at
 `https://matilda.maincode.com/api/v1/code` (model `matilda-code-1.0`, keyed by
