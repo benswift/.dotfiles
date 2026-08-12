@@ -1,5 +1,5 @@
 ---
-id: task-011
+id: TASK-026
 title: Document Telstra IPv6-only network connectivity issue
 status: Done
 assignee: []

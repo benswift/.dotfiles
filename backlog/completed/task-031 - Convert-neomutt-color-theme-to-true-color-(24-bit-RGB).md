@@ -1,5 +1,5 @@
 ---
-id: task-012
+id: TASK-031
 title: Convert neomutt color theme to true color (24-bit RGB)
 status: Done
 assignee: []
