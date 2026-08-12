@@ -397,10 +397,22 @@ channel it publishes to; the entry needs `allow_low_downloads` and
 It's a Gemini CLI fork, so the shape is familiar: the same `context.fileName`
 key points it at `CLAUDE.md`, and `-p`/`--output-format json` give the same
 headless mode as `claude -p`. Config and credentials live in `~/.matilda/`; sign
-in with `matilda auth login` (browser OAuth, so a headless host needs
-`MATILDA_OAUTH_SKIP_BROWSER=1` and the device code). The personal skills come
-along for nothing: Matilda reads `~/.matilda/skills` and `~/.agents/skills`, and
+in with `matilda auth login`. The personal skills come along for nothing:
+Matilda reads `~/.matilda/skills` and `~/.agents/skills`, and
 @bin/sync-agent-config already populates the latter for Codex.
+
+Signing in on a headless host is awkward, because `auth login` is loopback-OAuth
+only --- the bundle ships a device-code implementation but never selects it for
+account login (`kind:"loopback"` is the sole transport in the auth chunk), so
+there is no code to read off a screen and type elsewhere.
+`MATILDA_AUTH_SKIP_BROWSER=1` (note: `AUTH`, not `OAUTH`, and the value must be
+exactly `1`) only stops it launching a browser --- it still prints an authorize
+URL redirecting to `127.0.0.1:<port>` on _that_ host, with the port assigned at
+random per run. So open the printed URL on a machine that has a browser, then
+hand the callback back to the headless host: either replay the failed
+`http://127.0.0.1:<port>/callback?code=...` URL there with `curl`, or forward
+the port first with `ssh -L <port>:127.0.0.1:<port> <host>`. The waiting process
+holds the PKCE verifier, so the code only redeems against that session.
 
 Settings layer SystemDefaults < User < Workspace, and only the bottom layer is
 ours. `~/.matilda/settings.json` is Matilda's own: `auth login` writes the
