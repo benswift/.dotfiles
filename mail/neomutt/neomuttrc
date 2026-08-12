@@ -191,6 +191,23 @@ macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/acco
 macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
 
 # === Sync operations ===
+# In a maildir, neomutt keeps flag changes (read/unread, flagged, and the
+# D flag the archive macro sets) in memory and only renames the files on
+# sync-mailbox, folder change or quit. mbsync reads the files. So anything
+# not yet flushed is invisible to mailsync, and a `mailsync` run from a
+# separate pane --- or a second neomutt left open on the same maildir ---
+# propagates none of it. Worse for a move: save-message writes the Archive
+# copy immediately but defers deleting the source, so a sync in that window
+# uploads the copy and leaves the original, landing the message in both
+# folders on the server.
+#
+# So flush after a minute's idle, in every open instance, rather than
+# relying on remembering to press x. The cost is that a message marked for
+# deletion is purged once you sit still for a minute, instead of waiting
+# for a deliberate sync --- undelete has that long, no longer.
+set timeout = 60
+timeout-hook 'exec sync-mailbox'
+
 # sync-mailbox before mailsync so pending local changes (deletes from the
 # archive macro, read flags) hit disk and get pushed this run, and again
 # after so messages archived/deleted on other devices drop out of the index
