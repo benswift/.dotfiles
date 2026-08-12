@@ -8,7 +8,16 @@ set from = "ben.swift@anu.edu.au"
 set folder = ~/Maildir/anu/
 set spoolfile = +INBOX
 set postponed = +Drafts
-set record = +"Sent Items"
+# No Fcc: Office 365 files its own copy of anything submitted through SMTP
+# AUTH into Sent Items, and there's no supported way to turn that off. An
+# Fcc on top of that is a second copy of every message neomutt sends ---
+# which is how 40% of this folder ended up duplicated. Exchange's copy is
+# the better one anyway: neomutt writes its Fcc before submission, so it
+# carries no Received chain and no X-MS-Exchange-* headers. The cost is
+# that a sent message only shows up here after the next mailsync.
+#
+# Fastmail does NOT do this, so the personal account keeps its record.
+unset record
 set trash = +Deleted\ Items
 
 # Sending mail via msmtp

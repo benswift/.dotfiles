@@ -8,7 +8,12 @@ set from = "phdconvenor.cybernetics@anu.edu.au"
 set folder = ~/Maildir/phdconvenor/
 set spoolfile = +INBOX
 set postponed = +Drafts
-set record = +"Sent Items"
+# No Fcc --- same reason as the anu account, and even more pronounced here
+# (91% of this folder was duplicated). Exchange files send-as mail into the
+# delegated mailbox's own Sent Items, not Ben's: the pulled copies carry
+# X-MS-Exchange-MessageSentRepresentingType, so dropping the local Fcc
+# doesn't cost the convenor trail.
+unset record
 set trash = +"Deleted Items"
 
 # Sending mail via msmtp
