@@ -43,6 +43,17 @@ Current per-folder counts (extra copies beyond the first, then how many sets sho
 
 The Sent Items rule used in the earlier cleanup does not transfer. There the discriminator was structural and total: one copy had no transport headers at all because neomutt wrote it before submission, the other had the full Received chain, and every one of the 1910 sets fit. Two copies of the same archived message have both been through the transport, so both carry Received headers and the pair may be byte-identical. A different discriminator is needed, and the safe-set may well be smaller than the duplicate set.
 
+### Findings from the 2026-08-13 investigation
+
+The half-move population is still growing, and the producer is not the bug fixed in 0d31ef5 --- it is a cross-device archive race that no IMAP syncer can prevent. Two new sets appeared on 2026-08-13, and the mbsync state file (`.mbsyncstate` far/near UID mapping) proves the sequence: a message archived in neomutt sat unpushed because no mailsync ran for four hours; in that window the same message was archived from another client (phone/OWA), moving it server-side; the next sync then pulled the server's copy down and pushed the local copy up, landing two copies on both sides. The sync is state-based with UID-only identity, so mbsync cannot recognise the two copies as the same intent.
+
+Consequences for this task:
+
+- The 372 "half-move" sets are (at least mostly) this race accumulated over time, not damage from the fixed save-message bug. The fingerprint is the same either way.
+- The reliable discriminator for race damage: same folder, same Message-ID, bodies byte-identical except mbsync's `X-TUID` header. Both verified pairs from 2026-08-13 match exactly (equal size, single-line diff).
+- Mitigation shipped 2026-08-13: `launchd/com.benswift.mailsync.plist` runs `mailsync-scheduled` every 5 minutes (with a lock in `bin/mailsync` against concurrent runs, offline skip, and a deduped Pushover page on failure). This shrinks the race window from hours to minutes; a residual trickle is still possible if the same message is archived on two devices within one window.
+- The ~876 non-half-move sets remain uncharacterised and a fair number are probably legitimate; there is no commitment to classify them all. They are investigate-only unless a mechanical rule emerges.
+
 Note the repo has prior history here: two completed tasks, "Nuclear cleanup of ANU Archive maildir" and "Restore and deduplicate ANU archive emails". Read them before starting --- they may explain some of the unclassified population.
 
 Deleting a copy locally causes mbsync to expunge it from the server too (Expunge Both is set on every channel), so any cleanup is a live change to Fastmail and Exchange, not just to local disk. The quarantine-sync-verify pattern used for the Sent Items cleanup worked well and is the model to follow: move candidates out of ~/Maildir with a manifest recording each original path, sync, then verify every affected Message-ID still resolves to exactly one surviving copy before anything is deleted for good.
@@ -50,12 +61,11 @@ Deleting a copy locally causes mbsync to expunge it from the server too (Expunge
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every one of the ~1248 duplicate sets is classified into a named category with a stated, reproducible rule --- half-move damage, legitimate duplicate, or a further category the investigation identifies --- with no set left unclassified
-- [ ] #2 The classification rule is shown to be sound on the half-move population by manual inspection of a sample, including at least one case from each affected folder
-- [ ] #3 Duplicate sets that turn out to be legitimate are explicitly identified and excluded from any deletion, with the reasoning recorded
-- [ ] #4 Any cleanup moves candidates to a quarantine directory outside ~/Maildir with a manifest recording each file's original path, and is safe to interrupt at any point
-- [ ] #5 After the post-cleanup sync, every quarantined Message-ID is verified to still resolve to exactly one surviving copy in the maildir, and the surviving copy is verified to be the one the rule intended to keep
-- [ ] #6 No message is deleted from Fastmail or Exchange whose only remaining copy would be the deleted one
-- [ ] #7 A repeat of the duplicate scan reports zero remaining sets in the categories deemed to be damage, and the counts for categories deemed legitimate are unchanged
-- [ ] #8 Findings are written up in the repo --- what the ~876 unclassified copies turned out to be, and whether any live bug (as opposed to historical damage) still produces them
+- [ ] #1 Duplicate sets are classified by the mechanical race-damage rule --- same folder, same Message-ID, byte-identical except the X-TUID header --- and every set the rule does not match is excluded from deletion, no further classification owed
+- [ ] #2 The rule is spot-checked by manual inspection of a sample of matched sets, including at least one from each affected folder
+- [ ] #3 Any cleanup moves candidates to a quarantine directory outside ~/Maildir with a manifest recording each file's original path, and is safe to interrupt at any point
+- [ ] #4 After the post-cleanup sync, every quarantined Message-ID is verified to still resolve to exactly one surviving copy in the maildir
+- [ ] #5 No message is deleted from Fastmail or Exchange whose only remaining copy would be the deleted one
+- [ ] #6 A repeat of the duplicate scan reports zero remaining rule-matched sets, and counts for unmatched sets are unchanged
+- [ ] #7 After a few weeks on the 5-minute timer, a rescan confirms the new-duplicate rate has collapsed (the 2026-08-13 baseline was ~2/day with a four-hour sync gap)
 <!-- AC:END -->
