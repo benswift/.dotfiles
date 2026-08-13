@@ -3,51 +3,117 @@
 # requires-python = ">=3.12"
 # dependencies = []
 # ///
-"""Walk ~/claude-logs/<host>/<project>/<uuid>.jsonl and land a summary row per
-session in analytics.db. Idempotent: re-running updates existing rows."""
+"""Summarise every shipped agent session into ~/claude-logs/analytics.db.
+
+Two agents ship here, each with its own on-disk layout (see ROOTS): Claude
+Code's project-keyed tree and Codex CLI's date-keyed one. They land in one
+`sessions` table with an `agent` column rather than a table each, because the
+interesting questions ("how much work went into llms-unplugged, and with
+what") are group-bys over `project_canonical`, not unions.
+
+Ingest is incremental and keyed on the file path: a session file is re-parsed
+only when its size or mtime has moved, which matters because the Claude tree
+alone is ~16GB and a full rebuild re-read all of it every hour.
+
+Exits non-zero when a host has stopped delivering (see STALE_DAYS). That is
+the point of the check, not a side effect: the failure this pipeline actually
+suffers is not a unit that fails, it is a unit that succeeds and ships
+nothing --- daysy went five weeks unnoticed that way. Paired with
+`OnFailure=unit-oncall@%n.service`, a silent stall becomes a pkb todo.
+"""
 
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
+from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-LOGS = Path.home() / "claude-logs"
-DB = LOGS / "analytics.db"
+HOME = Path.home()
+DB = HOME / "claude-logs" / "analytics.db"
+
+# Each agent's shipped tree, and how to read a host/project out of a path
+# relative to that root. bin/ship-claude-logs writes both.
+#
+#   claude: <host>/<project_dir>/<uuid>.jsonl
+#   codex:  <host>/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl
+#
+# The Claude pattern is deliberately shallow enough to miss the subagent
+# transcripts Claude Code files under <uuid>/subagents/ --- 9k of them and
+# climbing. A subagent is not a session: counting one as a row would inflate
+# every per-project total by however many agents that session happened to fan
+# out to. They are still shipped and still readable by path; they just do not
+# belong in this table.
+ROOTS: dict[str, tuple[Path, str]] = {
+    "claude": (HOME / "claude-logs", "*/*/*.jsonl"),
+    "codex": (HOME / "codex-logs", "*/*/*/*/rollout-*.jsonl"),
+}
+
+# A host quiet for longer than this has almost certainly stopped shipping
+# rather than stopped being used. Generous, because daysy is a laptop that
+# can sit shut for a week without anything being wrong.
+STALE_DAYS = int(os.environ.get("AGENT_LOGS_STALE_DAYS", "7"))
 
 # Strips /Users/<user> and /home/<user> to ~ so the same repo worked on from
 # macOS and Linux hosts collapses to a single canonical project key.
 HOME_PREFIX_RE = re.compile(r"^/(Users|home)/[^/]+")
 
-# Rebuilt from scratch on every run --- the JSONL files on disk are the source
-# of truth, so dropping-and-recreating is cheaper than schema migrations.
+# A Codex rollout filename embeds the session uuid after the timestamp:
+#   rollout-2026-08-10T11-41-18-019feb7a-26bc-7381-bb87-bb3928675607.jsonl
+CODEX_UUID_RE = re.compile(r"rollout-\d{4}-\d{2}-\d{2}T[\d-]+?-([0-9a-f-]{36})$")
+
 SCHEMA = """
-DROP TABLE IF EXISTS sessions;
-CREATE TABLE sessions (
-    -- A session file can appear under several project dirs on one host
-    -- (worktree sessions, resumes from a different cwd), so the uuid alone
-    -- is not unique.
+CREATE TABLE IF NOT EXISTS sessions (
+    -- Path relative to $HOME. The file is the session's stable identity:
+    -- a uuid alone is not unique (worktree sessions and resumes from a
+    -- different cwd file the same session under several project dirs).
+    file_path         TEXT PRIMARY KEY,
+    agent             TEXT NOT NULL,
     session_uuid      TEXT NOT NULL,
     host              TEXT NOT NULL,
     project_dir       TEXT NOT NULL,
     project_canonical TEXT,
     cwd               TEXT,
     git_branch        TEXT,
-    claude_version    TEXT,
+    git_repo_url      TEXT,
+    agent_version     TEXT,
     started_at        TEXT,
     ended_at          TEXT,
     message_count     INTEGER NOT NULL,
     file_size         INTEGER NOT NULL,
-    ingested_at       TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (session_uuid, host, project_dir)
+    file_mtime        REAL NOT NULL,
+    ingested_at       TEXT NOT NULL
 );
-CREATE INDEX sessions_host ON sessions(host);
-CREATE INDEX sessions_project ON sessions(project_dir);
-CREATE INDEX sessions_canonical ON sessions(project_canonical);
-CREATE INDEX sessions_started ON sessions(started_at);
+CREATE INDEX IF NOT EXISTS sessions_agent ON sessions(agent);
+CREATE INDEX IF NOT EXISTS sessions_host ON sessions(host);
+CREATE INDEX IF NOT EXISTS sessions_uuid ON sessions(session_uuid);
+CREATE INDEX IF NOT EXISTS sessions_project ON sessions(project_dir);
+CREATE INDEX IF NOT EXISTS sessions_canonical ON sessions(project_canonical);
+CREATE INDEX IF NOT EXISTS sessions_started ON sessions(started_at);
 """
+
+COLUMNS = (
+    "file_path",
+    "agent",
+    "session_uuid",
+    "host",
+    "project_dir",
+    "project_canonical",
+    "cwd",
+    "git_branch",
+    "git_repo_url",
+    "agent_version",
+    "started_at",
+    "ended_at",
+    "message_count",
+    "file_size",
+    "file_mtime",
+    "ingested_at",
+)
 
 
 def canonicalise(cwd: str | None) -> str | None:
@@ -56,98 +122,225 @@ def canonicalise(cwd: str | None) -> str | None:
     return HOME_PREFIX_RE.sub("~", cwd)
 
 
-def summarise(path: Path) -> dict[str, Any] | None:
+def read_lines(path: Path) -> list[str] | None:
     try:
-        text = path.read_text()
+        return path.read_text(errors="replace").splitlines()
     except OSError:
         return None
 
-    lines = text.splitlines()
-    if not lines:
-        return None
 
-    started_at: str | None = None
-    ended_at: str | None = None
-    cwd: str | None = None
-    git_branch: str | None = None
-    version: str | None = None
+def entries(lines: list[str]) -> Iterator[dict[str, Any]]:
+    """Yield the well-formed JSON objects in a JSONL file, skipping the rest.
 
+    A session still being written can end mid-line, so a trailing partial
+    record is expected rather than exceptional.
+    """
     for line in lines:
         try:
             entry = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if not isinstance(entry, dict):
-            continue
+        if isinstance(entry, dict):
+            yield entry
 
-        ts = entry.get("timestamp")
-        if isinstance(ts, str) and ts:
-            if started_at is None:
-                started_at = ts
-            ended_at = ts
-        if cwd is None:
-            candidate = entry.get("cwd")
-            if isinstance(candidate, str) and candidate:
-                cwd = candidate
-        if git_branch is None:
-            candidate = entry.get("gitBranch")
-            if isinstance(candidate, str) and candidate:
-                git_branch = candidate
-        if version is None:
-            candidate = entry.get("version")
-            if isinstance(candidate, str) and candidate:
-                version = candidate
 
-    try:
-        size = path.stat().st_size
-    except OSError:
-        size = 0
+def first_str(entry: dict[str, Any], key: str) -> str | None:
+    value = entry.get(key)
+    return value if isinstance(value, str) and value else None
 
+
+def span(lines: list[str]) -> tuple[str | None, str | None]:
+    """The first and last timestamps in the file."""
+    started: str | None = None
+    ended: str | None = None
+    for entry in entries(lines):
+        ts = first_str(entry, "timestamp")
+        if ts:
+            if started is None:
+                started = ts
+            ended = ts
+    return started, ended
+
+
+def summarise_claude(lines: list[str]) -> dict[str, Any]:
+    """Claude Code repeats cwd/gitBranch/version on every record, so take the
+    first of each rather than assuming a header line."""
+    cwd: str | None = None
+    git_branch: str | None = None
+    version: str | None = None
+
+    for entry in entries(lines):
+        cwd = cwd or first_str(entry, "cwd")
+        git_branch = git_branch or first_str(entry, "gitBranch")
+        version = version or first_str(entry, "version")
+
+    started, ended = span(lines)
     return {
-        "session_uuid": path.stem,
-        "host": path.parent.parent.name,
-        "project_dir": path.parent.name,
-        "project_canonical": canonicalise(cwd),
         "cwd": cwd,
         "git_branch": git_branch,
-        "claude_version": version,
-        "started_at": started_at,
-        "ended_at": ended_at,
-        "message_count": len(lines),
-        "file_size": size,
+        "git_repo_url": None,
+        "agent_version": version,
+        "started_at": started,
+        "ended_at": ended,
     }
 
 
+def summarise_codex(lines: list[str]) -> dict[str, Any]:
+    """Codex writes a single `session_meta` record first, carrying everything
+    worth knowing --- including the git remote, which Claude never records."""
+    meta: dict[str, Any] = {}
+    for entry in entries(lines):
+        if entry.get("type") == "session_meta":
+            payload = entry.get("payload")
+            if isinstance(payload, dict):
+                meta = payload
+            break
+
+    git = meta.get("git")
+    git = git if isinstance(git, dict) else {}
+
+    started, ended = span(lines)
+    return {
+        "cwd": first_str(meta, "cwd"),
+        "git_branch": first_str(git, "branch"),
+        "git_repo_url": first_str(git, "repository_url"),
+        "agent_version": first_str(meta, "cli_version"),
+        "started_at": first_str(meta, "timestamp") or started,
+        "ended_at": ended,
+    }
+
+
+def session_uuid(agent: str, path: Path) -> str:
+    if agent == "codex":
+        match = CODEX_UUID_RE.match(path.stem)
+        if match:
+            return match.group(1)
+    return path.stem
+
+
+def summarise(agent: str, root: Path, path: Path) -> dict[str, Any] | None:
+    lines = read_lines(path)
+    if not lines:
+        return None
+
+    relative = path.relative_to(root)
+    stat = path.stat()
+    fields = summarise_claude(lines) if agent == "claude" else summarise_codex(lines)
+
+    return {
+        "file_path": str(path.relative_to(HOME)),
+        "agent": agent,
+        "session_uuid": session_uuid(agent, path),
+        "host": relative.parts[0],
+        # Claude's sanitised project directory; for Codex, the YYYY/MM/DD
+        # shard, which is the closest thing its layout has to one.
+        "project_dir": str(Path(*relative.parts[1:-1])),
+        "project_canonical": canonicalise(fields["cwd"]),
+        "message_count": len(lines),
+        "file_size": stat.st_size,
+        "file_mtime": stat.st_mtime,
+        "ingested_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        **fields,
+    }
+
+
+def ensure_schema(conn: sqlite3.Connection) -> None:
+    """Create the table, rebuilding from scratch if an older layout is found.
+
+    The source of truth is the JSONL on disk, so a schema change costs one
+    full re-ingest rather than a migration.
+    """
+    existing = {
+        row[1] for row in conn.execute("PRAGMA table_info(sessions)").fetchall()
+    }
+    if existing and "agent" not in existing:
+        conn.executescript("DROP TABLE sessions;")
+    conn.executescript(SCHEMA)
+
+
+def stale_hosts(conn: sqlite3.Connection) -> list[tuple[str, str]]:
+    """Hosts whose most recent session predates the staleness window."""
+    cutoff = datetime.now(UTC) - timedelta(days=STALE_DAYS)
+    stale: list[tuple[str, str]] = []
+    rows = conn.execute(
+        "SELECT host, max(started_at) FROM sessions"
+        " WHERE started_at IS NOT NULL GROUP BY host"
+    ).fetchall()
+    for host, newest in rows:
+        try:
+            seen = datetime.fromisoformat(newest)
+        except (TypeError, ValueError):
+            continue
+        if seen.tzinfo is None:
+            seen = seen.replace(tzinfo=UTC)
+        if seen < cutoff:
+            stale.append((host, newest))
+    return stale
+
+
 def main() -> None:
-    if not LOGS.is_dir():
-        raise SystemExit(f"No logs directory at {LOGS}")
+    if not DB.parent.is_dir():
+        raise SystemExit(f"No logs directory at {DB.parent}")
 
     conn = sqlite3.connect(DB)
     try:
-        conn.executescript(SCHEMA)
+        ensure_schema(conn)
 
-        rows: list[dict[str, Any]] = []
-        for path in LOGS.glob("*/*/*.jsonl"):
-            row = summarise(path)
-            if row is not None:
-                rows.append(row)
-
-        conn.executemany(
-            """
-            INSERT INTO sessions (
-                session_uuid, host, project_dir, project_canonical, cwd,
-                git_branch, claude_version, started_at, ended_at,
-                message_count, file_size, ingested_at
-            ) VALUES (
-                :session_uuid, :host, :project_dir, :project_canonical, :cwd,
-                :git_branch, :claude_version, :started_at, :ended_at,
-                :message_count, :file_size, CURRENT_TIMESTAMP
+        # (size, mtime) of everything already ingested, so an unchanged file
+        # is skipped without being opened.
+        known: dict[str, tuple[int, float]] = {
+            row[0]: (row[1], row[2])
+            for row in conn.execute(
+                "SELECT file_path, file_size, file_mtime FROM sessions"
             )
-            """,
+        }
+
+        seen: set[str] = set()
+        rows: list[dict[str, Any]] = []
+        for agent, (root, pattern) in ROOTS.items():
+            if not root.is_dir():
+                continue
+            for path in root.glob(pattern):
+                key = str(path.relative_to(HOME))
+                seen.add(key)
+                try:
+                    stat = path.stat()
+                except OSError:
+                    continue
+                if known.get(key) == (stat.st_size, stat.st_mtime):
+                    continue
+                row = summarise(agent, root, path)
+                if row is not None:
+                    rows.append(row)
+
+        placeholders = ", ".join(f":{name}" for name in COLUMNS)
+        conn.executemany(
+            f"INSERT OR REPLACE INTO sessions ({', '.join(COLUMNS)})"
+            f" VALUES ({placeholders})",
             rows,
         )
+
+        # Files that have gone from disk (a tree pruned, a host retired).
+        gone = sorted(set(known) - seen)
+        conn.executemany(
+            "DELETE FROM sessions WHERE file_path = ?", [(key,) for key in gone]
+        )
         conn.commit()
-        print(f"Ingested {len(rows)} sessions -> {DB}")
+
+        total = conn.execute("SELECT count(*) FROM sessions").fetchone()[0]
+        print(
+            f"Ingested {len(rows)} new/changed, dropped {len(gone)}"
+            f" --- {total} sessions in {DB}"
+        )
+
+        stale = stale_hosts(conn)
+        if stale:
+            detail = ", ".join(f"{host} (newest {newest})" for host, newest in stale)
+            raise SystemExit(
+                f"No sessions in the last {STALE_DAYS} days from: {detail}."
+                " That host has probably stopped shipping --- check its"
+                " ship-claude-logs timer/launchd agent."
+            )
     finally:
         conn.close()
 
