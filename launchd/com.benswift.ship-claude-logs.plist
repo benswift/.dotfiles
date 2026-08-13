@@ -21,7 +21,15 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <!-- launchd hands a job only what is spelled out here, and the
+         original value omitted two things the script needs: /sbin (for
+         `route`, used by the metered-network probe) and the mise shims (for
+         `rclone`, which is mise-managed per mise/config.toml). Under
+         `set -euo pipefail` the missing `route` exited 127 before rclone was
+         ever reached, and since launchd has no OnFailure equivalent, daysy
+         shipped nothing for five weeks in silence. The staleness check in
+         bin/ingest-claude-logs is what now catches this class. (2026-08-13) -->
+        <string>/Users/ben/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
     <key>StartInterval</key>
     <integer>900</integer>
