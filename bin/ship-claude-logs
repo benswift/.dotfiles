@@ -1,32 +1,56 @@
 #!/usr/bin/env bash
 #
-# Ship ~/.claude/projects to weddle:claude-logs/<hostname>/
+# Ship this host's AI-agent session logs to weddle:
 #
-# Uses rclone copy (never --delete) so weddle retains sessions that Claude Code
+#   ~/.claude/projects  ->  weddle:claude-logs/<hostname>/
+#   ~/.codex/sessions   ->  weddle:codex-logs/<hostname>/
+#
+# Two trees rather than one because the agents key their sessions differently
+# --- Claude by sanitised project path, Codex by date --- and bin/ingest-claude-logs
+# needs to know which layout it is walking. They land in one `sessions` table
+# at the far end regardless.
+#
+# Uses rclone copy (never --delete) so weddle retains sessions that the agent
 # has rotated out locally. On weddle itself, does a local rsync to the same
 # layout so the ingester can treat every host uniformly.
 
 set -euo pipefail
 
 REMOTE="${CLAUDE_LOGS_REMOTE:-weddle}"
-SOURCE_DIR="${CLAUDE_LOGS_SOURCE:-$HOME/.claude/projects}"
 DRY_RUN="${DRY_RUN:-false}"
 HOST="$(hostname -s)"
+
+# "<source dir>:<remote tree>" --- one line per agent. A source that does not
+# exist on this host is skipped, so a Claude-only machine needs no config.
+SOURCES=(
+    "${CLAUDE_LOGS_SOURCE:-$HOME/.claude/projects}:claude-logs"
+    "${CODEX_LOGS_SOURCE:-$HOME/.codex/sessions}:codex-logs"
+)
+
+# Records the last ship that actually moved data. The metered guard below
+# consults it so a long stint on a hotspot cannot silently stall shipping
+# indefinitely --- which is exactly how daysy went five weeks without
+# delivering a session.
+STAMP="${XDG_STATE_HOME:-$HOME/.local/state}/ship-claude-logs/last-success"
+METERED_GRACE_HOURS="${METERED_GRACE_HOURS:-24}"
 
 usage() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Ship Claude Code session logs to weddle.
+Ship this host's Claude Code and Codex CLI session logs to weddle.
 
 Options:
   -n, --dry-run    Show what would be transferred without making changes
   -h, --help       Show this help message
 
 Environment variables:
-  CLAUDE_LOGS_REMOTE   rclone remote name (default: weddle)
-  CLAUDE_LOGS_SOURCE   source directory (default: ~/.claude/projects)
-  DRY_RUN              Set to 'true' for dry run mode
+  CLAUDE_LOGS_REMOTE    rclone remote name (default: weddle)
+  CLAUDE_LOGS_SOURCE    Claude session dir (default: ~/.claude/projects)
+  CODEX_LOGS_SOURCE     Codex session dir  (default: ~/.codex/sessions)
+  METERED_GRACE_HOURS   Ship anyway once a metered network has blocked
+                        shipping for this long (default: 24)
+  DRY_RUN               Set to 'true' for dry run mode
 EOF
 }
 
@@ -38,28 +62,33 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ ! -d "$SOURCE_DIR" ]]; then
-  echo "No source directory at $SOURCE_DIR --- nothing to ship." >&2
-  exit 0
-fi
+# Hours since the last successful ship, or a large number if we have never
+# recorded one (so a fresh host ships on its first run regardless of network).
+hours_since_success() {
+  local last now
+  [[ -f "$STAMP" ]] || { echo 9999; return; }
+  last="$(cat "$STAMP" 2>/dev/null)" || { echo 9999; return; }
+  [[ "$last" =~ ^[0-9]+$ ]] || { echo 9999; return; }
+  now="$(date +%s)"
+  echo $(( (now - last) / 3600 ))
+}
 
-# On weddle, skip the network hop --- rsync locally into the same layout.
-if [[ "$HOST" == "weddle" ]]; then
-  DEST="$HOME/claude-logs/$HOST"
-  mkdir -p "$DEST"
-  RSYNC_ARGS=(-a)
-  [[ "$DRY_RUN" == "true" ]] && RSYNC_ARGS+=(--dry-run)
-  echo "Local copy: $SOURCE_DIR/ -> $DEST/"
-  rsync "${RSYNC_ARGS[@]}" "$SOURCE_DIR/" "$DEST/"
-  exit 0
-fi
+# Is this an expensive connection? macOS redacts the SSID from headless
+# processes, so we can't match on network name; instead check (a)
+# NWPath.isExpensive, Apple's own metered flag, and (b) the default gateway
+# --- an iPhone hotspot always NATs through 172.20.10.1 whether tethered over
+# Wi-Fi, USB, or Bluetooth.
+#
+# `route` lives in /sbin, which a launchd agent's PATH does not include unless
+# it is spelled out. Under `set -euo pipefail` that made the gateway probe
+# exit 127 and kill the whole script *before* rclone ran --- five weeks of
+# daysy shipping nothing, with only the launchd exit status to show for it.
+# So the probe is guarded here as well as fixed in the plist: this script must
+# not care what PATH its caller hands it. (2026-08-13)
+on_metered_network() {
+  [[ "$OSTYPE" == darwin* ]] || return 1
 
-# Don't ship over a metered connection (e.g. tethered to the phone's personal
-# hotspot). macOS redacts the SSID from headless processes, so we can't match
-# on network name; instead check (a) NWPath.isExpensive, Apple's own metered
-# flag, and (b) the default gateway --- an iPhone hotspot always NATs through
-# 172.20.10.1 whether tethered over Wi-Fi, USB, or Bluetooth.
-if [[ "$OSTYPE" == darwin* ]]; then
+  local expensive gateway
   expensive="$(swift - 2>/dev/null <<'EOF' || echo unknown
 import Network
 import Foundation
@@ -72,19 +101,56 @@ _ = sem.wait(timeout: .now() + 5)
 print(expensive ? "expensive" : "ok")
 EOF
 )"
-  if [[ "$expensive" == "expensive" ]]; then
-    echo "On a metered network (NWPath.isExpensive) --- skipping ship."
+  [[ "$expensive" == "expensive" ]] && return 0
+
+  local route_bin
+  route_bin="$(command -v route || echo /sbin/route)"
+  [[ -x "$route_bin" ]] || return 1
+  gateway="$("$route_bin" -n get default 2>/dev/null | awk '/gateway:/{print $2}')" || return 1
+  [[ "$gateway" == 172.20.10.* ]]
+}
+
+if on_metered_network; then
+  stalled="$(hours_since_success)"
+  if (( stalled < METERED_GRACE_HOURS )); then
+    echo "On a metered network --- skipping ship (last success ${stalled}h ago)."
     exit 0
   fi
-  gateway="$(route -n get default 2>/dev/null | awk '/gateway:/{print $2}')"
-  if [[ "$gateway" == 172.20.10.* ]]; then
-    echo "On a personal hotspot (gateway $gateway) --- skipping ship."
-    exit 0
-  fi
+  # Session logs are small text files, and a stale archive is worse than a
+  # few MB of hotspot data.
+  echo "On a metered network, but nothing has shipped for ${stalled}h --- shipping anyway."
 fi
 
-RCLONE_ARGS=(copy --progress)
-[[ "$DRY_RUN" == "true" ]] && RCLONE_ARGS+=(--dry-run)
+shipped=false
 
-echo "Shipping: $SOURCE_DIR -> $REMOTE:claude-logs/$HOST"
-rclone "${RCLONE_ARGS[@]}" "$SOURCE_DIR" "$REMOTE:claude-logs/$HOST"
+for entry in "${SOURCES[@]}"; do
+  source_dir="${entry%%:*}"
+  tree="${entry##*:}"
+
+  if [[ ! -d "$source_dir" ]]; then
+    echo "No $source_dir on this host --- skipping $tree."
+    continue
+  fi
+
+  # On weddle, skip the network hop --- rsync locally into the same layout.
+  if [[ "$HOST" == "weddle" ]]; then
+    dest="$HOME/$tree/$HOST"
+    mkdir -p "$dest"
+    rsync_args=(-a)
+    [[ "$DRY_RUN" == "true" ]] && rsync_args+=(--dry-run)
+    echo "Local copy: $source_dir/ -> $dest/"
+    rsync "${rsync_args[@]}" "$source_dir/" "$dest/"
+  else
+    rclone_args=(copy --progress)
+    [[ "$DRY_RUN" == "true" ]] && rclone_args+=(--dry-run)
+    echo "Shipping: $source_dir -> $REMOTE:$tree/$HOST"
+    rclone "${rclone_args[@]}" "$source_dir" "$REMOTE:$tree/$HOST"
+  fi
+
+  shipped=true
+done
+
+if [[ "$shipped" == "true" && "$DRY_RUN" != "true" ]]; then
+  mkdir -p "$(dirname "$STAMP")"
+  date +%s > "$STAMP"
+fi
