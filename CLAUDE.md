@@ -341,16 +341,56 @@ that clone (`~/.claude/plugins/marketplaces/ben/`), then commit and push from
 there. No symlink wiring in @create_symlinks.sh is involved --- the marketplace
 clone covers everything.
 
-### Claude Code session logs (analytics)
+### Agent session logs (analytics)
 
-Every host ships `~/.claude/projects` to `weddle:claude-logs/<host>/` via
-@bin/ship-claude-logs --- a 15-minute systemd timer on weddle, a launchd agent
-on macOS hosts (@launchd/, install instructions in each plist header), with a
-metered-network guard so laptops never ship over a phone hotspot. On weddle,
-@bin/ingest-claude-logs (hourly timer) rebuilds `~/claude-logs/analytics.db`
-(one `sessions` row per session file, keyed by uuid + host + project dir).
-Purpose: cross-machine introspection of Claude Code usage --- e.g. a recurring
-agent proposing patterns worth reifying into skills.
+Every host ships its AI-agent session logs to weddle via @bin/ship-claude-logs
+--- a 15-minute systemd timer on weddle, a launchd agent on macOS hosts
+(@launchd/, install instructions in each plist header). Two trees, because the
+two agents key their sessions differently:
+
+- `~/.claude/projects` -> `weddle:claude-logs/<host>/<project>/<uuid>.jsonl`
+- `~/.codex/sessions` -> `weddle:codex-logs/<host>/YYYY/MM/DD/rollout-*.jsonl`
+
+On weddle, @bin/ingest-claude-logs (hourly timer) summarises both into
+`~/claude-logs/analytics.db`, one `sessions` row per session file with an
+`agent` column --- one table rather than one per agent, because the questions
+worth asking ("how much work went into this repo, and with what") are group-bys
+over `project_canonical`, not unions. Codex records more than Claude does: its
+first `session_meta` line carries the git branch _and_ remote URL, so
+`git_repo_url` is populated for Codex rows and null for Claude ones.
+
+The row key is the session file's path relative to `~`, not the session uuid: a
+uuid is not unique (a resume from a different cwd files the same session under
+two project dirs), and a path lets ingest be incremental. Only files whose size
+or mtime moved get re-parsed, which took the hourly run from 56s over all 16GB
+to 0.2s.
+
+Purpose: cross-machine introspection of agent usage --- e.g. a recurring agent
+proposing patterns worth reifying into skills
+(`~/.nb/home/tasks/claude-retrospective.md`).
+
+#### The failure mode this pipeline actually has
+
+Not a unit that fails --- a unit that succeeds and ships nothing. daysy went
+five weeks (9 July to 13 August 2026) delivering no sessions at all, because its
+launchd plist pinned a `PATH` without `/sbin`, so the metered-network probe's
+`route` call exited 127 under `set -euo pipefail` and killed the script before
+rclone ran. Nothing noticed, because launchd has no `OnFailure` equivalent and
+the log it writes is a file nobody reads.
+
+Three guards now, in order of how much they matter:
+
+- **`ingest-claude-logs` exits non-zero when any host's newest session is older
+  than `AGENT_LOGS_STALE_DAYS` (default 7)**, and the unit carries
+  `OnFailure=unit-oncall@%n.service`. This is the one that generalises: it
+  catches a stalled host regardless of _why_, including a macOS host whose only
+  scheduler cannot report failure at all. weddle's ingester is daysy's alarm.
+- The metered-network guard is bounded. It skips only while a successful ship
+  happened within `METERED_GRACE_HOURS` (default 24); past that it ships anyway,
+  because session logs are small text files and a stale archive is the worse
+  outcome.
+- The gateway probe no longer trusts its caller's `PATH` --- it resolves `route`
+  itself and treats a miss as "not metered" rather than a fatal error.
 
 ### Codex CLI
 
