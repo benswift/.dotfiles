@@ -32,6 +32,27 @@ for cmd in mbsync mu; do
     fi
 done
 
+# Two mbsync runs on the same maildir corrupt its sync state (the task-010
+# disaster), and the launchd timer (mailsync-scheduled) can fire while a
+# manual `,s` sync is still going --- so every entry point takes this lock.
+# noclobber write is atomic, and the file holds the owner's PID so a lock
+# left behind by a crashed run is detected and cleared.
+LOCKFILE="$HOME/Maildir/.mailsync.lock"
+if ! (set -o noclobber; echo $$ > "$LOCKFILE") 2>/dev/null; then
+    otherpid=$(cat "$LOCKFILE" 2>/dev/null || true)
+    if [ -n "${otherpid:-}" ] && kill -0 "$otherpid" 2>/dev/null; then
+        print_status "Another mailsync (pid $otherpid) is already running; nothing to do"
+        exit 0
+    fi
+    print_warning "Clearing stale lock (pid ${otherpid:-unknown} not running)"
+    rm -f "$LOCKFILE"
+    if ! (set -o noclobber; echo $$ > "$LOCKFILE") 2>/dev/null; then
+        print_status "Another mailsync grabbed the lock first; nothing to do"
+        exit 0
+    fi
+fi
+trap 'rm -f "$LOCKFILE"' EXIT
+
 # Track if any sync had errors
 sync_errors=0
 
@@ -59,10 +80,12 @@ fi
 print_status "Updating search index..."
 mu index
 
-# Summary
+# Summary. Exit non-zero on sync errors so mailsync-scheduled can page ---
+# neomutt's `,s` macro ignores the exit code, so this only feeds the timer.
 echo ""
 if [ $sync_errors -eq 0 ]; then
     print_status "Mail sync completed successfully!"
 else
     print_warning "Mail sync completed with $sync_errors account(s) having issues"
+    exit 1
 fi
