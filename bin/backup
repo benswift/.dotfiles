@@ -2,9 +2,11 @@
 
 set -euo pipefail
 
-# Configuration
+# Configuration. The remote base is per-host: weddle:backup/ holds one
+# directory per machine, and a hardcoded default would let one machine's
+# `rclone sync` (which deletes) silently mirror over another's backup.
 REMOTE="${RCLONE_REMOTE:-weddle}"
-REMOTE_BASE="${RCLONE_REMOTE_BASE:-backup/mitch}"
+REMOTE_BASE="${RCLONE_REMOTE_BASE:-backup/$(hostname -s)}"
 DRY_RUN="${DRY_RUN:-false}"
 
 # Exclude patterns for build artifacts and regeneratable content
