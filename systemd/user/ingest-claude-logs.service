@@ -1,6 +1,11 @@
 [Unit]
 Description=Ingest shipped Claude logs into ~/claude-logs/analytics.db
 Documentation=file:///home/ben/.dotfiles/bin/ingest-claude-logs
+# A silent stall is the real failure mode here, so ingest-claude-logs exits
+# non-zero when a host stops delivering --- that is what reaches the notebook
+# through this hook. (2026-08-13)
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
 
 [Service]
 Type=oneshot

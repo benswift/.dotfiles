@@ -4,6 +4,11 @@ Documentation=file:///home/ben/.dotfiles/bin/ship-claude-logs
 # No `After=network-online.target` here: that is a system target, so in the
 # user manager it silently resolves to nothing and orders nothing. The real
 # guard is the ExecStartPre below. (2026-07-27)
+# Catches a hard failure (no rclone on PATH, remote unreachable). It cannot
+# catch the more common fault --- shipping nothing and exiting 0 --- which is
+# ingest-claude-logs' staleness check on weddle. (2026-08-13)
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
 
 [Service]
 Type=oneshot
