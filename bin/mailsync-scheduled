@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# launchd wrapper around mailsync: sync on a timer, page when it breaks.
+#
+# launchd has no OnFailure equivalent (see the ship-claude-logs plist for
+# the five-silent-weeks story), so failure routing lives here: the first
+# failure sends a Pushover page, repeats while still broken stay quiet, a
+# success re-arms, and a marker older than a day pages again so a persistent
+# breakage cannot go silent. Being offline is not a failure --- the machine
+# sleeps, networks drop --- so an unreachable IMAP host skips the run.
+#
+# stdout/stderr land in ~/Library/Logs/mailsync.log via the plist.
+
+set -euo pipefail
+
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/mailsync"
+MARKER="$STATE/failed"
+LOG="$HOME/Library/Logs/mailsync.log"
+REARM_MINUTES=1440
+
+mkdir -p "$STATE"
+
+# Offline? Try again next interval.
+if ! nc -z -w 5 outlook.office365.com 993 2>/dev/null; then
+    echo "[$(date '+%H:%M:%S')] offline (outlook.office365.com:993 unreachable); skipping"
+    exit 0
+fi
+
+if mailsync; then
+    if [ -f "$MARKER" ]; then
+        rm -f "$MARKER"
+        echo "[$(date '+%H:%M:%S')] recovered; failure marker cleared"
+    fi
+    exit 0
+fi
+
+# Failed. Page once per breakage, not once per interval.
+if [ -f "$MARKER" ] && [ -z "$(find "$MARKER" -mmin +"$REARM_MINUTES" 2>/dev/null)" ]; then
+    echo "[$(date '+%H:%M:%S')] still failing; already paged"
+    exit 1
+fi
+
+date -Iseconds > "$MARKER"
+# mise exec supplies PUSHOVER_TOKEN/PUSHOVER_USER_KEY from the untracked
+# [env] block in ~/.config/mise/config.local.toml. Best effort: a Pushover
+# outage must not mask the log, which already has the full story.
+tail -20 "$LOG" 2>/dev/null \
+    | mise exec -- notify-pushover --title "mailsync failing on $(hostname -s)" \
+    || echo "[$(date '+%H:%M:%S')] pushover page failed; log is the only record"
+exit 1

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Sync mail every 5 minutes via bin/mailsync-scheduled.
+
+  The point is shrinking the cross-device archive race (see TASK-025): a
+  message archived in neomutt sits in the server INBOX until the next sync,
+  and archiving it again from the phone in that window lands a duplicate in
+  Archive on both sides. Hours-wide window -> minutes-wide.
+
+  Concurrency with a manual `,s` sync is safe: bin/mailsync takes a lock.
+
+  Install (not in the symlink manifest because ~/Library only exists on
+  macOS):
+
+    cp ~/.dotfiles/launchd/com.benswift.mailsync.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.benswift.mailsync.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.benswift.mailsync</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/ben/.dotfiles/bin/mailsync-scheduled</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <!-- launchd hands a job only what is spelled out here: dotfiles bin
+         (mailsync itself), mise shims (mise exec for notify-pushover,
+         python3 for mutt_oauth2.py), homebrew (mbsync, mu), and the system
+         dirs (nc, security). -->
+        <string>/Users/ben/.dotfiles/bin:/Users/ben/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>StartInterval</key>
+    <integer>300</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/ben/Library/Logs/mailsync.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/ben/Library/Logs/mailsync.log</string>
+</dict>
+</plist>
