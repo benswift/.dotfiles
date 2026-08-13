@@ -27,12 +27,18 @@ if [[ "$(uname)" != "Darwin" ]]; then
   exit 1
 fi
 
-if ! command -v displayplacer >/dev/null 2>&1; then
+# Don't trust the caller's PATH (launchd and non-interactive ssh don't carry
+# /opt/homebrew/bin) --- the same trap that silently broke ship-claude-logs.
+displayplacer_bin="$(command -v displayplacer || true)"
+if [[ -z "$displayplacer_bin" && -x /opt/homebrew/bin/displayplacer ]]; then
+  displayplacer_bin=/opt/homebrew/bin/displayplacer
+fi
+if [[ -z "$displayplacer_bin" ]]; then
   echo "mirror-displays: displayplacer not found (brew install displayplacer)" >&2
   exit 1
 fi
 
-list_output="$(displayplacer list)"
+list_output="$("$displayplacer_bin" list)"
 
 # One block of key/value lines per screen, blank-line separated; the trailing
 # "run this to recreate the current arrangement" paragraph has no persistent
@@ -82,7 +88,7 @@ for id in "${external_ids[@]}"; do
 done
 
 echo "mirroring ${#external_ids[@]} external display(s) onto the built-in screen"
-if ! displayplacer "id:$chain"; then
+if ! "$displayplacer_bin" "id:$chain"; then
   echo "mirror-displays: displayplacer failed; arrangement left as-is" >&2
   exit 1
 fi
