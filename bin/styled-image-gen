@@ -10,6 +10,7 @@ Environment:
 
 Supported models:
     banana    - Google Nano Banana Pro (default): style transfer, up to 14 ref images, 4K
+    banana-2  - Google Nano Banana 2: the Flash-tier sibling, faster and cheaper
     imagen    - Google Imagen 4 Ultra: high-fidelity text-to-image, no ref images, 1K/2K
     seedream  - ByteDance Seedream 5 Pro: cinematic aesthetics, up to 10 ref images, 1K/2K
     gpt       - OpenAI GPT Image 2: all-round text-to-image + editing
@@ -43,6 +44,7 @@ from replicate.exceptions import ReplicateException
 
 MODELS: dict[str, str] = {
     "banana": "google/nano-banana-pro",
+    "banana-2": "google/nano-banana-2",
     "imagen": "google/imagen-4-ultra",
     "seedream": "bytedance/seedream-5-pro",
     "gpt": "openai/gpt-image-2",
@@ -134,6 +136,14 @@ def build_model_input(
         # serve the request from Seedream rather than erroring out. Billed at the
         # fallback model's price, and skipped for 4K or 4:5/5:4 aspect ratios.
         params["allow_fallback_model"] = True
+        if image_paths:
+            params["image_input"] = [
+                stack.enter_context(open(p, "rb")) for p in image_paths
+            ]
+
+    elif model == "banana-2":
+        # Same family as banana, but the Flash tier: no safety knob, no fallback.
+        params["resolution"] = resolution
         if image_paths:
             params["image_input"] = [
                 stack.enter_context(open(p, "rb")) for p in image_paths
@@ -234,6 +244,11 @@ TRANSIENT_MARKERS = (
 )
 RETRY_BASE_DELAY = 15
 
+# Where to go when a model stays unavailable. Nano Banana 2 is the same family
+# as Pro, so the house style survives the switch; nothing else has an obvious
+# stand-in, so they get none.
+DEFAULT_FALLBACKS = {"banana": "banana-2"}
+
 
 def is_transient(exc: Exception) -> bool:
     # A timeout usually means the model is queued behind a backlog, not that
@@ -294,7 +309,9 @@ def _main_impl(
     prompt: Annotated[str, typer.Argument(help="Image prompt")],
     model: Annotated[
         str,
-        typer.Option(help="Model to use: banana, imagen, seedream, gpt, recraft"),
+        typer.Option(
+            help="Model to use: banana, banana-2, imagen, seedream, gpt, recraft"
+        ),
     ] = "banana",
     output_dir: Annotated[Path, typer.Option(help="Output directory")] = Path(
         "styled_image_gen_output"
@@ -339,7 +356,8 @@ def _main_impl(
     fallback_model: Annotated[
         str | None,
         typer.Option(
-            help="Model to use if the chosen one stays unavailable, e.g. seedream"
+            help="Model to use if the chosen one stays unavailable "
+            "(banana falls back to banana-2 by default)"
         ),
     ] = None,
 ) -> None:
@@ -361,6 +379,8 @@ def _main_impl(
         error_exit(
             f"Unknown fallback model '{fallback_model}'. Choose from: {', '.join(MODELS)}"
         )
+    if fallback_model is None:
+        fallback_model = DEFAULT_FALLBACKS.get(model)
 
     all_input_images: list[Path] = list(input_image)
 
