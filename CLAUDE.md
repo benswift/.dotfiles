@@ -321,8 +321,10 @@ Three directories are involved --- note the differences:
   its `PostToolUse` hook fires on every `Write|Edit` regardless and drops
   `.impeccable/hook.cache.json` wherever it decides the project root is ---
   including inside `mail/utils/src/`, from where the cache shipped in the built
-  wheel. The plugin stays enabled globally in @claude/settings.json for the
-  repos that actually have a frontend.
+  wheel. As of August 2026 the plugin is disabled globally in
+  @claude/settings.json too, so this repo's opt-out is belt-and-braces; it stays
+  installed, so re-enabling it (here or for a frontend repo) is a one-line
+  `true`.
 
 The @claude/ folder includes:
 

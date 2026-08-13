@@ -85,7 +85,7 @@
     "claude-code-setup@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": false,
     "agent-browser@agent-browser": true,
-    "impeccable@impeccable": true,
+    "impeccable@impeccable": false,
     "ast-grep@ast-grep-marketplace": true,
     "modern-web-guidance@googlechrome": true,
     "ben@ben": true,
