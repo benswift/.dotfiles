@@ -53,6 +53,7 @@ Consequences for this task:
 - The reliable discriminator for race damage: same folder, same Message-ID, bodies byte-identical except mbsync's `X-TUID` header. Both verified pairs from 2026-08-13 match exactly (equal size, single-line diff).
 - Mitigation shipped 2026-08-13: `launchd/com.benswift.mailsync.plist` runs `mailsync-scheduled` every 5 minutes (with a lock in `bin/mailsync` against concurrent runs, offline skip, and a deduped Pushover page on failure). This shrinks the race window from hours to minutes; a residual trickle is still possible if the same message is archived on two devices within one window.
 - The ~876 non-half-move sets remain uncharacterised and a fair number are probably legitimate; there is no commitment to classify them all. They are investigate-only unless a mechanical rule emerges.
+- `~/Maildir/anu-archive` (the local-only search archive of mail expunged server-side by ANU's retention policy; no mbsync channel, so purely local) was scanned and deduplicated on 2026-08-13: 30,330 files, 3 content-identical duplicate sets, 3 extra copies moved to `~/mail-quarantine/anu-archive-20260813/` with a manifest. It is not part of this task's counts.
 
 Note the repo has prior history here: two completed tasks, "Nuclear cleanup of ANU Archive maildir" and "Restore and deduplicate ANU archive emails". Read them before starting --- they may explain some of the unclassified population.
 
