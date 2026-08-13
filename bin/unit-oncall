@@ -111,8 +111,27 @@ fail) ;;
 esac
 
 # Marker still fresh? Record the repeat and stay quiet.
+#
+# Age comes from the first-failure line inside the marker, not the file's mtime:
+# the repeat below appends, which bumps mtime, so an mtime-based age resets to
+# zero on every failure and a unit failing more often than REARM_HOURS never
+# re-arms. That is exactly the case the re-arm exists for --- a daily unit
+# crossed 24h between firings and re-filed, while an hourly one stayed quiet
+# under a single todo from its first failure. Fall back to mtime if the line is
+# missing or unparseable: re-arming late beats dying in the OnFailure= handler.
 if [[ -f "$marker" ]]; then
-	age_h=$((($(date +%s) - $(stat -c %Y "$marker")) / 3600))
+	first_ts="$(sed -n '1s/^first failure //p' "$marker")"
+	first_s=""
+	# Test for emptiness before parsing: `date -d ""` succeeds and yields
+	# midnight today, which would read as a fresh marker and suppress the
+	# re-arm --- the opposite of the fallback's intent.
+	if [[ -n "$first_ts" ]]; then
+		first_s="$(date -d "$first_ts" +%s 2>/dev/null || true)"
+	fi
+	if [[ -z "$first_s" ]]; then
+		first_s="$(stat -c %Y "$marker")"
+	fi
+	age_h=$((($(date +%s) - first_s) / 3600))
 	if [[ $age_h -lt $REARM_HOURS ]]; then
 		printf 'repeat failure %s\n' "$(date -Is)" >>"$marker"
 		say "$unit: repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new todo"
