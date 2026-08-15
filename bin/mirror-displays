@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # mirror-displays: mirror every connected external display onto the MacBook's
-# built-in screen (no extended desktop), with the first external as the
-# primary so the audience-facing screen dictates resolution and aspect.
+# built-in screen (no extended desktop), with the largest-native external as
+# the primary so the audience-facing screen dictates resolution and aspect.
 #
 # The point is to be safe to run blind: it inspects what is actually connected
 # and degrades to a no-op rather than guessing. Concretely:
@@ -13,18 +13,24 @@
 #   - displayplacer absent or its      -> exit 1 without touching anything
 #     output unparseable
 #
-# The applied command is `displayplacer "id:A+B+C res:WxH"`. Left alone, a
-# mirror set inherits the primary's mode, and MacBook panels aren't 16:9, so
-# leading with the built-in pillarboxes the externals (the screens the
-# audience actually sees). Instead the first external leads the chain as the
-# primary and the res is its largest mode: displayplacer validates res
-# against the primary only, and macOS then fits every secondary into the
-# mirror as best it can --- letterboxing the built-in, which beats
-# pillarboxing the audience-facing screen. Some listed modes are refused at
-# apply time (e.g. a MacBook panel's TV-style 1080p modes when primary), so
-# if the res-qualified command fails, retry the bare id chain, which leaves
-# all resolutions at their current values rather than wedging anything into
-# an unsupported mode.
+# The applied command is `displayplacer "id:A+B+C res:WxH ..."`. Left alone,
+# a mirror set inherits the primary's mode, and MacBook panels aren't 16:9,
+# so leading with the built-in pillarboxes the externals (the screens the
+# audience actually sees). Instead the external with the largest native panel
+# leads the chain as the primary (list order is arbitrary, and would happily
+# put a 1080p pen display ahead of a 4K projector): displayplacer validates
+# res against the primary only, and macOS then fits every secondary into the
+# mirror as best it can --- downscaling/letterboxing the built-in and any
+# smaller external, which beats capping the audience-facing screen.
+#
+# The chosen res is the primary's native (largest) mode, except on 4K-class
+# panels where the half-native HiDPI mode is preferred when offered: it sends
+# the same full-resolution signal to the display but keeps UI at a sane size
+# (a 4K projector runs "looks like 1920x1080" rendered at 3840x2160). Some
+# listed modes are refused at apply time (e.g. a MacBook panel's TV-style
+# 1080p modes when primary), so if the res-qualified command fails, retry the
+# bare id chain, which leaves all resolutions at their current values rather
+# than wedging anything into an unsupported mode.
 #
 # Requires displayplacer (`brew install displayplacer`). macOS only.
 
@@ -51,8 +57,8 @@ list_output="$("$displayplacer_bin" list)"
 # One block of key/value lines per screen, blank-line separated; the trailing
 # "run this to recreate the current arrangement" paragraph has no persistent
 # id, so it's dropped by the id=="" guard. The fourth field is the screen's
-# supported resolutions ("WxH", deduped across hz/scaling variants) as a
-# comma-separated list.
+# supported modes ("WxH/on" or "WxH/off" by HiDPI scaling, deduped across hz
+# variants) as a comma-separated list.
 screens="$(awk '
   BEGIN { RS=""; FS="\n" }
   {
@@ -66,9 +72,10 @@ screens="$(awk '
         r = $i
         sub(/^ *mode [0-9]+: res:/, "", r)
         sub(/ .*/, "", r)
-        if (!(r in seen)) {
-          seen[r] = 1
-          reslist = reslist (reslist == "" ? "" : ",") r
+        key = r "/" ($i ~ / scaling:on/ ? "on" : "off")
+        if (!(key in seen)) {
+          seen[key] = 1
+          reslist = reslist (reslist == "" ? "" : ",") key
         }
       }
     }
@@ -104,25 +111,54 @@ if (( ${#external_ids[@]} == 0 )); then
   exit 0
 fi
 
-# First external leads the chain: it becomes the mirror set's primary, and
-# res is validated against (and applied to) the primary alone.
-chain="${external_ids[0]}+$builtin_id"
-for id in "${external_ids[@]:1}"; do
-  chain+="+$id"
+# Prints "W H" for the largest mode by area in a "WxH/on,WxH/off,..." list
+# (the display's native resolution); prints nothing if the list is empty.
+native_res() {
+  tr ',' '\n' <<<"$1" | awk -F'[x/]' '
+    NF >= 2 && $1 * $2 > best { best = $1 * $2; w = $1; h = $2 }
+    END { if (best) print w, h }
+  '
+}
+
+# The external with the largest native panel becomes the mirror set's
+# primary; res is validated against (and applied to) the primary alone.
+primary_idx=0
+primary_area=0
+for i in "${!external_ids[@]}"; do
+  read -r w h <<<"$(native_res "${external_res[$i]}")"
+  [[ -n "${w:-}" ]] || continue
+  if ((w * h > primary_area)); then
+    primary_area=$((w * h))
+    primary_idx=$i
+  fi
 done
 
-# The audience display's largest mode by area (its native resolution).
-target_res="$(tr ',' '\n' <<<"${external_res[0]}" | awk -F'x' '
-  NF == 2 && $1 * $2 > best { best = $1 * $2; res = $0 }
-  END { print res }
-')"
+chain="${external_ids[$primary_idx]}+$builtin_id"
+for i in "${!external_ids[@]}"; do
+  ((i == primary_idx)) && continue
+  chain+="+${external_ids[$i]}"
+done
 
-if [[ -n "$target_res" ]]; then
-  echo "mirroring ${#external_ids[@]} external display(s), primary external at $target_res"
-  if "$displayplacer_bin" "id:$chain res:$target_res"; then
+# Native mode by default; on 4K-class panels prefer the half-native HiDPI
+# mode (Apple's "Retina 2x" default) when the display offers it --- same
+# signal resolution, sane UI size.
+target=""
+read -r w h <<<"$(native_res "${external_res[$primary_idx]}")"
+if [[ -n "${w:-}" ]]; then
+  if ((w * h >= 3840 * 2160)) &&
+    [[ ",${external_res[$primary_idx]}," == *",$((w / 2))x$((h / 2))/on,"* ]]; then
+    target="res:$((w / 2))x$((h / 2)) scaling:on"
+  else
+    target="res:${w}x${h}"
+  fi
+fi
+
+if [[ -n "$target" ]]; then
+  echo "mirroring ${#external_ids[@]} external display(s), primary external at $target"
+  if "$displayplacer_bin" "id:$chain $target"; then
     exit 0
   fi
-  echo "mirror-displays: res:$target_res refused; retrying at current resolutions" >&2
+  echo "mirror-displays: $target refused; retrying at current resolutions" >&2
 fi
 
 echo "mirroring ${#external_ids[@]} external display(s) at current resolutions"
