@@ -32,8 +32,12 @@ setopt HIST_IGNORE_SPACE
 alias y="yazi"
 alias h="hx ."
 alias zp="zed-preview"
-alias ay="claude --dangerously-skip-permissions --model opus"
-alias aym="claude --dangerously-skip-permissions --model opus --effort max"
+# The [1m] suffix is spelled out because --model overrides settings.json's
+# "model": "opus[1m]", and claude only auto-upgrades a bare `opus` alias to
+# the 1M context window on a first-party login --- not when a project pins
+# ANTHROPIC_BASE_URL at a proxy (comp4020), where bare opus gets 200k.
+alias ay="claude --dangerously-skip-permissions --model 'opus[1m]'"
+alias aym="claude --dangerously-skip-permissions --model 'opus[1m]' --effort max"
 # --setting-sources skips project .claude/settings.json (comp4020 pins the ANU
 # proxy there), so the Max login is used; local/user settings still load.
 alias ayf="claude --setting-sources user,local --dangerously-skip-permissions --model fable --effort high"
