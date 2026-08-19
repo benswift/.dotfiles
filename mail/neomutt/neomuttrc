@@ -225,23 +225,6 @@ bind index,pager x sync-mailbox
 # === Message management ===
 bind index,pager r reply
 bind index,pager R group-reply
-macro index,pager A "\
-<enter-command>unset pipe_decode<enter>\
-<pipe-message>cat > ~/.cache/neomutt/temp/ai-reply-source.eml<enter>\
-<enter-command>set pipe_decode<enter>\
-<enter-command>set my_old_editor=\$editor<enter>\
-<enter-command>set editor=ai-reply-editor<enter>\
-<reply>\
-<enter-command>set editor=\$my_old_editor<enter>" \
-"AI-assisted reply"
-macro index B "\
-<enter-command>unset pipe_decode<enter>\
-<shell-escape>rm -rf $HOME/.cache/neomutt/temp/ai-batch && mkdir -p $HOME/.cache/neomutt/temp/ai-batch<enter>\
-<tag-prefix><pipe-message>batch-email-collect<enter>\
-<enter-command>set pipe_decode<enter>\
-<shell-escape>ai-draft-batch $HOME/.cache/neomutt/temp/ai-batch; rm -rf $HOME/.cache/neomutt/temp/ai-batch<enter>\
-<untag-pattern>~A<enter>" \
-"AI batch drafts for tagged messages"
 macro index U "<toggle-new>" "toggle unread status"
 bind index <space> tag-entry
 bind index <Esc><space> tag-thread

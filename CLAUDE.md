@@ -51,9 +51,7 @@ The `uv run --script` tools in @bin/ carry PEP 723 inline metadata and a
 committed `bin/<name>.lock` beside each one, so a fresh clone resolves the same
 versions rather than whatever the index happens to hold that week. After editing
 a script's dependency block, re-run `uv lock --script bin/<name>` and commit the
-lock. `bin/ai-draft-batch` depends on `mail-utils` by relative path, which the
-lock records as `../mail/utils` --- no absolute path, so the same lock works on
-`/Users/ben` and `/home/ben`.
+lock.
 
 @mail/utils is a real package, installed editable by `install.sh` and re-run by
 `dotfiles update`. That is not cosmetic: @helix/languages.toml configures
