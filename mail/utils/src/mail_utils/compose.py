@@ -76,6 +76,47 @@ def choose_reply_target(reply_info: dict, self_from_addr: str) -> str | None:
     return reply_info.get("reply_to_header") or reply_info["from_"]
 
 
+# `set signature = ~/.config/neomutt/signature-anu`, optionally quoted.
+SIGNATURE_SETTING = re.compile(
+    r'^\s*set\s+signature\s*=\s*"?([^"\n]+?)"?\s*$', re.MULTILINE
+)
+
+
+def read_signature(account: Account | str) -> str | None:
+    """The signature text neomutt appends for this account, if any.
+
+    Read out of the neomutt account config rather than recorded a second
+    time here, so `set signature` stays the single source of truth and an
+    interactive neomutt and mail-compose can't disagree about what gets
+    appended. Returns None when the account sets no signature, or the file
+    it names is missing.
+    """
+    config = get_account_config(account)
+    if not config.neomutt_config.exists():
+        return None
+
+    match = SIGNATURE_SETTING.search(config.neomutt_config.read_text())
+    if not match:
+        return None
+
+    path = Path(match.group(1)).expanduser()
+    if not path.exists():
+        return None
+
+    return path.read_text().strip() or None
+
+
+def append_signature(body: str, signature: str | None) -> str:
+    """Append a signature to a body, delimited the way neomutt does it.
+
+    "-- " (with the trailing space) is the conventional delimiter mail
+    clients use to fold a signature away, and matches $sig_dashes.
+    """
+    if not signature:
+        return body
+    return f"{body.rstrip()}\n\n-- \n{signature}\n"
+
+
 def build_email(
     from_addr: str,
     to: str,
@@ -84,6 +125,7 @@ def build_email(
     cc: str | None = None,
     attachments: list[Path] | None = None,
     reply_to: Path | None = None,
+    signature: str | None = None,
 ) -> EmailMessage:
     """Build an email message with proper headers."""
     msg = EmailMessage()
@@ -101,7 +143,7 @@ def build_email(
     if cc:
         msg["Cc"] = cc
 
-    msg.set_content(body)
+    msg.set_content(append_signature(body, signature))
 
     if attachments:
         for attachment in attachments:
@@ -166,6 +208,7 @@ def open_neomutt_compose(
     cc: str | None = None,
     attachments: list[Path] | None = None,
     reply_to: Path | None = None,
+    signature: str | None = None,
 ) -> None:
     """Open neomutt in compose mode with a fully-built draft.
 
@@ -177,13 +220,15 @@ def open_neomutt_compose(
     thread while the same command with --send threaded correctly.
 
     $resume_draft_files stops neomutt treating the draft as a fresh
-    message: without it, it re-prompts for recipients it already has and
-    appends $signature to a body that has usually signed off already. It
+    message: without it, it re-prompts for recipients it already has, and
+    appends $signature on top of the one build_email has already added. It
     also disables mutt alias expansion, which costs nothing here because
     recipients are resolved before neomutt ever sees them.
     """
     config = get_account_config(account)
-    msg = build_email(config.from_addr, to, subject, body, cc, attachments, reply_to)
+    msg = build_email(
+        config.from_addr, to, subject, body, cc, attachments, reply_to, signature
+    )
 
     with tempfile.NamedTemporaryFile(suffix=".eml", delete=False) as draft_file:
         draft_file.write(msg.as_bytes())

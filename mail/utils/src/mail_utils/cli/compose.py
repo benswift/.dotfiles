@@ -16,6 +16,7 @@ from mail_utils.compose import (
     combine_cc,
     open_neomutt_compose,
     parse_reply_info,
+    read_signature,
     send_email,
     strip_frontmatter,
 )
@@ -76,6 +77,12 @@ def main(
         typer.Option(help="JSON array file for batch mode (use '-' for stdin)"),
     ] = None,
     send: Annotated[bool, typer.Option(help="Send directly without editor")] = False,
+    signature: Annotated[
+        bool,
+        typer.Option(
+            help="Append the account's neomutt signature to the body",
+        ),
+    ] = True,
     dry_run: Annotated[bool, typer.Option(help="Preview without sending")] = False,
 ) -> None:
     """
@@ -99,6 +106,10 @@ def main(
             --subject 'Hello {{preferred_name}}' --template body.md --send
     """
     config = get_account_config(account)
+    # Resolved once here rather than per-message: the signature supplies
+    # the sign-off, so bodies and templates should not carry one of their
+    # own. --no-signature covers the exceptions.
+    sig = read_signature(account) if signature else None
 
     if body == "-" and data and str(data) == "-":
         console.print("[red]Cannot read both --body and --data from stdin[/red]")
@@ -178,7 +189,12 @@ def main(
             email_cc = combine_cc(templated_cc, cc_all)
 
             msg = build_email(
-                config.from_addr, email_to, email_subject, email_content, email_cc
+                config.from_addr,
+                email_to,
+                email_subject,
+                email_content,
+                email_cc,
+                signature=sig,
             )
 
             if dry_run:
@@ -211,6 +227,7 @@ def main(
                 combine_cc(cc, cc_all),
                 attach,
                 reply_to,
+                sig,
             )
 
             success, message = send_email(msg, account, dry_run)
@@ -231,6 +248,7 @@ def main(
                 combine_cc(cc, cc_all),
                 attach,
                 reply_to,
+                sig,
             )
 
 

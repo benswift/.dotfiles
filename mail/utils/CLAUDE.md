@@ -43,6 +43,24 @@ from mail_utils.maildir import open_maildir, is_maildir
 from mail_utils.mu import find_message_path
 ```
 
+## Signatures
+
+`mail-compose` appends the account's signature to every message it builds ---
+`--send`, batch and the neomutt hand-off alike --- delimited with the
+conventional `-- ` line. **So a body or template must not sign off itself**: on
+`personal` the signature is exactly `Cheers,\nBen`, and a template ending the
+same way produces it twice. Write the message; the account supplies the
+sign-off. `--no-signature` covers the exceptions.
+
+The text is read from `set signature` in the account's neomutt config
+(`mail/neomutt/accounts/<account>`) rather than recorded again in `accounts.py`,
+so an interactive neomutt and `mail-compose` cannot disagree about what gets
+appended. `anu` and `phdconvenor` share `signature-anu`.
+
+This is also why `open_neomutt_compose` passes `resume_draft_files=yes`: the
+signature is already in the draft by then, and without the flag neomutt appends
+`$signature` a second time.
+
 ## Student database
 
 `student-db` reads the single normalised database at

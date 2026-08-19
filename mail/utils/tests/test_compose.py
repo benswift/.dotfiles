@@ -7,11 +7,13 @@ from unittest.mock import MagicMock, patch
 from mail_utils.accounts import Account, get_account_config
 from mail_utils.cli.compose import app
 from mail_utils.compose import (
+    append_signature,
     build_email,
     choose_reply_target,
     combine_cc,
     open_neomutt_compose,
     parse_reply_info,
+    read_signature,
     send_email,
     strip_frontmatter,
 )
@@ -712,4 +714,116 @@ class TestOpenNeomuttCompose:
             )
 
         assert result.exit_code == 0
-        assert opener.call_args.args[-1] == orig
+        assert orig in opener.call_args.args
+
+
+class TestSignature:
+    """The account signature supplies the sign-off, in both send modes."""
+
+    def _account_config(self, tmp_path: Path, setting: str | None) -> MagicMock:
+        neomuttrc = tmp_path / "account"
+        neomuttrc.write_text(
+            f"set from = 'ben@example.com'\n{setting or ''}\nset record = +Sent\n"
+        )
+        return MagicMock(
+            from_addr="Ben Swift <ben@example.com>", neomutt_config=neomuttrc
+        )
+
+    def test_reads_signature_named_by_the_account_config(self, tmp_path: Path):
+        sig = tmp_path / "signature-anu"
+        sig.write_text("Senior Lecturer\nANU\n")
+        config = self._account_config(tmp_path, f"set signature = {sig}")
+
+        with patch("mail_utils.compose.get_account_config", return_value=config):
+            assert read_signature(Account.anu) == "Senior Lecturer\nANU"
+
+    def test_handles_quoted_and_tilde_paths(self, tmp_path: Path, monkeypatch):
+        monkeypatch.setenv("HOME", str(tmp_path))
+        sig = tmp_path / ".sig"
+        sig.write_text("Ben\n")
+        config = self._account_config(tmp_path, 'set signature = "~/.sig"')
+
+        with patch("mail_utils.compose.get_account_config", return_value=config):
+            assert read_signature(Account.anu) == "Ben"
+
+    def test_none_when_account_sets_no_signature(self, tmp_path: Path):
+        config = self._account_config(tmp_path, None)
+
+        with patch("mail_utils.compose.get_account_config", return_value=config):
+            assert read_signature(Account.anu) is None
+
+    def test_none_when_signature_file_is_missing(self, tmp_path: Path):
+        config = self._account_config(tmp_path, f"set signature = {tmp_path / 'gone'}")
+
+        with patch("mail_utils.compose.get_account_config", return_value=config):
+            assert read_signature(Account.anu) is None
+
+    def test_appends_with_the_conventional_delimiter(self):
+        assert append_signature("Body\n", "Ben") == "Body\n\n-- \nBen\n"
+
+    def test_append_is_a_no_op_without_a_signature(self):
+        assert append_signature("Body\n", None) == "Body\n"
+
+    def test_build_email_includes_the_signature(self):
+        msg = build_email(
+            from_addr="sender@example.com",
+            to="recipient@example.com",
+            subject="Test",
+            body="Hello there",
+            signature="Senior Lecturer\nANU",
+        )
+
+        assert "\n-- \nSenior Lecturer\nANU" in msg.get_content()
+
+    def test_cli_signs_batch_email(self, tmp_path: Path):
+        """Batch convenor mail is the case that most wants the block."""
+        data = tmp_path / "data.json"
+        data.write_text(json.dumps([{"email": "a@example.com"}]))
+
+        with patch(
+            "mail_utils.cli.compose.read_signature", return_value="Senior Lecturer"
+        ):
+            result = CliRunner().invoke(
+                app,
+                [
+                    "-f",
+                    "anu",
+                    "--data",
+                    str(data),
+                    "--to",
+                    "{{email}}",
+                    "-s",
+                    "Hi",
+                    "-b",
+                    "Body",
+                    "--dry-run",
+                ],
+            )
+
+        assert result.exit_code == 0
+        assert "-- " in result.stdout
+        assert "Senior Lecturer" in result.stdout
+
+    def test_no_signature_flag_suppresses_it(self, tmp_path: Path):
+        with patch(
+            "mail_utils.cli.compose.read_signature", return_value="Senior Lecturer"
+        ) as reader:
+            result = CliRunner().invoke(
+                app,
+                [
+                    "-f",
+                    "anu",
+                    "--to",
+                    "a@example.com",
+                    "-s",
+                    "Hi",
+                    "-b",
+                    "Body",
+                    "--no-signature",
+                    "--dry-run",
+                ],
+            )
+
+        assert result.exit_code == 0
+        assert "Senior Lecturer" not in result.stdout
+        reader.assert_not_called()
