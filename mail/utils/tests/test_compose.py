@@ -10,6 +10,7 @@ from mail_utils.compose import (
     build_email,
     choose_reply_target,
     combine_cc,
+    open_neomutt_compose,
     parse_reply_info,
     send_email,
     strip_frontmatter,
@@ -603,3 +604,112 @@ class TestComposeCLIReplyTo:
         )
         assert result.exit_code == 0
         assert "someone-else@example.com" in result.stdout
+
+
+class TestOpenNeomuttCompose:
+    """The interactive path hands neomutt the same message --send builds."""
+
+    def _run(self, tmp_path: Path, **kwargs) -> tuple[list[str], bytes]:
+        """Invoke open_neomutt_compose, returning (argv, draft bytes).
+
+        neomutt is never launched; the draft is captured from disk while
+        the patched subprocess.run stands in for it.
+        """
+        captured: dict[str, bytes] = {}
+
+        def fake_run(cmd, **_):
+            captured["draft"] = Path(cmd[-1]).read_bytes()
+            captured["cmd"] = cmd
+            return MagicMock(returncode=0)
+
+        with patch("mail_utils.compose.subprocess.run", side_effect=fake_run):
+            open_neomutt_compose(Account.personal, **kwargs)
+        return captured["cmd"], captured["draft"]
+
+    def test_reply_to_sets_threading_headers(self, tmp_path: Path):
+        """The bug this path used to have: a stub draft carrying only
+        To/Cc/Subject started a new thread."""
+        orig = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="ben@benswift.me",
+            Subject="Meeting",
+            **{"Message-ID": "<orig@example.com>"},
+        )
+        _, draft = self._run(
+            tmp_path,
+            to="alice@example.com",
+            subject="Re: Meeting",
+            body="Sounds good",
+            reply_to=orig,
+        )
+
+        assert b"In-Reply-To: <orig@example.com>" in draft
+        assert b"References: <orig@example.com>" in draft
+
+    def test_draft_carries_from_and_cc(self, tmp_path: Path):
+        _, draft = self._run(
+            tmp_path,
+            to="alice@example.com",
+            subject="Hello",
+            body="Body",
+            cc="bob@example.com",
+        )
+
+        assert get_account_config("personal").from_addr.encode() in draft
+        assert b"Cc: bob@example.com" in draft
+        assert b"Body" in draft
+
+    def test_attachment_becomes_a_mime_part(self, tmp_path: Path):
+        """Attachments used to be passed as -a argv; they are now real
+        MIME parts, which is what lets neomutt list them in compose."""
+        attachment = tmp_path / "report.pdf"
+        attachment.write_bytes(b"%PDF-1.4 fake")
+
+        cmd, draft = self._run(
+            tmp_path,
+            to="alice@example.com",
+            subject="Hello",
+            body="Body",
+            attachments=[attachment],
+        )
+
+        assert b"multipart/mixed" in draft
+        assert b"report.pdf" in draft
+        assert "-a" not in cmd
+
+    def test_sets_resume_draft_files(self, tmp_path: Path):
+        """Without this neomutt re-prompts for recipients it already has
+        and appends $signature to an already signed-off body."""
+        cmd, _ = self._run(
+            tmp_path, to="alice@example.com", subject="Hello", body="Body"
+        )
+
+        assert "set resume_draft_files=yes" in cmd
+        assert cmd[-2] == "-H"
+
+    def test_draft_is_cleaned_up(self, tmp_path: Path):
+        cmd, _ = self._run(
+            tmp_path, to="alice@example.com", subject="Hello", body="Body"
+        )
+
+        assert not Path(cmd[-1]).exists()
+
+    def test_cli_passes_reply_to_through(self, tmp_path: Path):
+        """cli/compose.py used to call open_neomutt_compose without
+        reply_to, so --reply-to threaded under --send but not without it."""
+        orig = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="ben@benswift.me",
+            Subject="Meeting",
+            **{"Message-ID": "<orig@example.com>"},
+        )
+        with patch("mail_utils.cli.compose.open_neomutt_compose") as opener:
+            result = CliRunner().invoke(
+                app,
+                ["-f", "personal", "--reply-to", str(orig), "-b", "Sounds good"],
+            )
+
+        assert result.exit_code == 0
+        assert opener.call_args.args[-1] == orig

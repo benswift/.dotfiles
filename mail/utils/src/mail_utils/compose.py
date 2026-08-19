@@ -165,27 +165,39 @@ def open_neomutt_compose(
     body: str,
     cc: str | None = None,
     attachments: list[Path] | None = None,
+    reply_to: Path | None = None,
 ) -> None:
-    """Open neomutt in compose mode with a draft."""
-    config = get_account_config(account)
+    """Open neomutt in compose mode with a fully-built draft.
 
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".eml", delete=False
-    ) as draft_file:
-        draft_file.write(f"To: {to}\n")
-        if cc:
-            draft_file.write(f"Cc: {cc}\n")
-        draft_file.write(f"Subject: {subject}\n\n")
-        draft_file.write(body)
+    The draft is the same message build_email() hands to msmtp for --send,
+    so the two paths can't drift: threading headers, Cc and MIME
+    attachments are all built once, here, and neomutt only transmits.
+    Writing a bare To/Subject stub instead --- as this used to --- silently
+    dropped In-Reply-To/References, so an interactive reply started a new
+    thread while the same command with --send threaded correctly.
+
+    $resume_draft_files stops neomutt treating the draft as a fresh
+    message: without it, it re-prompts for recipients it already has and
+    appends $signature to a body that has usually signed off already. It
+    also disables mutt alias expansion, which costs nothing here because
+    recipients are resolved before neomutt ever sees them.
+    """
+    config = get_account_config(account)
+    msg = build_email(config.from_addr, to, subject, body, cc, attachments, reply_to)
+
+    with tempfile.NamedTemporaryFile(suffix=".eml", delete=False) as draft_file:
+        draft_file.write(msg.as_bytes())
         draft_path = Path(draft_file.name)
 
-    cmd = ["neomutt", "-e", f"source {config.neomutt_config}", "-H", str(draft_path)]
-
-    if attachments:
-        for attachment in attachments:
-            if attachment.exists():
-                cmd.extend(["-a", str(attachment)])
-        cmd.append("--")
+    cmd = [
+        "neomutt",
+        "-e",
+        f"source {config.neomutt_config}",
+        "-e",
+        "set resume_draft_files=yes",
+        "-H",
+        str(draft_path),
+    ]
 
     env = os.environ.copy()
     env["TERM"] = "xterm-direct"

@@ -224,7 +224,13 @@ def main(
                 raise typer.Exit(1)
         else:
             open_neomutt_compose(
-                account, to, subject or "", email_body, combine_cc(cc, cc_all), attach
+                account,
+                to,
+                subject or "",
+                email_body,
+                combine_cc(cc, cc_all),
+                attach,
+                reply_to,
             )
 
 
