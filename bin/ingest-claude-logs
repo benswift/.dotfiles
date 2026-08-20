@@ -28,6 +28,7 @@ import json
 import os
 import re
 import sqlite3
+import sys
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -43,11 +44,6 @@ DB = HOME / "claude-logs" / "analytics.db"
 #   codex:  <host>/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl
 #   zed:    <host>/<project_dir>/<thread-uuid>.jsonl
 #
-# The zed tree is a frozen back-fill of the pre-Claude-Code era, written by
-# bin/import-zed-logs in Claude's shape so it needs no parser of its own. It
-# never grows, which is why the staleness check below can ignore it: it is
-# keyed on host, and daysy still ships Claude sessions daily.
-#
 # The Claude pattern is deliberately shallow enough to miss the subagent
 # transcripts Claude Code files under <uuid>/subagents/ --- 9k of them and
 # climbing. A subagent is not a session: counting one as a row would inflate
@@ -57,6 +53,15 @@ DB = HOME / "claude-logs" / "analytics.db"
 ROOTS: dict[str, tuple[Path, str]] = {
     "claude": (HOME / "claude-logs", "*/*/*.jsonl"),
     "codex": (HOME / "codex-logs", "*/*/*/*/rollout-*.jsonl"),
+}
+
+# Trees that were back-filled once and will never grow again. bin/import-zed-logs
+# wrote ~/zed-logs in Claude's shape, so it needs no parser of its own --- but it
+# has no business in an hourly job either, so it is walked only with --archive.
+# Its rows stay in the table meanwhile: see the pruning in main(), which is
+# scoped to the agents actually walked. Without that, one run of this script
+# would quietly delete every session it was not asked to look at.
+ARCHIVES: dict[str, tuple[Path, str]] = {
     "zed": (HOME / "zed-logs", "*/*/*.jsonl"),
 }
 
@@ -286,6 +291,7 @@ def stale_hosts(conn: sqlite3.Connection) -> list[tuple[str, str]]:
 
 
 def main() -> None:
+    archive = "--archive" in sys.argv
     if not DB.parent.is_dir():
         raise SystemExit(f"No logs directory at {DB.parent}")
 
@@ -304,7 +310,8 @@ def main() -> None:
 
         seen: set[str] = set()
         rows: list[dict[str, Any]] = []
-        for agent, (root, pattern) in ROOTS.items():
+        walking = ROOTS | ARCHIVES if archive else ROOTS
+        for agent, (root, pattern) in walking.items():
             if not root.is_dir():
                 continue
             for path in root.glob(pattern):
@@ -327,8 +334,18 @@ def main() -> None:
             rows,
         )
 
-        # Files that have gone from disk (a tree pruned, a host retired).
-        gone = sorted(set(known) - seen)
+        # Files that have gone from disk (a tree pruned, a host retired), among
+        # the agents this run actually walked. An archive left alone keeps its
+        # rows rather than being read as deleted.
+        managed = {
+            row[0]
+            for row in conn.execute(
+                "SELECT file_path FROM sessions WHERE agent IN"
+                f" ({', '.join('?' * len(walking))})",
+                tuple(walking),
+            )
+        }
+        gone = sorted(managed - seen)
         conn.executemany(
             "DELETE FROM sessions WHERE file_path = ?", [(key,) for key in gone]
         )
