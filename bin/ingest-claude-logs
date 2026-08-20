@@ -41,6 +41,12 @@ DB = HOME / "claude-logs" / "analytics.db"
 #
 #   claude: <host>/<project_dir>/<uuid>.jsonl
 #   codex:  <host>/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl
+#   zed:    <host>/<project_dir>/<thread-uuid>.jsonl
+#
+# The zed tree is a frozen back-fill of the pre-Claude-Code era, written by
+# bin/import-zed-logs in Claude's shape so it needs no parser of its own. It
+# never grows, which is why the staleness check below can ignore it: it is
+# keyed on host, and daysy still ships Claude sessions daily.
 #
 # The Claude pattern is deliberately shallow enough to miss the subagent
 # transcripts Claude Code files under <uuid>/subagents/ --- 9k of them and
@@ -51,6 +57,7 @@ DB = HOME / "claude-logs" / "analytics.db"
 ROOTS: dict[str, tuple[Path, str]] = {
     "claude": (HOME / "claude-logs", "*/*/*.jsonl"),
     "codex": (HOME / "codex-logs", "*/*/*/*/rollout-*.jsonl"),
+    "zed": (HOME / "zed-logs", "*/*/*.jsonl"),
 }
 
 # A host quiet for longer than this has almost certainly stopped shipping
@@ -225,7 +232,7 @@ def summarise(agent: str, root: Path, path: Path) -> dict[str, Any] | None:
 
     relative = path.relative_to(root)
     stat = path.stat()
-    fields = summarise_claude(lines) if agent == "claude" else summarise_codex(lines)
+    fields = summarise_codex(lines) if agent == "codex" else summarise_claude(lines)
 
     return {
         "file_path": str(path.relative_to(HOME)),

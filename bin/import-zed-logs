@@ -1,0 +1,429 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["zstandard"]
+# ///
+"""One-off: back-fill the Zed era into ~/zed-logs as Claude-shaped JSONL.
+
+Before Claude Code (which starts 3 July 2025) the same work went through Zed
+on daysy, in two different panels that recorded very different amounts:
+
+  threads.db          the agent panel, Apr-Jul 2025. Real per-request token
+                      counts including the cache split, plus the model and
+                      the project path. Nothing is invented except *when*
+                      inside a thread each request happened.
+
+  conversations/      the older assistant panel, Apr 2024 - Jul 2025. Records
+                      the conversation text and nothing else: no usage, no
+                      model, no project, no timestamps. Every number here is
+                      an estimate --- see estimate_old().
+
+Both land in the same tree so the rest of the pipeline (ingest-claude-logs,
+and the blog's scan) needs no special case beyond a new root. Records carry
+`estimated` so a guessed row can always be told from a measured one.
+
+    import-zed-logs --threads-db <path> --conversations <dir> [--out ~/zed-logs]
+
+The sources live on daysy under ~/Library/Application Support/Zed and
+~/.config/zed; copy them across first (threads.db is 7MB, the conversations
+34MB) rather than pointing this at a live Zed.
+"""
+
+from __future__ import annotations
+
+import argparse
+import io
+import json
+import re
+import sqlite3
+import statistics
+from collections import Counter
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import Any
+
+import zstandard
+
+HOST = "daysy"
+USAGE_KEYS = (
+    "input_tokens",
+    "output_tokens",
+    "cache_creation_input_tokens",
+    "cache_read_input_tokens",
+)
+
+# Zed names models by alias, and the same model arrives under three providers
+# (anthropic direct, zed.dev's hosted key, GitHub Copilot). Everything
+# downstream keys on the dated API id, so collapse them here. Non-Claude
+# models are passed through under their own name and get dropped later by the
+# chart pipeline, which prices Claude only.
+MODEL_IDS = {
+    "claude-sonnet-4-latest": "claude-sonnet-4-20250514",
+    "claude-sonnet-4-thinking-latest": "claude-sonnet-4-20250514",
+    "claude-sonnet-4": "claude-sonnet-4-20250514",
+    "Claude Sonnet 4": "claude-sonnet-4-20250514",
+    "claude-opus-4-latest": "claude-opus-4-20250514",
+    "claude-opus-4-thinking-latest": "claude-opus-4-20250514",
+    "claude-3-7-sonnet-latest": "claude-3-7-sonnet-20250219",
+    "claude-3-7-sonnet-thinking-latest": "claude-3-7-sonnet-20250219",
+    "claude-3.7-sonnet-thought": "claude-3-7-sonnet-20250219",
+    "claude-3.7-sonnet": "claude-3-7-sonnet-20250219",
+    "claude-3-5-sonnet-latest": "claude-3-5-sonnet-20241022",
+}
+
+# The assistant panel records no model at all. dotfiles has zed/settings.json
+# pinned to claude-3-5-sonnet-latest for the whole time it was tracked (from
+# Jan 2025), and `-latest` resolved to whichever 3.5 Sonnet was current, so
+# date the alias rather than guess a model per conversation. The handful of
+# conversations predating 3.5 Sonnet's release get 3 Opus, which was the only
+# thing worth using in the Zed assistant then.
+OLD_MODEL_ERAS = (
+    ("2024-10-22", "claude-3-5-sonnet-20241022"),
+    ("2024-06-20", "claude-3-5-sonnet-20240620"),
+    ("0000-00-00", "claude-3-opus-20240229"),
+)
+
+# Characters per token. The usual English/code rule of thumb; the assistant
+# panel gives us nothing better to go on than the text itself.
+CHARS_PER_TOKEN = 4
+
+
+def is_assistant(message: Any) -> bool:
+    """True for a model turn, in either serialisation Zed has used.
+
+    Up to thread version 0.2.0 a message is a flat object with a `role`; 0.3.0
+    tags it instead, as {"Agent": {...}} or {"User": {...}}.
+    """
+    if not isinstance(message, dict):
+        return False
+    if "role" in message:
+        return message.get("role") == "assistant"
+    return "Agent" in message or "Assistant" in message
+
+
+def project_key(cwd: str | None) -> str:
+    """Claude Code's project directory naming, so the trees look alike."""
+    if not cwd:
+        return "-unknown"
+    return re.sub(r"[^A-Za-z0-9]", "-", cwd)
+
+
+def parse_ts(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def iso(moment: datetime) -> str:
+    return (
+        moment.astimezone(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    )
+
+
+def usage_total(usage: dict[str, Any] | None) -> int:
+    return sum((usage or {}).get(key, 0) or 0 for key in USAGE_KEYS)
+
+
+def split_usage(total: dict[str, int], weights: list[int]) -> list[dict[str, int]]:
+    """Divide a thread's total across its requests, in proportion to weights.
+
+    Largest-remainder, so the parts add back up to the total exactly rather
+    than drifting by a few tokens per thread.
+    """
+    n = len(weights)
+    if n == 0:
+        return []
+    denominator = sum(weights) or n
+    shares = weights if sum(weights) else [1] * n
+    out: list[dict[str, int]] = [{} for _ in range(n)]
+    for key in USAGE_KEYS:
+        amount = total.get(key, 0) or 0
+        exact = [amount * share / denominator for share in shares]
+        parts = [int(value) for value in exact]
+        remainder = amount - sum(parts)
+        for index in sorted(range(n), key=lambda i: exact[i] - parts[i], reverse=True)[
+            :remainder
+        ]:
+            parts[index] += 1
+        for index, value in enumerate(parts):
+            out[index][key] = value
+    return out
+
+
+def record(
+    *,
+    timestamp: datetime,
+    session: str,
+    cwd: str | None,
+    model: str,
+    usage: dict[str, int],
+    index: int,
+    version: str,
+    source: str,
+    estimated: bool,
+) -> dict[str, Any]:
+    """One assistant response, in the shape Claude Code writes.
+
+    The id has to be unique across the corpus because the blog's scan
+    deduplicates on it --- resuming a session from a second directory files
+    the same response twice.
+    """
+    return {
+        "type": "assistant",
+        "timestamp": iso(timestamp),
+        "sessionId": session,
+        "cwd": cwd,
+        "gitBranch": None,
+        "version": version,
+        "zedSource": source,
+        "estimated": estimated,
+        "message": {
+            "id": f"zed_{session}_{index}",
+            "type": "message",
+            "role": "assistant",
+            "model": model,
+            "usage": usage,
+        },
+    }
+
+
+def convert_threads(db_path: Path) -> tuple[list[dict[str, Any]], Counter]:
+    """The agent panel: real usage, interpolated timestamps.
+
+    Thread totals come from cumulative_token_usage, which is what Zed itself
+    reports; request_token_usage is used only for its *shape*, to decide how
+    much of the thread each request gets. The two disagree by 1.5% overall on
+    volume but threefold on output, so trusting the per-request list outright
+    would understate the expensive half.
+    """
+    conn = sqlite3.connect(db_path)
+    decompressor = zstandard.ZstdDecompressor()
+    stats: Counter = Counter()
+    rows: list[dict[str, Any]] = []
+    per_message: list[int] = []
+    measured: Counter = Counter()
+    pending: list[tuple[dict[str, Any], list[int]]] = []
+
+    for tid, updated_at, blob in conn.execute(
+        "SELECT id, updated_at, data FROM threads"
+    ):
+        thread = json.loads(decompressor.stream_reader(io.BytesIO(blob)).read())
+        messages = thread.get("messages") or []
+        assistant = [i for i, m in enumerate(messages) if is_assistant(m)]
+        total_hint = usage_total(thread.get("cumulative_token_usage"))
+        if not assistant:
+            # A thread can carry usage without a surviving assistant message
+            # (abandoned, or a serialisation Zed has since dropped). The
+            # tokens were still spent, so keep one response for them.
+            if not total_hint:
+                stats["threads_empty"] += 1
+                continue
+            assistant = [0]
+            stats["threads_without_messages"] += 1
+
+        requests = thread.get("request_token_usage") or []
+        entries = list(requests.values()) if isinstance(requests, dict) else requests
+        weights = [
+            usage_total(entries[i]) if i < len(entries) else 0 for i in assistant
+        ]
+
+        total = dict(thread.get("cumulative_token_usage") or {})
+        if not usage_total(total):
+            total = {
+                key: sum((e or {}).get(key, 0) or 0 for e in entries)
+                for key in USAGE_KEYS
+            }
+        snapshot = thread.get("initial_project_snapshot") or {}
+        worktrees = snapshot.get("worktree_snapshots") or []
+        context = {
+            "tid": tid,
+            "updated_at": updated_at,
+            "start": snapshot.get("timestamp") or updated_at,
+            "cwd": (worktrees[0] or {}).get("worktree_path") if worktrees else None,
+            "model": MODEL_IDS.get(
+                (thread.get("model") or {}).get("model"),
+                (thread.get("model") or {}).get("model") or "unknown",
+            ),
+            "version": f"zed-agent-{thread.get('version') or '?'}",
+            "assistant": assistant,
+            "total": total,
+        }
+        if usage_total(total):
+            per_message.extend([usage_total(total) // len(assistant)] * len(assistant))
+            for key in USAGE_KEYS:
+                measured[key] += total.get(key, 0) or 0
+            stats["threads_measured"] += 1
+        else:
+            stats["threads_unrecorded"] += 1
+        pending.append((context, weights))
+
+    # Threads from before Zed recorded usage still happened. Give each of
+    # their responses the median response of the threads that did, split the
+    # way the measured era splits --- a guess, but a better one than zero for
+    # 9% of the era's messages, and one that can't invent a fresh-input bill
+    # the cache would really have absorbed.
+    typical = int(statistics.median(per_message)) if per_message else 0
+    measured_sum = sum(measured.values()) or 1
+    shape = {key: measured[key] / measured_sum for key in USAGE_KEYS}
+
+    for context, weights in pending:
+        total = context["total"]
+        estimated = not usage_total(total)
+        if estimated:
+            budget = typical * len(context["assistant"])
+            total = {key: int(budget * share) for key, share in shape.items()}
+        start, end = parse_ts(context["start"]), parse_ts(context["updated_at"])
+        n = len(context["assistant"])
+        step = (end - start) / n if end > start else timedelta(0)
+        for position, usage in enumerate(split_usage(total, weights)):
+            rows.append(
+                record(
+                    timestamp=start + step * position,
+                    session=context["tid"],
+                    cwd=context["cwd"],
+                    model=context["model"],
+                    usage=usage,
+                    index=position,
+                    version=context["version"],
+                    source="zed-agent-panel",
+                    estimated=estimated,
+                )
+            )
+            stats["responses_estimated" if estimated else "responses_measured"] += 1
+    conn.close()
+    return rows, stats
+
+
+def old_model(day: str) -> str:
+    for since, model in OLD_MODEL_ERAS:
+        if day >= since:
+            return model
+    return "unknown"
+
+
+def estimate_old(directory: Path) -> tuple[list[dict[str, Any]], Counter]:
+    """The assistant panel: everything is inferred from the saved text.
+
+    A conversation file holds the final buffer plus the offset each message
+    starts at, so message sizes are recoverable but nothing else is. Output
+    is the assistant's own text; input is every character before that turn,
+    counted once per turn because this panel predates prompt caching and
+    re-sent the whole conversation each time. The file's mtime is the only
+    clock, so a conversation's responses all land at the moment it was last
+    saved.
+
+    The panel re-saved a conversation under a new filename each time its
+    generated title changed, so 1015 files hold only 745 conversations --- one
+    of them nineteen times over. Keeping the fullest snapshot of each id is
+    the difference between counting this era once and counting it several
+    times.
+    """
+    stats: Counter = Counter()
+    rows: list[dict[str, Any]] = []
+
+    newest: dict[str, tuple[int, float, dict[str, Any]]] = {}
+    for path in sorted(directory.glob("*.zed.json")):
+        # AppleDouble sidecars ride along whenever this tree is copied off a
+        # Mac, and they are not JSON.
+        if path.name.startswith("._"):
+            continue
+        try:
+            conversation = json.loads(path.read_text(errors="replace"))
+        except json.JSONDecodeError:
+            stats["files_unreadable"] += 1
+            continue
+        stats["files"] += 1
+        key = conversation.get("id") or path.stem
+        size = len(conversation.get("text") or "")
+        mtime = path.stat().st_mtime
+        held = newest.get(key)
+        # Fullest snapshot for the content, earliest for the clock: a later
+        # re-save under a new title says nothing about when the work happened.
+        newest[key] = (
+            max(size, held[0]) if held else size,
+            min(mtime, held[1]) if held else mtime,
+            conversation if not held or size > held[0] else held[2],
+        )
+    stats["conversations"] = len(newest)
+    stats["duplicate_snapshots"] = stats["files"] - len(newest)
+
+    for session, (_, mtime, conversation) in newest.items():
+        text = conversation.get("text") or ""
+        messages = conversation.get("messages") or []
+        saved = datetime.fromtimestamp(mtime, UTC)
+        model = old_model(saved.strftime("%Y-%m-%d"))
+
+        prefix = 0
+        index = 0
+        for position, message in enumerate(messages):
+            start = message.get("start", 0)
+            end = (
+                messages[position + 1].get("start", len(text))
+                if position + 1 < len(messages)
+                else len(text)
+            )
+            size = max(0, end - start)
+            if (message.get("metadata") or {}).get("role") == "assistant":
+                rows.append(
+                    record(
+                        timestamp=saved,
+                        session=session,
+                        cwd=None,
+                        model=model,
+                        usage={
+                            "input_tokens": prefix // CHARS_PER_TOKEN,
+                            "output_tokens": size // CHARS_PER_TOKEN,
+                            "cache_read_input_tokens": 0,
+                            "cache_creation_input_tokens": 0,
+                        },
+                        index=index,
+                        version=f"zed-assistant-{conversation.get('version') or '?'}",
+                        source="zed-assistant-panel",
+                        estimated=True,
+                    )
+                )
+                index += 1
+                stats["responses_estimated"] += 1
+            prefix += size
+    return rows, stats
+
+
+def write(rows: list[dict[str, Any]], out: Path) -> Counter:
+    """One file per session, under <host>/<project>/<session>.jsonl."""
+    sessions: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for row in rows:
+        sessions.setdefault((project_key(row["cwd"]), row["sessionId"]), []).append(row)
+
+    stats: Counter = Counter()
+    for (project, session), records in sessions.items():
+        directory = out / HOST / project
+        directory.mkdir(parents=True, exist_ok=True)
+        records.sort(key=lambda r: r["timestamp"])
+        (directory / f"{session}.jsonl").write_text(
+            "".join(json.dumps(r) + "\n" for r in records)
+        )
+        stats["files"] += 1
+        stats["records"] += len(records)
+    return stats
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--threads-db", type=Path, required=True)
+    parser.add_argument("--conversations", type=Path, required=True)
+    parser.add_argument("--out", type=Path, default=Path.home() / "zed-logs")
+    args = parser.parse_args()
+
+    threads, thread_stats = convert_threads(args.threads_db)
+    old, old_stats = estimate_old(args.conversations)
+    written = write(threads + old, args.out)
+
+    def tokens(rows: list[dict[str, Any]]) -> int:
+        return sum(usage_total(r["message"]["usage"]) for r in rows)
+
+    print(f"agent panel:     {dict(thread_stats)}")
+    print(f"assistant panel: {dict(old_stats)}")
+    print(f"tokens: agent {tokens(threads):,}  assistant {tokens(old):,}")
+    print(f"wrote {written['files']} files, {written['records']} records to {args.out}")
+
+
+if __name__ == "__main__":
+    main()
