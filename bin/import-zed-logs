@@ -348,6 +348,11 @@ def estimate_old(directory: Path) -> tuple[list[dict[str, Any]], Counter]:
     for session, (_, mtime, conversation) in newest.items():
         text = conversation.get("text") or ""
         messages = conversation.get("messages") or []
+        # Context format 0.4.0 hangs metadata off each message; 0.2.0 and
+        # 0.3.0 keep it in a sidecar map keyed by message id. Only six files
+        # use the older shape, but they are the whole of April to July 2024 ---
+        # the head of the record, and the easiest thing in it to lose.
+        sidecar = conversation.get("message_metadata") or {}
         saved = datetime.fromtimestamp(mtime, UTC)
         model = old_model(saved.strftime("%Y-%m-%d"))
 
@@ -361,7 +366,8 @@ def estimate_old(directory: Path) -> tuple[list[dict[str, Any]], Counter]:
                 else len(text)
             )
             size = max(0, end - start)
-            if (message.get("metadata") or {}).get("role") == "assistant":
+            meta = message.get("metadata") or sidecar.get(str(message.get("id"))) or {}
+            if meta.get("role") == "assistant":
                 rows.append(
                     record(
                         timestamp=saved,
