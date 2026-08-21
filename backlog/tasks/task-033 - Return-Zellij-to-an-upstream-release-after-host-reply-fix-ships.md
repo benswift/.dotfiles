@@ -4,7 +4,7 @@ title: Return Zellij to an upstream release after host-reply fix ships
 status: To Do
 assignee: []
 created_date: '2026-08-19 23:29'
-updated_date: '2026-08-21 00:39'
+updated_date: '2026-08-21 01:01'
 labels:
   - maintenance
   - zellij
@@ -28,6 +28,7 @@ The dotfiles temporarily install Zellij from `benswift/zellij` revision `1524095
 - [ ] #2 The official release is installed on daysy and weddle, and fresh login shells resolve that release
 - [ ] #3 Codex remains responsive after at least five zj-switch round trips on the released Zellij build
 - [ ] #4 mise/config.toml uses the normal prebuilt zellij = "latest" entry and no longer references any fork revision (was lbmeng's pre-0.45 branch; as of 2026-08-21 it is benswift/zellij host-reply-isolation-v0.45.0, i.e. PR #5375 rebased onto the v0.45.0 tag)
+- [ ] #5 When daysy is next online, the temporary `benswift/zellij` revision `1524095119990bc7af283296bbe291a3b4cffbcd` is installed there and a fresh login shell resolves that exact revision
 <!-- AC:END -->
 
 ## Implementation Plan
