@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Codex lifecycle hook: send a Pushover notification when a long turn ends.
+#
+# UserPromptSubmit calls `start`; Stop calls `stop`. Both receive Codex's hook
+# payload as JSON on stdin. The threshold defaults to five minutes, matching
+# claude-turn-tracker; override it with CODEX_NOTIFY_THRESHOLD.
+#
+# Hook failures must not interfere with Codex, so notification delivery is
+# best-effort.
+
+set -euo pipefail
+
+cmd="${1:-}"
+threshold_seconds="${CODEX_NOTIFY_THRESHOLD:-300}"
+stamp_dir="${TMPDIR:-/tmp}"
+
+input=$(cat)
+sid=$(jq -r '.session_id // empty' <<<"$input")
+turn_id=$(jq -r '.turn_id // empty' <<<"$input")
+[[ -n "$sid" ]] || exit 0
+
+# A turn id keeps stamp files distinct if multiple clients ever submit work to
+# one session concurrently. Session id remains a fallback for older clients.
+stamp_id="${turn_id:-$sid}"
+stamp_file="$stamp_dir/codex-turn-$stamp_id"
+
+case "$cmd" in
+    start)
+        date +%s >"$stamp_file"
+        ;;
+    stop)
+        [[ -f "$stamp_file" ]] || exit 0
+        start=$(<"$stamp_file")
+        rm -f "$stamp_file"
+        elapsed=$(( $(date +%s) - start ))
+        (( elapsed >= threshold_seconds )) || exit 0
+
+        if [[ -n "${ZELLIJ_SESSION_NAME:-}" ]]; then
+            proj="$ZELLIJ_SESSION_NAME"
+        else
+            cwd=$(jq -r '.cwd // empty' <<<"$input")
+            proj="${cwd##*/}"
+            [[ -n "$proj" ]] || proj="?"
+        fi
+
+        minutes=$((elapsed / 60))
+        seconds=$((elapsed % 60))
+        msg=$(printf 'Turn finished in %dm %02ds' "$minutes" "$seconds")
+        printf '%s\n' "$msg" \
+            | notify-pushover --title "Codex done: $(hostname -s):$proj" \
+            || true
+        ;;
+    *)
+        echo "Usage: $(basename "$0") {start|stop}" >&2
+        exit 1
+        ;;
+esac

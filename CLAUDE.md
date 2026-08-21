@@ -415,6 +415,11 @@ with `--profile dotfiles`. The `codex` and `oy` zsh aliases and
 @bin/codex-zellij add that flag, while @bin/sync-agent-config migrates the old
 `config.toml` symlink by retaining only machine-owned state.
 
+The profile also runs @bin/codex-turn-notify from `UserPromptSubmit` and `Stop`
+hooks. Like Claude's turn tracker, it sends a Pushover completion after a turn
+has run for five minutes; set `CODEX_NOTIFY_THRESHOLD` to override that default.
+Codex asks for trust approval whenever a hook definition changes.
+
 Put cross-platform defaults in the profile: model, reasoning effort,
 personality, project-instruction fallbacks, and any other setting that makes
 sense on every host. Keep absolute paths, provider/auth setup, per-project
