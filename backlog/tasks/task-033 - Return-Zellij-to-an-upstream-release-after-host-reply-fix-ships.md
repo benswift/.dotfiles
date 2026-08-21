@@ -4,7 +4,7 @@ title: Return Zellij to an upstream release after host-reply fix ships
 status: To Do
 assignee: []
 created_date: '2026-08-19 23:29'
-updated_date: '2026-08-21 00:04'
+updated_date: '2026-08-21 00:22'
 labels:
   - maintenance
   - zellij
@@ -25,9 +25,9 @@ The dotfiles temporarily install Zellij from lbmeng/zellij revision 5f177f4 beca
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 An official Zellij release is verified to contain the host-reply isolation fix from issue #5365 / PR #5375 or an equivalent upstream implementation
-- [ ] #2 mise/config.toml uses the normal prebuilt zellij = "latest" entry and no longer references the temporary lbmeng fork revision
-- [ ] #3 The official release is installed on daysy and weddle, and fresh login shells resolve that release
-- [ ] #4 Codex remains responsive after at least five zj-switch round trips on the released Zellij build
+- [ ] #2 The official release is installed on daysy and weddle, and fresh login shells resolve that release
+- [ ] #3 Codex remains responsive after at least five zj-switch round trips on the released Zellij build
+- [ ] #4 mise/config.toml uses the normal prebuilt zellij = "latest" entry and no longer references any fork revision (was lbmeng's pre-0.45 branch; as of 2026-08-21 it is benswift/zellij host-reply-isolation-v0.45.0, i.e. PR #5375 rebased onto the v0.45.0 tag)
 <!-- AC:END -->
 
 ## Implementation Notes
