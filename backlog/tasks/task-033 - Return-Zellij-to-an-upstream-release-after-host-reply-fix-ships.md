@@ -4,7 +4,7 @@ title: Return Zellij to an upstream release after host-reply fix ships
 status: To Do
 assignee: []
 created_date: '2026-08-19 23:29'
-updated_date: '2026-08-21 00:22'
+updated_date: '2026-08-21 00:39'
 labels:
   - maintenance
   - zellij
@@ -19,7 +19,7 @@ priority: medium
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-The dotfiles temporarily install Zellij from lbmeng/zellij revision 5f177f4 because v0.44.3 can misroute attach-time terminal replies into Codex and poison its input parser. Watch the upstream fix and remove the source-build workaround only after an official Zellij release contains equivalent host-reply isolation.
+The dotfiles temporarily install Zellij from `benswift/zellij` revision `15240951`: PR #5375 rebased onto the v0.45.0 tag. Stock v0.45.0 can misroute attach-time terminal replies into Codex and poison its input parser. Keep the release-based fork as a local workaround, coordinate a clean main-based upstream contribution, and return to an official prebuilt release only after equivalent host-reply isolation ships.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -29,6 +29,18 @@ The dotfiles temporarily install Zellij from lbmeng/zellij revision 5f177f4 beca
 - [ ] #3 Codex remains responsive after at least five zj-switch round trips on the released Zellij build
 - [ ] #4 mise/config.toml uses the normal prebuilt zellij = "latest" entry and no longer references any fork revision (was lbmeng's pre-0.45 branch; as of 2026-08-21 it is benswift/zellij host-reply-isolation-v0.45.0, i.e. PR #5375 rebased onto the v0.45.0 tag)
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Keep `benswift/zellij:host-reply-isolation-v0.45.0` pinned at rev `15240951` as the local v0.45.0 workaround; do not use this release-based branch as an upstream PR head.
+2. Before maintainer outreach, verify the pinned build remains installed and usable on daysy and weddle, including repeated `zj-switch` round trips.
+3. Next week, comment on upstream PR #5375 with the independent v0.45.0 regression evidence and offer the clean transplant; ask @lbmeng whether they want to refresh their PR or are happy for a takeover.
+4. Ask the Zellij maintainers via their recommended Discord/Matrix channel whether they are willing to review the fix, and whether they prefer the current small client-side reply matcher or an expected-reply discriminator carried over IPC.
+5. Prefer updating the existing PR. Only if the original author is unresponsive and maintainers invite a takeover, create a separate branch from current `zellij-org/zellij:main`, transplant only the two authored commits, retain Bin Meng's authorship/sign-offs, and open a draft PR that credits and links #5375.
+6. On the clean main-based branch, confirm the diff is limited to the four intended client/test files, then run format, the parser tests, the startup-host-query integration tests, and the broader upstream test suite requested by maintainers.
+7. After an equivalent fix is merged and included in an official release, install that release on daysy and weddle, perform the task's five-round-trip checks, and restore `zellij = "latest"` in mise.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
@@ -63,4 +75,16 @@ Tested deterministically rather than by hand. PR #5375 ships its own end-to-end 
 - **rebased branch: PASSES.** `cargo test -p zellij-client stdin_ansi_parser` 85 passed / 0 failed; `--test startup_host_query` 5 passed / 0 failed.
 
 So the rebase onto v0.45.0 is verified correct, not merely conflict-free. An ht-mcp-driven reproduction was tried first and abandoned: ht answers none of DA1 / OSC 10 / OSC 11 / DECRPM, so there are no replies to misroute and the test would be vacuous.
+
+## 2026-08-21 acceptance review and local verification
+
+The implementation remains technically persuasive: it isolates replies by the server's existing non-clipboard host-query whitelist, preserves the separate OSC 52 path added in #5472, and has deterministic unit and end-to-end coverage for the captured attach-time reply burst.
+
+The current fork branch is intentionally a local workaround only. Because the v0.45.0 release tag is not an ancestor of upstream `main`, proposing `host-reply-isolation-v0.45.0` directly would show 20 changed files, including release metadata and bundled WASM assets. A temporary transplant of its two commits onto current upstream `main` applied cleanly and produced the intended four-file diff (341 additions, 71 deletions). No upstream branch or PR was created.
+
+On weddle, mise resolves Zellij to the exact configured fork revision:
+`~/.local/share/mise/installs/cargo-https-github-com-benswift-zellij/rev-1524095119990bc7af283296bbe291a3b4cffbcd/bin/zellij`
+and the binary reports `zellij 0.45.0`.
+
+The non-disruptive `mise exec -- zellij setup --check` smoke check also passed: the live config is well-defined and the bundled default plugins are available.
 <!-- SECTION:NOTES:END -->
