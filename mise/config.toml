@@ -25,7 +25,14 @@ bun = "latest"
   "@maincode-ai/matilda-code",
 ] }
 yazi = "latest"
-zellij = "latest"
+# Zellij still misroutes attach-time host replies into the focused pane,
+# poisoning Codex's input parser so even Ctrl-C is swallowed after a session
+# switch (zellij-org/zellij#5365). Verified 2026-08-21: v0.45.0 still fails the
+# upstream fix's own regression test, and that fix (PR #5375) is unmerged and
+# conflicted. This pins the PR rebased onto the v0.45.0 tag; return to
+# `zellij = "latest"` once it ships upstream (TASK-033). A git source has no
+# prebuilt artefact, so this intentionally compiles once per platform.
+"cargo:https://github.com/benswift/zellij" = { version = "rev:1524095119990bc7af283296bbe291a3b4cffbcd", crate = "zellij", install_env = { CARGO_NET_GIT_FETCH_WITH_CLI = "true" } }
 zoxide = "latest"
 helix = "latest"
 vivid = "latest"
