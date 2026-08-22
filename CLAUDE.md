@@ -336,7 +336,7 @@ Three directories are involved --- note the differences:
 The @claude/ folder includes:
 
 - @claude/CLAUDE.md - global agent instructions (symlinked to both
-  `~/.claude/CLAUDE.md` and `~/.codex/instructions.md`)
+  `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`)
 - @claude/settings.json - Claude Code settings
 - @codex/config.toml - portable Codex profile defaults
 - @gemini/settings.json - portable Gemini context settings
@@ -403,7 +403,7 @@ Three guards now, in order of how much they matter:
 
 ### Codex CLI
 
-Codex CLI uses `~/.codex/instructions.md` for global instructions (symlinked to
+Codex CLI uses `~/.codex/AGENTS.md` for global instructions (symlinked to
 @claude/CLAUDE.md). Project-level instructions are read from `CLAUDE.md` via its
 `project_doc_fallback_filenames` setting. Codex doesn't understand Claude Code's
 plugin mechanism, but it reads the raw skill directories fine.
