@@ -8,5 +8,7 @@ Description=Sync all nb notebooks
 Type=oneshot
 ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
 Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/usr/local/bin/nb sync --all
+# Resolve the version pinned in mise/config.toml. /usr/bin/env is intentional:
+# systemd does not use the unit's PATH to resolve the first ExecStart word.
+ExecStart=/usr/bin/env mise exec -- nb sync --all
 TimeoutStartSec=15min

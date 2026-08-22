@@ -39,6 +39,8 @@ STATE_DIR = Path.home() / ".local" / "state" / "pkb-agent"
 LOG_DIR = STATE_DIR / "logs"
 DEFAULT_MODEL = "sonnet"
 TASK_TIMEOUT_S = 3600
+NB_SYNC_TIMEOUT_S = 900
+NB_COMMAND = ("mise", "exec", "--", "nb")
 
 
 @dataclass
@@ -159,6 +161,45 @@ def run_task(task: Task) -> int:
     return result.returncode
 
 
+def sync_notebook(phase: str) -> bool:
+    """Sync the notebook, reporting enough detail for the service journal."""
+    try:
+        result = subprocess.run(
+            [*NB_COMMAND, "sync"],
+            cwd=NOTEBOOK,
+            capture_output=True,
+            text=True,
+            timeout=NB_SYNC_TIMEOUT_S,
+            check=False,
+        )
+    except FileNotFoundError as error:
+        print(
+            f"pkb-agent: {phase} sync could not start: {error}",
+            file=sys.stderr,
+        )
+        return False
+    except subprocess.TimeoutExpired:
+        print(
+            f"pkb-agent: {phase} sync timed out after {NB_SYNC_TIMEOUT_S}s",
+            file=sys.stderr,
+        )
+        return False
+
+    if result.returncode == 0:
+        return True
+
+    print(
+        f"pkb-agent: {phase} sync failed (exit {result.returncode})",
+        file=sys.stderr,
+    )
+    detail = "\n".join(
+        part.strip() for part in (result.stdout, result.stderr) if part.strip()
+    )
+    if detail:
+        print(detail, file=sys.stderr)
+    return False
+
+
 def cmd_list() -> int:
     now = datetime.now().astimezone()
     tasks = load_tasks()
@@ -190,13 +231,26 @@ def cmd_run_due() -> int:
     due = [t for t in load_tasks() if is_due(t, now)]
     if not due:
         return 0
-    # Pull before tasks write and push their results afterwards. Routine sync
-    # is owned separately by nb-sync.timer.
-    subprocess.run(["nb", "sync"], capture_output=True, check=False)
+    # Pull before tasks write and push their results afterwards. A failed pull
+    # is a hard stop: running against stale state is how two hosts create
+    # avoidable conflicts. Routine sync is owned separately by nb-sync.timer.
+    if not sync_notebook("pre-task"):
+        print(
+            "pkb-agent: refusing to run due tasks against an unsynced notebook",
+            file=sys.stderr,
+        )
+        return 1
+
     rc = 0
-    for task in due:
-        rc |= run_task(task)
-    subprocess.run(["nb", "sync"], capture_output=True, check=False)
+    try:
+        for task in due:
+            rc |= run_task(task)
+    finally:
+        # Still attempt the push if an unexpected task exception escapes. The
+        # exception will keep the service failed; this finally only makes the
+        # files it may already have written less likely to remain local.
+        if not sync_notebook("post-task"):
+            rc |= 1
     return rc
 
 

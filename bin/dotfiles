@@ -198,6 +198,17 @@ check_script_deps() {
         fi
     done
 
+    # nb is pinned through mise rather than accepted from whichever unmanaged
+    # copy happens to be earlier on PATH. `mise exec` both verifies that the
+    # configured version is installed and exercises the same resolution path
+    # used by the scheduled notebook jobs.
+    local nb_version
+    if command_exists mise && nb_version=$(mise exec -- nb --version 2>/dev/null); then
+        check_pass "nb $nb_version (mise-managed)"
+    else
+        check_fail "nb not installed by mise (run 'mise install github:xwmx/nb')"
+    fi
+
     # agent-browser drives the teams script (installed as a Claude plugin)
     if command_exists agent-browser; then
         check_pass "agent-browser"
@@ -380,6 +391,11 @@ update() {
     fi
 
     "$DOTFILES_DIR/create_symlinks.sh"
+    # nb is infrastructure for scheduled jobs, not an optional interactive
+    # tool. Install its configured pin immediately when an update changes it;
+    # waiting for an interactive shell's later `mise upgrade` would leave the
+    # timers broken in the meantime.
+    mise install --yes github:xwmx/nb
     "$DOTFILES_DIR/bin/sync-agent-config" --update-claude
     "$DOTFILES_DIR/bin/lumis-parsers" --update || echo "parser sync failed --- yazi previews fall back to bat"
     # Editable, so code changes are already live --- this re-resolves after a

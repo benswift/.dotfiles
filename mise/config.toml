@@ -46,6 +46,12 @@ pandoc = "latest"
 ast-grep = "latest"
 jq = "latest"
 fd = "latest"
+# The notebook's operational layer. Pin rather than tracking latest: scheduled
+# agents and sync jobs depend on nb's filename, todo, and git semantics, so an
+# upstream change should land here deliberately and pass tests/test_nb.py
+# before reaching every host. The release is one signed portable script; mise's
+# GitHub backend installs its `nb` asset directly on both macOS and Linux.
+"github:xwmx/nb" = { version = "7.25.5", exe = "nb" }
 # bin/zj-switch's picker. Via mise rather than apt/brew so both platforms get
 # the same (and a current) fzf --- Debian ships 0.44, from 2023.
 fzf = "latest"

@@ -39,7 +39,8 @@ Six paths hold no symlink targets and so appear nowhere in the manifest: @bin/
 (on `PATH` directly via @zshenv), @launchd/ (plists installed by hand;
 instructions in each header), @lib/ (bash helpers sourced by the scripts ---
 `log.sh` and the manifest itself), @tests/ (uv single-file tests for the `bin/`
-scripts, run directly: `./tests/test_svg_validate.py`), `backlog/` (Backlog.md
+scripts and pinned infrastructure, run directly, e.g. `./tests/test_nb.py` and
+`./tests/test_svg_validate.py`), `backlog/` (Backlog.md
 task files), and @oxfmtrc.json (the shared markdown/TOML format config, used by
 `prettify-md` and @bin/oxfmt-helix).
 
@@ -118,6 +119,14 @@ etc.). Key scripts:
 
 See the "Microsoft 365 (calendar and Teams)" section below for this tooling and
 why it sidesteps Microsoft Graph.
+
+The `nb` executable underpinning the private notebook is a pinned
+`github:xwmx/nb` mise tool, not a separately installed `/usr/local/bin` copy.
+@bin/nb is the compatibility launcher that makes bare `nb` resolve the pin even
+in non-interactive agent shells; `pkb-agent` and both scheduled sync jobs invoke
+mise explicitly. @tests/test_nb.py exercises the launcher, note creation,
+search, daily append, todos, and sync failure against a temporary notebook; it
+never touches `~/.nb`.
 
 ## Tool management (mise)
 

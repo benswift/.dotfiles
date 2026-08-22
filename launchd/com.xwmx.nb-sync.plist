@@ -19,8 +19,9 @@
   per-run date stamp below.) bin/wait-for-network is the same guard the systemd
   units use as ExecStartPre, and it fails loudly if the network never arrives.
 
-  Absolute path because PATH below deliberately omits ~/.dotfiles/bin: launchd
-  jobs get no login shell, so nothing sources zshenv.
+  `mise exec` resolves the nb version pinned in mise/config.toml. launchd jobs
+  get no login shell, so PATH below includes both supported mise install
+  locations explicitly rather than relying on zshenv.
 
   Install:
     cp ~/.dotfiles/launchd/com.xwmx.nb-sync.plist ~/Library/LaunchAgents/
@@ -34,12 +35,12 @@
     <array>
         <string>/bin/sh</string>
         <string>-c</string>
-        <string>printf '=== %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S %z')"; /Users/ben/.dotfiles/bin/wait-for-network &amp;&amp; nb sync --all</string>
+        <string>printf '=== %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S %z')"; /Users/ben/.dotfiles/bin/wait-for-network &amp;&amp; mise exec -- nb sync --all</string>
     </array>
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <string>/Users/ben/.local/bin:/Users/ben/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
     </dict>
     <!-- Minute alone, with no Hour key, means every hour on the hour. A run
          missed while the machine slept is coalesced into a single run at

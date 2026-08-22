@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Resolve nb through the version pinned in mise/config.toml. This launcher is
+# first on PATH via zshenv, including in non-interactive agent shells where the
+# mise activation hook does not run and an old /usr/local/bin/nb could win.
+set -euo pipefail
+
+if ! command -v mise >/dev/null 2>&1; then
+    echo "nb: mise is required; run ~/.dotfiles/install.sh" >&2
+    exit 127
+fi
+
+exec mise exec -- nb "$@"

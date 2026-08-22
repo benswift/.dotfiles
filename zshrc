@@ -71,15 +71,17 @@ todo() {
   fi
 }
 daily() {
+  local filename="$(date +%Y%m%d).md"
+  local path="$HOME/.nb/home/$filename"
+  if [[ ! -f "$path" ]]; then
+    nb add --filename "$filename" --content "# Daily $(date +%Y-%m-%d)"$'\n' >/dev/null
+  fi
   if [[ $# -eq 0 ]]; then
-    local filename="$(date +%Y%m%d).md"
-    local path="$HOME/.nb/home/$filename"
-    if [[ ! -f "$path" ]]; then
-      nb add --filename "$filename" --content "# Daily $(date +%Y-%m-%d)"$'\n' >/dev/null
-    fi
     nb edit "$filename"
   else
-    nb daily "$@"
+    # nb has no native `daily` subcommand; append through edit so the
+    # non-interactive form follows the same filename convention as the editor.
+    nb edit "$filename" --content "$*" >/dev/null
   fi
 }
 alias latest="nb --limit 10"
