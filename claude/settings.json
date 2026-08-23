@@ -48,16 +48,6 @@
         ]
       }
     ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.dotfiles/bin/claude-turn-tracker session-start"
-          }
-        ]
-      }
-    ],
     "SessionEnd": [
       {
         "hooks": [

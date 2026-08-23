@@ -206,27 +206,11 @@ most-recently-used first, so `Alt s` then Enter returns to the previous session
 the way cmd-tab does. Zellij's built-in session manager --- which also creates
 sessions and resurrects dead ones --- stays on `Ctrl o` then `w`.
 
-Each row is annotated with the Claude Code agents in that session: the total
-count, then per-state counts colour-coded to match `hud`'s catppuccin palette
-(red blocked, yellow working, green idle, dim unknown). The two halves come from
-different places on purpose:
-
-- **how many agents**: the process tree. Each session's server runs as
-  `zellij --server <sockdir>/<session>` and every agent chains up to one, so a
-  single `ps` is authoritative about who's alive.
-- **what they're doing**: state files under
-  `$XDG_RUNTIME_DIR/claude-agent-state/<session>/<agent-pid>`, written by
-  @bin/claude-turn-tracker from Claude Code's `SessionStart`,
-  `UserPromptSubmit`, `Stop`, `Notification` and `SessionEnd` hooks. Keyed by
-  pid, not by Claude session id --- the id changes on resume or compaction,
-  which would leave a second file behind for the same still-running agent.
-
-State is therefore **reported, never inferred** --- nothing parses a pane's
-title or its screen. That matters because Claude Code writes an OSC title
-carrying an animated spinner glyph, so any title-scraping scheme breaks the next
-time its UI changes. Each state file records the agent's pid, and `zj-switch`
-drops entries whose pid is gone, so an agent killed without firing `SessionEnd`
-doesn't linger.
+Each row shows the number of Claude Code and Codex agents running in that
+session. The count comes directly from the process tree: each session's server
+runs as `zellij --server <sockdir>/<session>` and every agent chains up to one,
+so a single `ps` is authoritative about who's alive. Nested agent processes are
+counted only once.
 
 #### Pane naming while blocked
 
