@@ -40,6 +40,7 @@ SYMLINK_MANIFEST=(
     "claude/CLAUDE.md:~/.claude/CLAUDE.md"
     "claude/settings.json:~/.claude/settings.json"
     "claude/CLAUDE.md:~/.codex/AGENTS.md"
+    "agent-run/profiles.toml:~/.config/agent-run/profiles.toml"
     # tools
     "mise/config.toml:~/.config/mise/config.toml"
     # yazi: linked file-by-file rather than as a directory, because

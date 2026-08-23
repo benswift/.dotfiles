@@ -1,0 +1,188 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""Run a headless coding agent through a named provider profile."""
+
+from __future__ import annotations
+
+import argparse
+import os
+import subprocess
+import sys
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from pathlib import Path
+
+import tomllib
+
+DEFAULT_CONFIG = Path("~/.config/agent-run/profiles.toml").expanduser()
+RUNNERS = {"claude", "codex"}
+
+
+@dataclass(frozen=True)
+class Profile:
+    """One supported authentication and inference route."""
+
+    name: str
+    runner: str
+    model: str = ""
+    unset_env: tuple[str, ...] = ()
+    env: dict[str, str] = field(default_factory=dict)
+    secret_env: dict[str, str] = field(default_factory=dict)
+
+
+def load_profiles(path: Path) -> dict[str, Profile]:
+    """Load and validate the profile registry at ``path``."""
+    with path.open("rb") as config_file:
+        data = tomllib.load(config_file)
+    if data.get("version") != 1:
+        raise ValueError(f"{path}: unsupported or missing version (want 1)")
+
+    profiles: dict[str, Profile] = {}
+    for name, raw in data.get("profiles", {}).items():
+        runner = raw.get("runner", "")
+        if runner not in RUNNERS:
+            raise ValueError(f"{path}: profile {name!r} has unknown runner {runner!r}")
+        profiles[name] = Profile(
+            name=name,
+            runner=runner,
+            model=str(raw.get("model", "")),
+            unset_env=tuple(raw.get("unset_env", ())),
+            env={key: str(value) for key, value in raw.get("env", {}).items()},
+            secret_env={
+                key: str(value) for key, value in raw.get("secret_env", {}).items()
+            },
+        )
+    if not profiles:
+        raise ValueError(f"{path}: no [profiles.*] blocks")
+    return profiles
+
+
+def resolve_environment(profile: Profile, environ: dict[str, str]) -> dict[str, str]:
+    """Return the child environment without mutating the caller's mapping."""
+    child = dict(environ)
+    for name in profile.unset_env:
+        child.pop(name, None)
+    child.update(profile.env)
+    for child_name, source_name in profile.secret_env.items():
+        value = environ.get(source_name)
+        if not value:
+            raise ValueError(
+                f"profile {profile.name!r} needs {source_name} in the environment"
+            )
+        child[child_name] = value
+    if profile.runner == "claude":
+        child.pop("CLAUDECODE", None)
+    return child
+
+
+def build_command(
+    profile: Profile,
+    *,
+    prompt: str,
+    model: str,
+    cwd: Path,
+    claude_dangerously_skip_permissions: bool,
+    claude_disallowed_tools: str,
+    codex_sandbox: str,
+    environ: dict[str, str],
+) -> list[str]:
+    """Translate the common headless invocation into the selected CLI."""
+    if profile.runner == "claude":
+        command = [environ.get("CLAUDE_BIN", "claude")]
+        if claude_dangerously_skip_permissions:
+            command.append("--dangerously-skip-permissions")
+        if model:
+            command.extend(("--model", model))
+        command.append("--print")
+        if claude_disallowed_tools:
+            command.append(f"--disallowedTools={claude_disallowed_tools}")
+        command.append(prompt)
+        return command
+
+    command = [environ.get("CODEX_BIN", "codex"), "exec"]
+    if codex_sandbox:
+        command.extend(("--sandbox", codex_sandbox))
+    if model:
+        command.extend(("--model", model))
+    command.extend(("-C", str(cwd), prompt))
+    return command
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Run Claude Code or Codex through a named provider profile."
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path(os.environ.get("AGENT_RUN_CONFIG", DEFAULT_CONFIG)),
+    )
+    parser.add_argument("--profile", default=os.environ.get("AGENT_PROFILE", ""))
+    parser.add_argument("--model", default=os.environ.get("AGENT_MODEL", ""))
+    parser.add_argument("--cwd", type=Path, default=Path.cwd())
+    parser.add_argument("--list-profiles", action="store_true")
+    parser.add_argument("--describe", action="store_true")
+    parser.add_argument("--claude-dangerously-skip-permissions", action="store_true")
+    parser.add_argument("--claude-disallowed-tools", default="")
+    parser.add_argument("--codex-sandbox", default="")
+    parser.add_argument("prompt", nargs="?")
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        profiles = load_profiles(args.config.expanduser())
+        if args.list_profiles:
+            for name in profiles:
+                print(name)
+            return 0
+        if not args.profile:
+            raise ValueError("no profile selected; pass --profile or set AGENT_PROFILE")
+        if args.profile not in profiles:
+            known = ", ".join(profiles)
+            raise ValueError(f"unknown profile {args.profile!r} (known: {known})")
+
+        profile = profiles[args.profile]
+        model = args.model or profile.model
+        if args.describe:
+            binary_var = "CLAUDE_BIN" if profile.runner == "claude" else "CODEX_BIN"
+            binary = os.environ.get(binary_var, profile.runner)
+            result = subprocess.run(
+                [binary, "--version"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            version = (result.stdout or result.stderr).strip().splitlines()
+            label = version[0] if version else f"{binary} (version unavailable)"
+            print(f"{args.profile}: {label}{f' (model {model})' if model else ''}")
+            return result.returncode
+        if args.prompt is None:
+            raise ValueError("no prompt supplied")
+
+        cwd = args.cwd.expanduser().resolve()
+        if not cwd.is_dir():
+            raise ValueError(f"working directory is not a directory: {cwd}")
+        child_env = resolve_environment(profile, dict(os.environ))
+        command = build_command(
+            profile,
+            prompt=args.prompt,
+            model=model,
+            cwd=cwd,
+            claude_dangerously_skip_permissions=args.claude_dangerously_skip_permissions,
+            claude_disallowed_tools=args.claude_disallowed_tools,
+            codex_sandbox=args.codex_sandbox,
+            environ=child_env,
+        )
+        return subprocess.run(command, cwd=cwd, env=child_env, check=False).returncode
+    except (OSError, ValueError, tomllib.TOMLDecodeError) as error:
+        print(f"agent-run: {error}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

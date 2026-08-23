@@ -1,0 +1,50 @@
+version = 1
+
+[profiles.claude-sub]
+runner = "claude"
+unset_env = [
+  "ANTHROPIC_API_KEY",
+  "ANTHROPIC_AUTH_TOKEN",
+  "ANTHROPIC_BASE_URL",
+  "ANTHROPIC_MODEL",
+  "ANTHROPIC_SMALL_FAST_MODEL",
+  "API_TIMEOUT_MS",
+]
+
+[profiles.codex-sub]
+runner = "codex"
+
+[profiles.claude-api]
+# A caller-managed Anthropic-compatible endpoint. This deliberately inherits
+# the caller's ANTHROPIC_* variables; it exists for consumer-specific gateways
+# whose model and endpoint do not belong in this global registry.
+runner = "claude"
+
+[profiles.deepseek]
+runner = "claude"
+model = "deepseek-v4-flash"
+unset_env = [
+  "ANTHROPIC_API_KEY",
+  "ANTHROPIC_AUTH_TOKEN",
+  "ANTHROPIC_BASE_URL",
+  "ANTHROPIC_MODEL",
+  "ANTHROPIC_SMALL_FAST_MODEL",
+  "API_TIMEOUT_MS",
+]
+env = { ANTHROPIC_BASE_URL = "https://api.deepseek.com/anthropic", ANTHROPIC_SMALL_FAST_MODEL = "deepseek-v4-flash", API_TIMEOUT_MS = "600000" }
+secret_env = { ANTHROPIC_API_KEY = "DEEPSEEK_API_TOKEN" }
+
+[profiles.openrouter]
+runner = "claude"
+unset_env = [
+  "ANTHROPIC_API_KEY",
+  "ANTHROPIC_AUTH_TOKEN",
+  "ANTHROPIC_BASE_URL",
+  "ANTHROPIC_MODEL",
+  "ANTHROPIC_SMALL_FAST_MODEL",
+  "API_TIMEOUT_MS",
+]
+# OpenRouter's Anthropic skin requires API_KEY to be explicitly empty, not
+# merely absent, or Claude Code may fall back to an Anthropic login.
+env = { ANTHROPIC_BASE_URL = "https://openrouter.ai/api", ANTHROPIC_API_KEY = "" }
+secret_env = { ANTHROPIC_AUTH_TOKEN = "OPENROUTER_API_KEY" }

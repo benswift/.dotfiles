@@ -100,6 +100,8 @@ etc.). Key scripts:
 - `mailsync` --- sync all email accounts
 - `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI
   agents
+- `agent-run` --- headless Claude Code / Codex dispatcher with named
+  subscription and API-provider profiles
 - `zj-switch` --- `Alt s` session switcher (live sessions only, most-recently
   used first, annotated with each session's Claude agents and their state). See
   "Session switching" below
@@ -293,6 +295,39 @@ configured to read `CLAUDE.md` as the project-level instructions file. This
 means a single file works across all tools with no symlinks needed. Global
 instructions and base per-tool configuration are tracked here and symlinked into
 place.
+
+### Headless agent dispatcher
+
+@bin/agent-run is the common execution boundary for unattended agent jobs. A
+profile selects the official runner and its authentication route; the caller
+keeps the job-specific prompt, model override and permission settings. Profiles
+live in @agent-run/profiles.toml, symlinked to
+`~/.config/agent-run/profiles.toml`:
+
+- `claude-sub` --- native Claude Code with its on-disk subscription login; it
+  clears API and gateway variables first so a scheduled job cannot silently
+  become pay-as-you-go
+- `codex-sub` --- native `codex exec` with its on-disk ChatGPT login
+- `deepseek` --- Claude Code against DeepSeek's official Anthropic-compatible
+  endpoint, defaulting to `deepseek-v4-flash`
+- `openrouter` --- Claude Code against OpenRouter's Anthropic skin; the caller
+  supplies the model, including a `:free` variant when one is available
+- `claude-api` --- an escape hatch for a caller-managed Anthropic-compatible
+  endpoint; unlike the other profiles it deliberately inherits `ANTHROPIC_*`
+
+`AGENT_PROFILE` and `AGENT_MODEL` are equivalent to `--profile` and `--model`.
+Put `DEEPSEEK_API_TOKEN` and `OPENROUTER_API_KEY` in the untracked local mise
+environment. The registry maps them to each runner's expected variable only in
+the child process; no OAuth token is imported or replayed by the dispatcher.
+
+Examples:
+
+```sh
+agent-run --profile claude-sub --model sonnet \
+  --claude-dangerously-skip-permissions "/find-gigs"
+agent-run --profile deepseek --claude-disallowed-tools AskUserQuestion "tick"
+agent-run --profile openrouter --model "provider/model:free" "prompt"
+```
 
 ### Claude Code
 
