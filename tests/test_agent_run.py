@@ -78,6 +78,7 @@ def test_claude_command_preserves_headless_settings(tmp_path: Path) -> None:
         cwd=tmp_path,
         claude_dangerously_skip_permissions=False,
         claude_disallowed_tools="AskUserQuestion",
+        claude_effort="max",
         codex_sandbox="",
         environ={"CLAUDE_BIN": "/opt/claude"},
     )
@@ -86,6 +87,8 @@ def test_claude_command_preserves_headless_settings(tmp_path: Path) -> None:
         "/opt/claude",
         "--model",
         "deepseek-v4-flash",
+        "--effort",
+        "max",
         "--print",
         "--disallowedTools=AskUserQuestion",
         "tick",
@@ -100,6 +103,7 @@ def test_codex_command_preserves_sprite_sandbox(tmp_path: Path) -> None:
         cwd=tmp_path,
         claude_dangerously_skip_permissions=False,
         claude_disallowed_tools="",
+        claude_effort="",
         codex_sandbox="danger-full-access",
         environ={"CODEX_BIN": "/opt/codex"},
     )

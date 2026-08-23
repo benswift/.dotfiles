@@ -86,6 +86,7 @@ def build_command(
     cwd: Path,
     claude_dangerously_skip_permissions: bool,
     claude_disallowed_tools: str,
+    claude_effort: str,
     codex_sandbox: str,
     environ: dict[str, str],
 ) -> list[str]:
@@ -96,6 +97,8 @@ def build_command(
             command.append("--dangerously-skip-permissions")
         if model:
             command.extend(("--model", model))
+        if claude_effort:
+            command.extend(("--effort", claude_effort))
         command.append("--print")
         if claude_disallowed_tools:
             command.append(f"--disallowedTools={claude_disallowed_tools}")
@@ -127,6 +130,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--describe", action="store_true")
     parser.add_argument("--claude-dangerously-skip-permissions", action="store_true")
     parser.add_argument("--claude-disallowed-tools", default="")
+    parser.add_argument("--claude-effort", default="")
     parser.add_argument("--codex-sandbox", default="")
     parser.add_argument("prompt", nargs="?")
     return parser
@@ -175,6 +179,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             cwd=cwd,
             claude_dangerously_skip_permissions=args.claude_dangerously_skip_permissions,
             claude_disallowed_tools=args.claude_disallowed_tools,
+            claude_effort=args.claude_effort,
             codex_sandbox=args.codex_sandbox,
             environ=child_env,
         )
