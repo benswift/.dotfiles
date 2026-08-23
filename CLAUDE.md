@@ -40,9 +40,9 @@ Six paths hold no symlink targets and so appear nowhere in the manifest: @bin/
 instructions in each header), @lib/ (bash helpers sourced by the scripts ---
 `log.sh` and the manifest itself), @tests/ (uv single-file tests for the `bin/`
 scripts and pinned infrastructure, run directly, e.g. `./tests/test_nb.py` and
-`./tests/test_svg_validate.py`), `backlog/` (Backlog.md
-task files), and @oxfmtrc.json (the shared markdown/TOML format config, used by
-`prettify-md` and @bin/oxfmt-helix).
+`./tests/test_svg_validate.py`), `backlog/` (Backlog.md task files), and
+@oxfmtrc.json (the shared markdown/TOML format config, used by `prettify-md` and
+@bin/oxfmt-helix).
 
 ## Python
 
