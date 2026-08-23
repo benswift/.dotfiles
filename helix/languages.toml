@@ -177,6 +177,8 @@ source = { git = "https://github.com/ngalaiko/tree-sitter-go-template", rev = "a
 name = "mutt-compose"
 source = { git = "https://github.com/benswift/tree-sitter-mutt-compose", rev = "c0558cc601b8407fe84907f230a7595fdece1836" }
 
+# The upstream 0.1.4 tag omits generated src/parser.c, which Helix requires;
+# this is the first main-branch commit after that release carrying it.
 [[grammar]]
 name = "muttrc"
-source = { git = "https://github.com/benswift/tree-sitter-muttrc", rev = "f75f401f7584bcb44f6bdca96b1419b7ccc4331c" }
+source = { git = "https://github.com/neomutt/tree-sitter-muttrc", rev = "da8af7ba87b1bbe6d9e1606dfdc5eceb0fccc2dc" }

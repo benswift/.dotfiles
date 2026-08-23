@@ -1,83 +1,66 @@
-; Commands (keywords)
-(command) @keyword
+; Adapted from upstream: Helix uses #not-match?, not #not-lua-match?.
 
 ; Comments
 (comment) @comment
 
-; Strings
-(string) @string
-(shell) @string.special
+(comment
+  (body) @spell)
 
-; Regular expressions
-(regex) @string.regexp
-
-; Numbers
+; General
 (int) @number
 
-; Configuration options
-(option) @variable.parameter
+(string) @string
 
-; Quadoptions (yes/no/ask-yes/ask-no)
-(quadoption) @constant.builtin
+[
+  (map)
+  (object)
+  (composeobject)
+  (color)
+  (attribute)
+] @string.special
 
-; Colors
-(color) @constant
-(foreground) @constant
-(background) @constant
+(quadoption) @boolean
 
-; Attributes (bold, underline, etc.)
-(attribute) @attribute
+(path) @string.special.path
 
-; Color objects
-(object) @type
-(composeobject) @type
+(regex) @string.regexp
 
-; Keybinding maps
-(map) @type.enum
+(option) @variable
 
-; Functions
-(function) @function
+(command_line_option) @variable.builtin
 
-; Environment variables
-(env_var) @variable.builtin
+((option) @variable.builtin
+  (#not-match? @variable.builtin "^my_"))
 
-; Keys and key names
-(key_name) @string.special.symbol
+(command) @keyword
+
+(source_directive
+  (command) @keyword.import)
+
+(uri) @string.special.url
+
+(key_name) @constant.builtin
+
 (escape) @string.escape
 
-; Hook types
-(hook_type) @type
+(function) @function.call
 
-; MIME types
-(mime_type) @type
-(sub_mime_type) @type
+; Literals
+[
+  "<"
+  ">"
+] @punctuation.bracket
 
-; Paths and files
-(path) @string.special.path
-(directory) @string.special.path
-(mailbox) @string.special.path
+"," @punctuation.delimiter
 
-; Command line options (-group, -rx, etc.)
-(command_line_option) @attribute
+[
+  "&"
+  "?"
+  "*"
+] @character.special
 
-; Addresses
-(address) @string.special
-
-; Descriptions
-(description) @string
-
-; Group names
-(group_name) @variable
-
-; Symbols (for ifdef/ifndef)
-(symbol) @variable
-
-; Operators
-["=" "+=" "-="] @operator
-["+" "-"] @operator
-["?" "&" "!" "*"] @punctuation.special
-
-; Punctuation
-["<" ">"] @punctuation.bracket
-["'" "\"" "`"] @punctuation.delimiter
-[","] @punctuation.delimiter
+[
+  "="
+  "+="
+  "-="
+] @operator
