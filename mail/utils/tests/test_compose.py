@@ -617,16 +617,18 @@ class TestOpenNeomuttCompose:
         neomutt is never launched; the draft is captured from disk while
         the patched subprocess.run stands in for it.
         """
-        captured: dict[str, bytes] = {}
+        captured_cmd: list[str] = []
+        captured_draft = b""
 
-        def fake_run(cmd, **_):
-            captured["draft"] = Path(cmd[-1]).read_bytes()
-            captured["cmd"] = cmd
+        def fake_run(cmd: list[str], **_):
+            nonlocal captured_cmd, captured_draft
+            captured_draft = Path(cmd[-1]).read_bytes()
+            captured_cmd = cmd
             return MagicMock(returncode=0)
 
         with patch("mail_utils.compose.subprocess.run", side_effect=fake_run):
             open_neomutt_compose(Account.personal, **kwargs)
-        return captured["cmd"], captured["draft"]
+        return captured_cmd, captured_draft
 
     def test_reply_to_sets_threading_headers(self, tmp_path: Path):
         """The bug this path used to have: a stub draft carrying only
