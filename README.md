@@ -65,8 +65,8 @@ The `create_symlinks.sh` script sets up all necessary symlinks and directories.
 
 ### Personal skills plugin (`ben`)
 
-My personal Claude Code skills library (pkb, benswift-writer, phdconvenor,
-etc.) lives in a separate **private** repo,
+My personal Claude Code skills library (pkb, benswift-writer, phdconvenor, etc.)
+lives in a separate **private** repo,
 [`benswift/claude-plugin-personal`](https://github.com/benswift/claude-plugin-personal),
 loaded as a Claude Code plugin. The setup:
 
