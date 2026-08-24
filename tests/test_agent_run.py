@@ -32,6 +32,7 @@ def test_claude_subscription_clears_api_routing() -> None:
     environ = {
         "ANTHROPIC_API_KEY": "pay-as-you-go",
         "ANTHROPIC_BASE_URL": "https://proxy.invalid",
+        "ANTHROPIC_MODEL": "machine-default",
         "CLAUDECODE": "1",
         "PATH": "/bin",
     }
@@ -40,6 +41,7 @@ def test_claude_subscription_clears_api_routing() -> None:
 
     assert "ANTHROPIC_API_KEY" not in child
     assert "ANTHROPIC_BASE_URL" not in child
+    assert child["ANTHROPIC_MODEL"] == "machine-default"
     assert "CLAUDECODE" not in child
     assert child["PATH"] == "/bin"
     assert environ["ANTHROPIC_API_KEY"] == "pay-as-you-go"

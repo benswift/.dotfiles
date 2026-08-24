@@ -1,0 +1,27 @@
+{
+  "description": "Send Pushover notifications when long Codex turns finish.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.dotfiles/bin/codex-turn-notify start",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.dotfiles/bin/codex-turn-notify stop",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

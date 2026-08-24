@@ -74,48 +74,15 @@ sync_claude_plugins() {
     fi
 }
 
-sync_codex_profile() {
-    local codex_parent="$HOME/.codex"
-    local base_config="$codex_parent/config.toml"
-    local legacy_profile="$DOTFILES_DIR/codex/config.toml"
+remove_legacy_codex_profile() {
+    local profile="$HOME/.codex/dotfiles.config.toml"
+    local old_target="$DOTFILES_DIR/codex/config.toml"
 
-    mkdir -p "$codex_parent"
-
-    # Before the profile migration, config.toml was a symlink to the tracked
-    # defaults. Preserve only state Codex owns when replacing that old link
-    # with the local base configuration.
-    if [[ -L "$base_config" ]]; then
-        local link_target
-        link_target="$(readlink "$base_config")"
-        if [[ "$link_target" != "$legacy_profile" ]]; then
-            warn "$base_config is a symlink to $link_target, leaving it alone"
-            return
-        fi
-
-        local tmp_config
-        tmp_config="$(mktemp "$codex_parent/config.toml.migrate.XXXXXX")"
-        awk '
-            # Codex-generated tables that belong to this host, rather than
-            # its portable profile. Keep the complete TOML table, including
-            # nested subtables and comments.
-            function is_local_header(header) {
-                return header ~ /^\[projects\./ ||
-                    header ~ /^\[notice(\.|\])/ ||
-                    header ~ /^\[tui(\.|\])/ ||
-                    header ~ /^\[desktop(\.|\])/ ||
-                    header ~ /^\[external_config_migration_prompts(\.|\])/
-            }
-
-            /^\[/ { keep = is_local_header($0) }
-            keep { print }
-        ' "$base_config" > "$tmp_config"
-
-        rm "$base_config"
-        mv "$tmp_config" "$base_config"
-        info "Migrated Codex machine-local state to $base_config"
-    elif [[ ! -e "$base_config" ]]; then
-        : > "$base_config"
-        info "Created local Codex state file at $base_config"
+    if [[ -L "$profile" && "$(readlink "$profile")" == "$old_target" ]]; then
+        rm "$profile"
+        info "Removed obsolete Codex dotfiles profile link"
+    elif [[ -e "$profile" || -L "$profile" ]]; then
+        warn "$profile is not the legacy dotfiles link, leaving it alone"
     fi
 }
 
@@ -184,5 +151,5 @@ sync_codex_skills() {
 }
 
 sync_claude_plugins
-sync_codex_profile
+remove_legacy_codex_profile
 sync_codex_skills

@@ -54,10 +54,10 @@ This repo provides shared configuration for multiple AI coding agents, with
 
 - **Claude Code**: `claude/CLAUDE.md` is symlinked to `~/.claude/CLAUDE.md`.
 - **Codex CLI**: the same global instructions are symlinked to
-  `~/.codex/AGENTS.md`, while the `dotfiles` Codex profile tells Codex to read
-  project `CLAUDE.md` files. The `codex` and `oy` aliases select that profile
-  automatically; trusted-project and UI state remain local in
-  `~/.codex/config.toml`.
+  `~/.codex/AGENTS.md`, and portable notification hooks are symlinked to
+  `~/.codex/hooks.json`. Model selection, project-instruction fallbacks,
+  trusted-project paths and UI state remain machine-local in
+  `~/.codex/config.toml`; the `oy` alias only selects full-access mode.
 - **Gemini CLI**: `gemini/settings.json` tells Gemini to read `CLAUDE.md` and
   `GEMINI.md` as context files.
 

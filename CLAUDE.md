@@ -306,7 +306,7 @@ live in @agent-run/profiles.toml, symlinked to
 
 - `claude-sub` --- native Claude Code with its on-disk subscription login; it
   clears API and gateway variables first so a scheduled job cannot silently
-  become pay-as-you-go
+  become pay-as-you-go, while inheriting the machine-local model and effort
 - `codex-sub` --- native `codex exec` with its on-disk ChatGPT login
 - `deepseek` --- Claude Code against DeepSeek's official Anthropic-compatible
   endpoint, defaulting to `deepseek-v4-flash`
@@ -373,7 +373,7 @@ The @claude/ folder includes:
 - @claude/CLAUDE.md - global agent instructions (symlinked to both
   `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`)
 - @claude/settings.json - Claude Code settings
-- @codex/config.toml - portable Codex profile defaults
+- @codex/hooks.json - portable Codex notification hooks
 - @gemini/settings.json - portable Gemini context settings
 
 Every personal skill lives in the ben plugin --- that is the single, exclusive
@@ -451,25 +451,23 @@ removing a `ben` skill is reflected on the next `dotfiles update` without a
 second manifest. The sync also removes its legacy links from `~/.codex/skills`,
 while leaving Codex's generated `.system/` skills untouched.
 
-`~/.codex/config.toml` is Codex-owned, machine-local state: trusted project
-paths, dismissed notices, desktop/TUI state, and host-specific settings. It is
-deliberately not symlinked or tracked. The portable configuration instead lives
-in @codex/config.toml, symlinked to `~/.codex/dotfiles.config.toml` and loaded
-with `--profile dotfiles`. The `codex` and `oy` zsh aliases and
-@bin/codex-zellij add that flag, while @bin/sync-agent-config migrates the old
-`config.toml` symlink by retaining only machine-owned state.
+`~/.codex/config.toml` is entirely machine-local: model and reasoning defaults,
+project-instruction fallbacks, MCP servers, trusted project paths, dismissed
+notices, desktop/TUI preferences, hook trust hashes and other generated state.
+It is deliberately neither symlinked nor tracked. Set
+`project_doc_fallback_filenames = ["CLAUDE.md"]` there on each machine.
 
-The profile also runs @bin/codex-turn-notify from `UserPromptSubmit` and `Stop`
-hooks. Like Claude's turn tracker, it sends a Pushover completion after a turn
-has run for five minutes; set `CODEX_NOTIFY_THRESHOLD` to override that default.
-Codex asks for trust approval whenever a hook definition changes.
+The portable hook definitions live in @codex/hooks.json, symlinked to
+`~/.codex/hooks.json`. They run @bin/codex-turn-notify on `UserPromptSubmit` and
+`Stop`, sending a Pushover completion after a turn has run for five minutes; set
+`CODEX_NOTIFY_THRESHOLD` to override that default. Codex records approval of
+each exact hook definition in the machine-local config, so neither hook hashes
+nor absolute paths enter git.
 
-Put cross-platform defaults in the profile: model, reasoning effort,
-personality, project-instruction fallbacks, and any other setting that makes
-sense on every host. Keep absolute paths, provider/auth setup, per-project
-trust, and UI/onboarding state in the local base config. If a TUI preference is
-deliberately shared (for example a keymap), it may go in the profile; generated
-`[tui.*]` state stays local.
+There is deliberately no shared Codex profile. The `oy` alias and
+@bin/codex-zellij select full-access mode only, leaving every configuration
+entry point --- interactive shells, zellij, the IDE and @bin/agent-run --- on
+the same native user config.
 
 ### Gemini CLI
 

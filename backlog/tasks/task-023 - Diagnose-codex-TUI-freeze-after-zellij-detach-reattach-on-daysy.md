@@ -18,7 +18,7 @@ codex CLI sometimes becomes non-responsive after detaching and reattaching a zel
 
 Investigated 2026-07-13 on weddle (identical versions: zellij 0.44.3, codex 0.144.1): NOT reproducible in a headless terminal in any variant --- clean detach while idle, detach mid-request, hard client kill, and with `tui.alternate_screen=always` forced. The trigger therefore involves ghostty as the attached client (kitty keyboard protocol / synchronized output / focus reporting --- capabilities a dumb terminal never advertises). No matching upstream issue found in openai/codex, zellij-org/zellij, or ghostty-org/ghostty.
 
-Workaround under trial: `alternate_screen = "never"` in codex/config.toml (the dotfiles profile) --- inline mode was robust across every detach variant tested, and sidesteps zellij's alt-screen state restoration entirely.
+Workaround under trial: `alternate_screen = "never"` in daysy's machine-local `~/.codex/config.toml` --- inline mode was robust across every detach variant tested, and sidesteps zellij's alt-screen state restoration entirely.
 
 Next time it freezes, run these three checks (each discriminates a failure mode):
 

@@ -32,19 +32,14 @@ setopt HIST_IGNORE_SPACE
 alias y="yazi"
 alias h="hx ."
 alias zp="zed-preview"
-# The [1m] suffix is spelled out because --model overrides settings.json's
-# "model": "opus[1m]", and claude only auto-upgrades a bare `opus` alias to
-# the 1M context window on a first-party login --- not when a project pins
-# ANTHROPIC_BASE_URL at a proxy (comp4020), where bare opus gets 200k.
-alias ay="claude --dangerously-skip-permissions --model 'opus[1m]'"
-alias aym="claude --dangerously-skip-permissions --model 'opus[1m]' --effort max"
+# The ordinary aliases inherit each machine's ANTHROPIC_MODEL from the
+# untracked mise config; variants name a model only when that is their point.
+alias ay="claude --dangerously-skip-permissions"
+alias aym="claude --dangerously-skip-permissions --effort max"
 # --setting-sources skips project .claude/settings.json (comp4020 pins the ANU
 # proxy there), so the Max login is used; local/user settings still load.
 alias ayf="claude --setting-sources user,local --dangerously-skip-permissions --model fable --effort high"
-# Codex keeps per-machine trust and UI state in ~/.codex/config.toml. Its
-# portable defaults live in the dotfiles profile, layered on every invocation.
-alias codex="command codex --profile dotfiles"
-alias oy="command codex --profile dotfiles --dangerously-bypass-approvals-and-sandbox"
+alias oy="command codex --dangerously-bypass-approvals-and-sandbox"
 alias gyolo="gemini --yolo"
 sysup() {
   if [[ "$OSTYPE" == darwin* ]]; then
