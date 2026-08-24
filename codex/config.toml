@@ -20,6 +20,14 @@ type = "command"
 command = "$HOME/.dotfiles/bin/codex-turn-notify stop"
 timeout = 15
 
+[hooks.state]
+
+[hooks.state."/home/ben/.codex/dotfiles.config.toml:user_prompt_submit:0:0"]
+trusted_hash = "sha256:6900d81c109e763b78ff2c20eb9191887f42697f708ad3c178b75775b830be09"
+
+[hooks.state."/home/ben/.codex/dotfiles.config.toml:stop:0:0"]
+trusted_hash = "sha256:e1545d82e75bc1b17ee4958d3a214d61c5781592b79d93e35063d5385111e13d"
+
 [tui]
 alternate_screen = "never"
 
