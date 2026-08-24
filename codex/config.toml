@@ -54,3 +54,6 @@ trust_level = "trusted"
 
 [projects."/home/ben/projects/aps-ai-tracker"]
 trust_level = "trusted"
+
+[notice]
+hide_rate_limit_model_nudge = true
