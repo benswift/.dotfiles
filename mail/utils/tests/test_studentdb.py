@@ -123,6 +123,29 @@ class TestStudent:
             )
         assert "status must be one of" in str(exc_info.value)
 
+    def test_withdrawn_student_may_have_incomplete_historical_data(self):
+        student = Student(person_id="test", status="withdrawn")
+
+        assert student.uid is None
+        assert student.primary_supervisor_id is None
+        assert student.panel_ids == []
+
+    @pytest.mark.parametrize("field", ["uid", "primary_supervisor_id", "panel_ids"])
+    def test_non_withdrawn_student_requires_candidature_fields(self, field: str):
+        data = {
+            "person_id": "test",
+            "uid": "u1234567",
+            "primary_supervisor_id": "supervisor",
+            "panel_ids": ["panel"],
+            "status": "completed",
+        }
+        del data[field]
+
+        with pytest.raises(ValidationError) as exc_info:
+            Student.model_validate(data)
+
+        assert field in str(exc_info.value)
+
 
 class TestStudentDatabase:
     def test_validates_valid_database(self):
@@ -285,6 +308,7 @@ class TestStudentDB:
         assert alice.status == "confirmed"
         assert alice.commencement_date == "2024-01-15"
 
+        assert alice.supervisor is not None
         assert alice.supervisor.name == "Carol Supervisor"
         assert alice.supervisor.email == "carol@example.com"
 
@@ -301,6 +325,20 @@ class TestStudentDB:
         assert bob.preferred_name is None
         assert bob.commencement_date is None
         assert bob.crp_chair is None
+
+    def test_students_denormalises_incomplete_withdrawn_record(self, tmp_path: Path):
+        data = {
+            "people": {"former_student": {"name": "Former Student"}},
+            "students": [{"person_id": "former_student", "status": "withdrawn"}],
+        }
+        db_file = tmp_path / "db.json"
+        db_file.write_text(json.dumps(data))
+
+        [student] = StudentDB.from_file(db_file).students()
+
+        assert student.uid is None
+        assert student.supervisor is None
+        assert student.panel == []
 
     def test_get_student_returns_student_by_id(self, db: StudentDB):
         alice = db.get_student("alice_student")

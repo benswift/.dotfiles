@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Ben's own person_id, used to derive `ben_role` on the denormalised output.
 BEN_PERSON_ID = "ben_swift"
@@ -33,13 +33,13 @@ class Person(BaseModel):
 
 class Student(BaseModel):
     person_id: str
-    uid: str
+    uid: str | None = None
     program: str = "PhD"
-    primary_supervisor_id: str
+    primary_supervisor_id: str | None = None
     # Chair of Panel, who may or may not be the primary supervisor. `panel_ids`
     # holds the associate supervisors only --- panel minus primary minus chair.
     panel_chair_id: str | None = None
-    panel_ids: list[str]
+    panel_ids: list[str] = Field(default_factory=list)
     status: str
     school: str | None = None
     commencement_date: str | None = None
@@ -72,6 +72,20 @@ class Student(BaseModel):
             raise ValueError(f"status must be one of {VALID_STATUSES}, got {v!r}")
         return v
 
+    @model_validator(mode="after")
+    def require_non_withdrawn_fields(self) -> "Student":
+        if self.status != "withdrawn":
+            missing = []
+            if not self.uid:
+                missing.append("uid")
+            if not self.primary_supervisor_id:
+                missing.append("primary_supervisor_id")
+            if "panel_ids" not in self.model_fields_set:
+                missing.append("panel_ids")
+            if missing:
+                raise ValueError("non-withdrawn students require " + ", ".join(missing))
+        return self
+
 
 class StudentDatabase(BaseModel):
     people: dict[str, Person]
@@ -84,7 +98,10 @@ class StudentDatabase(BaseModel):
                 errors.append(
                     f"student references unknown person_id: {student.person_id}"
                 )
-            if student.primary_supervisor_id not in self.people:
+            if (
+                student.primary_supervisor_id
+                and student.primary_supervisor_id not in self.people
+            ):
                 errors.append(
                     f"student {student.person_id} references unknown supervisor: "
                     f"{student.primary_supervisor_id}"
@@ -113,14 +130,14 @@ class DenormalisedStudent(BaseModel):
     preferred_name: str | None
     email: str | None
     alt_email: str | None = None
-    uid: str
+    uid: str | None
     program: str = "PhD"
     status: str
     school: str | None = None
     commencement_date: str | None
     completion_date: str | None = None
     ben_role: str | None = None
-    supervisor: Person
+    supervisor: Person | None
     panel_chair: Person | None = None
     panel: list[Person]
     crp_chair: Person | None = None

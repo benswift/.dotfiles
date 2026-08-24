@@ -78,7 +78,11 @@ class StudentDB:
             thesis_title=student.thesis_title,
             source=student.source,
             notes=student.notes,
-            supervisor=self._get_person(student.primary_supervisor_id),
+            supervisor=(
+                self._get_person(student.primary_supervisor_id)
+                if student.primary_supervisor_id
+                else None
+            ),
             panel_chair=(
                 self._get_person(student.panel_chair_id)
                 if student.panel_chair_id
