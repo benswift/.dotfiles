@@ -32,8 +32,6 @@ setopt HIST_IGNORE_SPACE
 alias y="yazi"
 alias h="hx ."
 alias zp="zed-preview"
-# The ordinary aliases inherit each machine's ANTHROPIC_MODEL from the
-# untracked mise config; variants name a model only when that is their point.
 alias ay="claude --dangerously-skip-permissions"
 alias aym="claude --dangerously-skip-permissions --effort max"
 # --setting-sources skips project .claude/settings.json (comp4020 pins the ANU

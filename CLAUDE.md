@@ -290,7 +290,7 @@ live in @agent-run/profiles.toml, symlinked to
 
 - `claude-sub` --- native Claude Code with its on-disk subscription login; it
   clears API and gateway variables first so a scheduled job cannot silently
-  become pay-as-you-go, while inheriting the machine-local model and effort
+  become pay-as-you-go
 - `codex-sub` --- native `codex exec` with its on-disk ChatGPT login
 - `deepseek` --- Claude Code against DeepSeek's official Anthropic-compatible
   endpoint, defaulting to `deepseek-v4-flash`
