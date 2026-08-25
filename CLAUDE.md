@@ -100,8 +100,8 @@ etc.). Key scripts:
 - `mailsync` --- sync all email accounts
 - `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI
   agents
-- `agent-run` --- headless Claude Code / Codex dispatcher with named
-  subscription and API-provider profiles
+- `agent-run` --- headless Claude Code / Codex / Grok Build dispatcher with
+  named subscription and API-provider profiles
 - `zj-switch` --- `Alt s` session switcher (live sessions only, most-recently
   used first, annotated with each session's Claude agents and their state). See
   "Session switching" below
@@ -298,11 +298,31 @@ live in @agent-run/profiles.toml, symlinked to
   supplies the model, including a `:free` variant when one is available
 - `claude-api` --- an escape hatch for a caller-managed Anthropic-compatible
   endpoint; unlike the other profiles it deliberately inherits `ANTHROPIC_*`
+- `grok-sub` --- native Grok Build (`grok -p`) with its on-disk grok.com login.
+  Same guard as `claude-sub`, against a longer list: `XAI_API_KEY` and
+  `GROK_CODE_XAI_API_KEY` switch the CLI to xAI API billing, and
+  `GROK_AUTH_PROVIDER_COMMAND`/`_ACCESS_TOKEN` swap the credential source
+  outright
+- `grok-api` --- the xAI API-billed escape hatch, named so it cannot be mistaken
+  for the subscription route; like `claude-api` it inherits the caller's
+  credential
+
+Three routes reach Grok and only one of them is subscription-backed: `grok-sub`
+consumes the SuperGrok entitlement (SuperGrok or X Premium+ suffices --- Heavy
+buys a larger allowance, not access), `grok-api` bills xAI per token, and the
+`openrouter` profile bills OpenRouter credits. The `total_cost_usd` a headless
+`grok` run prints is token accounting at API rates, not a charge against a card.
 
 `AGENT_PROFILE` and `AGENT_MODEL` are equivalent to `--profile` and `--model`.
 Put `DEEPSEEK_API_TOKEN` and `OPENROUTER_API_KEY` in the untracked local mise
 environment. The registry maps them to each runner's expected variable only in
 the child process; no OAuth token is imported or replayed by the dispatcher.
+
+Options are namespaced by runner (`--claude-*`, `--codex-*`, `--grok-*`) and the
+dispatcher refuses one aimed at a different runner than the profile selects,
+rather than dropping it. That matters for permission flags above all: silently
+ignoring `--claude-dangerously-skip-permissions` on a Grok profile would leave
+an unattended job blocking on a prompt nobody is there to answer.
 
 Examples:
 
@@ -311,6 +331,8 @@ agent-run --profile claude-sub --model sonnet \
   --claude-dangerously-skip-permissions "/find-gigs"
 agent-run --profile deepseek --claude-disallowed-tools AskUserQuestion "tick"
 agent-run --profile openrouter --model "provider/model:free" "prompt"
+agent-run --profile grok-sub --grok-permission-mode bypassPermissions \
+  --grok-output-format json "/publish"
 ```
 
 ### Claude Code
@@ -457,6 +479,26 @@ the same native user config.
 
 Gemini CLI uses @gemini/settings.json to read `CLAUDE.md` as a context file (in
 addition to the default `GEMINI.md`).
+
+### Grok Build
+
+xAI's coding agent CLI (`grok`), installed from mise's aqua backend rather than
+the `x.ai/cli/install.sh` one-liner, so it is pinned and updated alongside every
+other agent instead of self-updating. `grok login --oauth` writes
+`~/.grok/auth.json`; on a headless host use `grok login --device-auth`, which
+prints a code to redeem from a machine that has a browser --- unlike Matilda,
+Grok implements the device flow properly, so no port forwarding is needed.
+
+Nothing else needs configuring, because Grok already reads this repo's Claude
+config: `CLAUDE.md` at both global and project level, and Claude Code skills at
+user and project level (project skills win a name collision; user ones are
+reachable as `/user:<name>`). `grok inspect` prints exactly what it discovered
+for the current directory, which is the fastest way to check a port before
+running one. Its headless surface mirrors Claude Code's closely enough that
+@bin/agent-run maps the two with the same option shapes --- `-p` for a
+single-turn prompt, `--permission-mode bypassPermissions` where Claude has
+`--dangerously-skip-permissions`, plus `--model`, `--effort` and
+`--output-format json`.
 
 ### Matilda Code
 

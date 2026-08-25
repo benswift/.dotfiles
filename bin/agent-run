@@ -18,7 +18,21 @@ from pathlib import Path
 import tomllib
 
 DEFAULT_CONFIG = Path("~/.config/agent-run/profiles.toml").expanduser()
-RUNNERS = {"claude", "codex"}
+RUNNERS = {"claude", "codex", "grok"}
+
+# CLI options only one runner understands. Passing a Claude flag to a Grok
+# profile is a misunderstanding, and the silent version of that mistake is a
+# scheduled job running without the permission flag its author thought it had
+# set --- so the dispatcher refuses rather than dropping the option.
+RUNNER_OPTIONS: dict[str, tuple[str, ...]] = {
+    "claude": (
+        "claude_dangerously_skip_permissions",
+        "claude_disallowed_tools",
+        "claude_effort",
+    ),
+    "codex": ("codex_sandbox",),
+    "grok": ("grok_permission_mode", "grok_effort", "grok_output_format"),
+}
 
 
 @dataclass(frozen=True)
@@ -89,6 +103,9 @@ def build_command(
     claude_effort: str,
     codex_sandbox: str,
     environ: dict[str, str],
+    grok_permission_mode: str = "",
+    grok_effort: str = "",
+    grok_output_format: str = "",
 ) -> list[str]:
     """Translate the common headless invocation into the selected CLI."""
     if profile.runner == "claude":
@@ -105,6 +122,21 @@ def build_command(
         command.append(prompt)
         return command
 
+    if profile.runner == "grok":
+        command = [environ.get("GROK_BIN", "grok")]
+        if model:
+            command.extend(("--model", model))
+        if grok_permission_mode:
+            command.extend(("--permission-mode", grok_permission_mode))
+        if grok_effort:
+            command.extend(("--effort", grok_effort))
+        if grok_output_format:
+            command.extend(("--output-format", grok_output_format))
+        # -p takes the prompt as its value and makes the run single-turn; the
+        # working directory comes from the child process, as it does for claude.
+        command.extend(("-p", prompt))
+        return command
+
     command = [environ.get("CODEX_BIN", "codex"), "exec"]
     if codex_sandbox:
         command.extend(("--sandbox", codex_sandbox))
@@ -112,6 +144,19 @@ def build_command(
         command.extend(("--model", model))
     command.extend(("-C", str(cwd), prompt))
     return command
+
+
+def check_runner_options(runner: str, args: argparse.Namespace) -> None:
+    """Reject options belonging to a runner other than the selected one."""
+    for other, names in RUNNER_OPTIONS.items():
+        if other == runner:
+            continue
+        for name in names:
+            if getattr(args, name, ""):
+                flag = "--" + name.replace("_", "-")
+                raise ValueError(
+                    f"{flag} is a {other} option, but this profile runs {runner}"
+                )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -132,6 +177,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--claude-disallowed-tools", default="")
     parser.add_argument("--claude-effort", default="")
     parser.add_argument("--codex-sandbox", default="")
+    parser.add_argument("--grok-permission-mode", default="")
+    parser.add_argument("--grok-effort", default="")
+    parser.add_argument("--grok-output-format", default="")
     parser.add_argument("prompt", nargs="?")
     return parser
 
@@ -151,9 +199,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise ValueError(f"unknown profile {args.profile!r} (known: {known})")
 
         profile = profiles[args.profile]
+        check_runner_options(profile.runner, args)
         model = args.model or profile.model
         if args.describe:
-            binary_var = "CLAUDE_BIN" if profile.runner == "claude" else "CODEX_BIN"
+            binary_var = f"{profile.runner.upper()}_BIN"
             binary = os.environ.get(binary_var, profile.runner)
             result = subprocess.run(
                 [binary, "--version"],
@@ -182,6 +231,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             claude_effort=args.claude_effort,
             codex_sandbox=args.codex_sandbox,
             environ=child_env,
+            grok_permission_mode=args.grok_permission_mode,
+            grok_effort=args.grok_effort,
+            grok_output_format=args.grok_output_format,
         )
         return subprocess.run(command, cwd=cwd, env=child_env, check=False).returncode
     except (OSError, ValueError, tomllib.TOMLDecodeError) as error:

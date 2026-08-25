@@ -38,6 +38,10 @@ helix = "latest"
 vivid = "latest"
 gemini = "latest"
 codex = "latest"
+# Grok Build, xAI's coding agent CLI. The aqua backend installs the same
+# release binary the x.ai/cli/install.sh one-liner fetches, so this pins it
+# alongside every other agent rather than leaving one CLI self-updating.
+grok = "latest"
 glab = "latest"
 typst = "latest"
 # Via mise rather than apt so the typst writer is current --- Ubuntu's pandoc

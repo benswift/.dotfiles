@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import argparse
 import importlib.machinery
 import importlib.util
 import sys
@@ -119,6 +120,109 @@ def test_codex_command_preserves_sprite_sandbox(tmp_path: Path) -> None:
         str(tmp_path),
         "tick",
     ]
+
+
+def test_grok_subscription_clears_api_billing_routes() -> None:
+    profile = mod.Profile(
+        name="grok-sub",
+        runner="grok",
+        unset_env=(
+            "XAI_API_KEY",
+            "GROK_CODE_XAI_API_KEY",
+            "GROK_AUTH_PROVIDER_ACCESS_TOKEN",
+            "GROK_AUTH_PROVIDER_COMMAND",
+        ),
+    )
+    environ = {
+        "XAI_API_KEY": "pay-as-you-go",
+        "GROK_CODE_XAI_API_KEY": "also-pay-as-you-go",
+        "GROK_AUTH_PROVIDER_COMMAND": "print-a-token",
+        "PATH": "/bin",
+    }
+
+    child = mod.resolve_environment(profile, environ)
+
+    assert "XAI_API_KEY" not in child
+    assert "GROK_CODE_XAI_API_KEY" not in child
+    assert "GROK_AUTH_PROVIDER_COMMAND" not in child
+    assert child["PATH"] == "/bin"
+    assert environ["XAI_API_KEY"] == "pay-as-you-go"
+
+
+def test_grok_command_is_single_turn_headless(tmp_path: Path) -> None:
+    command = mod.build_command(
+        mod.Profile(name="grok-sub", runner="grok"),
+        prompt="tick",
+        model="grok-4.6",
+        cwd=tmp_path,
+        claude_dangerously_skip_permissions=False,
+        claude_disallowed_tools="",
+        claude_effort="",
+        codex_sandbox="",
+        environ={"GROK_BIN": "/opt/grok"},
+        grok_permission_mode="bypassPermissions",
+        grok_effort="high",
+        grok_output_format="json",
+    )
+
+    assert command == [
+        "/opt/grok",
+        "--model",
+        "grok-4.6",
+        "--permission-mode",
+        "bypassPermissions",
+        "--effort",
+        "high",
+        "--output-format",
+        "json",
+        "-p",
+        "tick",
+    ]
+
+
+def test_grok_command_omits_unset_options(tmp_path: Path) -> None:
+    command = mod.build_command(
+        mod.Profile(name="grok-sub", runner="grok"),
+        prompt="tick",
+        model="",
+        cwd=tmp_path,
+        claude_dangerously_skip_permissions=False,
+        claude_disallowed_tools="",
+        claude_effort="",
+        codex_sandbox="",
+        environ={},
+    )
+
+    assert command == ["grok", "-p", "tick"]
+
+
+def test_foreign_runner_options_fail_rather_than_being_ignored() -> None:
+    args = argparse.Namespace(
+        claude_dangerously_skip_permissions=True,
+        claude_disallowed_tools="",
+        claude_effort="",
+        codex_sandbox="",
+        grok_permission_mode="",
+        grok_effort="",
+        grok_output_format="",
+    )
+
+    with pytest.raises(ValueError, match="claude option"):
+        mod.check_runner_options("grok", args)
+
+
+def test_own_runner_options_are_accepted() -> None:
+    args = argparse.Namespace(
+        claude_dangerously_skip_permissions=False,
+        claude_disallowed_tools="",
+        claude_effort="",
+        codex_sandbox="",
+        grok_permission_mode="bypassPermissions",
+        grok_effort="high",
+        grok_output_format="json",
+    )
+
+    mod.check_runner_options("grok", args)
 
 
 if __name__ == "__main__":

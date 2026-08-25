@@ -47,3 +47,23 @@ unset_env = [
 # merely absent, or Claude Code may fall back to an Anthropic login.
 env = { ANTHROPIC_BASE_URL = "https://openrouter.ai/api", ANTHROPIC_API_KEY = "" }
 secret_env = { ANTHROPIC_AUTH_TOKEN = "OPENROUTER_API_KEY" }
+
+[profiles.grok-sub]
+# Grok Build with its on-disk grok.com login (SuperGrok or X Premium+). The
+# unset list is the same guard as claude-sub: XAI_API_KEY and
+# GROK_CODE_XAI_API_KEY switch the CLI to xAI API billing, and the
+# GROK_AUTH_PROVIDER_* pair swaps the credential source outright, so a
+# scheduled job cannot silently stop consuming the subscription.
+runner = "grok"
+unset_env = [
+  "XAI_API_KEY",
+  "GROK_CODE_XAI_API_KEY",
+  "GROK_AUTH_PROVIDER_ACCESS_TOKEN",
+  "GROK_AUTH_PROVIDER_COMMAND",
+]
+
+[profiles.grok-api]
+# The xAI API-billed escape hatch, named so it cannot be mistaken for the
+# subscription route. Like claude-api it deliberately inherits the caller's
+# credential rather than mapping one here.
+runner = "grok"
