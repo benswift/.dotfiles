@@ -320,9 +320,15 @@ the child process; no OAuth token is imported or replayed by the dispatcher.
 
 Options are namespaced by runner (`--claude-*`, `--codex-*`, `--grok-*`) and the
 dispatcher refuses one aimed at a different runner than the profile selects,
-rather than dropping it. That matters for permission flags above all: silently
-ignoring `--claude-dangerously-skip-permissions` on a Grok profile would leave
-an unattended job blocking on a prompt nobody is there to answer.
+rather than dropping it. The exception is `--bypass-permissions`, which is
+runner-agnostic on purpose: an unattended consumer can say "never stop to ask"
+without knowing which runner its profile picked, and switching profile stays a
+one-variable change. It maps to `--dangerously-skip-permissions` for claude and
+`--permission-mode bypassPermissions` for grok, and refuses codex, whose sandbox
+profile is a different axis rather than the same idea spelled differently. That
+matters for permission flags above all: silently ignoring
+`--claude-dangerously-skip-permissions` on a Grok profile would leave an
+unattended job blocking on a prompt nobody is there to answer.
 
 Examples:
 

@@ -106,8 +106,22 @@ def build_command(
     grok_permission_mode: str = "",
     grok_effort: str = "",
     grok_output_format: str = "",
+    bypass_permissions: bool = False,
 ) -> list[str]:
     """Translate the common headless invocation into the selected CLI."""
+    if bypass_permissions:
+        if profile.runner == "claude":
+            claude_dangerously_skip_permissions = True
+        elif profile.runner == "grok":
+            grok_permission_mode = grok_permission_mode or "bypassPermissions"
+        else:
+            # Codex spells this as a sandbox profile, which is a different axis
+            # from a permission prompt --- so it names its own option rather
+            # than being quietly folded in here.
+            raise ValueError(
+                "--bypass-permissions is not defined for the codex runner;"
+                " pass --codex-sandbox danger-full-access instead"
+            )
     if profile.runner == "claude":
         command = [environ.get("CLAUDE_BIN", "claude")]
         if claude_dangerously_skip_permissions:
@@ -180,6 +194,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--grok-permission-mode", default="")
     parser.add_argument("--grok-effort", default="")
     parser.add_argument("--grok-output-format", default="")
+    # Runner-agnostic: lets an unattended consumer say "never stop to ask"
+    # without knowing which runner its profile selects.
+    parser.add_argument("--bypass-permissions", action="store_true")
     parser.add_argument("prompt", nargs="?")
     return parser
 
@@ -234,6 +251,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             grok_permission_mode=args.grok_permission_mode,
             grok_effort=args.grok_effort,
             grok_output_format=args.grok_output_format,
+            bypass_permissions=args.bypass_permissions,
         )
         return subprocess.run(command, cwd=cwd, env=child_env, check=False).returncode
     except (OSError, ValueError, tomllib.TOMLDecodeError) as error:

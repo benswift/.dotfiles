@@ -225,5 +225,59 @@ def test_own_runner_options_are_accepted() -> None:
     mod.check_runner_options("grok", args)
 
 
+def test_bypass_permissions_translates_per_runner(tmp_path: Path) -> None:
+    common = {
+        "prompt": "tick",
+        "model": "",
+        "cwd": tmp_path,
+        "claude_dangerously_skip_permissions": False,
+        "claude_disallowed_tools": "",
+        "claude_effort": "",
+        "codex_sandbox": "",
+        "environ": {},
+        "bypass_permissions": True,
+    }
+
+    claude = mod.build_command(mod.Profile(name="c", runner="claude"), **common)
+    grok = mod.build_command(mod.Profile(name="g", runner="grok"), **common)
+
+    assert "--dangerously-skip-permissions" in claude
+    assert grok[grok.index("--permission-mode") + 1] == "bypassPermissions"
+
+
+def test_bypass_permissions_refuses_codex(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="codex-sandbox"):
+        mod.build_command(
+            mod.Profile(name="codex-sub", runner="codex"),
+            prompt="tick",
+            model="",
+            cwd=tmp_path,
+            claude_dangerously_skip_permissions=False,
+            claude_disallowed_tools="",
+            claude_effort="",
+            codex_sandbox="",
+            environ={},
+            bypass_permissions=True,
+        )
+
+
+def test_explicit_grok_permission_mode_wins_over_bypass(tmp_path: Path) -> None:
+    command = mod.build_command(
+        mod.Profile(name="grok-sub", runner="grok"),
+        prompt="tick",
+        model="",
+        cwd=tmp_path,
+        claude_dangerously_skip_permissions=False,
+        claude_disallowed_tools="",
+        claude_effort="",
+        codex_sandbox="",
+        environ={},
+        grok_permission_mode="plan",
+        bypass_permissions=True,
+    )
+
+    assert command[command.index("--permission-mode") + 1] == "plan"
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))
