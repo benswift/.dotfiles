@@ -73,6 +73,10 @@ auto-format = false
 # --stdin-filepath and uses its MDX parser. Without this, oxfmt treats MDX
 # expression containers as markdown emphasis and mangles single-line MDX
 # comments like `{/* _class: hero */}`.
+# Highlighting/injections inherit from markdown via
+# ~/.config/helix/runtime/queries/mdx/ --- a language with no query directory
+# of its own gets *no* highlighting at all, whatever grammar it names
+# (`hx --health mdx` reports it).
 [[language]]
 name = "mdx"
 scope = "source.markdown"
