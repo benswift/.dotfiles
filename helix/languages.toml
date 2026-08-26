@@ -35,12 +35,18 @@ command = "nb-lsp"
 # [language-server.harper-ls.config.harper-ls]
 # dialect = "Australian"
 
-# astromotion decks: skip auto-format because prettier/oxfmt mangle multi-line
-# MDX expression containers like `{/* notes: ...\n<ol>...</ol>\n*/}` (the
-# leading `*` gets escaped to `\*` and a blank line is inserted before the
-# content). Single-line `{/* _class: hero */}` survives correctly *if* oxfmt
-# is told the file is .mdx (see the dedicated mdx rule below), but multi-line
-# cases are a known prettier behaviour, so we just skip auto-format here.
+# astromotion decks: skip auto-format so deck prose keeps the line breaks it was
+# written with --- the family's deck repos set `proseWrap: "always"`, which would
+# rewrap every paragraph in a deck on save.
+#
+# This is now a preference rather than a safety net. It used to be the latter:
+# prettier/oxfmt mangle a multi-line MDX expression container (the leading `*`
+# gets escaped to `\*`), which is what speaker notes used to be. From astromotion
+# 0.23.0 notes and authoring comments are fenced ```notes / ```comment blocks ---
+# fence contents are never reflowed --- and a multi-line `{/* … */}` comment is a
+# build error rather than a silent corruption. Every repo with decks still
+# excludes them in its .oxfmtrc.json, so this only teaches Helix what
+# `pnpm format` and the claude-format hook already do.
 # Covers both parent decks (`*.deck.mdx`, routed by astromotion) and partials
 # (`*.mdx` files under any `decks/` subtree, included via `@include`).
 # Highlighting/injections inherit from markdown via
