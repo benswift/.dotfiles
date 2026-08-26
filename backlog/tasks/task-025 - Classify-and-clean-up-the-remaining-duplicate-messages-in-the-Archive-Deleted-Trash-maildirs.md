@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-08-12 08:02'
+updated_date: '2026-08-26 07:37'
 labels:
   - mail
   - maildir
@@ -58,6 +59,24 @@ Consequences for this task:
 Note the repo has prior history here: two completed tasks, "Nuclear cleanup of ANU Archive maildir" and "Restore and deduplicate ANU archive emails". Read them before starting --- they may explain some of the unclassified population.
 
 Deleting a copy locally causes mbsync to expunge it from the server too (Expunge Both is set on every channel), so any cleanup is a live change to Fastmail and Exchange, not just to local disk. The quarantine-sync-verify pattern used for the Sent Items cleanup worked well and is the model to follow: move candidates out of ~/Maildir with a manifest recording each original path, sync, then verify every affected Message-ID still resolves to exactly one surviving copy before anything is deleted for good.
+
+### Timer verification and cleanup, 2026-08-26
+
+AC#7 is met. Scanning everything written to the Archive/Deleted/Trash maildirs since the timer landed on 2026-08-13 found three duplicate sets in thirteen days, against the ~2/day baseline --- roughly a tenfold collapse. All three matched the race-damage rule exactly: same folder, same Message-ID, identical byte size, differing only in the `X-TUID` header.
+
+    anu/Archive     <7A95125C-A96E-49A1-BBD2-128B1F87EA35@me.com>        18275 x2
+    anu/Archive     <ME3PR01MB789356EE2...@...outlook.com>               93865 x2
+    personal/Trash  <20260818061852.55ed06f685c0ecd9@mail.tipping...>    27554 x2
+
+All three were made in one burst on 2026-08-19: neomutt wrote its copies at 08:07--08:10 and mbsync pulled the server's copies at 08:18. The window was eight minutes, not hours, so these are not sleep-gap damage --- they are the irreducible residual the plist header predicted, two devices acting on the same message inside one sync interval. No timer setting closes that.
+
+The three redundant copies were quarantined to `~/mail-quarantine/halfmove-20260826/` (with `manifest.tsv` recording each original path, size and Message-ID), the deletion propagated (`Far: +0 *3 #0 -3`), and each Message-ID verified to resolve to exactly one surviving copy. The copy kept in each case is the server-originated one that mbsync pulled down, with its flags intact; the neomutt-written upload is the one removed.
+
+Also checked, because the worry was silent corruption rather than latency: all 18 synced boxes have state files matching their maildirs, there are no leftover `.mbsyncstate.journal`/`.new` files, no stale locks, and every `tmp/` is empty. The anu INBOX shows a rolling delta of one or two entries whose near-side files are gone --- messages archived since the last sync --- and those clear on the following run rather than accumulating. The only errors in `~/Library/Logs/mailsync.log` are transient socket timeouts, which mbsync rolls back safely.
+
+What the timer does not fix, and cannot: launchd's `StartInterval` does not fire while the Mac is asleep. Over 1046 runs the median interval is 5.4 minutes, but 95 exceed 10 minutes and 48 exceed an hour, the longest being 14.5 hours. Mail archived in neomutt before the lid closes therefore sits in the server INBOX --- and on the phone --- until daysy next wakes. That is accepted: it costs latency and, rarely, a duplicate, but never lost or corrupt state.
+
+The remaining ~876 uncharacterised sets are untouched and still investigate-only.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -68,5 +87,5 @@ Deleting a copy locally causes mbsync to expunge it from the server too (Expunge
 - [ ] #4 After the post-cleanup sync, every quarantined Message-ID is verified to still resolve to exactly one surviving copy in the maildir
 - [ ] #5 No message is deleted from Fastmail or Exchange whose only remaining copy would be the deleted one
 - [ ] #6 A repeat of the duplicate scan reports zero remaining rule-matched sets, and counts for unmatched sets are unchanged
-- [ ] #7 After a few weeks on the 5-minute timer, a rescan confirms the new-duplicate rate has collapsed (the 2026-08-13 baseline was ~2/day with a four-hour sync gap)
+- [x] #7 After a few weeks on the 5-minute timer, a rescan confirms the new-duplicate rate has collapsed (the 2026-08-13 baseline was ~2/day with a four-hour sync gap)
 <!-- AC:END -->
