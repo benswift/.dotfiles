@@ -158,7 +158,7 @@ case "$f" in
 *.typ) fmt typstyle --wrap-text ;;
 *.tex) fmt tex-fmt --stdin ;;
 *.toml) fmt_oxfmt file.toml ;;
-*.kdl) fmt kdlfmt format - ;;
+*.kdl) fmt kdlfmt format --kdl-version v1 - ;; # zellij parses KDL v1 only
 *.astro) fmt_prettier ;;
 *.py) fmt_ruff ;;
 *.ex | *.exs | *.heex) fmt_mix ;;

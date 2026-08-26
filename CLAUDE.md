@@ -195,9 +195,17 @@ My Zellij config is in the @zellij/ folder. This includes:
 - @zellij/config.kdl - theme, plus a full `clear-defaults=true` keybind block
 - @zellij/layouts/dev.kdl - dev layout (hx + claude-yolo + terminal)
 
-`config.kdl` is a fixed point of `kdlfmt format -`, the same command
-@bin/claude-format and Helix run on save. Keep it that way, or a one-line
-keybind change lands as a 500-line reflow.
+Both files are fixed points of `kdlfmt format --kdl-version v1 -`, the same
+command @bin/claude-format and Helix run on save. Keep them that way, or a
+one-line keybind change lands as a 500-line reflow.
+
+The `--kdl-version v1` is load-bearing, not decoration. Left to itself kdlfmt
+tries every KDL version and formats to whichever parses, so a file that happens
+to be valid v2 --- `dev.kdl` is --- comes back with its strings unquoted
+(`command="hx"` becomes `command=hx`, `args "--flag"` becomes `args --flag`).
+Zellij's parser is v1, where a bare word is not a value, so the layout breaks.
+`config.kdl` escapes only by accident: its bare `true` booleans fail the v2
+parse, so kdlfmt falls back to v1 there on its own.
 
 #### Session switching
 

@@ -130,10 +130,21 @@ formatter = { command = "oxfmt-helix", args = [
   "file.toml",
 ] }
 
+# kdl: pin v1. kdlfmt tries every KDL version and formats to whichever
+# parses, and a file that happens to be valid v2 --- zellij/layouts/dev.kdl
+# is --- comes back with its strings unquoted (`command="hx"` -> `command=hx`,
+# `args "--flag"` -> `args --flag`). Zellij's parser is v1, where a bare word
+# is not a value, so that silently breaks the layout. zellij/config.kdl is
+# spared only by accident: its bare `true` booleans fail the v2 parse.
 [[language]]
 name = "kdl"
 auto-format = true
-formatter = { command = "kdlfmt", args = ["format", "-"] }
+formatter = { command = "kdlfmt", args = [
+  "format",
+  "--kdl-version",
+  "v1",
+  "-",
+] }
 
 # astro: every Astro repo here checks `prettier --check '**/*.astro'` in CI,
 # but prettier and prettier-plugin-astro are project-local devDependencies, so
