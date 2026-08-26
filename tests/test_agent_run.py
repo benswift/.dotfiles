@@ -240,25 +240,28 @@ def test_bypass_permissions_translates_per_runner(tmp_path: Path) -> None:
 
     claude = mod.build_command(mod.Profile(name="c", runner="claude"), **common)
     grok = mod.build_command(mod.Profile(name="g", runner="grok"), **common)
+    codex = mod.build_command(mod.Profile(name="x", runner="codex"), **common)
 
     assert "--dangerously-skip-permissions" in claude
     assert grok[grok.index("--permission-mode") + 1] == "bypassPermissions"
+    assert codex[codex.index("--sandbox") + 1] == "danger-full-access"
 
 
-def test_bypass_permissions_refuses_codex(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="codex-sandbox"):
-        mod.build_command(
-            mod.Profile(name="codex-sub", runner="codex"),
-            prompt="tick",
-            model="",
-            cwd=tmp_path,
-            claude_dangerously_skip_permissions=False,
-            claude_disallowed_tools="",
-            claude_effort="",
-            codex_sandbox="",
-            environ={},
-            bypass_permissions=True,
-        )
+def test_explicit_codex_sandbox_wins_over_bypass(tmp_path: Path) -> None:
+    command = mod.build_command(
+        mod.Profile(name="codex-sub", runner="codex"),
+        prompt="tick",
+        model="",
+        cwd=tmp_path,
+        claude_dangerously_skip_permissions=False,
+        claude_disallowed_tools="",
+        claude_effort="",
+        codex_sandbox="workspace-write",
+        environ={},
+        bypass_permissions=True,
+    )
+
+    assert command[command.index("--sandbox") + 1] == "workspace-write"
 
 
 def test_explicit_grok_permission_mode_wins_over_bypass(tmp_path: Path) -> None:

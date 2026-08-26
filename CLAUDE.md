@@ -331,12 +331,16 @@ dispatcher refuses one aimed at a different runner than the profile selects,
 rather than dropping it. The exception is `--bypass-permissions`, which is
 runner-agnostic on purpose: an unattended consumer can say "never stop to ask"
 without knowing which runner its profile picked, and switching profile stays a
-one-variable change. It maps to `--dangerously-skip-permissions` for claude and
-`--permission-mode bypassPermissions` for grok, and refuses codex, whose sandbox
-profile is a different axis rather than the same idea spelled differently. That
-matters for permission flags above all: silently ignoring
-`--claude-dangerously-skip-permissions` on a Grok profile would leave an
-unattended job blocking on a prompt nobody is there to answer.
+one-variable change. It maps to `--dangerously-skip-permissions` for claude,
+`--permission-mode bypassPermissions` for grok, and
+`--sandbox danger-full-access` for codex. The last of those is a translation to
+the nearest equivalent rather than the same knob --- a sandbox profile is a
+different axis from a permission prompt --- but refusing it left the callers
+that need the flag most, unattended jobs a drop-in away from changing runner,
+with no portable way to spell it. An explicitly passed runner option still wins
+over the translation. The namespacing matters for permission flags above all:
+silently ignoring `--claude-dangerously-skip-permissions` on a Grok profile
+would leave an unattended job blocking on a prompt nobody is there to answer.
 
 Examples:
 

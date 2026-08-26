@@ -115,13 +115,15 @@ def build_command(
         elif profile.runner == "grok":
             grok_permission_mode = grok_permission_mode or "bypassPermissions"
         else:
-            # Codex spells this as a sandbox profile, which is a different axis
-            # from a permission prompt --- so it names its own option rather
-            # than being quietly folded in here.
-            raise ValueError(
-                "--bypass-permissions is not defined for the codex runner;"
-                " pass --codex-sandbox danger-full-access instead"
-            )
+            # Codex spells this as a sandbox profile rather than a permission
+            # prompt, so this is a translation to the nearest equivalent rather
+            # than the same knob. It is still the right one: the flag exists so
+            # an unattended caller can say "never stop to ask" without knowing
+            # its profile's runner, and refusing here left the one caller that
+            # needs that --- a cron job whose runner is a drop-in away from
+            # changing --- with no portable way to spell it. An explicit
+            # --codex-sandbox still wins, as an explicit grok mode does above.
+            codex_sandbox = codex_sandbox or "danger-full-access"
     if profile.runner == "claude":
         command = [environ.get("CLAUDE_BIN", "claude")]
         if claude_dangerously_skip_permissions:
