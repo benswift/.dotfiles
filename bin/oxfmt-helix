@@ -1,10 +1,92 @@
 #!/usr/bin/env bash
-# oxfmt-helix --- run oxfmt with the global dotfiles config, portably.
+# oxfmt-helix --- run oxfmt with the global dotfiles config, portably, and
+# refuse the two MDX outputs prettier's markdown printer gets wrong.
 #
 # Helix passes formatter args verbatim (no shell), and oxfmt expands neither ~
 # nor $HOME, so the config path can't be templated in languages.toml. This
 # wrapper is the shell layer that expands $HOME (/Users/ben on macOS,
 # /home/ben on Linux). Referenced as the markdown/mdx formatter in
-# ~/.config/helix/languages.toml.
+# ~/.config/helix/languages.toml, and by bin/claude-format.
+#
+# MDX carries two failure modes, both prettier's and both reproduced by oxfmt
+# (prettier/prettier#6274, #13586 --- the workaround upstream recommends is
+# proseWrap:preserve for every .mdx, which costs wrapping on the files that
+# would have been fine). This wrapper buys the wrapping back by checking the
+# output instead of assuming it:
+#
+#   1. A multi-line {/* ... */} comment has its `*` escaped as markdown
+#      emphasis, and the result is INVALID MDX. That output is stable, so the
+#      fixed-point check below can't see it --- hence the content probe, which
+#      passes such a buffer through untouched. (astromotion decks are the
+#      files that have these.)
+#   2. Wrapping can move an inline JSX tag to the start of a line, where MDX
+#      reparses it as block-level: pass 1 looks fine, pass 2 splits the
+#      paragraph in two. Any such buffer is not a fixed point after one pass,
+#      so formatting twice and comparing catches it before anything is
+#      written, and we fall back to proseWrap:preserve --- the old behaviour.
+#
+# Everything a fixed point survives is written as normal, which is every MDX
+# file that has no inline JSX at a wrap boundary.
 set -euo pipefail
-exec oxfmt -c "$HOME/.dotfiles/oxfmtrc.json" "$@"
+config="$HOME/.dotfiles/oxfmtrc.json"
+
+# The name oxfmt infers its parser from. Helix and claude-format both pass a
+# synthetic one (--stdin-filepath file.mdx), so this is the only clue we get.
+name=""
+prev=""
+for a in "$@"; do
+    case "$a" in --stdin-filepath=*) name="${a#*=}" ;; esac
+    [[ "$prev" == "--stdin-filepath" ]] && name="$a"
+    prev="$a"
+done
+
+# Anything that isn't MDX on stdin goes straight through, as before.
+case "$name" in
+*.mdx) ;;
+*) exec oxfmt -c "$config" "$@" ;;
+esac
+
+src=$(mktemp) p1=$(mktemp) p2=$(mktemp) cfg=""
+trap 'rm -f "$src" "$p1" "$p2" "$cfg"' EXIT
+cat >"$src"
+
+# An astromotion deck, recognised by its directive markers. Helix has
+# auto-format = false for these and claude-format skips them by path, but the
+# synthetic --stdin-filepath means this wrapper can't see a path --- and a
+# deck's line breaks are laid out by hand, per slide, so nothing should rewrap
+# them. Every deck carries markers; no other .mdx uses them.
+if grep -qE '\{/\* (_id|_class|@include|embed):' "$src"; then
+    cat "$src"
+    exit 0
+fi
+
+# Failure mode 1: a `{/*` with no `*/` on the same line.
+if awk '/\{\/\*/ && !/\*\//{ found = 1 } END { exit !found }' "$src"; then
+    cat "$src"
+    exit 0
+fi
+
+# Format, then format the output. Anything unexpected (a parse error, a
+# missing oxfmt) leaves the buffer alone rather than mangling it.
+if ! oxfmt -c "$config" --stdin-filepath "$name" <"$src" >"$p1" 2>/dev/null ||
+    ! oxfmt -c "$config" --stdin-filepath "$name" <"$p1" >"$p2" 2>/dev/null; then
+    cat "$src"
+    exit 0
+fi
+
+if cmp -s "$p1" "$p2"; then
+    cat "$p1"
+    exit 0
+fi
+
+# Failure mode 2. Fall back to preserve, derived from the one config so the
+# two can't drift; with no jq to derive it, leave the buffer alone.
+if command -v jq &>/dev/null; then
+    cfg=$(mktemp --suffix=.json)
+    if jq '.proseWrap = "preserve"' "$config" >"$cfg" 2>/dev/null &&
+        oxfmt -c "$cfg" --stdin-filepath "$name" <"$src" >"$p1" 2>/dev/null; then
+        cat "$p1"
+        exit 0
+    fi
+fi
+cat "$src"
