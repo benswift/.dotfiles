@@ -667,10 +667,13 @@ theme "catppuccin-mocha"
 // Choose the path to override cwd that zellij will use for opening new panes
 //
 // default_cwd "/tmp"
-// The name of the default layout to load on startup
+// The name of the default layout to load on startup. `compact` is zellij's own
+// (no file in this repo): one `compact-bar` line at the bottom carrying both
+// the tab list and the mode indicator, against `default`'s two lines --- a
+// `tab-bar` on top and a `status-bar` underneath.
 // Default: "default"
 //
-// default_layout "compact"
+default_layout "compact"
 // The folder in which Zellij will look for layouts
 // (Requires restart)
 //

@@ -192,8 +192,22 @@ My Helix config is in the @helix/ folder. This includes:
 
 My Zellij config is in the @zellij/ folder. This includes:
 
-- @zellij/config.kdl - theme, plus a full `clear-defaults=true` keybind block
+- @zellij/config.kdl - theme, `default_layout "compact"`, plus a full
+  `clear-defaults=true` keybind block
 - @zellij/layouts/dev.kdl - dev layout (hx + claude-yolo + terminal)
+
+The bars are not chrome zellij draws around a session --- they are plugin panes
+in whichever layout is loaded. `default` spends two lines on them (a `tab-bar`
+across the top, a `status-bar` along the bottom); `compact` spends one, a single
+bottom `compact-bar` carrying the tab list and the mode indicator together. So
+the setting is worth a line of screen, and a layout naming no plugin pane at all
+--- as `dev.kdl` doesn't --- renders no bar at all. That last step is available
+as a three-line layout file if the mode indicator ever stops earning its line,
+but locked mode (`Ctrl x`) is sticky and invisible without it.
+
+Only sessions _created_ without `--layout` (`zs`, plain `zellij`) read
+`default_layout`. `za` and `zj-switch` merely attach, so an existing session
+keeps the layout it was born with and a change here lands as sessions turn over.
 
 Both files are fixed points of `kdlfmt format --kdl-version v1 -`, the same
 command @bin/claude-format and Helix run on save. Keep them that way, or a
