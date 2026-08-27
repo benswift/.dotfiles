@@ -875,4 +875,3 @@ show_startup_tips false
 // can be useful for removing wrappers around commands
 // Note: be sure to escape backslashes and similar characters properly
 // post_command_discovery_hook "echo $RESURRECT_COMMAND | sed <your_regex_here>"
-
