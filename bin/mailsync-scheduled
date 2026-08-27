@@ -26,7 +26,24 @@ if ! nc -z -w 5 outlook.office365.com 993 2>/dev/null; then
     exit 0
 fi
 
-if mailsync; then
+# bin/mailsync caps mbsync itself, which is where the one observed hang was.
+# This is the guard that generalises: a stall anywhere else in the run --- mu
+# index, a PassCmd waiting on the keychain, whatever gets added later --- would
+# equally mean this wrapper never reaches the failure routing below, so no page
+# is ever sent and the lock silences every later fire. An outer kill turns a
+# silent stall into an ordinary failure, whatever caused it.
+MAILSYNC_TIMEOUT="${MAILSYNC_TIMEOUT:-900}"
+timeout_bin="$(command -v timeout || command -v gtimeout || true)"
+
+run_mailsync() {
+    if [ -n "$timeout_bin" ]; then
+        "$timeout_bin" --kill-after=60 "$MAILSYNC_TIMEOUT" mailsync
+    else
+        mailsync
+    fi
+}
+
+if run_mailsync; then
     if [ -f "$MARKER" ]; then
         rm -f "$MARKER"
         echo "[$(date '+%H:%M:%S')] recovered; failure marker cleared"

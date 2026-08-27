@@ -67,12 +67,43 @@ if [ ! -d ~/.cache/mu ]; then
         --personal-address=ben@benswift.me
 fi
 
+# mbsync can hang rather than fail, which is the worse of the two: a run that
+# never returns holds the lock above, so every subsequent timer fire exits
+# "already running", and mailsync-scheduled only pages on a non-zero exit ---
+# so nothing is sent and mail silently stops arriving. That is not theoretical:
+# on 26 Aug 2026 a run sat 16 hours on an ESTABLISHED-but-dead socket to
+# fastmail after the machine slept mid-sync, and only a manual look found it.
+#
+# mbsync's own Timeout (20s by default, 120 for the ANU accounts) does not
+# cover this. It bounds connect and data *reads*; a write to a peer that has
+# gone away without a RST sits in the retransmit/persist loop indefinitely, and
+# no read timeout ever comes due. So cap the wall clock from outside instead.
+# A normal run is ~20s, so ten minutes is generous even for a big backlog.
+MBSYNC_TIMEOUT="${MBSYNC_TIMEOUT:-600}"
+
+# GNU coreutils timeout: /usr/bin on Linux, brew's coreutils on macOS. If it
+# is missing, sync unguarded rather than not at all --- the outer cap in
+# mailsync-scheduled still bounds the unattended path.
+timeout_bin="$(command -v timeout || command -v gtimeout || true)"
+sync_cmd=(mbsync -a)
+if [ -n "$timeout_bin" ]; then
+    sync_cmd=("$timeout_bin" --kill-after=30 "$MBSYNC_TIMEOUT" "${sync_cmd[@]}")
+else
+    print_warning "coreutils timeout not found; running mbsync unguarded"
+fi
+
 # Sync all accounts
 print_status "Syncing all mail accounts..."
-if mbsync -a; then
+if "${sync_cmd[@]}"; then
     print_status "All accounts synced successfully"
 else
-    print_warning "Mail sync had issues"
+    sync_status=$?
+    # 124: timeout fired. 137: it had to escalate to SIGKILL 30s later.
+    if [ "$sync_status" -eq 124 ] || [ "$sync_status" -eq 137 ]; then
+        print_error "mbsync exceeded ${MBSYNC_TIMEOUT}s and was killed (dead socket?)"
+    else
+        print_warning "Mail sync had issues"
+    fi
     sync_errors=$((sync_errors + 1))
 fi
 
