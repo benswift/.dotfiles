@@ -110,6 +110,13 @@ etc.). Key scripts:
 - `pkb-agent` --- run scheduled "EA" tasks (headless claude over the notebook);
   task definitions live in `~/.nb/home/tasks/`, one systemd timer
   (`pkb-agent.timer`, weddle only) fires everything due
+- `ai-tropes` --- screen a draft for AI-writing tells. The mechanical half of
+  the `ben:benswift-writer` skill's trope pass: the greppable patterns plus four
+  structural finders (echoed sentence skeletons, stacked questions, anaphora
+  runs, negated litanies) that no regex can express. Masks fenced code, inline
+  spans, link targets and frontmatter first, so a post about shell scripts isn't
+  screened as though its snippets were prose. The taxonomy it serves lives in
+  that skill's `ai-tropes.md`, and each pattern id is cross-referenced there
 - `ts-cat`, `lumis-parsers` --- tree-sitter syntax highlighting for yazi's
   preview pane (see "File manager (yazi)" below)
 - `pi-kiosk` --- flash an SD card that boots a Raspberry Pi into a fullscreen

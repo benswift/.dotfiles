@@ -1,0 +1,1091 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""Screen a draft for AI-writing tells.
+
+The mechanical half of the ben:benswift-writer skill's AI-trope pass. The
+taxonomy lives in that skill's ai-tropes.md; this script covers the subset a
+machine can find reliably, so the read-through can spend its attention on the
+tells that need judgement (dead metaphor, stakes inflation, one-point
+dilution).
+
+The pattern set and the four structural finders are adapted from Simon
+Willison's LLM cliche highlighter (https://tools.simonwillison.net/llm-cliche-highlighter),
+which is itself partly drawn from Wikipedia:Signs of AI writing. The structural
+finders are the reason this exists as a script rather than a page of `rg`
+one-liners: echoed sentence skeletons, stacked questions and anaphora runs are
+not expressible as a regex over a line.
+
+Every hit is a candidate, never a conviction --- `is real` fires on "the risk is
+real, and it is not hypothetical" whether or not that sentence needed writing
+differently. Patterns that lie often in technical prose are marked noisy and
+stay off unless --noisy is passed.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from collections import Counter
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass, field
+from pathlib import Path
+
+# --- match plumbing ---------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Hit:
+    """One matched span, as offsets into the (masked) source text."""
+
+    start: int
+    end: int
+    note: str = ""
+
+
+@dataclass(frozen=True)
+class Pattern:
+    id: str
+    name: str
+    description: str
+    find: Callable[[str], list[Hit]]
+    # Fires often enough on honest technical prose that leaving it on by
+    # default would train the reader to ignore the whole report.
+    noisy: bool = False
+
+
+def regex_finder(
+    pattern: str, flags: int = re.IGNORECASE
+) -> Callable[[str], list[Hit]]:
+    compiled = re.compile(pattern, flags)
+
+    def find(text: str) -> list[Hit]:
+        return [Hit(m.start(), m.end()) for m in compiled.finditer(text)]
+
+    return find
+
+
+# "HEAD x, HEAD y, and HEAD z" --- the negated litany. The note carries the
+# item count, because two is a construction and four is a tic.
+CHAIN_BODY = r"[^,.;:!?\n–—…]*"
+CHAIN_SEP = (
+    r"(?:\s*,\s*(?:and\s+|or\s+)?|\s+(?:and|or)\s+"
+    r"|\s*[;&–—]\s*(?:and\s+|or\s+)?|\s+-{1,2}\s+)"
+)
+
+
+def chain_finder(head: str, item_label: str) -> Callable[[str], list[Hit]]:
+    item = head + CHAIN_BODY
+    chain = re.compile(rf"\b{item}(?:{CHAIN_SEP}{item})+", re.IGNORECASE)
+    splitter = re.compile(CHAIN_SEP, re.IGNORECASE)
+    head_test = re.compile(rf"^{head}", re.IGNORECASE)
+
+    def find(text: str) -> list[Hit]:
+        hits = []
+        for m in chain.finditer(text):
+            end = m.end()
+            while end > m.start() and text[end - 1].isspace():
+                end -= 1
+            count = sum(
+                1
+                for part in splitter.split(m.group(0))
+                if head_test.match(part.strip())
+            )
+            # The regex matches on shape, but only the items actually opening
+            # with the head are the litany. Masked-out inline code can leave a
+            # bare "no , and no longer ..." looking like one; a single item is
+            # not a chain.
+            if count < 2:
+                continue
+            hits.append(Hit(m.start(), end, f"{count} {item_label}s"))
+        return hits
+
+    return find
+
+
+SENTENCE_RE = re.compile(r"[^.!?\n]+[.!?]?")
+WORD_RE = re.compile(r"[a-z0-9'’-]+")
+
+
+@dataclass
+class Sentence:
+    start: int
+    end: int
+    text: str
+
+
+def sentences(text: str, min_words: int = 1) -> list[Sentence]:
+    out = []
+    for m in SENTENCE_RE.finditer(text):
+        if len(m.group(0).split()) >= min_words:
+            out.append(Sentence(m.start(), m.end(), m.group(0)))
+    return out
+
+
+def same_paragraph(text: str, end: int, start: int) -> bool:
+    """Do two sentences sit in one paragraph?
+
+    Prose wrapped at 80 columns puts a bare newline between sentences of the
+    same paragraph, so a character-count gap can't tell the two cases apart:
+    a paragraph break is two newlines, and that is the only thing worth
+    measuring. A repeated skeleton or opener across a paragraph break is a
+    different move from one repeated three times in a row.
+    """
+    return text.count("\n", end, start) < 2
+
+
+def ngrams(sentence: str, n: int) -> set[str]:
+    words = WORD_RE.findall(sentence.lower())
+    return {" ".join(words[i : i + n]) for i in range(len(words) - n + 1)}
+
+
+def echo_finder(min_gram: int = 4, min_run: int = 2) -> Callable[[str], list[Hit]]:
+    """Runs of adjacent sentences built on one repeated skeleton.
+
+    "A shopping cart is an object in the system. A chat room is an object in
+    the system." Shared n-grams rather than a regex, because the varying half
+    of the sentence is exactly the part you cannot write down in advance.
+    """
+
+    def find(text: str) -> list[Hit]:
+        sents = sentences(text, min_words=4)
+        hits: list[Hit] = []
+        i = 0
+        while i < len(sents):
+            j = i
+            shared: str | None = None
+            while j + 1 < len(sents):
+                # Adjacent prose only: a blank line between them is a new
+                # thought, not an echo.
+                if not same_paragraph(text, sents[j].end, sents[j + 1].start):
+                    break
+                common = ngrams(sents[j].text, min_gram) & ngrams(
+                    sents[j + 1].text, min_gram
+                )
+                if not common:
+                    break
+                shared = max(common, key=len)
+                j += 1
+            run = j - i + 1
+            if run >= min_run and shared:
+                end = sents[j].end
+                while end > sents[i].start and text[end - 1].isspace():
+                    end -= 1
+                hits.append(
+                    Hit(sents[i].start, end, f"{run} sentences echoing {shared!r}")
+                )
+                i = j + 1
+            else:
+                i += 1
+        return hits
+
+    return find
+
+
+def question_chain_finder(min_run: int = 2) -> Callable[[str], list[Hit]]:
+    """Stacked rhetorical questions --- "Do I know how it works? Where it breaks?" """
+    chain = re.compile(r"[^.!?\n]+\?(?:\s+[^.!?\n]+\?)+")
+
+    def find(text: str) -> list[Hit]:
+        hits = []
+        for m in chain.finditer(text):
+            count = m.group(0).count("?")
+            if count < min_run:
+                continue
+            start = m.start()
+            while start < m.end() and text[start].isspace():
+                start += 1
+            hits.append(Hit(start, m.end(), f"{count} questions in a row"))
+        return hits
+
+    return find
+
+
+# Repeating a pronoun or article across sentences is ordinary English, not a tic.
+ANAPHORA_SKIP = {
+    "i",
+    "it",
+    "the",
+    "a",
+    "an",
+    "this",
+    "that",
+    "we",
+    "you",
+    "they",
+    "he",
+    "she",
+    "there",
+    "but",
+    "and",
+    "so",
+    "in",
+    "as",
+    "if",
+    "my",
+    "his",
+    "her",
+    "their",
+    "its",
+    "these",
+    "those",
+    "for",
+    "at",
+    "on",
+    "of",
+    "to",
+    "is",
+    "was",
+}
+OPENER_RE = re.compile(r"[A-Za-z'’-]+")
+
+
+def anaphora_finder(min_run: int = 3) -> Callable[[str], list[Hit]]:
+    """Consecutive sentences opening on the same word --- "Maybe X. Maybe Y. Maybe Z." """
+
+    def find(text: str) -> list[Hit]:
+        heads: list[tuple[int, int, str]] = []
+        for m in re.finditer(r"[^.!?\n]+[.!?]", text):
+            w = OPENER_RE.search(m.group(0))
+            if w:
+                heads.append((m.start() + w.start(), m.end(), w.group(0).lower()))
+        hits: list[Hit] = []
+        i = 0
+        while i < len(heads):
+            j = i
+            while (
+                j + 1 < len(heads)
+                and heads[j + 1][2] == heads[i][2]
+                and same_paragraph(text, heads[j][1], heads[j + 1][0])
+            ):
+                j += 1
+            run = j - i + 1
+            if run >= min_run and heads[i][2] not in ANAPHORA_SKIP:
+                hits.append(
+                    Hit(
+                        heads[i][0],
+                        heads[j][1],
+                        f"{run} sentences opening {heads[i][2]!r}",
+                    )
+                )
+                i = j + 1
+            else:
+                i += 1
+        return hits
+
+    return find
+
+
+# --- the patterns -----------------------------------------------------------
+
+PATTERNS: list[Pattern] = [
+    # Structural: the tells no regex can reach.
+    Pattern(
+        "echo-run",
+        "Echoing sentence runs",
+        "Adjacent sentences built on one repeated skeleton.",
+        echo_finder(),
+    ),
+    Pattern(
+        "stacked-questions",
+        "Stacked rhetorical questions",
+        "Two or more questions fired in a row, usually fragments after the first.",
+        question_chain_finder(),
+    ),
+    Pattern(
+        "anaphora",
+        "Repeated sentence openers",
+        "Three or more consecutive sentences starting on the same word.",
+        anaphora_finder(),
+    ),
+    Pattern(
+        "no-chain",
+        "'No X, no Y' chains",
+        "Negated litany: 'No fluff, no filler, no jargon.'",
+        chain_finder(r"no[-\s]", "'no' item"),
+    ),
+    Pattern(
+        "did-not-chain",
+        "'Did not X, did not Y' chains",
+        "The same litany in the past tense.",
+        chain_finder(r"(?:did\s+not|didn['’]t)\s", "'did not' item"),
+    ),
+    # Negative parallelism and its relatives.
+    Pattern(
+        "not-just",
+        "'Not just X, but Y'",
+        "Negative parallelism, including the 'it's not X --- it's Y' contrast.",
+        regex_finder(
+            r"\bnot\s+(?:just|only|merely|simply)\s+[^.!?\n;]*?\bbut(?:\s+also)?\b"
+            r"|\b(?:it|this|that)(?:['’]s|\s+(?:is|was))\s+not\s+"
+            r"[^.!?\n,;—–]{1,60}[,;—–]\s*"
+            r"(?:it|this|that)(?:['’]s|\s+(?:is|was))\b"
+            r"|\bnot\s+because\s+[^.!?\n;]*?\bbut\s+because\b"
+        ),
+    ),
+    Pattern(
+        "appositive-antithesis",
+        "'X, not Y' appositives",
+        "The compressed negative parallelism: 'banded, not ticked'. Keep the "
+        "ones carrying information the reader would otherwise get wrong; the "
+        "tell is three or four in one piece.",
+        regex_finder(r",\s+(?:not|never|rather\s+than)\s+(?!only\b|just\b)\w+"),
+        noisy=True,
+    ),
+    Pattern(
+        "not-x-not-y-just-z",
+        "'Not X. Not Y. Just Z.'",
+        "The dramatic countdown: two or more negations before the reveal.",
+        regex_finder(
+            r"(?:^|[.!?–—]\s+|\n)Not\s+[^.!?\n]{2,60}[.!?]\s+"
+            r"Not\s+[^.!?\n]{2,60}[.!?]"
+        ),
+    ),
+    # Manufactured drama and false suspense.
+    Pattern(
+        "heres-the-twist",
+        "'Here's the twist'",
+        "The stage-managed reveal: here's the thing / catch / kicker / rub.",
+        regex_finder(
+            r"\bhere(?:['’]s|\s+is)\s+(?:the|a|my|one)\s+"
+            r"(?:twist|thing|catch|kicker|rub|problem|first|second|third|next|"
+            r"real|best|worst|surprising|interesting|key|important)\b"
+            r"[\w\s-]{0,20}[:.]"
+        ),
+    ),
+    Pattern(
+        "punchline",
+        "'The punchline is'",
+        "'The punchline is ...', 'the punchline:', 'the punchline?'.",
+        regex_finder(r"\bthe\s+punchline(?:\s+(?:is|was|being)\b|\s*[:?])"),
+    ),
+    Pattern(
+        "turns-out",
+        "'Turns out ...'",
+        "The casual-revelation opener, almost always bolted to a tidy conclusion.",
+        regex_finder(r"(?:^|[.!?–—]\s+|\n)Turns\s+out\b|\bit\s+turns\s+out\s+that\b"),
+    ),
+    Pattern(
+        "self-posed-question",
+        "'The X? A Y.'",
+        "A question posed and answered in the same breath: 'The result? Devastating.'",
+        regex_finder(
+            r"(?:^|[.!?]\s+|\n)(?:The|Their|Its|His|Her|My|Our)\s+[\w\s-]{2,30}\?\s+[A-Z]"
+        ),
+    ),
+    # Stakes, significance, and the therapist register.
+    Pattern(
+        "is-the-whole",
+        "'Is the whole / entire ...'",
+        "'That's the whole point', 'consistency is the entire game'.",
+        regex_finder(
+            r"(?:\b(?:is|was|are|were)|['’]s)\s+the\s+(?:whole|entire)\b"
+            r"(?:\s+\w+)?"
+            r"|\bhere(?:['’]s|\s+is)\s+the\s+(?:whole|entire)\b(?:\s+\w+)?"
+            r"|\bthe\s+entire\s+[\w'’-]+(?:\s+[\w'’-]+){0,4}?\s+"
+            r"(?:is|was|are|were)\b"
+        ),
+    ),
+    Pattern(
+        "not-nothing",
+        "'That's not nothing'",
+        "'That is not nothing', and its this / it / which variants.",
+        regex_finder(
+            r"\b(?:that|this|it|which)(?:['’]s|\s+(?:is|was))\s+not\s+nothing\b"
+        ),
+    ),
+    Pattern(
+        "worth-naming",
+        "'Worth naming'",
+        "The therapist-voiced 'that loss is real and it's worth naming'.",
+        regex_finder(
+            r"(?:\b(?:is|are|was|were|feels?|felt|seems?|seemed)|['’]s)\s+"
+            r"(?:\w+\s+){0,2}?worth\s+naming\b(?!\s+names\b)"
+            r"|\bworth\s+naming\s*:"
+        ),
+    ),
+    Pattern(
+        "sit-with",
+        "'Sit with that'",
+        "The reflective 'sit with that / the discomfort / the tension'.",
+        regex_finder(
+            r"\bsit(?:s|ting)?\s+with\s+(?:that|this|it|(?:the|your)\s+"
+            r"(?:discomfort|feelings?|tension|weight|uncertainty|ambiguity|"
+            r"grief|silence|unease))\b(?:\s+for\s+a\s+\w+)?"
+        ),
+    ),
+    Pattern(
+        "is-real",
+        "'Is real ... and / not'",
+        "'The improvement is real, and it's not subtle.' Skips real estate, "
+        "real time, real world.",
+        regex_finder(
+            r"\bis\s+(?:(?:the|a)\s+real\b(?![\s-]+(?:estate|time|life|world|quick)\b)"
+            r"[^.!?\n]*?\b(?:and|not)\s+it\b"
+            r"|real\b(?![\s-]+(?:estate|time|life|world|quick)\b)"
+            r"[^.!?\n]*?\b(?:and|not)\b)"
+        ),
+    ),
+    Pattern(
+        "thats-why-mattered",
+        "'That's why X mattered'",
+        "Retroactively assigning significance to the thing just described.",
+        regex_finder(
+            r"\b(?:that|this)(?:['’]s|\s+(?:is|was))\s+why\b[^.!?\n]{0,80}?"
+            r"\b(?:matter(?:s|ed)?|count(?:s|ed)?)\b"
+        ),
+    ),
+    Pattern(
+        "thats-the-part",
+        "'That's the part ...'",
+        "Gesturing at a favoured detail instead of stating it.",
+        regex_finder(
+            r"\b(?:that|this|it)(?:['’]s|\s+(?:is|was))\s+the\s+part\b"
+            r"|\bthe\s+part\s+that\s+(?:makes|made|gets|got|keeps|kept)\s+"
+            r"(?:me|you|us|it)\b"
+            r"|\bmy\s+favou?rite\s+part\s+of\b"
+        ),
+    ),
+    Pattern(
+        "only-i-trust",
+        "'The only X I trust'",
+        "The narrowing superlative reveal.",
+        regex_finder(
+            r"\bthe\s+only\s+[\w'’-]+(?:\s+[\w'’-]+){0,2}?\s+"
+            r"(?:I|you|we|it|he|she|they)\s+"
+            r"(?:trust|need|needs|care|want|wants|use|uses|believe)\b"
+            r"|\bthe\s+only\s+[\w'’-]+\s+that\s+"
+            r"(?:matters|counts|works|survives)\b"
+        ),
+    ),
+    Pattern(
+        "x-is-dead",
+        "'X is dead'",
+        "The obituary headline and its sequel, 'long live X'.",
+        regex_finder(r"\b[\w\s]{3,30}\s+(?:is|are)\s+dead\b|\blong\s+live\s+\w+"),
+    ),
+    Pattern(
+        "stranded-auxiliary",
+        "Stranded auxiliary contrast",
+        "A clause landing on a bare auxiliary for the reversal: "
+        "'The tool died; the data didn't.'",
+        regex_finder(
+            r"[;:,]\s+[^.;:!?\n]{2,50}\s"
+            r"(?:did|does|do|was|were|is|are|has|have|had|can|could|would|will)"
+            r"(?:n['’]t)?\s*[.;]"
+            r"|\b(?:Maybe|Perhaps)\s+\w+[^.!?\n]{0,40}\s"
+            r"(?:would|could|might|should|did|had|was|is)(?:n['’]t)?\s+"
+            r"(?:have\s*)?\.",
+            flags=0,
+        ),
+    ),
+    # Performed candour and the pedagogical voice.
+    Pattern(
+        "performative-honesty",
+        "Performative honesty",
+        "Sincerity announced rather than demonstrated: 'I'll be honest', "
+        "'to be clear', sentence-initial 'Honestly,' or 'Look,'.",
+        regex_finder(
+            r"\bI\s+(?:will\s+not|won['’]t)\s+pretend\b"
+            r"|\b(?:I['’]ll|let['’]s|to)\s+be\s+(?:honest|clear|blunt|real)\b"
+            r"|(?:^|[.!?–—]\s+|\n)(?:Honestly|Look|Truthfully|Frankly)\s*,"
+            r"|\b(?:an?|the)\s+honest\s+"
+            r"(?:take|answer|caveat|assessment|version|truth)\b"
+        ),
+    ),
+    Pattern(
+        "already-know",
+        "'You already know'",
+        "'You already know the answer' --- flattery standing in for an argument.",
+        regex_finder(
+            r"\byou\s+already\s+knows?\s+"
+            r"(?:the\s+answer|what|how|why|this|that|it|who|where)\b"
+            r"|\byou\s+already\s+knows?\b(?![ \t]+\w)"
+        ),
+    ),
+    Pattern(
+        "take-my-word",
+        "'Don't take my word for it'",
+        "The stock invitation to verify.",
+        regex_finder(
+            r"\b(?:you\s+)?(?:do\s+not|don['’]t)\s+(?:have\s+to\s+)?"
+            r"take\s+my\s+word\s+for\s+(?:it|any\s+of\s+(?:it|this|that))\b"
+        ),
+    ),
+    Pattern(
+        "pedagogical",
+        "The pedagogical voice",
+        "'Let's break this down', 'let's unpack', 'think of it as' --- "
+        "hand-holding for an expert audience.",
+        regex_finder(
+            r"\blet['’]?s\s+(?:unpack|dive|break|explore|walk\s+through|"
+            r"take\s+a\s+look|talk\s+about)\b"
+            r"|\bthink\s+of\s+it\s+as\b"
+            r"|\bimagine\s+a\s+world\s+where\b"
+        ),
+    ),
+    Pattern(
+        "note-that",
+        "'It's important to note'",
+        "Didactic hedging, plus the worth pausing / considering family.",
+        regex_finder(
+            r"\bit(?:['’]s|\s+(?:is|was))\s+(?:also\s+)?"
+            r"(?:important|worth|crucial|essential|vital)\s+"
+            r"(?:to\s+(?:note|remember|understand|recognis|recogniz|mention|pause|"
+            r"consider|ask)\w*|noting|mentioning|remembering|pausing|considering|"
+            r"asking)\b(?:\s+that\b)?"
+            r"|\bit\s+should\s+be\s+noted\b"
+        ),
+    ),
+    Pattern(
+        "filler-transition",
+        "Filler transitions",
+        "'Importantly,', 'Notably,', 'Interestingly,' --- a point introduced "
+        "without being connected to anything.",
+        regex_finder(
+            r"(?:^|[.!?]\s+|\n)(?:Importantly|Notably|Interestingly|Crucially|"
+            r"Significantly|Ultimately|Essentially)\s*,"
+        ),
+    ),
+    Pattern(
+        "topic-label-opener",
+        "Topic-label openers",
+        "'On X,', 'As for Y,', 'When it comes to Z,' --- a filing cabinet, "
+        "not an argument.",
+        regex_finder(
+            r"(?:^|[.!?]\s+|\n)(?:As\s+for\s+[^,\n]{2,40},"
+            r"|When\s+it\s+comes\s+to\s+[^,\n]{2,40},)"
+        ),
+    ),
+    Pattern(
+        "signposted-conclusion",
+        "The signposted conclusion",
+        "Competent writing doesn't announce that it's concluding.",
+        regex_finder(r"\b(?:in\s+conclusion|to\s+sum\s+up|in\s+summary)\b"),
+    ),
+    # Inflated significance.
+    Pattern(
+        "serves-as",
+        "The 'serves as' dodge",
+        "'Serves as', 'stands as', 'marks a', 'represents a' in place of 'is'.",
+        regex_finder(
+            r"\b(?:serves?|served|stands?|stood)\s+as\s+(?:a|an|the)\b"
+            r"|\b(?:marks?|marked|represents?|represented)\s+(?:a|an)\s+"
+            r"(?:\w+\s+){0,2}?(?:moment|shift|turning|milestone|step|departure|"
+            r"change|break)\b"
+        ),
+    ),
+    Pattern(
+        "testament",
+        "'Stands as a testament'",
+        "Inflating significance instead of saying what happened.",
+        regex_finder(
+            r"\b(?:stand|stands|stood|serve|serves|served|standing|serving)\s+as\s+"
+            r"(?:a|an)\s+(?:\w+\s+)?(?:testament|reminder)\b"
+            r"|\b(?:is|was|are|were|remain|remains)\s+a\s+(?:\w+\s+)?"
+            r"testament\s+to\b"
+        ),
+    ),
+    Pattern(
+        "crucial-role",
+        "'Plays a crucial role'",
+        "'Plays a crucial / pivotal / vital / key role in ...'.",
+        regex_finder(
+            r"\bplay(?:s|ed|ing)?\s+(?:a|an)\s+(?:\w+\s+)?"
+            r"(?:crucial|pivotal|vital|key|significant|central|critical|important)"
+            r"\s+role\b"
+        ),
+    ),
+    Pattern(
+        "participle-tail",
+        "Participle sentence tails",
+        "Superficial analysis bolted onto a sentence end: "
+        "'..., underscoring the importance of ...'.",
+        regex_finder(
+            r",\s+(?:highlighting|underscoring|emphasising|emphasizing|showcasing|"
+            r"reflecting|demonstrating|illustrating|signalling|signaling|"
+            r"solidifying|cementing|reinforcing|underlining)\s+"
+            r"(?:its|his|her|their|our|the|a|an|how|that|what|both)\b[^.!?\n]*"
+        ),
+    ),
+    Pattern(
+        "vague-attribution",
+        "'Experts argue'",
+        "Vague attribution to unnamed authorities.",
+        regex_finder(
+            r"\b(?:many|some|several|most|numerous)?\s*"
+            r"(?:experts|critics|observers|scholars|analysts|commentators)\s+"
+            r"(?:have\s+|often\s+|widely\s+)?"
+            r"(?:argu(?:e|es|ed)|not(?:e|es|ed)|suggest(?:s|ed)?|believ(?:e|es|ed)|"
+            r"agree[ds]?|contend(?:s|ed)?|observ(?:e|es|ed)|claim(?:s|ed)?|"
+            r"cit(?:e|es|ed)|point(?:s|ed)?\s+out)\b"
+            r"|\bindustry\s+reports?\s+(?:suggest|indicate|show)\w*\b"
+        ),
+    ),
+    Pattern(
+        "despite-challenges",
+        "'Despite these challenges'",
+        "The acknowledge-then-dismiss formula, plus 'remains to be seen' and "
+        "'time will tell'.",
+        regex_finder(
+            r"\bdespite\s+(?:these|those|such|its|their|the|numerous|significant|"
+            r"ongoing)\s+(?:\w+\s+)?challenges\b"
+            r"|\bfac(?:e|es|ed|ing)\s+(?:several|numerous|many|significant|various|"
+            r"a\s+number\s+of)\s+challenges\b"
+            r"|\bchallenges\s+remain\b|\bremains\s+to\s+be\s+seen\b"
+            r"|\b(?:only\s+)?time\s+will\s+tell\b"
+        ),
+    ),
+    Pattern(
+        "landscape",
+        "'Ever-evolving landscape'",
+        "Scene-setting boilerplate.",
+        regex_finder(
+            r"\b(?:ever-)?(?:evolving|changing|shifting)\s+landscape\b"
+            r"|\bin\s+today['’]s\s+(?:fast-paced|ever-changing|ever-evolving|"
+            r"digital|modern|competitive)\s+\w+"
+        ),
+    ),
+    # Vocabulary.
+    Pattern(
+        "vocab-current",
+        "Current-generation vocabulary (2025--26)",
+        "The tics of the model generation now writing: 'load-bearing' is a "
+        "documented Claude habit. One hit can be coincidence; several is a tell.",
+        regex_finder(
+            r"\b(?:load-bearing|battle-tested|key\s+insight|built\s+different|"
+            r"ever-evolving|the\s+seams?\b|non-negotiable|table\s+stakes|"
+            r"first-class\s+citizen)\b"
+        ),
+    ),
+    Pattern(
+        "vocab-classic",
+        "Classic LLM vocabulary (2023--24)",
+        "Rarer now, still a red flag: delve, tapestry, meticulous, seamless.",
+        regex_finder(
+            r"\b(?:delv(?:e|es|ed|ing)|tapestr(?:y|ies)|meticulous(?:ly)?|pivotal|"
+            r"intricate(?:ly)?|intricacies|interplay|underscor(?:e|es|ed|ing)|"
+            r"garner(?:s|ed|ing)?|bolster(?:s|ed|ing)?|vibrant|bustling|"
+            r"multifaceted|seamless(?:ly)?|commendable|robust|leverag(?:e|es|ed|ing)|"
+            r"foster(?:s|ed|ing)?|harness(?:es|ed|ing)?|streamlin(?:e|es|ed|ing)|"
+            r"utilis(?:e|es|ed|ing)|utiliz(?:e|es|ed|ing))\b"
+        ),
+    ),
+    Pattern(
+        "magic-adverbs",
+        "Magic adverbs",
+        "Bolted on to make a mundane statement feel significant: 'quietly "
+        "orchestrating workflows'.",
+        regex_finder(
+            r"\b(?:quietly|deeply|fundamentally|remarkably|arguably|genuinely|"
+            r"profoundly|meaningfully)\b"
+        ),
+        noisy=True,
+    ),
+    Pattern(
+        "promo",
+        "Promotional boilerplate",
+        "Travel-brochure tone: 'nestled in', 'in the heart of', 'hidden gem'.",
+        regex_finder(
+            r"\bnestled\s+(?:in|on|among|between|along|at)\b"
+            r"|\bin\s+the\s+heart\s+of\b"
+            r"|\brich\s+(?:cultural\s+|historical\s+)?"
+            r"(?:heritage|history|tapestry)\b"
+            r"|\bhidden\s+gem\b|\bmust-(?:visit|see|try)\b|\bbreathtaking\b"
+            r"|\bboasts?\s+(?:a|an|the)\b"
+            r"|\bstunning\s+(?:views?|scenery|architecture|backdrop)\b"
+        ),
+    ),
+    Pattern(
+        "dev-blog-boilerplate",
+        "'Fits in your head'",
+        "Dev-blog stock phrases for simplicity.",
+        regex_finder(
+            r"\b(?:hold|fit|fits|holds|held)\s+(?:it\s+)?in\s+your\s+head\b"
+            r"|\bbatteries[-\s]included\b|\bit\s+just\s+works\b"
+            r"|\bzero[-\s]config(?:uration)?\b|\bsane\s+defaults\b"
+        ),
+    ),
+    # Formatting.
+    Pattern(
+        "bold-first-bullet",
+        "Bold-first bullets",
+        "Almost nobody hand-writes lists as '**Security**: ...'.",
+        regex_finder(r"^\s*[-*]\s+\*\*[^*\n]+\*\*\s*[:.]", flags=re.MULTILINE),
+    ),
+    Pattern(
+        "unicode-decoration",
+        "Unicode decoration",
+        "Arrows and emoji bullets --- characters a writer at a keyboard wouldn't type.",
+        regex_finder(r"[→⇒✅✨\U0001f680⭐\U0001f525]"),
+    ),
+    Pattern(
+        "colon-triple",
+        "Colon into a triple",
+        "A colon opening onto three comma-separated items. The commonest shape "
+        "LLM prose uses to sound concrete --- and ordinary in documentation.",
+        regex_finder(
+            r":\s+[^.!?;:\n]{2,40},\s+[^.!?;:\n]{2,40},\s+(?:and\s+|or\s+)?"
+            r"[^.!?;:\n]{2,40}(?=[.!?\n])",
+            flags=0,
+        ),
+        noisy=True,
+    ),
+    Pattern(
+        "chatbot-leftovers",
+        "Chatbot leftovers",
+        "Artifacts pasted straight from a chat session, plus tracking parameters.",
+        regex_finder(
+            r"\bas\s+an\s+ai(?:\s+language)?\s+model\b"
+            r"|\bas\s+of\s+my\s+last\s+(?:update|training)\b"
+            r"|\bknowledge\s+cutoff\b"
+            r"|contentReference|oaicite|turn0(?:search|news|image)\d*"
+            r"|attributableIndex|utm_source="
+        ),
+    ),
+]
+
+PATTERNS_BY_ID = {p.id: p for p in PATTERNS}
+
+
+# --- source masking ---------------------------------------------------------
+
+# Replaced with spaces rather than deleted, so every offset still maps to the
+# right line of the original file.
+FENCE_RE = re.compile(
+    r"^([ \t]*)(`{3,}|~{3,})[^\n]*\n.*?^\1\2[^\n]*$", re.DOTALL | re.MULTILINE
+)
+INLINE_CODE_RE = re.compile(r"`[^`\n]+`")
+LINK_TARGET_RE = re.compile(r"\]\([^)\s]+(?:\s+\"[^\"]*\")?\)")
+FRONTMATTER_RE = re.compile(r"\A---\n.*?^---$", re.DOTALL | re.MULTILINE)
+
+
+def blank(match: re.Match[str]) -> str:
+    """Keep newlines so line numbers survive; blank everything else."""
+    return "".join("\n" if ch == "\n" else " " for ch in match.group(0))
+
+
+def mask_code(text: str) -> str:
+    """Blank out the spans that aren't prose.
+
+    A dotfiles-adjacent blog post is half shell snippets, and a `--sandbox
+    danger-full-access` inside a fenced block is not an AI trope.
+    """
+    for pattern in (FRONTMATTER_RE, FENCE_RE, INLINE_CODE_RE, LINK_TARGET_RE):
+        text = pattern.sub(blank, text)
+    return text
+
+
+# --- density checks ---------------------------------------------------------
+
+EM_DASH_RE = re.compile(r"\s---\s|\s--\s|—|(?<=[^\s-])---(?=[^\s-])")
+
+# Ordinary enough that repetition says nothing. Deliberately short: the point
+# is to surface candidates for a human to dismiss, not to be right.
+ECHO_STOPWORDS = {
+    "about",
+    "after",
+    "again",
+    "against",
+    "already",
+    "although",
+    "always",
+    "another",
+    "because",
+    "before",
+    "being",
+    "below",
+    "better",
+    "between",
+    "could",
+    "different",
+    "does",
+    "doing",
+    "during",
+    "each",
+    "either",
+    "enough",
+    "every",
+    "first",
+    "from",
+    "gets",
+    "getting",
+    "have",
+    "having",
+    "here",
+    "however",
+    "into",
+    "itself",
+    "just",
+    "keep",
+    "kind",
+    "know",
+    "least",
+    "less",
+    "like",
+    "little",
+    "made",
+    "make",
+    "makes",
+    "making",
+    "many",
+    "might",
+    "more",
+    "most",
+    "much",
+    "need",
+    "needs",
+    "never",
+    "next",
+    "once",
+    "only",
+    "other",
+    "over",
+    "own",
+    "part",
+    "place",
+    "point",
+    "put",
+    "rather",
+    "really",
+    "right",
+    "same",
+    "seems",
+    "since",
+    "some",
+    "something",
+    "still",
+    "such",
+    "sure",
+    "take",
+    "takes",
+    "than",
+    "that",
+    "their",
+    "them",
+    "then",
+    "there",
+    "these",
+    "they",
+    "thing",
+    "things",
+    "think",
+    "this",
+    "those",
+    "though",
+    "three",
+    "through",
+    "time",
+    "times",
+    "under",
+    "until",
+    "used",
+    "using",
+    "very",
+    "want",
+    "well",
+    "were",
+    "what",
+    "when",
+    "where",
+    "which",
+    "while",
+    "will",
+    "with",
+    "without",
+    "work",
+    "would",
+    "your",
+}
+
+
+@dataclass
+class Density:
+    words: int = 0
+    em_dashes: int = 0
+    echo_words: list[tuple[str, int]] = field(default_factory=list)
+
+
+def density(text: str) -> Density:
+    words = WORD_RE.findall(text.lower())
+    counts = Counter(
+        w for w in words if len(w) >= 5 and w.isalpha() and w not in ECHO_STOPWORDS
+    )
+    return Density(
+        words=len(words),
+        em_dashes=len(EM_DASH_RE.findall(text)),
+        echo_words=[(w, n) for w, n in counts.most_common(5) if n >= 4],
+    )
+
+
+# --- reporting --------------------------------------------------------------
+
+
+def collect(text: str, enabled: list[Pattern]) -> list[tuple[Pattern, Hit]]:
+    """All hits, earliest first, with overlaps suppressed.
+
+    One span shouldn't be reported twice because two patterns describe the
+    same tic from different angles.
+    """
+    raw = [(p, h) for p in enabled for h in p.find(text)]
+    raw.sort(key=lambda ph: (ph[1].start, -ph[1].end))
+    kept: list[tuple[Pattern, Hit]] = []
+    for pattern, hit in raw:
+        if kept and hit.start < kept[-1][1].end:
+            continue
+        kept.append((pattern, hit))
+    return kept
+
+
+def line_col(text: str, offset: int) -> tuple[int, int]:
+    line = text.count("\n", 0, offset) + 1
+    col = offset - (text.rfind("\n", 0, offset) + 1) + 1
+    return line, col
+
+
+def excerpt(text: str, hit: Hit, limit: int = 90) -> str:
+    span = " ".join(text[hit.start : hit.end].split())
+    return span if len(span) <= limit else span[: limit - 1] + "…"
+
+
+def select(only: str, skip: str, noisy: bool) -> list[Pattern]:
+    chosen = PATTERNS if noisy else [p for p in PATTERNS if not p.noisy]
+    if only:
+        wanted = {s.strip() for s in only.split(",") if s.strip()}
+        unknown = wanted - PATTERNS_BY_ID.keys()
+        if unknown:
+            raise ValueError(f"unknown pattern id(s): {', '.join(sorted(unknown))}")
+        chosen = [PATTERNS_BY_ID[i] for i in wanted]
+    if skip:
+        dropped = {s.strip() for s in skip.split(",") if s.strip()}
+        unknown = dropped - PATTERNS_BY_ID.keys()
+        if unknown:
+            raise ValueError(f"unknown pattern id(s): {', '.join(sorted(unknown))}")
+        chosen = [p for p in chosen if p.id not in dropped]
+    return chosen
+
+
+def scan(
+    path: Path, enabled: list[Pattern]
+) -> tuple[str, list[tuple[Pattern, Hit]], Density]:
+    raw = path.read_text(errors="replace")
+    masked = mask_code(raw)
+    return masked, collect(masked, enabled), density(masked)
+
+
+def report(
+    path: Path, hits: list[tuple[Pattern, Hit]], text: str, dens: Density
+) -> Iterator[str]:
+    for pattern, hit in hits:
+        line, col = line_col(text, hit.start)
+        note = f"  ({hit.note})" if hit.note else ""
+        yield f"{path}:{line}:{col}  [{pattern.id}]{note}  {excerpt(text, hit)}"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Screen a draft for the mechanically detectable AI-writing tells."
+    )
+    parser.add_argument("files", nargs="*", type=Path)
+    parser.add_argument(
+        "--list", action="store_true", help="list the patterns and exit"
+    )
+    parser.add_argument("--only", default="", help="comma-separated pattern ids")
+    parser.add_argument("--skip", default="", help="comma-separated pattern ids")
+    parser.add_argument(
+        "--noisy",
+        action="store_true",
+        help="also run the patterns that fire often on honest technical prose",
+    )
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--exit-zero", action="store_true", help="exit 0 even when hits are found"
+    )
+    args = parser.parse_args()
+
+    if args.list:
+        for p in PATTERNS:
+            flag = " (noisy, off by default)" if p.noisy else ""
+            print(f"{p.id}{flag}\n    {p.name}: {p.description}\n")
+        return 0
+
+    if not args.files:
+        parser.error("no files given")
+
+    try:
+        enabled = select(args.only, args.skip, args.noisy)
+    except ValueError as error:
+        print(f"ai-tropes: {error}", file=sys.stderr)
+        return 2
+
+    total = 0
+    payload: list[dict[str, object]] = []
+    for path in args.files:
+        if not path.is_file():
+            print(f"ai-tropes: not a file: {path}", file=sys.stderr)
+            return 2
+        text, hits, dens = scan(path, enabled)
+        total += len(hits)
+
+        if args.json:
+            payload.append(
+                {
+                    "file": str(path),
+                    "words": dens.words,
+                    "em_dashes": dens.em_dashes,
+                    "repeated_words": [
+                        {"word": w, "count": n} for w, n in dens.echo_words
+                    ],
+                    "hits": [
+                        {
+                            "pattern": pattern.id,
+                            "name": pattern.name,
+                            "line": line_col(text, hit.start)[0],
+                            "column": line_col(text, hit.start)[1],
+                            "note": hit.note,
+                            "text": excerpt(text, hit),
+                        }
+                        for pattern, hit in hits
+                    ],
+                }
+            )
+            continue
+
+        for line in report(path, hits, text, dens):
+            print(line)
+
+        counts = Counter(pattern.id for pattern, _ in hits)
+        if counts:
+            print()
+            print(f"{path}: {len(hits)} hits across {len(counts)} patterns")
+            for pattern_id, n in counts.most_common():
+                print(f"  {n:>3}  {pattern_id}")
+        else:
+            print(f"{path}: no hits")
+
+        # Never a hit on its own --- 20 em dashes in a long essay is fine and
+        # in a 400-word post is not, and a repeated word may just be the topic.
+        print()
+        print(
+            f"  density: {dens.words} words, {dens.em_dashes} em dashes"
+            f" ({dens.em_dashes * 1000 // max(dens.words, 1)} per 1000 words)"
+        )
+        if dens.echo_words:
+            repeated = ", ".join(f"{w} ({n})" for w, n in dens.echo_words)
+            print(
+                f"  repeated words (check these are the topic, not a tic): {repeated}"
+            )
+        print()
+
+    if args.json:
+        print(json.dumps(payload, indent=2))
+
+    return 0 if args.exit_zero or total == 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

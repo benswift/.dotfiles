@@ -26,6 +26,7 @@ extend-exclude = ["mail/mutt_oauth2.py"]
 
 extend-include = [
   "bin/agent-run",
+  "bin/ai-tropes",
   "bin/hud",
   "bin/icloud-export",
   "bin/ingest-claude-logs",
