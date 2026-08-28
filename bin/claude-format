@@ -150,6 +150,24 @@ fmt_ruff() { fmt ruff format --force-exclude --stdin-filename "$f" -; }
 # untouched in a repo with no prettier installed.
 fmt_prettier() { fmt prettier-helix "$f"; }
 
+# TypeScript and JavaScript go through plain oxfmt, not oxfmt-helix: the
+# dotfiles config is tuned for prose (80 columns, proseWrap) and code takes
+# oxfmt's own defaults (100 columns). Run from the file's directory so the
+# nearest project .oxfmtrc.json applies when there is one --- Helix runs the
+# same command from the project root and resolves the same config. The real
+# path goes in --stdin-filepath so the project's ignorePatterns apply too.
+fmt_oxfmt_code() {
+    command -v oxfmt &>/dev/null || return 0
+    oxfmt_ignored && return 0
+    local tmp
+    tmp="$(mktemp)"
+    if (cd "$(dirname "$f")" && oxfmt --stdin-filepath "$f") <"$f" >"$tmp" 2>/dev/null &&
+        ! cmp -s "$tmp" "$f"; then
+        cat "$tmp" >"$f"
+    fi
+    rm -f "$tmp"
+}
+
 case "$f" in
 *.deck.mdx | */decks/*.mdx) ;; # astromotion decks: auto-format = false
 */backlog/*.md) ;;             # Backlog.md CLI owns these files' serialisation
@@ -160,6 +178,7 @@ case "$f" in
 *.toml) fmt_oxfmt file.toml ;;
 *.kdl) fmt kdlfmt format --kdl-version v1 - ;; # zellij parses KDL v1 only
 *.astro) fmt_prettier ;;
+*.ts | *.tsx | *.mts | *.cts | *.js | *.jsx | *.mjs | *.cjs) fmt_oxfmt_code ;;
 *.py) fmt_ruff ;;
 *.ex | *.exs | *.heex) fmt_mix ;;
 *.rs) fmt_rust ;;

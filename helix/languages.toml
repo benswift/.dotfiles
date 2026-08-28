@@ -157,6 +157,31 @@ name = "astro"
 auto-format = true
 formatter = { command = "prettier-helix", args = ["%{buffer_name}"] }
 
+# typescript/javascript: plain oxfmt, not oxfmt-helix --- the dotfiles config
+# is tuned for prose, and code takes oxfmt's defaults (100 columns) unless the
+# project has an .oxfmtrc.json, which oxfmt finds from the working directory.
+# The buffer name lets the project's ignorePatterns apply. bin/claude-format
+# runs the same command from the file's directory.
+[[language]]
+name = "typescript"
+auto-format = true
+formatter = { command = "oxfmt", args = ["--stdin-filepath", "%{buffer_name}"] }
+
+[[language]]
+name = "tsx"
+auto-format = true
+formatter = { command = "oxfmt", args = ["--stdin-filepath", "%{buffer_name}"] }
+
+[[language]]
+name = "javascript"
+auto-format = true
+formatter = { command = "oxfmt", args = ["--stdin-filepath", "%{buffer_name}"] }
+
+[[language]]
+name = "jsx"
+auto-format = true
+formatter = { command = "oxfmt", args = ["--stdin-filepath", "%{buffer_name}"] }
+
 [language-server.mutt-compose-lsp]
 command = "mutt-compose-lsp"
 
