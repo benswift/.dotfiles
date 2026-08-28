@@ -1,15 +1,19 @@
 # Ben's dotfiles repo
 
-This repo contains all of the (public) config files that I use on my machines.
+The (public) config files I use on my machines.
 
 **DO NOT EVER ADD RAW CREDENTIALS/PASSWORDS TO THIS REPO.**
+
+Most `bin/` scripts carry a header comment explaining their own mechanism. This
+file says where things live and which rules must not be broken; it does not
+repeat what the scripts already document.
 
 ## Philosophy
 
 - modern, zsh-only (no bash configs)
 - cross-platform: macOS (Apple Silicon) and Linux
 - mise-first for tool version management
-- native package managers: Homebrew on macOS only, use apt/dnf/etc on Linux (no
+- native package managers: Homebrew on macOS only, apt/dnf/etc on Linux (no
   Linuxbrew)
 - easy to provision a new machine via `install.sh`
 
@@ -24,646 +28,223 @@ This repo contains all of the (public) config files that I use on my machines.
 
 ## Repo structure
 
-All these files are expected to be in specific locations (e.g. @~/.config). The
-@./create_symlinks.sh script links all the files in this repo into their
-expected locations. The full list of links lives in @lib/symlink-manifest.sh ---
-the single source of truth consumed by both @./create_symlinks.sh (to create)
-and `dotfiles doctor` (to verify), so add new links there. In many cases the
-filename in this repo doesn't have the preceding dot, but the symlink source
-does (e.g. `~/.zshrc` is linked to `zshrc`).
+Config files are symlinked into place (`~/.config/...`, `~/.zshrc`, etc.) by
+@create_symlinks.sh. **Add every new link to @lib/symlink-manifest.sh** --- it
+is the single source of truth, consumed by both `create_symlinks.sh` (to create)
+and `dotfiles doctor` (to verify). Repo filenames usually drop the leading dot
+(`~/.zshrc` -> `zshrc`).
 
-Apart from a few one-off config files, these config files and scripts are
-grouped into the following categories.
+Paths with no symlink targets, so absent from the manifest: @bin/ (on `PATH` via
+@zshenv), @launchd/ (plists installed by hand, instructions in each header),
+@lib/ (bash helpers), @tests/ (uv single-file tests, run directly:
+`./tests/test_nb.py`), `backlog/` (Backlog.md tasks), @oxfmtrc.json (shared
+markdown/TOML format config).
 
-Six paths hold no symlink targets and so appear nowhere in the manifest: @bin/
-(on `PATH` directly via @zshenv), @launchd/ (plists installed by hand;
-instructions in each header), @lib/ (bash helpers sourced by the scripts ---
-`log.sh` and the manifest itself), @tests/ (uv single-file tests for the `bin/`
-scripts and pinned infrastructure, run directly, e.g. `./tests/test_nb.py` and
-`./tests/test_svg_validate.py`), `backlog/` (Backlog.md task files), and
-@oxfmtrc.json (the shared markdown/TOML format config, used by `prettify-md` and
-@bin/oxfmt-helix).
+Editor and multiplexer config: @zed/, @helix/, @zellij/, @ghostty/. Email:
+@mail/ (see @mail/README.md). AI agents: @claude/, @codex/, @gemini/, @matilda/,
+@agent-run/.
 
 ## Python
 
-Python lives in two places, and they are provisioned differently.
+- `bin/` tools are `uv run --script` with PEP 723 metadata and a committed
+  `bin/<name>.lock`. After editing a dependency block, run
+  `uv lock --script bin/<name>` and commit the lock.
+- **Adding a `bin/` tool means adding it to `extend-include` in @ruff.toml**, or
+  it is silently never linted (a glob can't work --- it would drag the bash and
+  swift scripts through the Python parser).
+- @mail/utils is a real package, installed editable by `install.sh`. It provides
+  `mutt-compose-lsp`, which @helix/languages.toml configures as a language
+  server, so a machine without it has a quietly broken editor.
 
-The `uv run --script` tools in @bin/ carry PEP 723 inline metadata and a
-committed `bin/<name>.lock` beside each one, so a fresh clone resolves the same
-versions rather than whatever the index happens to hold that week. After editing
-a script's dependency block, re-run `uv lock --script bin/<name>` and commit the
-lock.
+## Version control
 
-@mail/utils is a real package, installed editable by `install.sh` and re-run by
-`dotfiles update`. That is not cosmetic: @helix/languages.toml configures
-`mutt-compose-lsp` as a language server, so a machine without it has a quietly
-broken editor.
-
-@ruff.toml covers both halves --- `mail/utils` has no `[tool.ruff]`, so ruff
-walks up to the root and finds it. The `bin/` tools have to be listed there one
-by one, because `extend-include` forces every match through the Python parser
-regardless of shebang; a glob would drag in the bash and swift scripts too.
-Adding a `uv run --script` tool means adding it to that list, or it is silently
-never linted.
-
-## Shell
-
-Shell config stuff is in the top-level. I mostly use zsh (on macOS), so I have
-@zshrc and @zshenv files. The prompt is a plain `PS1` --- no starship or
-equivalent.
-
-## Version control (git)
-
-This repo uses plain git. Use `gh` CLI for GitHub API operations (PRs, issues,
-etc.).
-
-For GitLab, use `glab` CLI. Two instances are configured:
+Plain git. Use `gh` for GitHub API operations, `glab` for GitLab. Two GitLab
+instances are configured:
 
 - `gitlab.comp.anu.edu.au` --- teaching repos (comp2300, comp1720, lucy, etc.)
 - `gitlab.anu.edu.au` --- jekyll-anu websites and other ANU projects
 
-Set `GITLAB_HOST` to target a specific instance when not inside a repo (e.g.
-`GITLAB_HOST=gitlab.comp.anu.edu.au glab repo list`). Inside a cloned repo,
-`glab` picks the host from the `origin` remote automatically.
-
-Git configuration files are in the top-level:
-
-- @gitconfig - global git configuration
-- @gitignore - global gitignore patterns
-
-## Utilities
-
-The @bin/ directory contains utility scripts for system tasks (backup scripts,
-etc.). Key scripts:
-
-- `dotfiles` --- main management command (doctor, update, edit)
-- `mailsync` --- sync all email accounts
-- `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers for AI
-  agents
-- `agent-run` --- headless Claude Code / Codex / Grok Build dispatcher with
-  named subscription and API-provider profiles
-- `zj-switch` --- `Alt s` session switcher (live sessions only, most-recently
-  used first, annotated with each session's Claude agents and their state). See
-  "Session switching" below
-- `agenda` --- read/create ANU Exchange calendar events via EventKit
-- `teams` --- read/send Teams DMs by driving the web client
-- `pkb-agent` --- run scheduled "EA" tasks (headless claude over the notebook);
-  task definitions live in `~/.nb/home/tasks/`, one systemd timer
-  (`pkb-agent.timer`, weddle only) fires everything due
-- `ai-tropes` --- screen a draft for AI-writing tells. The mechanical half of
-  the `ben:benswift-writer` skill's trope pass: the greppable patterns plus four
-  structural finders (echoed sentence skeletons, stacked questions, anaphora
-  runs, negated litanies) that no regex can express. Masks fenced code, inline
-  spans, link targets and frontmatter first, so a post about shell scripts isn't
-  screened as though its snippets were prose. The taxonomy it serves lives in
-  that skill's `ai-tropes.md`, and each pattern id is cross-referenced there
-- `ts-cat`, `lumis-parsers` --- tree-sitter syntax highlighting for yazi's
-  preview pane (see "File manager (yazi)" below)
-- `pi-kiosk` --- flash an SD card that boots a Raspberry Pi into a fullscreen
-  Chromium web kiosk at a given URL, with wifi and Tailscale baked in. Built on
-  the cloud-init support in Raspberry Pi OS (Trixie onward): flashes the stock
-  desktop image, then writes `user-data`/`network-config` to the boot partition.
-  Supersedes the SDM-based `rpi/pi-setup.sh` scripts in the panic and
-  imaginative-restoration repos
-
-See the "Microsoft 365 (calendar and Teams)" section below for this tooling and
-why it sidesteps Microsoft Graph.
-
-The `nb` executable underpinning the private notebook is a pinned
-`github:xwmx/nb` mise tool, not a separately installed `/usr/local/bin` copy.
-@bin/nb is the compatibility launcher that makes bare `nb` resolve the pin even
-in non-interactive agent shells; `pkb-agent` and both scheduled sync jobs invoke
-mise explicitly. @tests/test_nb.py exercises the launcher, note creation,
-search, daily append, todos, and sync failure against a temporary notebook; it
-never touches `~/.nb`.
+Set `GITLAB_HOST` when not inside a repo (e.g.
+`GITLAB_HOST=gitlab.comp.anu.edu.au glab repo list`); inside a clone, `glab`
+reads it from `origin`.
 
 ## Tool management (mise)
 
-Global tool versions are defined in @mise/config.toml. This file is symlinked to
-`~/.config/mise/config.toml` and provides fallback versions for tools when not
-in a project with its own `mise.toml`.
+@mise/config.toml (-> `~/.config/mise/config.toml`) sets global tool versions,
+used when a project has no `mise.toml` of its own.
 
-Machine-local config (per-host env vars) goes in
-`~/.config/mise/config.local.toml` --- mise auto-merges it with the global
-config, so any `[env]` entries get exported into every shell.
-
-That untracked `[env]` table is also the sole home for secrets:
-`PUSHOVER_TOKEN`/`PUSHOVER_USER_KEY` for `notify-pushover`,
-`REPLICATE_API_TOKEN` for `styled-image-gen`, `ANU_PASSWORD` for `vpn`. The file
-is machine-local and gitignored, so nothing secret lands in a tracked file.
-
-fnox and its 1Password-backed `op://` references were dropped in July 2026: the
-tool is gone from @mise/config.toml, the repo carries no `fnox.toml`, and
-`dotfiles doctor` no longer checks for either. Don't reintroduce them. The one
-remaining `op` call is @bin/vpn, which falls back to
-`op read op://Personal/ANU Identity/password` when `ANU_PASSWORD` is unset ---
-infrequent and interactive, so the 1Password prompt costs nothing.
+`~/.config/mise/config.local.toml` is machine-local, untracked, and auto-merged;
+its `[env]` table is **the sole home for secrets** (`PUSHOVER_TOKEN`,
+`PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`, `ANU_PASSWORD`). The one 1Password
+call left is @bin/vpn, falling back to `op read` when `ANU_PASSWORD` is unset.
 
 ### Package installation hierarchy
 
-When a tool can be installed multiple ways, prefer this order:
+When a tool can be installed several ways, prefer in order:
 
-1. **mise** --- for tools required by scripts and configs in this repo, plus
-   development runtimes (python, node, go, rust). Ensures consistent versions
-   across machines and makes dependencies explicit in @mise/config.toml.
-2. **Platform package manager** (brew on macOS, apt/dnf on Linux) --- for system
-   utilities (curl, git, jq) and tools needing OS integration. Fast, prebuilt
-   binaries.
-3. **Language package managers** (`uv tool`, `bun add -g`, `cargo install`) ---
-   only when the tool's documentation explicitly recommends this method, or mise
-   doesn't support the tool.
+1. **mise** --- tools this repo's scripts need, plus development runtimes
+   (python, node, go, rust)
+2. **platform package manager** (brew on macOS, apt/dnf on Linux) --- system
+   utilities (curl, git, jq) and tools needing OS integration
+3. **language package managers** (`uv tool`, `bun add -g`, `cargo install`) ---
+   only when the tool's docs say so, or mise doesn't support it
 
-Avoid `cargo install` for tools available via mise or brew---it compiles from
-source, which is slow and resource-intensive. Use it only when the tool's docs
-say to, or for Rust-specific tooling in Rust projects.
+Avoid `cargo install` for anything available via mise or brew --- it compiles
+from source. Pick one method per tool and stick to it, so `dotfiles doctor` can
+verify it.
 
-Pick one installation method per tool and stick with it so `dotfiles doctor` can
-verify the setup.
+## Formatting
 
-## Text editors
+@bin/claude-format is a `Write|Edit` hook running the same per-type formatters
+Helix runs on save (dispatch table in the script; mirrors
+@helix/languages.toml). Keep the two in sync.
 
-### Zed
+**KDL files must stay fixed points of `kdlfmt format --kdl-version v1 -`.** The
+`v1` is load-bearing: kdlfmt otherwise formats to whichever version parses, and
+@zellij/layouts/dev.kdl is valid v2, which comes back with strings unquoted
+(`command="hx"` -> `command=hx`). Zellij's parser is v1, where a bare word is
+not a value, so the layout silently breaks.
 
-My Zed config is in the @zed/ folder.
+## Utilities (@bin/)
 
-### Helix
+Each script's header has the detail. Notable ones:
 
-My Helix config is in the @helix/ folder. This includes:
+- `dotfiles` --- doctor, update, edit
+- `mailsync` --- sync all email accounts
+- `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers
+- `agent-run` --- headless agent dispatcher (see below)
+- `zj-switch` --- `Alt s` session switcher, live sessions MRU-first, annotated
+  with each session's running agents
+- `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to
+  `⚠ <reason>` while an agent is blocked (undone on the next prompt)
+- `agenda` --- ANU Exchange calendar via EventKit (macOS only)
+- `teams` --- Teams DMs via the web client
+- `pkb-agent` --- scheduled "EA" tasks over the notebook; definitions live in
+  `~/.nb/home/tasks/`, one systemd timer (weddle only) fires everything due
+- `ai-tropes` --- screen a draft for AI-writing tells; taxonomy lives in the
+  `ben:benswift-writer` skill's `ai-tropes.md`, cross-referenced by pattern id
+- `ts-cat`, `lumis-parsers` --- tree-sitter highlighting for yazi previews and
+  `nb show`, via lumis. Add a language to `PARSERS` in `lumis-parsers` if it's
+  previewed often; add a `case` override in `ts-cat` if the extension doesn't
+  map to a parser (as with `.mdx`)
+- `pi-kiosk` --- flash an SD card booting a Raspberry Pi into a fullscreen
+  Chromium kiosk, with wifi and Tailscale baked in (cloud-init, RPi OS Trixie+)
 
-- @helix/config.toml - main configuration (theme, editor settings, keybindings)
-- @helix/languages.toml - language server and formatter configuration
+`nb` is a pinned `github:xwmx/nb` mise tool; @bin/nb is the launcher that makes
+bare `nb` resolve the pin in non-interactive agent shells. @tests/test_nb.py
+covers it against a temporary notebook, never `~/.nb`.
 
-## Terminal multiplexer
-
-### Zellij
-
-My Zellij config is in the @zellij/ folder. This includes:
-
-- @zellij/config.kdl - theme, `default_layout "compact"`, plus a full
-  `clear-defaults=true` keybind block
-- @zellij/layouts/dev.kdl - dev layout (hx + claude-yolo + terminal)
-
-The bars are not chrome zellij draws around a session --- they are plugin panes
-in whichever layout is loaded. `default` spends two lines on them (a `tab-bar`
-across the top, a `status-bar` along the bottom); `compact` spends one, a single
-bottom `compact-bar` carrying the tab list and the mode indicator together. So
-the setting is worth a line of screen, and a layout naming no plugin pane at all
---- as `dev.kdl` doesn't --- renders no bar at all. That last step is available
-as a three-line layout file if the mode indicator ever stops earning its line,
-but locked mode (`Ctrl x`) is sticky and invisible without it.
-
-Only sessions _created_ without `--layout` (`zs`, plain `zellij`) read
-`default_layout`. `za` and `zj-switch` merely attach, so an existing session
-keeps the layout it was born with and a change here lands as sessions turn over.
-
-Both files are fixed points of `kdlfmt format --kdl-version v1 -`, the same
-command @bin/claude-format and Helix run on save. Keep them that way, or a
-one-line keybind change lands as a 500-line reflow.
-
-The `--kdl-version v1` is load-bearing, not decoration. Left to itself kdlfmt
-tries every KDL version and formats to whichever parses, so a file that happens
-to be valid v2 --- `dev.kdl` is --- comes back with its strings unquoted
-(`command="hx"` becomes `command=hx`, `args "--flag"` becomes `args --flag`).
-Zellij's parser is v1, where a bare word is not a value, so the layout breaks.
-`config.kdl` escapes only by accident: its bare `true` booleans fail the v2
-parse, so kdlfmt falls back to v1 there on its own.
-
-#### Session switching
-
-`Alt s` runs @bin/zj-switch in a floating pane. It lists only **live** sessions,
-most-recently-used first, so `Alt s` then Enter returns to the previous session
-the way cmd-tab does. Zellij's built-in session manager --- which also creates
-sessions and resurrects dead ones --- stays on `Ctrl o` then `w`.
-
-Each row shows the number of Claude Code and Codex agents running in that
-session. The count comes directly from the process tree: each session's server
-runs as `zellij --server <sockdir>/<session>` and every agent chains up to one,
-so a single `ps` is authoritative about who's alive. Nested agent processes are
-counted only once.
-
-#### Pane naming while blocked
-
-The same hook renames the agent's own pane (via `ZELLIJ_PANE_ID`, so it never
-touches whichever pane is focused) --- but **only** while the agent is blocked.
-`Notification` renames it to `⚠ <why it wants you>`; the next `UserPromptSubmit`
-calls `undo-rename-pane` and hands the title back.
-
-The restraint is the point. A zellij rename is sticky: it overrides every
-subsequent OSC title until undone. Claude Code's own title --- an animated
-spinner plus the task in progress --- is more informative than any state glyph
-while it's working, so the title is only taken over once the agent has gone
-quiet and stopped saying anything. Zellij keeps tracking the program's title
-underneath, so the undo restores whatever Claude Code most recently set, not the
-stale value from before the rename.
-
-The MRU stack lives at `$XDG_STATE_HOME/zj-switch/mru` and is maintained solely
-by `zj-switch`: it pushes the current session on launch and the chosen one on
-exit. A session first entered via `za`/`zs` shows up once you press `Alt s`
-there, so the stack self-heals.
-
-## File manager (yazi)
-
-Yazi highlights its preview pane with syntect, which reads Sublime Text
-`.sublime-syntax` grammars baked into the binary --- there's no config key to
-add more. That set has no Astro grammar and no notion of language injection, so
-YAML frontmatter in a markdown file renders as body text. Bat has the same gaps,
-because it's the same asset set.
-
-So previews are routed through tree-sitter instead, which does follow
-injections: @yazi/yazi.toml prepends a previewer that pipes every text mime
-through `piper.yazi` into @bin/ts-cat.
-
-- @bin/ts-cat --- highlights a file to stdout with `lumis highlight`
-  (https://lumis.sh: tree-sitter parsing with nvim-treesitter queries, built-in
-  catppuccin_mocha theme, mise-installed), falling back to bat and then plain
-  `cat` when lumis is missing or fails. lumis passes files it has no parser for
-  through as plain text, so no output-sniffing is needed for that case. Two
-  constraints come from piper and are load-bearing: anything written to stderr
-  _replaces_ the preview (so all stderr is discarded), and piper kills the
-  process once the pane is full. Also useful standalone as a `cat` that
-  understands injections.
-- @bin/lumis-parsers --- pre-fetches the ~20 common WASM parsers into lumis's
-  cache (`~/.local/share/lumis`, build artefacts, so not tracked here). Run by
-  `install.sh` and `dotfiles update` (the latter with `--update` to pick up new
-  parser versions). This is a warm-up, not a gate: lumis silently downloads any
-  missing parser from unpkg on first use.
-
-The same engine backs `nb show` via @nb/lumis-highlight.nb-plugin, which
-overrides nb's internal bat-based highlighting function (plugins are sourced
-after nb's own definitions, so the redefinition wins).
-
-The plugin itself is pinned in @yazi/package.toml and installed with
-`ya pkg install`. Note `~/.config/yazi/plugins` is owned by `ya pkg`, which is
-why the yazi configs are symlinked file-by-file rather than as a directory.
-
-Adding a language means nothing at all if lumis publishes a parser for it
-(auto-download covers it); append it to the `PARSERS` array in
-@bin/lumis-parsers if it's previewed often. If the extension doesn't map to a
-parser (as with `.mdx`), add a language override to the `case` in @bin/ts-cat.
+yazi's plugin dir is owned by `ya pkg`, which is why @yazi/ configs are
+symlinked file-by-file rather than as a directory.
 
 ## AI coding agents
 
-All four AI coding agents (Claude Code, Codex CLI, Gemini CLI, Matilda Code) are
-configured to read `CLAUDE.md` as the project-level instructions file. This
-means a single file works across all tools with no symlinks needed. Global
-instructions and base per-tool configuration are tracked here and symlinked into
-place.
+All of Claude Code, Codex CLI, Gemini CLI, Matilda Code and Grok Build read
+`CLAUDE.md` as the project instructions file, so one file serves them all.
+Tracked config: @claude/CLAUDE.md (global instructions, symlinked to both
+`~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`), @claude/settings.json,
+@codex/hooks.json, @gemini/settings.json, @matilda/system-defaults.json.
+
+### Personal skills
+
+Skills live **only** in the private `benswift/claude-plugin-personal` repo,
+cloned by Claude Code to `~/.claude/plugins/marketplaces/ben/`. That clone is
+the single source of truth: edit, commit and push from there, and **push
+immediately** --- `claude plugin marketplace update` (run by every
+`dotfiles update`) deletes and re-clones from GitHub, discarding local-only
+commits. If that happens, the last-installed tree survives under
+`~/.claude/plugins/cache/ben/ben/<sha>/`. Skills appear as `ben:<name>`.
+
+@bin/sync-agent-config registers marketplaces, installs enabled plugins, and
+symlinks each skill into `~/.agents/skills` so Codex and Matilda see them too.
 
 ### Headless agent dispatcher
 
-@bin/agent-run is the common execution boundary for unattended agent jobs. A
-profile selects the official runner and its authentication route; the caller
-keeps the job-specific prompt, model override and permission settings. Profiles
-live in @agent-run/profiles.toml, symlinked to
-`~/.config/agent-run/profiles.toml`:
+@bin/agent-run runs unattended agent jobs; profiles in @agent-run/profiles.toml
+select the runner and auth route, the caller supplies prompt, model and
+permissions. Subscription-backed profiles (`claude-sub`, `codex-sub`,
+`grok-sub`) clear API/gateway env vars first, so a scheduled job cannot silently
+become pay-as-you-go. API-billed escape hatches are named `*-api`. `openrouter`
+and `deepseek` reach third-party endpoints through Claude Code's
+Anthropic-compatible surface; put their keys in the untracked mise env.
 
-- `claude-sub` --- native Claude Code with its on-disk subscription login; it
-  clears API and gateway variables first so a scheduled job cannot silently
-  become pay-as-you-go
-- `codex-sub` --- native `codex exec` with its on-disk ChatGPT login
-- `deepseek` --- Claude Code against DeepSeek's official Anthropic-compatible
-  endpoint, defaulting to `deepseek-v4-flash`
-- `openrouter` --- Claude Code against OpenRouter's Anthropic skin; the caller
-  supplies the model, including a `:free` variant when one is available
-- `claude-api` --- an escape hatch for a caller-managed Anthropic-compatible
-  endpoint; unlike the other profiles it deliberately inherits `ANTHROPIC_*`
-- `grok-sub` --- native Grok Build (`grok -p`) with its on-disk grok.com login.
-  Same guard as `claude-sub`, against a longer list: `XAI_API_KEY` and
-  `GROK_CODE_XAI_API_KEY` switch the CLI to xAI API billing, and
-  `GROK_AUTH_PROVIDER_COMMAND`/`_ACCESS_TOKEN` swap the credential source
-  outright
-- `grok-api` --- the xAI API-billed escape hatch, named so it cannot be mistaken
-  for the subscription route; like `claude-api` it inherits the caller's
-  credential
-
-Three routes reach Grok and only one of them is subscription-backed: `grok-sub`
-consumes the SuperGrok entitlement (SuperGrok or X Premium+ suffices --- Heavy
-buys a larger allowance, not access), `grok-api` bills xAI per token, and the
-`openrouter` profile bills OpenRouter credits. The `total_cost_usd` a headless
-`grok` run prints is token accounting at API rates, not a charge against a card.
-
-`AGENT_PROFILE` and `AGENT_MODEL` are equivalent to `--profile` and `--model`.
-Put `DEEPSEEK_API_TOKEN` and `OPENROUTER_API_KEY` in the untracked local mise
-environment. The registry maps them to each runner's expected variable only in
-the child process; no OAuth token is imported or replayed by the dispatcher.
-
-Options are namespaced by runner (`--claude-*`, `--codex-*`, `--grok-*`) and the
-dispatcher refuses one aimed at a different runner than the profile selects,
-rather than dropping it. The exception is `--bypass-permissions`, which is
-runner-agnostic on purpose: an unattended consumer can say "never stop to ask"
-without knowing which runner its profile picked, and switching profile stays a
-one-variable change. It maps to `--dangerously-skip-permissions` for claude,
-`--permission-mode bypassPermissions` for grok, and
-`--sandbox danger-full-access` for codex. The last of those is a translation to
-the nearest equivalent rather than the same knob --- a sandbox profile is a
-different axis from a permission prompt --- but refusing it left the callers
-that need the flag most, unattended jobs a drop-in away from changing runner,
-with no portable way to spell it. An explicitly passed runner option still wins
-over the translation. The namespacing matters for permission flags above all:
-silently ignoring `--claude-dangerously-skip-permissions` on a Grok profile
-would leave an unattended job blocking on a prompt nobody is there to answer.
-
-Examples:
+Options are namespaced per runner (`--claude-*`, `--codex-*`, `--grok-*`) and a
+mismatched one is refused, not dropped. `--bypass-permissions` is the deliberate
+exception --- runner-agnostic, so an unattended caller need not know its runner.
 
 ```sh
 agent-run --profile claude-sub --model sonnet \
   --claude-dangerously-skip-permissions "/find-gigs"
-agent-run --profile deepseek --claude-disallowed-tools AskUserQuestion "tick"
 agent-run --profile openrouter --model "provider/model:free" "prompt"
-agent-run --profile grok-sub --grok-permission-mode bypassPermissions \
-  --grok-output-format json "/publish"
 ```
 
-### Claude Code
+### Session log analytics
 
-Three directories are involved --- note the differences:
+@bin/ship-claude-logs sends each host's `~/.claude/projects` and
+`~/.codex/sessions` to weddle (systemd timer there, launchd on macOS).
+@bin/ingest-claude-logs summarises both hourly into
+`~/claude-logs/analytics.db`, one `sessions` row per session file, keyed on path
+so ingest is incremental. Purpose: cross-machine introspection of agent usage.
 
-- `claude/` (no dot) --- tracked config source in this public repo. It holds
-  only `CLAUDE.md` (global instructions) and `settings.json`, both symlinked
-  into `~/.claude/`. Deliberately **no** skills live here: personal skills are
-  hosted exclusively in the `ben` plugin (below), so there's no `claude/skills/`
-  directory and no `~/.claude/skills` symlink pointing back into dotfiles.
-- The `ben` Claude Code plugin (personal skills library) lives in the
-  **private** `benswift/claude-plugin-personal` repo. `install.sh` and
-  `dotfiles update` run @bin/sync-agent-config, which registers the marketplace
-  and installs enabled plugins via the `claude` CLI; @claude/settings.json then
-  enables them via `enabledPlugins`. Claude Code maintains its own clone at
-  `~/.claude/plugins/marketplaces/ben/`. That clone is the **single source of
-  truth** --- edit skills there, commit and push from there. **Push immediately
-  after committing**: `claude plugin marketplace update` (run by
-  `sync-agent-config --update-claude`, i.e. every `dotfiles update`) deletes and
-  re-clones the marketplace from GitHub, discarding local-only commits. If that
-  happens, the tree at the last-installed commit survives as a snapshot under
-  `~/.claude/plugins/cache/ben/ben/<sha>/`. Skills appear to the model as
-  `ben:<skill-name>` (e.g. `ben:pkb`). The same bootstrap pattern handles the
-  `impeccable` and `agent-browser` plugins.
-- `.claude/` (with dot) --- project-local working directory auto-created by
-  Claude Code. Contents are gitignored by default (`.claude/*` globally), but
-  individual repos can opt-in to tracking specific subdirectories via a local
-  `!.claude/<path>/` rule (e.g. project-local skills). The directory typically
-  contains machine-specific state like `settings.local.json`, plans, and session
-  data. This repo takes that opt-in for one file: `.claude/settings.json` is
-  tracked, and disables the `impeccable` plugin here. Impeccable is a frontend
-  design plugin with nothing to review in a repo of shell and Python config, but
-  its `PostToolUse` hook fires on every `Write|Edit` regardless and drops
-  `.impeccable/hook.cache.json` wherever it decides the project root is ---
-  including inside `mail/utils/src/`, from where the cache shipped in the built
-  wheel. As of August 2026 the plugin is disabled globally in
-  @claude/settings.json too, so this repo's opt-out is belt-and-braces; it stays
-  installed, so re-enabling it (here or for a frontend repo) is a one-line
-  `true`.
+The failure mode is a unit that succeeds and ships nothing, so
+`ingest-claude-logs` exits non-zero when any host's newest session is older than
+`AGENT_LOGS_STALE_DAYS` (default 7), with `OnFailure=unit-oncall@%n.service`.
+weddle's ingester is every other host's alarm.
 
-The @claude/ folder includes:
+### Per-agent notes
 
-- @claude/CLAUDE.md - global agent instructions (symlinked to both
-  `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`)
-- @claude/settings.json - Claude Code settings
-- @codex/hooks.json - portable Codex notification hooks
-- @gemini/settings.json - portable Gemini context settings
-
-Every personal skill lives in the ben plugin --- that is the single, exclusive
-home, with no second copy tracked in this dotfiles repo. Each skill is a
-directory at `~/.claude/plugins/marketplaces/ben/skills/<name>/SKILL.md` inside
-Claude Code's marketplace clone, and is namespaced as `ben:<name>` when the
-model loads it through the plugin mechanism. To add or edit a skill, work in
-that clone (`~/.claude/plugins/marketplaces/ben/`), then commit and push from
-there. No symlink wiring in @create_symlinks.sh is involved --- the marketplace
-clone covers everything.
-
-### Agent session logs (analytics)
-
-Every host ships its AI-agent session logs to weddle via @bin/ship-claude-logs
---- a 15-minute systemd timer on weddle, a launchd agent on macOS hosts
-(@launchd/, install instructions in each plist header). Two trees, because the
-two agents key their sessions differently:
-
-- `~/.claude/projects` -> `weddle:claude-logs/<host>/<project>/<uuid>.jsonl`
-- `~/.codex/sessions` -> `weddle:codex-logs/<host>/YYYY/MM/DD/rollout-*.jsonl`
-
-On weddle, @bin/ingest-claude-logs (hourly timer) summarises both into
-`~/claude-logs/analytics.db`, one `sessions` row per session file with an
-`agent` column --- one table rather than one per agent, because the questions
-worth asking ("how much work went into this repo, and with what") are group-bys
-over `project_canonical`, not unions. Codex records more than Claude does: its
-first `session_meta` line carries the git branch _and_ remote URL, so
-`git_repo_url` is populated for Codex rows and null for Claude ones.
-
-The row key is the session file's path relative to `~`, not the session uuid: a
-uuid is not unique (a resume from a different cwd files the same session under
-two project dirs), and a path lets ingest be incremental. Only files whose size
-or mtime moved get re-parsed, which took the hourly run from 56s over all 16GB
-to 0.2s.
-
-Purpose: cross-machine introspection of agent usage --- e.g. a recurring agent
-proposing patterns worth reifying into skills
-(`~/.nb/home/tasks/claude-retrospective.md`).
-
-#### The failure mode this pipeline actually has
-
-Not a unit that fails --- a unit that succeeds and ships nothing. daysy went
-five weeks (9 July to 13 August 2026) delivering no sessions at all, because its
-launchd plist pinned a `PATH` without `/sbin`, so the metered-network probe's
-`route` call exited 127 under `set -euo pipefail` and killed the script before
-rclone ran. Nothing noticed, because launchd has no `OnFailure` equivalent and
-the log it writes is a file nobody reads.
-
-Three guards now, in order of how much they matter:
-
-- **`ingest-claude-logs` exits non-zero when any host's newest session is older
-  than `AGENT_LOGS_STALE_DAYS` (default 7)**, and the unit carries
-  `OnFailure=unit-oncall@%n.service`. This is the one that generalises: it
-  catches a stalled host regardless of _why_, including a macOS host whose only
-  scheduler cannot report failure at all. weddle's ingester is daysy's alarm.
-- The metered-network guard is bounded. It skips only while a successful ship
-  happened within `METERED_GRACE_HOURS` (default 24); past that it ships anyway,
-  because session logs are small text files and a stale archive is the worse
-  outcome.
-- The gateway probe no longer trusts its caller's `PATH` --- it resolves `route`
-  itself and treats a miss as "not metered" rather than a fatal error.
-
-### Codex CLI
-
-Codex CLI uses `~/.codex/AGENTS.md` for global instructions (symlinked to
-@claude/CLAUDE.md). Project-level instructions are read from `CLAUDE.md` via its
-`project_doc_fallback_filenames` setting. Codex doesn't understand Claude Code's
-plugin mechanism, but it reads the raw skill directories fine.
-
-Personal skills are shared with Codex by @bin/sync-agent-config. It symlinks
-each skill from `~/.claude/plugins/marketplaces/ben/skills/` into the supported
-user-level directory `~/.agents/skills`, leaving independently installed skills
-there alone. The marketplace clone remains the single source of truth: adding or
-removing a `ben` skill is reflected on the next `dotfiles update` without a
-second manifest. The sync also removes its legacy links from `~/.codex/skills`,
-while leaving Codex's generated `.system/` skills untouched.
-
-`~/.codex/config.toml` is entirely machine-local: model and reasoning defaults,
-project-instruction fallbacks, MCP servers, trusted project paths, dismissed
-notices, desktop/TUI preferences, hook trust hashes and other generated state.
-It is deliberately neither symlinked nor tracked. Set
-`project_doc_fallback_filenames = ["CLAUDE.md"]` there on each machine.
-
-The portable hook definitions live in @codex/hooks.json, symlinked to
-`~/.codex/hooks.json`. They run @bin/codex-turn-notify on `UserPromptSubmit` and
-`Stop`, sending a Pushover completion after a turn has run for five minutes; set
-`CODEX_NOTIFY_THRESHOLD` to override that default. Codex records approval of
-each exact hook definition in the machine-local config, so neither hook hashes
-nor absolute paths enter git.
-
-There is deliberately no shared Codex profile. The `oy` alias and
-@bin/codex-zellij select full-access mode only, leaving every configuration
-entry point --- interactive shells, zellij, the IDE and @bin/agent-run --- on
-the same native user config.
-
-### Gemini CLI
-
-Gemini CLI uses @gemini/settings.json to read `CLAUDE.md` as a context file (in
-addition to the default `GEMINI.md`).
-
-### Grok Build
-
-xAI's coding agent CLI (`grok`), installed from mise's aqua backend rather than
-the `x.ai/cli/install.sh` one-liner, so it is pinned and updated alongside every
-other agent instead of self-updating. `grok login --oauth` writes
-`~/.grok/auth.json`; on a headless host use `grok login --device-auth`, which
-prints a code to redeem from a machine that has a browser --- unlike Matilda,
-Grok implements the device flow properly, so no port forwarding is needed.
-
-Nothing else needs configuring, because Grok already reads this repo's Claude
-config: `CLAUDE.md` at both global and project level, and Claude Code skills at
-user and project level (project skills win a name collision; user ones are
-reachable as `/user:<name>`). `grok inspect` prints exactly what it discovered
-for the current directory, which is the fastest way to check a port before
-running one. Its headless surface mirrors Claude Code's closely enough that
-@bin/agent-run maps the two with the same option shapes --- `-p` for a
-single-turn prompt, `--permission-mode bypassPermissions` where Claude has
-`--dangerously-skip-permissions`, plus `--model`, `--effort` and
-`--output-format json`.
-
-### Matilda Code
-
-Maincode's coding agent (Matilda, the Australian-built model at
-matilda.maincode.com). Installed from npm via mise, since npm is the only
-channel it publishes to; the entry needs `allow_low_downloads` and
-`allow_builds` or mise's npm backend aborts the install.
-
-It's a Gemini CLI fork, so the shape is familiar: the same `context.fileName`
-key points it at `CLAUDE.md`, and `-p`/`--output-format json` give the same
-headless mode as `claude -p`. Config and credentials live in `~/.matilda/`; sign
-in with `matilda auth login`. The personal skills come along for nothing:
-Matilda reads `~/.matilda/skills` and `~/.agents/skills`, and
-@bin/sync-agent-config already populates the latter for Codex.
-
-Signing in on a headless host is awkward, because `auth login` is loopback-OAuth
-only --- the bundle ships a device-code implementation but never selects it for
-account login (`kind:"loopback"` is the sole transport in the auth chunk), so
-there is no code to read off a screen and type elsewhere.
-`MATILDA_AUTH_SKIP_BROWSER=1` (note: `AUTH`, not `OAUTH`, and the value must be
-exactly `1`) only stops it launching a browser --- it still prints an authorize
-URL redirecting to `127.0.0.1:<port>` on _that_ host, with the port assigned at
-random per run. So open the printed URL on a machine that has a browser, then
-hand the callback back to the headless host: either replay the failed
-`http://127.0.0.1:<port>/callback?code=...` URL there with `curl`, or forward
-the port first with `ssh -L <port>:127.0.0.1:<port> <host>`. The waiting process
-holds the PKCE verifier, so the code only redeems against that session.
-
-Settings layer SystemDefaults < User < Workspace, and only the bottom layer is
-ours. `~/.matilda/settings.json` is Matilda's own: `auth login` writes the
-provider block, the selected model and the UI name into it, and the atomic
-rewrite replaces a symlink with a real file --- so it is deliberately neither
-tracked nor linked. @matilda/system-defaults.json holds the portable half
-instead, read in place from the repo via `MATILDA_CODE_SYSTEM_DEFAULTS_PATH`
-(set in @mise/config.toml, and exported by the mise shims too, so a
-non-interactive caller gets it). It ships already stamped `"$version": 5` in
-Matilda's own byte format, missing trailing newline and all: an unstamped file
-is migrated in place on first run, dirtying the repo and leaving a `.orig`
-beside it.
-
-There's also an OpenAI-protocol endpoint at
-`https://matilda.maincode.com/api/v1/code` (model `matilda-code-1.0`, keyed by
-`MATILDA_API_KEY`), which is what the CLI itself talks to --- so any
-OpenAI-compatible client can use the same subscription. Its docs
-(matilda.maincode.help/welcome/external-api) sit behind a GitHub Pages login.
+- **Claude Code** --- `.claude/` (with dot) is machine-local and gitignored;
+  this repo tracks only `.claude/settings.json`, which disables the `impeccable`
+  plugin (its `PostToolUse` hook fires on every edit and drops
+  `.impeccable/hook.cache.json` into whatever it thinks the project root is,
+  including `mail/utils/src/`, from where it shipped in the built wheel).
+- **Codex** --- `~/.codex/config.toml` is entirely machine-local and
+  deliberately untracked; set `project_doc_fallback_filenames = ["CLAUDE.md"]`
+  there on each machine. There is no shared Codex profile: the `oy` alias and
+  @bin/codex-zellij just select full-access mode.
+- **Grok Build** --- installed via mise's aqua backend so it's pinned rather
+  than self-updating. `grok login --device-auth` works headless. Reads this
+  repo's `CLAUDE.md` and Claude Code skills with no extra config; `grok inspect`
+  prints what it found.
+- **Matilda Code** --- npm-only, so its mise entry needs `allow_low_downloads`
+  and `allow_builds`. `~/.matilda/settings.json` is Matilda's own (rewritten
+  atomically by `auth login`, replacing a symlink with a real file), so
+  @matilda/system-defaults.json holds the portable half instead, read in place
+  via `MATILDA_CODE_SYSTEM_DEFAULTS_PATH`. It ships pre-stamped `"$version": 5`
+  in Matilda's byte format, missing trailing newline and all --- an unstamped
+  file is migrated in place on first run, dirtying the repo.
+  - headless login is loopback-OAuth only, no device-code fallback.
+    `MATILDA_AUTH_SKIP_BROWSER=1` (`AUTH`, not `OAUTH`) still prints an
+    authorize URL pointing at a random `127.0.0.1:<port>` on that host. Open it
+    on a machine with a browser, then either `curl` the failed
+    `.../callback?code=...` on the headless host or `ssh -L` the port first ---
+    the waiting process holds the PKCE verifier.
+  - there's also an OpenAI-protocol endpoint at
+    `https://matilda.maincode.com/api/v1/code` (model `matilda-code-1.0`, keyed
+    by `MATILDA_API_KEY`) on the same subscription.
 
 ## Email
 
-The email config lives in @mail/ and includes:
+@mail/ holds neomutt config, @mail/msmtprc (SMTP), @mail/mbsyncrc (IMAP), and
+email-processing scripts in @mail/utils/. Setup instructions: @mail/README.md.
 
-- @mail/neomutt/ - neomutt email client config
-- @mail/msmtprc - SMTP configuration
-- @mail/mbsyncrc - IMAP sync configuration
-- email-processing scripts in @mail/utils/ (often in uv-powered single-file
-  python scripts using the `mailbox` module)
-
-See @mail/README.md for detailed setup instructions.
-
-### Using neomutt with ht-mcp
-
-To drive neomutt (or any TUI) interactively, use the `ht-mcp` MCP server. It's
-installed via brew (`ht-mcp` binary) and registered globally in `~/.claude.json`
-under `mcpServers.ht-mcp`. Tools appear under the `mcp__ht-mcp__` prefix:
-
-1. `mcp__ht-mcp__ht_create_session` with `["bash"]` and `enableWebServer: true`
-2. `mcp__ht-mcp__ht_execute_command` with `TERM=xterm-direct neomutt`
-3. `mcp__ht-mcp__ht_send_keys` to send keystrokes (e.g. `["m"]`, `["Enter"]`,
-   `["C-g"]`)
-4. `mcp__ht-mcp__ht_take_snapshot` to view current terminal state. Note the
-   snapshot is plain text and does NOT show which row has the cursor (the
-   indicator is rendered via background colour). To probe cursor position, send
-   a side-effect key like `<space>` (tag-entry) and check which row got the `*`
-   flag, or rely on the resolve=yes cursor-advance behaviour
-5. `mcp__ht-mcp__ht_close_session` when done
-
-Useful for testing neomutt macros and workflows without GUI interaction.
+To drive neomutt (or any TUI) interactively, use the `ht-mcp` MCP server
+(`mcp__ht-mcp__*` tools): create a session with `["bash"]`, run
+`TERM=xterm-direct neomutt`, then send keys and take snapshots. Snapshots are
+plain text and do **not** show the cursor row (it's a background colour), so
+probe position with a side-effect key like `<space>` (tag-entry) and see which
+row gets the `*`.
 
 ## Microsoft 365 (calendar and Teams)
 
-ANU locks down third-party Microsoft Graph app registrations and the device-code
-flow, so there is no API path to ANU calendar or Teams data --- don't reach for
-Graph here. It was tried and abandoned (no public client id works, and staff
-can't self-register an app); the dead `sharepoint-dl` script that documented the
-attempt has been removed. Two scripts in @bin/ instead go through channels ANU
-does permit: the native macOS calendar stack, and the Teams web client signed in
-as yourself.
+ANU locks down third-party Graph app registrations and the device-code flow, so
+**there is no API path to ANU calendar or Teams data --- don't reach for
+Graph.** Two scripts use channels ANU does permit:
 
-### Calendar --- @bin/agenda
-
-Native, registration-free calendar access via EventKit. The ANU Exchange account
-is already synced into macOS Calendar.app --- it shows up as the calendar titled
-"Calendar" under the "ANU Exchange" source --- and EventKit reads and writes it
-directly, far faster than Calendar.app's AppleScript date-range queries. macOS
-only; the first run prompts once for Calendar access (granted to the controlling
-terminal).
-
-- `agenda` --- upcoming events (default 7 days); takes `--days N`,
-  `--cal "<name>"`, `--json`
-- `agenda calendars` --- list calendars and their account source
-- `agenda create --title "..." --start "2026-06-25 14:00" --end "..."` ---
-  create an event (optional `--cal`, `--location`, `--notes`, `--all-day`).
-  There is no `--attendee` option by design, so it only ever creates a personal
-  time-block, never a meeting invite.
-
-### Teams DMs --- @bin/teams
-
-Reads and sends Teams chats by driving the Teams _web_ client with
-`agent-browser`. Signing into teams.microsoft.com as yourself uses Microsoft's
-own first-party client (which ANU permits), and the logged-in session lives in a
-persistent Chrome profile at `~/.cache/agent-browser/teams-profile` on an
-isolated `--session teams`. This is UI automation, so it's inherently more
-brittle than the calendar tool --- expect occasional fix-ups when Microsoft
-reshuffles the web client. Parsing leans on ARIA roles and labels rather than
-positions to stay as durable as possible.
-
-- `teams chats [N]` --- recent chats with previews and timestamps
-- `teams read <name> [N]` --- a thread matched by a name substring (people or
-  group chats)
-- `teams send <name> <text>` --- post to a chat
-- `teams login` --- interactive re-auth when the on-disk session expires (opens
-  a window; tick "stay signed in")
-- `teams status` --- login state
-
-After the first interactive login the browser runs headless, reusing the on-disk
-cookies. A cold start takes ~25--30s while Teams web loads; warm calls reuse the
-running browser. Stop the background browser with
-`agent-browser --session teams close`. Send clears the compose box (select-all +
-delete) before typing, because Teams' contenteditable ignores an empty `fill`
-and otherwise appends.
+- @bin/agenda --- EventKit against the ANU Exchange account already synced into
+  macOS Calendar.app (the calendar titled "Calendar" under the "ANU Exchange"
+  source). macOS only; first run prompts for Calendar access. Creates personal
+  time-blocks only --- there is no `--attendee` option by design.
+- @bin/teams --- drives the Teams web client via `agent-browser`, signed in as
+  yourself in a persistent Chrome profile. Being UI automation it's brittle;
+  expect fix-ups when Microsoft reshuffles the web client.

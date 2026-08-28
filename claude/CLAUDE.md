@@ -32,6 +32,24 @@ default; LAYERED for academic). Jamesian owns sentence and paragraph
 architecture, em-dash discipline (sparing), opening patterns, and signposting
 --- don't reintroduce those decisions inside the benswift-writer overlay.
 
+### Harness instruction files
+
+CLAUDE.md, AGENTS.md and SKILL.md are prompts loaded into every session, not
+documentation. Be short, clear and direct: state the instruction, and include
+rationale only where the bare instruction would be reverted or misapplied
+without it (a non-obvious constraint, a footgun, a deliberate deviation).
+
+When you edit one, **delete what the edit supersedes**. Never leave a record of
+a decision that has been overridden, a note that something "used to" work
+another way, a dated changelog entry, or a war story about how a bug was found.
+Git holds the history; the file holds the current state only. Keep such a record
+only if I explicitly ask for it.
+
+Don't restate what the code already says. If a script's header comment or a
+config file's comments explain a mechanism, point at it rather than paraphrasing
+it --- two copies drift, and the copy in the instruction file is the one that
+gets stale.
+
 ### Markdown formatting
 
 Use three dashes for em dashes. Lists: don't capitalise the first letter unless
