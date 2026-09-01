@@ -25,6 +25,17 @@ bun = "latest"
   "@maincode-ai/matilda-code",
 ] }
 yazi = "latest"
+# Chromium rendered into a kitty-graphics terminal (ghostty qualifies). Via the
+# github backend rather than the upstream curl|bash installer, so it is pinned
+# here like every other tool --- don't run `terminal-browser upgrade`, it
+# rewrites the install out from under mise. The tarball bundles its own
+# agent-browser under agent-browser/bin, which mise does not put on PATH, so
+# the npm:agent-browser above stays the one that answers.
+# On Linux where /proc/sys/kernel/apparmor_restrict_unprivileged_userns is 1
+# (Ubuntu 24.04+), chromium's sandbox needs an AppArmor profile: run the
+# bundled `scripts/apparmor.sh` (sudo) from the install dir. The profile is
+# keyed on the electron binary's path, so re-run it after every version bump.
+"github:zenbu-labs/terminal-browser" = "latest"
 # Zellij still misroutes attach-time host replies into the focused pane,
 # poisoning Codex's input parser so even Ctrl-C is swallowed after a session
 # switch (zellij-org/zellij#5365). Verified 2026-08-21: v0.45.0 still fails the
