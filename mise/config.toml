@@ -35,6 +35,11 @@ yazi = "latest"
 # (Ubuntu 24.04+), chromium's sandbox needs an AppArmor profile: run the
 # bundled `scripts/apparmor.sh` (sudo) from the install dir. The profile is
 # keyed on the electron binary's path, so re-run it after every version bump.
+# Run it in a plain ghostty tab, NOT inside zellij. It ships no zellij adapter
+# (upstream PR #56 is unmerged), so detection leaks through to ghostty's and it
+# takes the whole pane; worse, every frame of a full-pane video stream then
+# crosses zellij 0.45's two-week-old kitty-graphics path, which crawls and
+# takes the session down with it.
 "github:zenbu-labs/terminal-browser" = "latest"
 # Zellij still misroutes attach-time host replies into the focused pane,
 # poisoning Codex's input parser so even Ctrl-C is swallowed after a session
