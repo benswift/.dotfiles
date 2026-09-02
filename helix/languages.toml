@@ -35,18 +35,13 @@ command = "nb-lsp"
 # [language-server.harper-ls.config.harper-ls]
 # dialect = "Australian"
 
-# astromotion decks: skip auto-format so deck prose keeps the line breaks it was
-# written with --- the family's deck repos set `proseWrap: "always"`, which would
-# rewrap every paragraph in a deck on save.
+# astromotion decks: formatted like any other MDX --- oxfmt-helix carries the
+# three guards that make a deck safe to reflow (see its header), including the
+# one that matters most here: two adjacent `{/* _class: … */}` / `{/* _id: … */}`
+# comments must not be folded onto one line, or astromotion stops matching them
+# and the slide silently loses its class and id.
 #
-# This is now a preference rather than a safety net. It used to be the latter:
-# prettier/oxfmt mangle a multi-line MDX expression container (the leading `*`
-# gets escaped to `\*`), which is what speaker notes used to be. From astromotion
-# 0.23.0 notes and authoring comments are fenced ```notes / ```comment blocks ---
-# fence contents are never reflowed --- and a multi-line `{/* … */}` comment is a
-# build error rather than a silent corruption. Every repo with decks still
-# excludes them in its .oxfmtrc.json, so this only teaches Helix what
-# `pnpm format` and the claude-format hook already do.
+# This language exists for the highlight queries, not for a different formatter.
 # Covers both parent decks (`*.deck.mdx`, routed by astromotion) and partials
 # (`*.mdx` files under any `decks/` subtree, included via `@include`).
 # Highlighting/injections inherit from markdown via
@@ -57,7 +52,8 @@ scope = "source.markdown"
 grammar = "markdown"
 language-servers = ["marksman", "nb-lsp"]
 file-types = [{ glob = "*.deck.mdx" }, { glob = "**/decks/**/*.mdx" }]
-auto-format = false
+auto-format = true
+formatter = { command = "oxfmt-helix", args = ["--stdin-filepath", "file.mdx"] }
 
 # Backlog.md task files: skip auto-format because the `backlog` CLI owns their
 # serialisation --- it writes single-quoted YAML dates and unwrapped prose, so

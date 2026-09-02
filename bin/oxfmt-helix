@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # oxfmt-helix --- run oxfmt with the global dotfiles config, portably, and
-# refuse the two MDX outputs prettier's markdown printer gets wrong.
+# refuse the three MDX outputs prettier's markdown printer gets wrong.
 #
 # Helix passes formatter args verbatim (no shell), and oxfmt expands neither ~
 # nor $HOME, so the config path can't be templated in languages.toml. This
@@ -8,18 +8,23 @@
 # /home/ben on Linux). Referenced as the markdown/mdx formatter in
 # ~/.config/helix/languages.toml, and by bin/claude-format.
 #
-# MDX carries two failure modes, both prettier's and both reproduced by oxfmt
-# (prettier/prettier#6274, #13586 --- the workaround upstream recommends is
-# proseWrap:preserve for every .mdx, which costs wrapping on the files that
-# would have been fine). This wrapper buys the wrapping back by checking the
-# output instead of assuming it:
+# MDX carries three failure modes, all of them prettier's markdown printer and
+# all reproduced by oxfmt (prettier/prettier#6274, #13586 --- the workaround
+# upstream recommends is proseWrap:preserve for every .mdx, which costs wrapping
+# on the files that would have been fine). This wrapper buys the wrapping back by
+# checking the output instead of assuming it:
 #
 #   1. A multi-line {/* ... */} comment has its `*` escaped as markdown
 #      emphasis, and the result is INVALID MDX. That output is stable, so the
 #      fixed-point check below can't see it --- hence the content probe, which
-#      passes such a buffer through untouched. (astromotion decks are the
-#      files that have these.)
-#   2. Wrapping can move an inline JSX tag to the start of a line, where MDX
+#      passes such a buffer through untouched.
+#   2. Two adjacent single-line {/* ... */} comments are joined onto one line,
+#      where MDX reparses them as inline expressions and astromotion's slide
+#      directives stop matching --- a SILENT loss of _class/_id, with no build
+#      error. That output is stable too, so adjacency is normalised away before
+#      formatting (a blank line between them is both correct and a fixed point)
+#      and the result is checked afterwards.
+#   3. Wrapping can move an inline JSX tag to the start of a line, where MDX
 #      reparses it as block-level: pass 1 looks fine, pass 2 splits the
 #      paragraph in two. Any such buffer is not a fixed point after one pass,
 #      so formatting twice and comparing catches it before anything is
@@ -46,25 +51,23 @@ case "$name" in
 *) exec oxfmt -c "$config" "$@" ;;
 esac
 
-src=$(mktemp) p1=$(mktemp) p2=$(mktemp) cfg=""
-trap 'rm -f "$src" "$p1" "$p2" "$cfg"' EXIT
+src=$(mktemp) norm=$(mktemp) p1=$(mktemp) p2=$(mktemp) cfgdir=""
+trap 'rm -f "$src" "$norm" "$p1" "$p2"; [ -n "$cfgdir" ] && rm -rf "$cfgdir"' EXIT
 cat >"$src"
-
-# An astromotion deck, recognised by its directive markers. Helix has
-# auto-format = false for these and claude-format skips them by path, but the
-# synthetic --stdin-filepath means this wrapper can't see a path --- and a
-# deck's line breaks are laid out by hand, per slide, so nothing should rewrap
-# them. Every deck carries markers; no other .mdx uses them.
-if grep -qE '\{/\* (_id|_class|@include|embed):' "$src"; then
-    cat "$src"
-    exit 0
-fi
 
 # Failure mode 1: a `{/*` with no `*/` on the same line.
 if awk '/\{\/\*/ && !/\*\//{ found = 1 } END { exit !found }' "$src"; then
     cat "$src"
     exit 0
 fi
+
+# Failure mode 2, prevented: separate two adjacent single-line MDX comments so
+# the markdown printer cannot fold them into one paragraph.
+awk '
+    { cur = ($0 ~ /^\{\/\*.*\*\/\}$/) }
+    NR > 1 && prevdir && cur { print "" }
+    { print; prevdir = cur }
+' "$src" >"$norm" && cat "$norm" >"$src"
 
 # Format, then format the output. Anything unexpected (a parse error, a
 # missing oxfmt) leaves the buffer alone rather than mangling it.
@@ -75,14 +78,21 @@ if ! oxfmt -c "$config" --stdin-filepath "$name" <"$src" >"$p1" 2>/dev/null ||
 fi
 
 if cmp -s "$p1" "$p2"; then
+    # Failure mode 2, verified: no line may carry two directive comments.
+    if grep -qE '\{/\*[^*]*\*/\}[[:space:]]*\{/\*' "$p1"; then
+        cat "$src"
+        exit 0
+    fi
     cat "$p1"
     exit 0
 fi
 
-# Failure mode 2. Fall back to preserve, derived from the one config so the
+# Failure mode 3. Fall back to preserve, derived from the one config so the
 # two can't drift; with no jq to derive it, leave the buffer alone.
 if command -v jq &>/dev/null; then
-    cfg=$(mktemp --suffix=.json)
+    # oxfmt infers the config format from the name, so it must end .json ---
+    # mktemp -d is the portable way to get one (macOS has no --suffix).
+    cfgdir=$(mktemp -d) cfg="$cfgdir/oxfmtrc.json"
     if jq '.proseWrap = "preserve"' "$config" >"$cfg" 2>/dev/null &&
         oxfmt -c "$cfg" --stdin-filepath "$name" <"$src" >"$p1" 2>/dev/null; then
         cat "$p1"

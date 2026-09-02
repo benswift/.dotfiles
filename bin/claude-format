@@ -4,9 +4,8 @@
 # Claude and Helix never leave formatting-only git diffs behind.
 #
 # Keep the dispatch table in sync with ~/.dotfiles/helix/languages.toml ---
-# same commands, same args, same exclusions (e.g. astromotion decks are
-# auto-format = false in Helix, so they're skipped here too). The one place
-# this hook does more than Helix is oxfmt's ignorePatterns --- see fmt_oxfmt.
+# same commands, same args, same exclusions. The one place this hook does more
+# than Helix is oxfmt's ignorePatterns --- see fmt_oxfmt.
 #
 # Reads the hook JSON payload on stdin and extracts the file path.
 set -euo pipefail
@@ -169,8 +168,7 @@ fmt_oxfmt_code() {
 }
 
 case "$f" in
-*.deck.mdx | */decks/*.mdx) ;; # astromotion decks: auto-format = false
-*/backlog/*.md) ;;             # Backlog.md CLI owns these files' serialisation
+*/backlog/*.md) ;; # Backlog.md CLI owns these files' serialisation
 *.md | *.markdown | *.deck.svx) fmt_oxfmt file.md ;;
 *.mdx) fmt_oxfmt file.mdx ;;
 *.typ) fmt typstyle --wrap-text ;;
