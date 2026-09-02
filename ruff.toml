@@ -30,6 +30,7 @@ extend-include = [
   "bin/hud",
   "bin/icloud-export",
   "bin/ingest-claude-logs",
+  "bin/pangram",
   "bin/pkb-agent",
   "bin/s2",
   "bin/styled-image-gen",

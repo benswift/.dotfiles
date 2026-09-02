@@ -1,0 +1,306 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["httpx"]
+# ///
+"""Check a draft against Pangram's AI-text detector.
+
+The paid second opinion behind bin/ai-tropes: ai-tropes finds the mechanically
+detectable tells for free and locally, this asks a trained classifier and
+returns a verdict with per-segment scores. Run the free pass first --- every
+call here costs money, billed per word.
+
+Talks to the REST API directly rather than through pangram-sdk, which is a thin
+wrapper over three endpoints and would drag `requests` in beside httpx. The
+contract: POST /task returns a task_id, GET /task/{id} is polled until `stage`
+reaches STAGE_SUCCESS or STAGE_FAILED, and auth is an `x-api-key` header.
+
+A model must be named on every request --- omitting it was deprecated and
+unsupported from 30 September 2026 --- so --model defaults to "default" rather
+than sending nothing. `--list-models` shows what this key is entitled to.
+
+PANGRAM_API_KEY lives in the untracked mise env block
+(~/.config/mise/config.local.toml), never in this repo.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import os
+import sys
+import time
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
+
+import httpx
+
+API = "https://text.external-api.pangram.com"
+SUCCESS_STAGE = "STAGE_SUCCESS"
+FAILED_STAGE = "STAGE_FAILED"
+
+# Pangram's list price for a realtime request against the current model, used
+# only for the estimate this script prints --- nothing reads it back. The
+# previous-generation model is a tenth of this per word, so the figure is
+# wrong by an order of magnitude if --model names an older one.
+USD_PER_100_WORDS = 0.05
+
+# Per-request HTTP timeout, distinct from --timeout (the budget for the whole
+# submit-and-poll cycle, which spans many requests).
+HTTP_TIMEOUT_SECONDS = 10.0
+
+
+class PangramError(Exception):
+    """A refusal from the API, or a request this script won't make."""
+
+
+def api_key() -> str:
+    key = os.environ.get("PANGRAM_API_KEY", "").strip()
+    if not key:
+        raise PangramError(
+            "PANGRAM_API_KEY is not set --- put it in the [env] table of"
+            " ~/.config/mise/config.local.toml"
+        )
+    return key
+
+
+def call(client: httpx.Client, method: str, path: str, **kwargs: Any) -> dict[str, Any]:
+    """One API request, with the failures worth naming spelled out."""
+    response = client.request(method, f"{API}{path}", **kwargs)
+    if response.status_code == 402:
+        raise PangramError("out of credits (402) --- top up at pangram.com")
+    if response.status_code == 429:
+        raise PangramError("rate limited (429) --- retry in a moment")
+    if response.status_code != 200:
+        raise PangramError(f"API returned {response.status_code}: {response.text}")
+
+    payload = response.json()
+    if not isinstance(payload, dict):
+        raise PangramError(f"API returned a non-object body: {payload!r}")
+    if "error" in payload:
+        raise PangramError(f"API returned an error: {payload['error']}")
+    return payload
+
+
+def list_models(client: httpx.Client) -> list[str]:
+    models = call(client, "GET", "/models").get("models")
+    if not isinstance(models, list):
+        raise PangramError(f"invalid model catalogue: {models!r}")
+    return [str(model) for model in models]
+
+
+def predict(
+    client: httpx.Client,
+    text: str,
+    *,
+    model: str,
+    dashboard: bool,
+    timeout: float,
+    poll_interval: float,
+) -> dict[str, Any]:
+    """Submit text and poll until the task reaches a terminal stage."""
+    submitted = call(
+        client,
+        "POST",
+        "/task",
+        json={"text": text, "model": model, "public_dashboard_link": dashboard},
+    )
+    task_id = submitted.get("task_id")
+    if not isinstance(task_id, str) or not task_id:
+        raise PangramError(f"no task_id in response: {submitted!r}")
+
+    deadline = time.monotonic() + timeout
+    while True:
+        result = call(client, "GET", f"/task/{task_id}")
+        stage = result.get("stage")
+        if stage == SUCCESS_STAGE:
+            return result
+        if stage == FAILED_STAGE:
+            detail = result.get("headline") or result.get("detail") or "task failed"
+            raise PangramError(f"task {task_id} failed: {detail}")
+        if stage is None:
+            raise PangramError(f"no stage for task {task_id}: {result!r}")
+        if time.monotonic() >= deadline:
+            raise PangramError(
+                f"task {task_id} still {stage} after {timeout:.0f}s"
+                " --- raise --timeout or retry"
+            )
+        time.sleep(min(poll_interval, max(0.0, deadline - time.monotonic())))
+
+
+def words(text: str) -> int:
+    return len(text.split())
+
+
+def estimate(text: str) -> float:
+    """List-price cost of one realtime call, billed per 100 words."""
+    return math.ceil(words(text) / 100) * USD_PER_100_WORDS
+
+
+def line_of(text: str, index: int) -> int:
+    return text.count("\n", 0, index) + 1
+
+
+def excerpt(text: str, limit: int = 70) -> str:
+    flat = " ".join(text.split())
+    return flat if len(flat) <= limit else f"{flat[: limit - 1]}…"
+
+
+def report(label: str, result: dict[str, Any]) -> Iterator[str]:
+    # Pangram 4 may normalise the text before inference, and window offsets
+    # index the *returned* text, so excerpts come from that rather than from
+    # what was sent.
+    analysed = str(result.get("text", ""))
+    yield f"{label}: {result.get('prediction_short', '?')}  --- {result.get('headline', '')}"
+    yield (
+        f"  ai {float(result.get('fraction_ai', 0.0)):.2f}"
+        f"  ai-assisted {float(result.get('fraction_ai_assisted', 0.0)):.2f}"
+        f"  human {float(result.get('fraction_human', 0.0)):.2f}"
+        f"   segments: {result.get('num_ai_segments', 0)} AI,"
+        f" {result.get('num_ai_assisted_segments', 0)} assisted,"
+        f" {result.get('num_human_segments', 0)} human"
+    )
+
+    raw_windows = result.get("windows")
+    flagged = [
+        window
+        for window in (raw_windows if isinstance(raw_windows, list) else [])
+        if isinstance(window, dict) and window.get("label") != "Human Written"
+    ]
+    if flagged:
+        yield ""
+        for window in flagged:
+            start = int(window.get("start_index", 0))
+            humanized = "  humanized" if window.get("is_humanized") else ""
+            yield (
+                f"  line {line_of(analysed, start)}"
+                f"  [{window.get('label', '?')},"
+                f" {window.get('confidence', '?')} confidence,"
+                f" score {float(window.get('ai_assistance_score', 0.0)):.2f}"
+                f"{humanized}]"
+            )
+            yield f"    {excerpt(str(window.get('text', '')))}"
+
+    link = result.get("dashboard_link")
+    if link:
+        yield ""
+        yield f"  dashboard: {link}"
+
+
+def read_sources(paths: list[Path]) -> list[tuple[str, str]]:
+    """(label, text) per input --- the files given, or stdin if there are none."""
+    if not paths:
+        return [("<stdin>", sys.stdin.read())]
+
+    sources: list[tuple[str, str]] = []
+    for path in paths:
+        if str(path) == "-":
+            sources.append(("<stdin>", sys.stdin.read()))
+            continue
+        if not path.is_file():
+            raise PangramError(f"not a file: {path}")
+        sources.append((str(path), path.read_text()))
+    return sources
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Check a draft against Pangram's AI-text detector."
+    )
+    parser.add_argument("files", nargs="*", type=Path, help="default: read stdin")
+    parser.add_argument(
+        "--model",
+        default="default",
+        help='detection model (default: "default"; see --list-models)',
+    )
+    parser.add_argument(
+        "--list-models", action="store_true", help="list available models and exit"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print the word count and cost estimate without calling the API",
+    )
+    parser.add_argument(
+        "--dashboard",
+        action="store_true",
+        help="also return a public dashboard link for each result",
+    )
+    parser.add_argument("--json", action="store_true", help="print the raw API result")
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=300.0,
+        help="seconds to wait for one task to finish (default: 300)",
+    )
+    parser.add_argument("--poll-interval", type=float, default=0.5)
+    parser.add_argument(
+        "--exit-zero",
+        action="store_true",
+        help="exit 0 even when a draft is not judged human",
+    )
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+
+    try:
+        if args.list_models:
+            with httpx.Client(
+                headers={"x-api-key": api_key()}, timeout=HTTP_TIMEOUT_SECONDS
+            ) as client:
+                for model in list_models(client):
+                    print(model)
+            return 0
+
+        sources = read_sources(args.files)
+
+        if args.dry_run:
+            for label, text in sources:
+                print(f"{label}: {words(text)} words, ≈${estimate(text):.2f}")
+            return 0
+
+        payload: list[dict[str, Any]] = []
+        flagged = False
+        with httpx.Client(
+            headers={"x-api-key": api_key()}, timeout=HTTP_TIMEOUT_SECONDS
+        ) as client:
+            for label, text in sources:
+                if not text.strip():
+                    raise PangramError(f"{label} is empty")
+
+                result = predict(
+                    client,
+                    text,
+                    model=args.model,
+                    dashboard=args.dashboard,
+                    timeout=args.timeout,
+                    poll_interval=args.poll_interval,
+                )
+                if result.get("prediction_short") != "Human":
+                    flagged = True
+
+                if args.json:
+                    payload.append({"source": label, "result": result})
+                    continue
+
+                for line in report(label, result):
+                    print(line)
+                print()
+                print(f"  {words(text)} words, ≈${estimate(text):.2f} at list price")
+                print()
+
+        if args.json:
+            print(json.dumps(payload, indent=2))
+    except (OSError, ValueError, PangramError, httpx.HTTPError) as error:
+        print(f"pangram: {error}", file=sys.stderr)
+        return 2
+
+    return 0 if args.exit_zero or not flagged else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

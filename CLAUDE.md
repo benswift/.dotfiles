@@ -127,6 +127,9 @@ Each script's header has the detail. Notable ones:
   `~/.nb/home/tasks/`, one systemd timer (weddle only) fires everything due
 - `ai-tropes` --- screen a draft for AI-writing tells; taxonomy lives in the
   `ben:benswift-writer` skill's `ai-tropes.md`, cross-referenced by pattern id
+- `pangram` --- the paid second opinion behind `ai-tropes`, against Pangram's
+  detector API. Billed per word, so `--dry-run` costs the estimate first;
+  `PANGRAM_API_KEY` goes in the untracked mise env block
 - `ts-cat`, `lumis-parsers` --- tree-sitter highlighting for yazi previews and
   `nb show`, via lumis. Add a language to `PARSERS` in `lumis-parsers` if it's
   previewed often; add a `case` override in `ts-cat` if the extension doesn't
