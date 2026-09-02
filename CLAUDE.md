@@ -75,8 +75,12 @@ used when a project has no `mise.toml` of its own.
 
 `~/.config/mise/config.local.toml` is machine-local, untracked, and auto-merged;
 its `[env]` table is **the sole home for secrets** (`PUSHOVER_TOKEN`,
-`PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`, `ANU_PASSWORD`). The one 1Password
-call left is @bin/vpn, falling back to `op read` when `ANU_PASSWORD` is unset.
+`PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`, `ANU_PASSWORD`). Nothing here calls
+1Password; the secrets that aren't in that `[env]` table live in the macOS login
+keychain, read with `security find-generic-password` (@bin/vpn, @mail/mbsyncrc,
+@mail/msmtprc). An item saved in the Passwords app syncs via the iCloud
+keychain, which the `security` CLI cannot read --- these must be login-keychain
+items.
 
 ### Package installation hierarchy
 
