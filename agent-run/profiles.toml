@@ -11,7 +11,11 @@ unset_env = [
 ]
 
 [profiles.codex-sub]
+# Codex with its on-disk ChatGPT login. The unset list is the same guard as
+# claude-sub and grok-sub: OPENAI_API_KEY switches the CLI to API billing, so a
+# scheduled job cannot silently stop consuming the subscription.
 runner = "codex"
+unset_env = ["OPENAI_API_KEY"]
 
 [profiles.claude-api]
 # A caller-managed Anthropic-compatible endpoint. This deliberately inherits
