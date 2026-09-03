@@ -61,6 +61,17 @@ This is also why `open_neomutt_compose` passes `resume_draft_files=yes`: the
 signature is already in the draft by then, and without the flag neomutt appends
 `$signature` a second time.
 
+## Sent copies
+
+`mail-compose --send` never writes into `~/Maildir`. Exchange files its own copy
+of anything submitted over SMTP AUTH (the `unset record` note in
+`mail/neomutt/accounts/anu`), so for `anu` and `phdconvenor` there is nothing to
+do. Fastmail doesn't, so `personal` gets an IMAP APPEND to its Sent Items on the
+server, with the password from `mail-secret`. A local maildir write only reaches
+the server from a host running mbsync in push mode, and on a host that mirrors
+daysy's maildir (weddle) it would be the sole record, deleted by the next backup
+run.
+
 ## Student database
 
 `student-db` reads the single normalised database at

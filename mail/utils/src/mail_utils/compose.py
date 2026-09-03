@@ -1,6 +1,7 @@
 """Email composition and sending utilities."""
 
 import email
+import imaplib
 import os
 import re
 import subprocess
@@ -9,7 +10,6 @@ import time
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid
 from pathlib import Path
-from socket import gethostname
 
 from mail_utils.accounts import Account, get_account_config
 
@@ -159,19 +159,37 @@ def build_email(
     return msg
 
 
-def save_to_sent(msg: EmailMessage, account: Account) -> Path:
-    """Save a sent message to the account's sent folder."""
+MAIL_SECRET = Path.home() / ".dotfiles/bin/mail-secret"
+
+
+def append_to_sent(msg: EmailMessage, account: Account) -> None:
+    """File a copy of a sent message in the account's sent folder on the
+    server, for accounts whose server doesn't do that itself (see
+    AccountConfig.sent_append). Deliberately not a write into ~/Maildir:
+    that only reaches the server from a host that runs mbsync in push mode.
+    """
     config = get_account_config(account)
-    sent_dir = config.maildir / config.sent_folder / "cur"
-    sent_dir.mkdir(parents=True, exist_ok=True)
+    target = config.sent_append
+    if target is None:
+        return
 
-    timestamp = int(time.time())
-    hostname = gethostname().split(".")[0]
-    filename = f"{timestamp}.{os.getpid()}.{hostname}:2,S"
-    filepath = sent_dir / filename
+    password = subprocess.run(
+        [str(MAIL_SECRET), "get", target.secret_account, target.secret_service],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.rstrip("\n")
 
-    filepath.write_bytes(msg.as_bytes())
-    return filepath
+    with imaplib.IMAP4_SSL(target.host) as imap:
+        imap.login(target.user, password)
+        status, detail = imap.append(
+            f'"{config.sent_folder}"',
+            r"(\Seen)",
+            imaplib.Time2Internaldate(time.time()),
+            msg.as_bytes(),
+        )
+    if status != "OK":
+        raise RuntimeError(f"IMAP APPEND to {config.sent_folder} failed: {detail}")
 
 
 def send_email(
@@ -194,7 +212,7 @@ def send_email(
     )
 
     if result.returncode == 0:
-        save_to_sent(msg, account)
+        append_to_sent(msg, account)
         return True, "Sent successfully"
     else:
         return False, f"Failed to send: {result.stderr.decode()}"

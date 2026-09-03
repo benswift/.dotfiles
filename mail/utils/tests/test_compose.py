@@ -4,10 +4,12 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
 from mail_utils.accounts import Account, get_account_config
 from mail_utils.cli.compose import app
 from mail_utils.compose import (
     append_signature,
+    append_to_sent,
     build_email,
     choose_reply_target,
     combine_cc,
@@ -151,7 +153,7 @@ class TestSendEmail:
 
         with (
             patch("subprocess.run") as mock_run,
-            patch("mail_utils.compose.save_to_sent"),
+            patch("mail_utils.compose.append_to_sent"),
         ):
             mock_run.return_value = MagicMock(returncode=0)
             success, _ = send_email(msg, Account.personal, dry_run=False)
@@ -163,6 +165,63 @@ class TestSendEmail:
             assert "-t" in args
             assert "-a" in args
             assert "personal" in args
+
+
+class TestAppendToSent:
+    def _msg(self):
+        return build_email(
+            from_addr="sender@example.com",
+            to="recipient@example.com",
+            subject="Test",
+            body="Body",
+        )
+
+    def test_personal_appends_to_fastmail_sent_folder(self):
+        imap = MagicMock()
+        imap.append.return_value = ("OK", [b"[APPENDUID 1 2] Append completed"])
+        imap_ssl = MagicMock()
+        imap_ssl.return_value.__enter__.return_value = imap
+
+        with (
+            patch("mail_utils.compose.subprocess.run") as mock_run,
+            patch("mail_utils.compose.imaplib.IMAP4_SSL", imap_ssl),
+        ):
+            mock_run.return_value = MagicMock(returncode=0, stdout="s3cret\n")
+            append_to_sent(self._msg(), Account.personal)
+
+        secret_args = mock_run.call_args[0][0]
+        assert secret_args[-3:] == ["get", "benswift@fastmail.com", "mbsync-fastmail"]
+        imap_ssl.assert_called_once_with("imap.fastmail.com")
+        imap.login.assert_called_once_with("benswift@fastmail.com", "s3cret")
+        mailbox, flags, _, body = imap.append.call_args[0]
+        assert mailbox == '"Sent Items"'
+        assert "Seen" in flags
+        assert b"Subject: Test" in body
+
+    def test_exchange_accounts_leave_sent_to_the_server(self):
+        with (
+            patch("mail_utils.compose.subprocess.run") as mock_run,
+            patch("mail_utils.compose.imaplib.IMAP4_SSL") as imap_ssl,
+        ):
+            append_to_sent(self._msg(), Account.anu)
+            append_to_sent(self._msg(), Account.phdconvenor)
+
+        mock_run.assert_not_called()
+        imap_ssl.assert_not_called()
+
+    def test_failed_append_raises(self):
+        imap = MagicMock()
+        imap.append.return_value = ("NO", [b"Mailbox does not exist"])
+        imap_ssl = MagicMock()
+        imap_ssl.return_value.__enter__.return_value = imap
+
+        with (
+            patch("mail_utils.compose.subprocess.run") as mock_run,
+            patch("mail_utils.compose.imaplib.IMAP4_SSL", imap_ssl),
+            pytest.raises(RuntimeError, match="Sent Items"),
+        ):
+            mock_run.return_value = MagicMock(returncode=0, stdout="s3cret\n")
+            append_to_sent(self._msg(), Account.personal)
 
 
 class TestGetAccountConfig:
