@@ -122,6 +122,18 @@ install_mise_tools() {
     mise install --yes
 }
 
+install_helix() {
+    info "Building helix from source..."
+    eval "$(mise activate bash)"
+    # Not a mise tool: upstream has cut no release since 25.07.1 and ships no
+    # nightly, so bin/helix-build compiles the commit pinned in
+    # helix/pinned-rev. A first run also builds ~300 tree-sitter grammars.
+    # --no-test because the integration suite wants the language servers, and
+    # install_python_tools has not run yet.
+    "$DOTFILES_DIR/bin/helix-build" --no-test ||
+        warn "helix build failed --- run 'helix-build' once the machine is set up"
+}
+
 setup_previewers() {
     info "Installing yazi plugins and tree-sitter parsers..."
     eval "$(mise activate bash)"
@@ -204,6 +216,7 @@ main() {
     clone_dotfiles
     setup_symlinks
     install_mise_tools
+    install_helix
     setup_previewers
     install_python_tools
     install_claude

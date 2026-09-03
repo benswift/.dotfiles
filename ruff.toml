@@ -20,8 +20,6 @@
 # Vendored verbatim from the mutt source (GPL, "version 2020-08-07" in its
 # header). Reformatting it to this repo's taste would only make the next
 # re-vendoring harder to diff, so it is upstream's to lint, not ours.
-# The tree-sitter grammar checkouts under helix/runtime/grammars/ are vendored
-# too, but they are gitignored and ruff honours that on its own.
 extend-exclude = ["mail/mutt_oauth2.py"]
 
 extend-include = [

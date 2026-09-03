@@ -147,8 +147,18 @@ check_symlinks() {
 check_tools() {
     section "Checking tools..."
 
-    local required_tools=(helix:hx tmux)
+    local required_tools=(tmux)
     local optional_tools=(neomutt mu mbsync msmtp rclone fzf mosh)
+
+    # helix is built from source by bin/helix-build, not installed by mise, so
+    # `hx` merely being on PATH proves nothing: it must be the pinned build,
+    # and nothing earlier on PATH may shadow it.
+    local helix_status
+    if helix_status=$("$DOTFILES_DIR/bin/helix-build" --check 2>&1); then
+        check_pass "helix (source build at the pinned rev)"
+    else
+        check_fail "helix: $(tail -1 <<<"$helix_status")"
+    fi
 
     for tool in "${required_tools[@]}"; do
         local name="${tool%%:*}"
@@ -396,6 +406,10 @@ update() {
     # waiting for an interactive shell's later `mise upgrade` would leave the
     # timers broken in the meantime.
     mise install --yes github:xwmx/nb
+    # A no-op unless the pull just moved helix/pinned-rev; only then does this
+    # pay for a compile.
+    "$DOTFILES_DIR/bin/helix-build" ||
+        echo "helix build failed --- hx is still the previously built binary"
     "$DOTFILES_DIR/bin/sync-agent-config" --update-claude
     "$DOTFILES_DIR/bin/lumis-parsers" --update || echo "parser sync failed --- yazi previews fall back to bat"
     # Editable, so code changes are already live --- this re-resolves after a

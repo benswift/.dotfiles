@@ -50,7 +50,11 @@ yazi = "latest"
 # prebuilt artefact, so this intentionally compiles once per platform.
 "cargo:https://github.com/benswift/zellij" = { version = "rev:1524095119990bc7af283296bbe291a3b4cffbcd", crate = "zellij", install_env = { CARGO_NET_GIT_FETCH_WITH_CLI = "true" } }
 zoxide = "latest"
-helix = "latest"
+# helix is deliberately absent: bin/helix-build compiles it from the main
+# commit pinned in helix/pinned-rev, because upstream has not tagged a
+# release since 25.07.1 and ships no nightly. Do not add it back --- mise
+# activate puts its bin dir ahead of ~/.local/bin, so a mise-managed helix
+# silently shadows the source build.
 vivid = "latest"
 gemini = "latest"
 codex = "latest"

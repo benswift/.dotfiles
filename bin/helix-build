@@ -1,0 +1,258 @@
+#!/usr/bin/env bash
+# helix-build --- build and install helix from source, at the commit pinned in
+# helix/pinned-rev.
+#
+# Upstream has not tagged a release since 25.07.1 and its own advice is to run
+# main, but it publishes no nightly binary, so source is the only route --- and
+# `cargo install` on its own is not enough, because a release tarball also
+# ships runtime/ (themes, the default query set, the tutor) and cargo installs
+# none of it.
+#
+# So: keep a checkout at $HELIX_SRC and build helix-term out of it with
+# HELIX_DEFAULT_RUNTIME baked in, pointing at that checkout's runtime/. Two
+# useful things fall out of doing it that way round.
+#
+#   * helix-term's build.rs fetches and compiles every tree-sitter grammar into
+#     that same runtime/, from the *merged* language config --- so the custom
+#     grammars in helix/languages.toml (extempore, mutt-compose, muttrc) are
+#     built alongside the upstream ones and cannot fall out of step with the
+#     binary. Never run `hx --grammar build` by hand: with no CARGO_MANIFEST_DIR
+#     set it targets ~/.config/helix/runtime/grammars instead, which outranks
+#     the baked runtime and would shadow every grammar with a stale copy.
+#   * Baking the path beats exporting HELIX_RUNTIME, because `hx` then needs no
+#     environment at all: same behaviour from a systemd unit, an agent shell or
+#     a login shell. ~/.config/helix/runtime still outranks it --- helix
+#     searches the config dir ahead of either runtime variable --- so the query
+#     overrides in helix/runtime/queries/ keep winning.
+#
+# The pin is what makes this reproducible: every machine builds the same
+# commit, and an unchanged pin makes this script a no-op, so `dotfiles update`
+# only pays for a compile when the pin actually moves.
+#
+# Usage:
+#   helix-build              build and install the pinned rev (no-op if current)
+#   helix-build --update     move the pin to upstream's default branch, then build
+#   helix-build --force      rebuild even when the pinned rev is already installed
+#   helix-build --rollback   pin and rebuild the rev installed before this one
+#   helix-build --check      report status only; non-zero if not on the pin
+#   helix-build --no-test    skip the post-build tests/test_helix.py run
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+source "$DOTFILES_DIR/lib/log.sh"
+
+HELIX_SRC="${HELIX_SRC:-${XDG_DATA_HOME:-$HOME/.local/share}/helix-src}"
+HELIX_PREFIX="${HELIX_PREFIX:-$HOME/.local}"
+REPO_URL="https://github.com/helix-editor/helix"
+
+PIN_FILE="$DOTFILES_DIR/helix/pinned-rev"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/helix-build"
+HX="$HELIX_PREFIX/bin/hx"
+
+# Grammars from the old release-tarball setup. They sit in the config runtime
+# dir, which outranks the baked one, so each is a stale ABI-mismatched copy
+# shadowing the grammar this build produced. Regenerable and gitignored.
+LEGACY_GRAMMARS="$DOTFILES_DIR/helix/runtime/grammars"
+
+MODE=build
+RUN_TESTS=true
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --update) MODE=update ;;
+    --force) MODE=force ;;
+    --rollback) MODE=rollback ;;
+    --check) MODE=check ;;
+    --no-test) RUN_TESTS=false ;;
+    -h | --help)
+        sed -n '/^# Usage:/,/^#   helix-build --no-test/p' "$0" | sed 's/^# \{0,1\}//'
+        exit 0
+        ;;
+    *)
+        error "unknown option: $1"
+        exit 1
+        ;;
+    esac
+    shift
+done
+
+pinned_rev() {
+    [[ -f "$PIN_FILE" ]] || {
+        error "no pin file at $PIN_FILE"
+        return 1
+    }
+    grep -m1 -oE '^[0-9a-f]{40}$' "$PIN_FILE" || {
+        error "$PIN_FILE holds no 40-character commit sha"
+        return 1
+    }
+}
+
+write_pin() {
+    cat >"$PIN_FILE" <<EOF
+# The helix commit bin/helix-build compiles. Bump it with
+# \`helix-build --update\` and commit the result, so every machine builds the
+# same editor.
+$1
+EOF
+}
+
+# `hx --version` on a source build prints "helix 26.01 (079a789e)".
+installed_rev() {
+    [[ -x "$HX" ]] || return 1
+    "$HX" --version 2>/dev/null | grep -oE '\([0-9a-f]{8}\)' | tr -d '()'
+}
+
+ensure_checkout() {
+    [[ -d "$HELIX_SRC/.git" ]] && return 0
+    info "Cloning helix into $HELIX_SRC"
+    git clone --filter=blob:none "$REPO_URL" "$HELIX_SRC"
+}
+
+# Upstream's default branch, asked rather than assumed, so a master -> main
+# rename doesn't quietly pin this script to a dead ref.
+default_branch() {
+    git -C "$HELIX_SRC" remote set-head origin --auto >/dev/null 2>&1 || true
+    git -C "$HELIX_SRC" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null ||
+        echo "origin/master"
+}
+
+update_pin() {
+    ensure_checkout
+    info "Fetching $REPO_URL"
+    git -C "$HELIX_SRC" fetch --prune origin
+    local branch rev
+    branch="$(default_branch)"
+    rev="$(git -C "$HELIX_SRC" rev-parse "$branch")"
+    if [[ "$rev" == "$(pinned_rev 2>/dev/null || true)" ]]; then
+        info "Pin is already at the tip of $branch ($rev)"
+        return
+    fi
+    write_pin "$rev"
+    info "Pin moved to $rev (tip of $branch)"
+    warn "commit helix/pinned-rev so the other machines follow"
+}
+
+# Never delete the old grammars before a working build replaces them.
+prune_legacy_grammars() {
+    [[ -d "$LEGACY_GRAMMARS" ]] || return 0
+    warn "Removing $LEGACY_GRAMMARS --- grammars there outrank, and would shadow, the ones just built"
+    rm -rf "$LEGACY_GRAMMARS"
+}
+
+build() {
+    local rev="$1" previous
+    previous="$(cat "$STATE_DIR/current-rev" 2>/dev/null || true)"
+
+    ensure_checkout
+    # Fetch only when the commit isn't already local, so an unchanged pin
+    # rebuilds offline.
+    if ! git -C "$HELIX_SRC" cat-file -e "${rev}^{commit}" 2>/dev/null; then
+        info "Fetching $rev"
+        git -C "$HELIX_SRC" fetch --prune origin
+    fi
+    git -C "$HELIX_SRC" -c advice.detachedHead=false checkout --quiet "$rev"
+
+    info "Building helix $rev --- a first run also compiles ~300 tree-sitter grammars"
+    HELIX_DEFAULT_RUNTIME="$HELIX_SRC/runtime" \
+        cargo install --path "$HELIX_SRC/helix-term" \
+        --locked --force --root "$HELIX_PREFIX" --target-dir "$HELIX_SRC/target"
+
+    prune_legacy_grammars
+
+    mkdir -p "$STATE_DIR"
+    if [[ -n "$previous" && "$previous" != "$rev" ]]; then
+        echo "$previous" >"$STATE_DIR/previous-rev"
+    fi
+    echo "$rev" >"$STATE_DIR/current-rev"
+}
+
+rollback() {
+    local previous
+    previous="$(cat "$STATE_DIR/previous-rev" 2>/dev/null || true)"
+    if [[ -z "$previous" ]]; then
+        error "no previous rev recorded in $STATE_DIR/previous-rev"
+        exit 1
+    fi
+    info "Rolling back to $previous"
+    write_pin "$previous"
+    build "$previous"
+}
+
+# Anything earlier on PATH silently wins over the build we just installed ---
+# most likely a leftover mise-managed helix, which mise activate puts ahead of
+# ~/.local/bin in an interactive shell.
+check_shadowing() {
+    local found
+    found="$(command -v hx 2>/dev/null || true)"
+    if [[ -n "$found" && "$found" != "$HX" ]]; then
+        warn "PATH resolves hx to $found, not $HX"
+        [[ "$found" == *"/mise/"* ]] &&
+            warn "run 'mise uninstall helix' --- helix is no longer a mise-managed tool"
+        return 1
+    fi
+}
+
+report() {
+    local want got
+    want="$(pinned_rev)"
+    got="$(installed_rev || true)"
+    if [[ -z "$got" ]]; then
+        error "no helix build at $HX"
+        return 1
+    fi
+    if [[ "$want" != "$got"* ]]; then
+        error "$HX is $got, but the pin is ${want:0:8} --- run helix-build"
+        return 1
+    fi
+    info "helix ${want:0:8} installed at $HX (runtime $HELIX_SRC/runtime)"
+}
+
+run_tests() {
+    [[ "$RUN_TESTS" == "true" ]] || return 0
+    local suite="$DOTFILES_DIR/tests/test_helix.py"
+    [[ -x "$suite" ]] || return 0
+    info "Running the helix integration tests"
+    if ! "$suite"; then
+        error "the integration suite failed against this build"
+        error "roll back with: helix-build --rollback"
+        return 1
+    fi
+}
+
+case "$MODE" in
+check)
+    report && check_shadowing
+    ;;
+rollback)
+    rollback
+    report
+    check_shadowing || true
+    run_tests
+    ;;
+update)
+    update_pin
+    build "$(pinned_rev)"
+    report
+    check_shadowing || true
+    run_tests
+    ;;
+force)
+    build "$(pinned_rev)"
+    report
+    check_shadowing || true
+    run_tests
+    ;;
+build)
+    rev="$(pinned_rev)"
+    installed="$(installed_rev || true)"
+    if [[ -n "$installed" && "$rev" == "$installed"* ]]; then
+        info "helix ${rev:0:8} is already installed --- nothing to do"
+        check_shadowing || true
+        exit 0
+    fi
+    build "$rev"
+    report
+    check_shadowing || true
+    run_tests
+    ;;
+esac

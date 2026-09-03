@@ -97,6 +97,36 @@ Avoid `cargo install` for anything available via mise or brew --- it compiles
 from source. Pick one method per tool and stick to it, so `dotfiles doctor` can
 verify it.
 
+## Editor (helix)
+
+Upstream has tagged no release since 25.07.1, so @bin/helix-build compiles helix
+from the commit in @helix/pinned-rev and installs `hx` into `~/.local/bin`.
+**Don't put helix back in mise** --- `mise activate` puts its bin dir ahead of
+`~/.local/bin`, so a mise-managed copy silently shadows the source build.
+
+- `helix-build` --- build the pinned commit, a no-op if it is already installed.
+  `dotfiles update` runs it, so a compile only happens when the pin moves
+- `helix-build --update` --- move the pin to the tip of upstream's default
+  branch and rebuild; commit @helix/pinned-rev so the other machines follow
+- `helix-build --rollback` --- return to the previously built commit
+- `helix-build --check` --- what `dotfiles doctor` asks
+
+The checkout lives at `~/.local/share/helix-src`, and its `runtime/` is baked
+into the binary as `HELIX_DEFAULT_RUNTIME`, so `hx` needs no environment
+variable in any context. helix-term's `build.rs` compiles every grammar into
+that same `runtime/` from the _merged_ language config, so the custom grammars
+in @helix/languages.toml are built alongside the upstream ones and cannot fall
+out of step with the binary. **Never run `hx --grammar build` by hand**: with no
+`CARGO_MANIFEST_DIR` set it writes to `~/.config/helix/runtime/grammars`, which
+outranks the baked runtime and shadows every grammar with a stale copy.
+
+@tests/test_helix.py guards all of it, and `helix-build` runs it after each
+build. It drives a real `hx` in a pty to confirm the file-type globs still
+resolve (`*.deck.mdx` to astromotion-deck, `**/backlog/**/*.md` to backlog-task,
+and the rest), that every configured grammar, query, formatter and language
+server still loads, and that the formatters helix runs on save are the ones
+@bin/claude-format runs too.
+
 ## Formatting
 
 @bin/claude-format is a `Write|Edit` hook running the same per-type formatters
