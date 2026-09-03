@@ -237,14 +237,23 @@ def run_helix(
                 painted = True
                 break
 
-        # A config error puts helix behind a "press ENTER" prompt that swallows
-        # the :q, so never wait on the quit alone.
+        # Keep draining while it quits. Opening the command line makes helix
+        # repaint, and a pty whose output nobody is reading blocks the writer:
+        # macOS's buffer is small enough that helix stalls there and never gets
+        # to the :q, so every case paid the full timeout below. A config error
+        # also puts helix behind a "press ENTER" prompt that swallows the :q,
+        # so this is a grace period, not something to wait on.
         with contextlib.suppress(OSError):
             os.write(master, b":q\r")
-        try:
-            process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            process.kill()
+        deadline = time.monotonic() + 5
+        while process.poll() is None and time.monotonic() < deadline:
+            if not select.select([master], [], [], 0.05)[0]:
+                continue
+            try:
+                if not os.read(master, 65536):
+                    break
+            except OSError:
+                break
     finally:
         os.close(master)
         if process.poll() is None:
