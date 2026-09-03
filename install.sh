@@ -60,23 +60,32 @@ install_mise() {
     fi
 }
 
-# isync (mbsync) with OAuth2. homebrew-core's isync is built without SASL, so it
-# can't authenticate to Office365/Gmail over XOAUTH2. The benswift/tap build
-# links a cyrus-sasl that bundles the XOAUTH2 plugin, so OAuth2 IMAP works out of
-# the box (and survives `brew upgrade`, unlike the old self-compiled binary).
-# macOS only --- on Linux install the distro's isync + cyrus-sasl-xoauth2
-# packages instead (see mail/README.md).
+# Mail tooling, per the tiers in mail/README.md. macOS is the full tier:
+# isync (mbsync) with OAuth2 --- homebrew-core's isync is built without SASL,
+# so it can't authenticate to Office365 over XOAUTH2, while the benswift/tap
+# build links a cyrus-sasl that bundles the XOAUTH2 plugin (and survives
+# `brew upgrade`, unlike the old self-compiled binary). Linux is read-only
+# plus send: mu to index a maildir and msmtp for mail-compose, no mbsync (the
+# distro isync is too old for the config anyway, and only one host syncs).
 install_mail_sync() {
-    [[ "$platform" == "macos" ]] || return 0
-
-    if brew list isync &>/dev/null; then
-        info "isync already installed (mbsync with XOAUTH2)"
-        return
+    if [[ "$platform" == "macos" ]]; then
+        if brew list isync &>/dev/null; then
+            info "isync already installed (mbsync with XOAUTH2)"
+            return
+        fi
+        info "Installing isync (mbsync) with XOAUTH2 support..."
+        brew tap benswift/tap
+        brew install benswift/tap/isync
+    elif command_exists apt-get; then
+        if command_exists mu && command_exists msmtp; then
+            info "mu and msmtp already installed"
+            return
+        fi
+        info "Installing mu and msmtp (read-only mail tier)..."
+        sudo apt-get install -y maildir-utils msmtp
+    else
+        warn "no known package manager --- install mu and msmtp manually"
     fi
-
-    info "Installing isync (mbsync) with XOAUTH2 support..."
-    brew tap benswift/tap
-    brew install benswift/tap/isync
 }
 
 # mosh: mitigates high-latency SSH (predictive echo, frame sync, roaming).
