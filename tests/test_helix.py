@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["pexpect", "pyte", "pytest", "pytest-xdist"]
+# dependencies = ["pyte", "pytest", "pytest-xdist"]
 # ///
 """Integration-test the source-built helix against this repo's editor config.
 
@@ -18,16 +18,22 @@ in a pty and read the language back off the statusline.
 
 from __future__ import annotations
 
+import contextlib
+import fcntl
 import os
+import pty
 import re
+import select
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
+import termios
 import time
+from collections.abc import Callable
 from pathlib import Path
 
-import pexpect
 import pyte
 import pytest
 import tomllib
@@ -52,12 +58,16 @@ DYLIB = "dylib" if sys.platform == "darwin" else "so"
 
 ANSI = re.compile(r"\x1b\[[0-9;?]*[a-zA-Z]|\x1b\][^\x07]*\x07|\x1b[()][AB0]")
 
-# Terminal queries and mode switches, which pyte either mis-dispatches or
-# does not need: private CSI (cursor visibility, alt screen, synchronised
-# output, device-status probes), DCS and OSC strings. Stripping them leaves
-# the plain cursor-movement and SGR stream that paints the grid.
+# Everything pyte either mis-dispatches or does not need, leaving the plain
+# cursor-movement stream that paints the grid: private CSI (cursor visibility,
+# alt screen, synchronised output, device-status probes, some with a `$`
+# intermediate byte), DCS and OSC strings, and colour --- pyte renders helix's
+# colon-form SGR as literal text, and none of these tests read colour.
 CHATTER = re.compile(
-    r"\x1b\[\?[0-9;]*[a-zA-Z$]|\x1bP.*?(?:\x1b\\|\x07)|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)",
+    r"\x1b\[\?[0-9;]*\$?[a-zA-Z]"
+    r"|\x1bP.*?(?:\x1b\\|\x07)"
+    r"|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)"
+    r"|\x1b\[[0-9;:]*m",
     re.DOTALL,
 )
 
@@ -167,56 +177,84 @@ def minimal_config() -> Path:
 ROWS, COLUMNS = 24, 200
 
 
-def drain(child: pexpect.spawn, settle: float = 0.4, limit: float = 15.0) -> str:
-    """Read until hx has been quiet for `settle` seconds.
+def render(raw: str) -> list[str]:
+    """helix's output as a screen, row by row.
 
-    There is no event that says "the file is open and painted", so quiet is
-    the only signal available.
+    It paints with cursor movement, so the raw stream is not in screen order
+    and has to go through a terminal emulator to be read back.
     """
-    output = ""
-    deadline = time.monotonic() + limit
-    while time.monotonic() < deadline:
-        try:
-            output += child.read_nonblocking(size=65536, timeout=settle)
-        except pexpect.TIMEOUT:
-            if output:
-                break
-        except pexpect.EOF:
-            break
-    return output
-
-
-def run_helix(args: list[str]) -> list[str]:
-    """Open helix with `args` and return the rendered screen, row by row.
-
-    The output is replayed through a terminal emulator rather than pattern
-    matched, because helix paints with cursor movement: the raw stream is not
-    in screen order.
-    """
-    child = pexpect.spawn(
-        str(HX),
-        args,
-        env=dict(os.environ, TERM="xterm-256color"),
-        dimensions=(ROWS, COLUMNS),
-        encoding="utf-8",
-        timeout=30,
-    )
-    try:
-        painted = drain(child)
-        child.send(":q\r")
-        try:
-            child.expect(pexpect.EOF, timeout=5)
-        except (pexpect.TIMEOUT, pexpect.EOF):
-            # A config error puts helix behind a "press ENTER" prompt, which
-            # swallows the :q. The force close below still reaps it.
-            pass
-    finally:
-        child.close(force=True)
-
-    assert painted, f"hx painted nothing for {args}"
     screen = pyte.Screen(COLUMNS, ROWS)
-    pyte.Stream(screen).feed(CHATTER.sub("", painted))
+    pyte.Stream(screen).feed(CHATTER.sub("", raw))
     return screen.display
+
+
+def run_helix(
+    args: list[str], ready: Callable[[list[str]], bool], limit: float = 30.0
+) -> list[str]:
+    """Open helix with `args` and return the screen once `ready` accepts it.
+
+    Nothing announces "the file is open and painted", and waiting for the
+    output to go quiet is not a substitute: helix paints in bursts, so under
+    load a gap mid-paint reads as finished and hands back a blank grid. Poll
+    the rendered screen instead, which is the condition actually wanted.
+    Helix paints top-to-bottom, so a painted statusline implies painted
+    content above it.
+
+    The pty is built by hand rather than with pexpect because these tests run
+    under xdist, whose workers are threaded, and forkpty() in a threaded
+    process can deadlock between fork and exec. Popen forks and execs the way
+    the stdlib guarantees is safe.
+    """
+    master, slave = pty.openpty()
+    fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", ROWS, COLUMNS, 0, 0))
+    process = subprocess.Popen(
+        [str(HX), *args],
+        stdin=slave,
+        stdout=slave,
+        stderr=slave,
+        env=dict(os.environ, TERM="xterm-256color"),
+        start_new_session=True,
+    )
+    os.close(slave)
+
+    raw = ""
+    display = [""] * ROWS
+    painted = False
+    try:
+        deadline = time.monotonic() + limit
+        while time.monotonic() < deadline:
+            if not select.select([master], [], [], 0.2)[0]:
+                continue
+            try:
+                chunk = os.read(master, 65536)
+            except OSError:
+                break  # the child exited and let go of its end
+            if not chunk:
+                break
+            raw += chunk.decode("utf-8", errors="replace")
+            display = render(raw)
+            if ready(display):
+                painted = True
+                break
+
+        # A config error puts helix behind a "press ENTER" prompt that swallows
+        # the :q, so never wait on the quit alone.
+        with contextlib.suppress(OSError):
+            os.write(master, b":q\r")
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+    finally:
+        os.close(master)
+        if process.poll() is None:
+            process.kill()
+        process.wait()
+
+    assert painted, (
+        f"hx never finished painting for {args} within {limit}s:\n" + "\n".join(display)
+    )
+    return display
 
 
 def detected_language(config: Path, path: Path) -> str:
@@ -227,7 +265,10 @@ def detected_language(config: Path, path: Path) -> str:
     of the file name.
     """
     # Second from the bottom: the command line sits below the statusline.
-    return run_helix(["-c", str(config), str(path)])[-2].strip()
+    rows = run_helix(
+        ["-c", str(config), str(path)], ready=lambda display: bool(display[-2].strip())
+    )
+    return rows[-2].strip()
 
 
 def test_hx_on_path_is_the_source_build() -> None:
@@ -281,6 +322,7 @@ def test_configured_theme_exists() -> None:
     )
 
 
+@pytest.mark.xdist_group("pty")
 def test_real_config_loads_cleanly(tmp_path: Path) -> None:
     """helix/config.toml must still be valid for this build.
 
@@ -290,7 +332,12 @@ def test_real_config_loads_cleanly(tmp_path: Path) -> None:
     """
     sample = tmp_path / "sample.md"
     sample.write_text("# Title\n\nSome prose.\n")
-    rows = run_helix([str(sample)])
+    rows = run_helix(
+        [str(sample)],
+        ready=lambda display: any(
+            "# Title" in row or "Bad config" in row for row in display
+        ),
+    )
     complaints = [row.strip() for row in rows if "Bad config" in row]
     assert not complaints, f"helix rejected the config: {complaints}"
     assert any("# Title" in row for row in rows), (
@@ -338,6 +385,7 @@ def test_query_overrides_belong_to_configured_languages() -> None:
     assert not orphans, f"query directories with no language block: {orphans}"
 
 
+@pytest.mark.xdist_group("pty")
 @pytest.mark.parametrize(("relative", "expected"), DETECTION_CASES)
 def test_file_type_detection(
     minimal_config: Path, tmp_path: Path, relative: str, expected: str
@@ -399,4 +447,7 @@ def test_formatters_match_the_claude_format_hook() -> None:
 if __name__ == "__main__":
     # Extra arguments pass through, so a single case can be re-run in
     # isolation: ./tests/test_helix.py -k detection
-    sys.exit(pytest.main([__file__, *(sys.argv[1:] or ["-v", "-n", "auto"])]))
+    # loadgroup keeps the xdist_group("pty") tests on a single worker, so the
+    # editor instances start one at a time rather than all at once.
+    default = ["-v", "-n", "auto", "--dist", "loadgroup"]
+    sys.exit(pytest.main([__file__, *(sys.argv[1:] or default)]))
