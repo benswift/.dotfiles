@@ -9,7 +9,7 @@ Port 993
 # Port 80
 AuthMech LOGIN
 User benswift@fastmail.com
-PassCmd "security find-generic-password -a benswift@fastmail.com -s mbsync-fastmail -w"
+PassCmd "$HOME/.dotfiles/bin/mail-secret get benswift@fastmail.com mbsync-fastmail"
 TLSType IMAPS
 PipelineDepth 50
 
@@ -39,7 +39,7 @@ Host outlook.office365.com
 Port 993
 AuthMech XOAUTH2
 User u2548636@anu.edu.au
-PassCmd "/Users/ben/.dotfiles/mail/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/mail/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/mail/anu_oauth2_keychain_stub"
+PassCmd "$HOME/.dotfiles/bin/mail-secret oauth anu"
 TLSType IMAPS
 PipelineDepth 1
 Timeout 120
@@ -75,7 +75,7 @@ Host outlook.office365.com
 Port 993
 AuthMech XOAUTH2
 User phdconvenor.cybernetics@anu.edu.au
-PassCmd "/Users/ben/.dotfiles/mail/mutt_oauth2.py --decryption-pipe 'security find-generic-password -a u2548636@anu.edu.au -s mutt_oauth2_anu -w' --encryption-pipe '/Users/ben/.dotfiles/mail/keychain-store.sh u2548636@anu.edu.au mutt_oauth2_anu' /Users/ben/.dotfiles/mail/anu_oauth2_keychain_stub"
+PassCmd "$HOME/.dotfiles/bin/mail-secret oauth anu"
 TLSType IMAPS
 PipelineDepth 1
 Timeout 120

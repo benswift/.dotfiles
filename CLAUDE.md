@@ -76,11 +76,13 @@ used when a project has no `mise.toml` of its own.
 `~/.config/mise/config.local.toml` is machine-local, untracked, and auto-merged;
 its `[env]` table is **the sole home for secrets** (`PUSHOVER_TOKEN`,
 `PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`, `ANU_PASSWORD`). Nothing here calls
-1Password; the secrets that aren't in that `[env]` table live in the macOS login
-keychain, read with `security find-generic-password` (@bin/vpn, @mail/mbsyncrc,
-@mail/msmtprc). An item saved in the Passwords app syncs via the iCloud
-keychain, which the `security` CLI cannot read --- these must be login-keychain
-items.
+1Password. Two exceptions, both read through a script rather than inline:
+@bin/vpn reads the macOS login keychain with `security find-generic-password`,
+and everything under @mail/ goes through @bin/mail-secret (login keychain on
+macOS, mode-0600 files under `~/.local/state/mail-secret/` on Linux --- the
+OAuth token is rewritten on every refresh, so it can't be a config value). An
+item saved in the Passwords app syncs via the iCloud keychain, which the
+`security` CLI cannot read --- these must be login-keychain items.
 
 ### Package installation hierarchy
 
