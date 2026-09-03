@@ -5,6 +5,11 @@ alternates ^benswift@fastmail\\.com$ ^ben@benswift\\.me$
 
 # Folder settings
 set from = "ben@benswift.me"
+
+# Message-ID domain (without this neomutt uses the system FQDN, which
+# here is a Tailscale name that doesn't resolve publicly --- a spam
+# signal at some receivers).
+set hostname = "benswift.me"
 set folder = ~/Maildir/personal/
 set spoolfile = +INBOX
 set postponed = +Drafts

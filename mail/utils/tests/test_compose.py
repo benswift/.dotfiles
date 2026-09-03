@@ -38,6 +38,16 @@ class TestBuildEmail:
         assert msg["Message-ID"] is not None
         assert "Test body" in msg.as_string()
 
+    def test_message_id_domain_matches_from_address(self):
+        msg = build_email(
+            from_addr="Ben Swift <ben@benswift.me>",
+            to="recipient@example.com",
+            subject="Test",
+            body="Body",
+        )
+
+        assert msg["Message-ID"].endswith("@benswift.me>")
+
     def test_includes_cc_when_provided(self):
         msg = build_email(
             from_addr="sender@example.com",

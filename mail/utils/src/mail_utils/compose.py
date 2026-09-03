@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import time
 from email.message import EmailMessage
-from email.utils import formatdate, make_msgid
+from email.utils import formatdate, make_msgid, parseaddr
 from pathlib import Path
 
 from mail_utils.accounts import Account, get_account_config
@@ -117,6 +117,19 @@ def append_signature(body: str, signature: str | None) -> str:
     return f"{body.rstrip()}\n\n-- \n{signature}\n"
 
 
+def msgid_domain(from_addr: str) -> str | None:
+    """The domain to stamp into a Message-ID: the From address's own.
+
+    make_msgid() otherwise falls back to socket.getfqdn(), which here is a
+    Tailscale name that doesn't resolve publicly. A Message-ID domain that
+    neither resolves nor matches From is a spam signal for some filters.
+    """
+    _, addr = parseaddr(from_addr)
+    if "@" not in addr:
+        return None
+    return addr.rsplit("@", 1)[1] or None
+
+
 def build_email(
     from_addr: str,
     to: str,
@@ -133,7 +146,7 @@ def build_email(
     msg["To"] = to
     msg["Subject"] = subject
     msg["Date"] = formatdate(localtime=True)
-    msg["Message-ID"] = make_msgid()
+    msg["Message-ID"] = make_msgid(domain=msgid_domain(from_addr))
 
     if reply_to:
         info = parse_reply_info(reply_to)

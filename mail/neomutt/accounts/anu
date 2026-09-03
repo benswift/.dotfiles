@@ -5,6 +5,11 @@ alternates ^u2548636@anu\\.edu\\.au$ ^ben\\.swift@anu\\.edu\\.au$
 
 # Folder settings
 set from = "ben.swift@anu.edu.au"
+
+# Message-ID domain (without this neomutt uses the system FQDN, which
+# here is a Tailscale name that doesn't resolve publicly --- a spam
+# signal at some receivers).
+set hostname = "anu.edu.au"
 set folder = ~/Maildir/anu/
 set spoolfile = +INBOX
 set postponed = +Drafts
