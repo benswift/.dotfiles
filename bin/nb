@@ -4,9 +4,23 @@
 # mise activation hook does not run and an old /usr/local/bin/nb could win.
 set -euo pipefail
 
-if ! command -v mise >/dev/null 2>&1; then
+# zshenv puts mise's *shims* on PATH but not mise itself, and on macOS mise is
+# a Homebrew install whose bin dir only reaches PATH via `brew shellenv` in an
+# interactive/login shell. So a non-login shell (ssh <host> nb ..., a launchd
+# job, an agent) found no mise and this launcher refused to run. Look in the
+# two supported install locations before giving up.
+mise="$(command -v mise || true)"
+if [[ -z "$mise" ]]; then
+    for candidate in "$HOME/.local/bin/mise" /opt/homebrew/bin/mise; do
+        [[ -x "$candidate" ]] && {
+            mise="$candidate"
+            break
+        }
+    done
+fi
+if [[ -z "$mise" ]]; then
     echo "nb: mise is required; run ~/.dotfiles/install.sh" >&2
     exit 127
 fi
 
-exec mise exec -- nb "$@"
+exec "$mise" exec -- nb "$@"
