@@ -30,7 +30,7 @@ fmt() {
 }
 
 # mix format needs the project's .formatter.exs; walk up to the mix root.
-# elixir-ls formats via mix format, so this matches Helix output.
+# expert formats via mix format, so this matches Helix output.
 fmt_mix() {
     command -v mix &>/dev/null || return 0
     local dir

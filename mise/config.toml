@@ -90,6 +90,9 @@ bat = "latest"
 ruff = "latest"
 ty = "latest"
 marksman = "latest"
+# Elixir's language server. One bare release binary per platform, so aqua (the
+# registry default) covers both hosts.
+expert = "latest"
 rclone = "latest"
 # mergiraf is Codeberg-only (no GitHub releases, not in mise's registry), so
 # it's the one formatter here with no cross-platform prebuilt binary --- cargo

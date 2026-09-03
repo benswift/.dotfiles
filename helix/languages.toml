@@ -13,19 +13,19 @@ args = ["server"]
 
 [[language]]
 name = "elixir"
-language-servers = ["elixir-ls"]
+language-servers = ["expert"]
 auto-format = true
 
 [[language]]
 name = "heex"
-language-servers = ["elixir-ls"]
+language-servers = ["expert"]
 auto-format = true
 
-[language-server.elixir-ls]
-command = "elixir-ls"
-
-[language-server.nb-lsp]
-command = "nb-lsp"
+# --stdio is not the default: a bare `expert` prints its help and exits, which
+# helix reports only as a language server that keeps dying.
+[language-server.expert]
+command = "expert"
+args = ["--stdio"]
 
 # harper-ls: grammar checker for prose (disabled by default---too noisy)
 # to enable, add "harper-ls" to language-servers below and uncomment:
@@ -50,7 +50,7 @@ command = "nb-lsp"
 name = "astromotion-deck"
 scope = "source.markdown"
 grammar = "markdown"
-language-servers = ["marksman", "nb-lsp"]
+language-servers = ["marksman"]
 file-types = [{ glob = "*.deck.mdx" }, { glob = "**/decks/**/*.mdx" }]
 auto-format = true
 formatter = { command = "oxfmt-helix", args = ["--stdin-filepath", "file.mdx"] }
@@ -67,7 +67,7 @@ formatter = { command = "oxfmt-helix", args = ["--stdin-filepath", "file.mdx"] }
 name = "backlog-task"
 scope = "source.markdown"
 grammar = "markdown"
-language-servers = ["marksman", "nb-lsp"]
+language-servers = ["marksman"]
 file-types = [{ glob = "**/backlog/**/*.md" }]
 auto-format = false
 
@@ -83,14 +83,14 @@ auto-format = false
 name = "mdx"
 scope = "source.markdown"
 grammar = "markdown"
-language-servers = ["marksman", "nb-lsp"]
+language-servers = ["marksman"]
 auto-format = true
 file-types = ["mdx"]
 formatter = { command = "oxfmt-helix", args = ["--stdin-filepath", "file.mdx"] }
 
 [[language]]
 name = "markdown"
-language-servers = ["marksman", "nb-lsp"]
+language-servers = ["marksman"]
 auto-format = true
 file-types = [
   "md",
