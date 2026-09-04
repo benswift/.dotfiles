@@ -787,6 +787,66 @@ class TestOpenNeomuttCompose:
         assert result.exit_code == 0
         assert orig in opener.call_args.args
 
+    def _run_kwargs(self, terminal, **stream_is_tty) -> dict:
+        """Invoke the opener and return the kwargs neomutt was spawned with.
+
+        `terminal` stands in for /dev/tty; `stream_is_tty` says which of
+        stdin/stdout/stderr the process already owns.
+        """
+        captured: dict = {}
+
+        def fake_run(cmd: list[str], **kwargs):
+            captured.update(kwargs)
+            return MagicMock(returncode=0)
+
+        streams = {
+            name: MagicMock(
+                isatty=MagicMock(return_value=stream_is_tty.get(name, True))
+            )
+            for name in ("stdin", "stdout", "stderr")
+        }
+        with (
+            patch("mail_utils.compose.subprocess.run", side_effect=fake_run),
+            patch("mail_utils.compose._open_terminal", return_value=terminal),
+            patch.multiple("mail_utils.compose.sys", **streams),
+        ):
+            open_neomutt_compose(
+                Account.personal, to="alice@example.com", subject="Hi", body="Body"
+            )
+        return captured
+
+    def test_non_tty_stdin_is_replaced_by_the_terminal(self):
+        """The regression: `--body -` leaves stdin a drained pipe, and
+        neomutt inheriting that exits before showing the draft."""
+        terminal = MagicMock()
+        kwargs = self._run_kwargs(terminal, stdin=False)
+
+        assert kwargs["stdin"] is terminal
+        assert kwargs["stdout"] is None
+        assert terminal.close.called
+
+    def test_terminal_streams_are_left_inherited(self):
+        """Nothing is redirected when the process already owns the terminal."""
+        kwargs = self._run_kwargs(MagicMock())
+
+        assert (kwargs["stdin"], kwargs["stdout"], kwargs["stderr"]) == (
+            None,
+            None,
+            None,
+        )
+
+    def test_no_controlling_terminal_falls_back_to_inheriting(self):
+        """A cron job or agent shell cannot open /dev/tty at all. An
+        interactive compose is doomed there either way, so let neomutt say
+        so rather than failing with something less recognisable."""
+        kwargs = self._run_kwargs(None, stdin=False)
+
+        assert (kwargs["stdin"], kwargs["stdout"], kwargs["stderr"]) == (
+            None,
+            None,
+            None,
+        )
+
 
 class TestSignature:
     """The account signature supplies the sign-off, in both send modes."""

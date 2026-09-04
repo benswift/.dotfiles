@@ -5,11 +5,13 @@ import imaplib
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import time
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid, parseaddr
 from pathlib import Path
+from typing import IO, Any
 
 from mail_utils.accounts import Account, get_account_config
 
@@ -231,6 +233,22 @@ def send_email(
         return False, f"Failed to send: {result.stderr.decode()}"
 
 
+def _is_terminal(stream: IO[Any] | None) -> bool:
+    """Is this stream a terminal? False for anything that cannot say."""
+    try:
+        return stream is not None and stream.isatty()
+    except (AttributeError, ValueError, OSError):
+        return False
+
+
+def _open_terminal() -> IO[bytes] | None:
+    """The controlling terminal, or None where the process has none."""
+    try:
+        return open("/dev/tty", "r+b", buffering=0)
+    except OSError:
+        return None
+
+
 def open_neomutt_compose(
     account: Account,
     to: str,
@@ -278,9 +296,33 @@ def open_neomutt_compose(
     env = os.environ.copy()
     env["TERM"] = "xterm-direct"
 
+    # neomutt is a full-screen program, so every standard stream it inherits
+    # has to be the terminal. `--body -` reads the body from stdin, which by
+    # the time we get here is a drained pipe: neomutt given that exits at once
+    # and the draft is never shown, so the two documented ways of using this
+    # command could not be combined. Hand it the controlling terminal for any
+    # stream that is not already one. Where there is no controlling terminal
+    # (a cron job, an agent shell) nothing can rescue an interactive compose,
+    # so inherit as before and let neomutt report it.
+    inherited = (sys.stdin, sys.stdout, sys.stderr)
+    terminal = None if all(map(_is_terminal, inherited)) else _open_terminal()
+
+    def channel(stream: IO[Any] | None) -> IO[bytes] | None:
+        """The terminal for a stream that isn't one; None to inherit."""
+        return None if terminal is None or _is_terminal(stream) else terminal
+
     try:
-        subprocess.run(cmd, env=env, check=False)
+        subprocess.run(
+            cmd,
+            env=env,
+            check=False,
+            stdin=channel(sys.stdin),
+            stdout=channel(sys.stdout),
+            stderr=channel(sys.stderr),
+        )
     finally:
+        if terminal is not None:
+            terminal.close()
         draft_path.unlink(missing_ok=True)
 
 
