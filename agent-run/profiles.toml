@@ -39,14 +39,11 @@ secret_env = { ANTHROPIC_API_KEY = "DEEPSEEK_API_TOKEN" }
 
 [profiles.openrouter]
 runner = "claude"
-unset_env = [
-  "ANTHROPIC_API_KEY",
-  "ANTHROPIC_AUTH_TOKEN",
-  "ANTHROPIC_BASE_URL",
-  "ANTHROPIC_MODEL",
-  "ANTHROPIC_SMALL_FAST_MODEL",
-  "API_TIMEOUT_MS",
-]
+# Only the auth route is cleared. OpenRouter serves many models through one
+# endpoint, so the model, small-fast model and timeout are the caller's to set
+# (--model or AGENT_MODEL, ANTHROPIC_SMALL_FAST_MODEL, API_TIMEOUT_MS) and
+# must survive into the child.
+unset_env = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL"]
 # OpenRouter's Anthropic skin requires API_KEY to be explicitly empty, not
 # merely absent, or Claude Code may fall back to an Anthropic login.
 env = { ANTHROPIC_BASE_URL = "https://openrouter.ai/api", ANTHROPIC_API_KEY = "" }
