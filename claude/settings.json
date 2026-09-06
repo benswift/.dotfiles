@@ -78,7 +78,6 @@
     "ast-grep@ast-grep-marketplace": true,
     "modern-web-guidance@googlechrome": true,
     "ben@ben": true,
-    "astro-theme-anu@astro-theme-anu": true,
     "comp4020@comp4020": false,
     "comp4020-statusline@comp4020": true
   },
@@ -111,13 +110,6 @@
       "source": {
         "source": "github",
         "repo": "GoogleChrome/modern-web-guidance"
-      }
-    },
-    "astro-theme-anu": {
-      "source": {
-        "source": "git",
-        "url": "https://gitlab.anu.edu.au/u2548636/astro-theme-anu.git",
-        "ref": "astro-theme-anu@v0.9.1"
       }
     },
     "comp4020": {
