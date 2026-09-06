@@ -4,7 +4,7 @@ title: Return Zellij to an upstream release after host-reply fix ships
 status: To Do
 assignee: []
 created_date: '2026-08-19 23:29'
-updated_date: '2026-08-21 01:01'
+updated_date: '2026-09-06 04:22'
 labels:
   - maintenance
   - zellij
@@ -34,13 +34,11 @@ The dotfiles temporarily install Zellij from `benswift/zellij` revision `1524095
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Keep `benswift/zellij:host-reply-isolation-v0.45.0` pinned at rev `15240951` as the local v0.45.0 workaround; do not use this release-based branch as an upstream PR head.
-2. Before maintainer outreach, verify the pinned build remains installed and usable on daysy and weddle, including repeated `zj-switch` round trips.
-3. Next week, comment on upstream PR #5375 with the independent v0.45.0 regression evidence and offer the clean transplant; ask @lbmeng whether they want to refresh their PR or are happy for a takeover.
-4. Ask the Zellij maintainers via their recommended Discord/Matrix channel whether they are willing to review the fix, and whether they prefer the current small client-side reply matcher or an expected-reply discriminator carried over IPC.
-5. Prefer updating the existing PR. Only if the original author is unresponsive and maintainers invite a takeover, create a separate branch from current `zellij-org/zellij:main`, transplant only the two authored commits, retain Bin Meng's authorship/sign-offs, and open a draft PR that credits and links #5375.
-6. On the clean main-based branch, confirm the diff is limited to the four intended client/test files, then run format, the parser tests, the startup-host-query integration tests, and the broader upstream test suite requested by maintainers.
-7. After an equivalent fix is merged and included in an official release, install that release on daysy and weddle, perform the task's five-round-trip checks, and restore `zellij = "latest"` in mise.
+1. On weddle, then daysy: install stock v0.45.1 (`mise x zellij@0.45.1 -- zellij` or flip the mise entry) and do the five zj-switch round trips with codex >= 0.148. If Codex stays responsive, restore `zellij = "latest"` and delete the fork pin now; the fork branch stays on GitHub but nothing depends on it.
+2. Post one short comment on #5375 (not a new PR): independent v0.45.0 and v0.45.1 evidence, the exact command that reproduces the failure (`cargo test -p zellij-integration-tests --test startup_host_query` with the PR's test grafted onto the tag), and that Codex now tolerates the misroute but stock-crossterm TUIs (crossterm #1104) do not. Ask a maintainer to approve the CI run.
+3. Ask on the Zellij Discord #contributing/general whether imsnif still intends to remove the client startup query (his #5236 plan). If yes, that removal makes #5365/#5375 moot and is the PR he would actually take; offer to do it. If no, ask whether he wants #5375's reply matcher or a smaller server-side discriminator so the PR can be reshaped before review.
+4. Do not open a competing PR or a takeover while lbmeng is actively rebasing; only transplant onto main if they go quiet and a maintainer invites it (keep authorship/sign-offs).
+5. Cross-link #5557 in the outreach as the severe form of the same attach-time query traffic problem.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -88,4 +86,27 @@ On weddle, mise resolves Zellij to the exact configured fork revision:
 and the binary reports `zellij 0.45.0`.
 
 The non-disruptive `mise exec -- zellij setup --check` smoke check also passed: the live config is well-defined and the bundled default plugins are available.
+
+## 2026-09-06 upstream check
+
+Zellij v0.45.1 shipped 2026-08-28 and still does NOT contain the fix. Verified the same way as before: PR #5375's regression test grafted test-only onto the v0.45.1 tag fails in 1.9s with the pane receiving the whole attach burst (`ESC[4;1160;2220t ESC[6;20;10t OSC11 OSC10 ESC[?2026;2$y OSC10`). Nothing in v0.45.0..v0.45.1 touches the forwarding path (#5523 edits stdin_ansi_parser.rs for OSC 9 notifications only).
+
+- PR #5375: lbmeng force-pushed 2026-08-25, rebased onto main at b0bd3e1e (post-0.45.0, pre-0.45.1); now 2 ahead / 14 behind main. Still zero comments, zero reviews, and the CI workflows are stuck at `action_required` (never approved to run). Author is active elsewhere on GitHub daily.
+- issue #5365: unchanged since 2026-07-14, no maintainer response
+- new neighbours, also unanswered: #5557 (server SIGABRT on attach when a booted Codex pane is focused, 2026-08-29) and #5373 (Codex freeze after resize-while-detached, opencode reporter added 2026-08-25)
+
+### Codex has worked around it (from 0.148.0)
+
+Codex swapped crossterm for `openai-oss-forks/crossterm` branch `charlie/preserve-startup-terminal-input` in PR #38641 "Harden TUI startup input handling" (merged 2026-08-14, shipped in codex 0.148.0 on 2026-08-18). That branch's commit f4f65b19 "Discard completed unsupported terminal control sequences" makes the reader clear its buffer on any completed-but-unrecognised CSI or OSC instead of treating it as incomplete; its own unit test covers a DECRPM reply (`ESC[?1;2$y`). Upstream crossterm has the same bug filed as #1104 with fix PR #1106 (open, unreviewed), so stock-crossterm TUIs are still exposed.
+
+Verified with a pty harness (scratchpad `inject_burst.py`): boot codex, write the captured burst into its stdin, then type and send Ctrl-C.
+
+- codex 0.147.0 + burst: no output on typing, Ctrl-C ignored (wedged). Without burst: responsive.
+- codex 0.153.4 + burst: responsive, Ctrl-C quits. Same as control.
+
+So with codex >= 0.148.0 the zellij misroute is harmless garbage rather than a wedge; the fork pin is no longer load-bearing for the Codex symptom.
+
+### Contribution-process read
+
+CONTRIBUTING.md says minor fixes "might take a long while" and to ask on Discord/Matrix first. Observed behaviour is more specific: imsnif merges small external bug fixes in sweeps (2026-08-10/11, 08-17, 08-25/28), typically within days when the diff is small and the reproduction is one command, and usually hand-adjusts them before merging (#5446, a client stdin-parser fix, merged in 4 days). He pushes back on anything in the host-query/stdin path that conflicts with his own plans: #5236 (3-line startup palette query batching) was declined because "I was planning on removing the startup query entirely since we now also do this on demand", and #4882 (forward unrecognised stdin bytes) as "naive". #5375 is 341+/71- in exactly that path, so it is the shape of PR he leaves sitting. 344 PRs are open, oldest from 2021; neither Codex-related issue nor the PR has had any maintainer touch in 7 weeks.
 <!-- SECTION:NOTES:END -->
