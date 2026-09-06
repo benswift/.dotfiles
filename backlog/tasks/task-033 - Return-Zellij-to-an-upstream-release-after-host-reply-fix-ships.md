@@ -4,7 +4,7 @@ title: Return Zellij to an upstream release after host-reply fix ships
 status: To Do
 assignee: []
 created_date: '2026-08-19 23:29'
-updated_date: '2026-09-06 04:22'
+updated_date: '2026-09-06 04:37'
 labels:
   - maintenance
   - zellij
@@ -19,22 +19,21 @@ priority: medium
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-The dotfiles temporarily install Zellij from `benswift/zellij` revision `15240951`: PR #5375 rebased onto the v0.45.0 tag. Stock v0.45.0 can misroute attach-time terminal replies into Codex and poison its input parser. Keep the release-based fork as a local workaround, coordinate a clean main-based upstream contribution, and return to an official prebuilt release only after equivalent host-reply isolation ships.
+The dotfiles temporarily installed Zellij from `benswift/zellij` (PR #5375 rebased onto the v0.45.0 tag) because stock Zellij misroutes attach-time terminal replies into the focused pane and Codex < 0.148 wedged its input parser on the stray DECRPM report. Codex >= 0.148.0 discards that reply, which Ben accepted on 2026-09-06 as sufficient: return to the official prebuilt release now, and keep this task open only to see the Zellij-side fix upstream (or confirm it is moot).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 An official Zellij release is verified to contain the host-reply isolation fix from issue #5365 / PR #5375 or an equivalent upstream implementation
-- [ ] #2 The official release is installed on daysy and weddle, and fresh login shells resolve that release
-- [ ] #3 Codex remains responsive after at least five zj-switch round trips on the released Zellij build
-- [ ] #4 mise/config.toml uses the normal prebuilt zellij = "latest" entry and no longer references any fork revision (was lbmeng's pre-0.45 branch; as of 2026-08-21 it is benswift/zellij host-reply-isolation-v0.45.0, i.e. PR #5375 rebased onto the v0.45.0 tag)
-- [ ] #5 When daysy is next online, the temporary `benswift/zellij` revision `1524095119990bc7af283296bbe291a3b4cffbcd` is installed there and a fresh login shell resolves that exact revision
+- [ ] #1 The official release is installed on daysy and weddle, and fresh login shells resolve that release
+- [ ] #2 Codex remains responsive after at least five zj-switch round trips on the released Zellij build
+- [x] #3 mise/config.toml uses the normal prebuilt zellij = "latest" entry and no longer references any fork revision (was lbmeng's pre-0.45 branch; as of 2026-08-21 it is benswift/zellij host-reply-isolation-v0.45.0, i.e. PR #5375 rebased onto the v0.45.0 tag)
+- [x] #4 Codex on the installed release stays responsive to the misrouted attach burst: either an official Zellij release contains host-reply isolation (#5365 / #5375 or equivalent) OR the installed Codex is >= 0.148.0, which discards the stray reply (verified 2026-09-06)
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. On weddle, then daysy: install stock v0.45.1 (`mise x zellij@0.45.1 -- zellij` or flip the mise entry) and do the five zj-switch round trips with codex >= 0.148. If Codex stays responsive, restore `zellij = "latest"` and delete the fork pin now; the fork branch stays on GitHub but nothing depends on it.
+1. mise now uses prebuilt `zellij = "latest"` (v0.45.1 installed on weddle 2026-09-06). Still needed: `mise install zellij` on daysy, then five zj-switch round trips with codex >= 0.148 on each machine from a real ghostty client.
 2. Post one short comment on #5375 (not a new PR): independent v0.45.0 and v0.45.1 evidence, the exact command that reproduces the failure (`cargo test -p zellij-integration-tests --test startup_host_query` with the PR's test grafted onto the tag), and that Codex now tolerates the misroute but stock-crossterm TUIs (crossterm #1104) do not. Ask a maintainer to approve the CI run.
 3. Ask on the Zellij Discord #contributing/general whether imsnif still intends to remove the client startup query (his #5236 plan). If yes, that removal makes #5365/#5375 moot and is the PR he would actually take; offer to do it. If no, ask whether he wants #5375's reply matcher or a smaller server-side discriminator so the PR can be reshaped before review.
 4. Do not open a competing PR or a takeover while lbmeng is actively rebasing; only transplant onto main if they go quiet and a maintainer invites it (keep authorship/sign-offs).
@@ -109,4 +108,8 @@ So with codex >= 0.148.0 the zellij misroute is harmless garbage rather than a w
 ### Contribution-process read
 
 CONTRIBUTING.md says minor fixes "might take a long while" and to ask on Discord/Matrix first. Observed behaviour is more specific: imsnif merges small external bug fixes in sweeps (2026-08-10/11, 08-17, 08-25/28), typically within days when the diff is small and the reproduction is one command, and usually hand-adjusts them before merging (#5446, a client stdin-parser fix, merged in 4 days). He pushes back on anything in the host-query/stdin path that conflicts with his own plans: #5236 (3-line startup palette query batching) was declined because "I was planning on removing the startup query entirely since we now also do this on demand", and #4882 (forward unrecognised stdin bytes) as "naive". #5375 is 341+/71- in exactly that path, so it is the shape of PR he leaves sitting. 344 PRs are open, oldest from 2021; neither Codex-related issue nor the PR has had any maintainer touch in 7 weeks.
+
+## 2026-09-06 returned to the prebuilt release
+
+Ben accepted the Codex-side fix as sufficient. mise/config.toml is back to `zellij = "latest"`; weddle installed v0.45.1 and a fresh login shell resolves `~/.local/share/mise/installs/zellij/latest/zellij` (`zellij 0.45.1`). The fork install dirs under `~/.local/share/mise/installs/cargo-https-github-com-*-zellij` are now orphaned and can go with `mise prune`. daysy and the five round trips remain.
 <!-- SECTION:NOTES:END -->
