@@ -74,9 +74,26 @@ def load_profiles(path: Path) -> dict[str, Profile]:
     return profiles
 
 
+def _strip_script_venv(child: dict[str, str]) -> None:
+    """Drop the `uv run --script` venv this dispatcher runs in.
+
+    uv exports VIRTUAL_ENV and prepends its bin to PATH for the script's own
+    benefit; inherited by the agent, `python3` becomes a bare venv with none
+    of the sprite's packages, and every script the agent writes fails on its
+    first import.
+    """
+    venv = child.pop("VIRTUAL_ENV", None)
+    if not venv:
+        return
+    venv_bin = str(Path(venv) / "bin")
+    parts = [p for p in child.get("PATH", "").split(os.pathsep) if p and p != venv_bin]
+    child["PATH"] = os.pathsep.join(parts)
+
+
 def resolve_environment(profile: Profile, environ: dict[str, str]) -> dict[str, str]:
     """Return the child environment without mutating the caller's mapping."""
     child = dict(environ)
+    _strip_script_venv(child)
     for name in profile.unset_env:
         child.pop(name, None)
     child.update(profile.env)

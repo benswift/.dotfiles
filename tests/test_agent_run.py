@@ -284,3 +284,17 @@ def test_explicit_grok_permission_mode_wins_over_bypass(tmp_path: Path) -> None:
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))
+
+
+def test_child_does_not_inherit_the_dispatcher_script_venv() -> None:
+    profile = mod.Profile(name="claude-api", runner="claude")
+    environ = {
+        "VIRTUAL_ENV": "/home/x/.cache/uv/environments-v2/agent-run-abc",
+        "PATH": "/home/x/.cache/uv/environments-v2/agent-run-abc/bin:/usr/bin:/bin",
+    }
+
+    child = mod.resolve_environment(profile, environ)
+
+    assert "VIRTUAL_ENV" not in child
+    assert child["PATH"] == "/usr/bin:/bin"
+    assert environ["VIRTUAL_ENV"]  # caller untouched
