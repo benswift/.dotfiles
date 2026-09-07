@@ -8,6 +8,7 @@ set -euo pipefail
 REMOTE="${RCLONE_REMOTE:-weddle}"
 REMOTE_BASE="${RCLONE_REMOTE_BASE:-backup/$(hostname -s)}"
 DRY_RUN="${DRY_RUN:-false}"
+MAILDIR_ONLY=false
 
 # Exclude patterns for build artifacts and regeneratable content
 EXCLUDES=(
@@ -40,6 +41,8 @@ Sync ~/Documents and ~/Maildir to remote storage using rclone.
 
 Options:
   -n, --dry-run    Show what would be transferred without making changes
+  -m, --maildir    Sync only ~/Maildir (the hourly launchd job on daysy, so
+                   weddle's read-only mirror stays fresh for pkb-triage)
   -r, --remote     Set remote name (default: weddle)
   -h, --help       Show this help message
 
@@ -55,6 +58,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -n|--dry-run)
       DRY_RUN=true
+      shift
+      ;;
+    -m|--maildir)
+      MAILDIR_ONLY=true
       shift
       ;;
     -r|--remote)
@@ -94,13 +101,15 @@ if [[ "$DRY_RUN" == "true" ]]; then
   echo "DRY RUN MODE - no changes will be made"
 fi
 
-echo "=== Documents ==="
-echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
-echo "Excluding: ${EXCLUDES[*]}"
-echo
-rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
+if [[ "$MAILDIR_ONLY" != "true" ]]; then
+  echo "=== Documents ==="
+  echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
+  echo "Excluding: ${EXCLUDES[*]}"
+  echo
+  rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
+  echo
+fi
 
-echo
 echo "=== Maildir ==="
 echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
 echo

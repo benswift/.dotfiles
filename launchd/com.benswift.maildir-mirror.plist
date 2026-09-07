@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Push ~/Maildir to weddle every hour (bin/backup with the -m flag).
+
+  weddle's Maildir is a read-only mirror of this one (mail/README.md), and
+  pkb-triage there reads it every morning: without this the mirror is only as
+  fresh as the last manual `backup`, which has been days. Documents are not
+  included; a full `backup` is still a manual run.
+
+  weddle unreachable (laptop off the tailnet) is not a failure worth paging
+  for: rclone exits non-zero, the log records it, and the next hour retries.
+  The briefing's "mail synced N ago" line is the visible signal.
+
+  Install (not in the symlink manifest because ~/Library only exists on
+  macOS):
+
+    cp ~/.dotfiles/launchd/com.benswift.maildir-mirror.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.benswift.maildir-mirror.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.benswift.maildir-mirror</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/ben/.dotfiles/bin/backup</string>
+        <string>--maildir</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/ben/.dotfiles/bin:/Users/ben/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>StartInterval</key>
+    <integer>3600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/ben/Library/Logs/maildir-mirror.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/ben/Library/Logs/maildir-mirror.log</string>
+</dict>
+</plist>
