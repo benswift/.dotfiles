@@ -417,6 +417,8 @@ update() {
     # outright on a machine provisioned before install.sh grew this step.
     uv tool install --force -e "$DOTFILES_DIR/mail/utils" >/dev/null ||
         echo "mail-utils install failed --- mail-* commands and mutt-compose-lsp will be missing"
+    uv tool install --force -e "$DOTFILES_DIR/pkb" >/dev/null ||
+        echo "pkb-tools install failed --- pkb-* commands will be missing"
     echo "Done!"
 }
 

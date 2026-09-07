@@ -155,8 +155,11 @@ Each script's header has the detail. Notable ones:
   `⚠ <reason>` while an agent is blocked (undone on the next prompt)
 - `agenda` --- ANU Exchange calendar via EventKit (macOS only)
 - `teams` --- Teams DMs via the web client
-- `pkb-agent` --- scheduled "EA" tasks over the notebook; definitions live in
-  `~/.nb/home/tasks/`, one systemd timer (weddle only) fires everything due
+- `pkb-agent`, `pkb-triage`, `pkb-health`, `pkb-briefing` --- the notebook's
+  scheduled loops, a uv-tool package at @pkb/ (installed editable like
+  mail/utils). Task definitions live in `~/.nb/home/tasks/`; one systemd timer
+  (weddle only) fires everything due. The notebook's CLAUDE.md is the format
+  reference; @pkb/README.md the map
 - `ai-tropes` --- screen a draft for AI-writing tells; taxonomy lives in the
   `ben:benswift-writer` skill's `ai-tropes.md`, cross-referenced by pattern id
 - `pangram` --- the paid second opinion behind `ai-tropes`, against Pangram's
@@ -207,8 +210,10 @@ become pay-as-you-go. API-billed escape hatches are named `*-api`. `openrouter`
 and `deepseek` reach third-party endpoints through Claude Code's
 Anthropic-compatible surface; put their keys in the untracked mise env.
 
-Options are namespaced per runner (`--claude-*`, `--codex-*`, `--grok-*`) and a
-mismatched one is refused, not dropped. `--bypass-permissions` is the deliberate
+A caller that passes no `--profile` (and no `AGENT_PROFILE`) gets the
+registry's `default`, which is the one line to change when the subscription
+provider changes. Options are namespaced per runner (`--claude-*`, `--codex-*`,
+`--grok-*`) and a mismatched one is refused, not dropped. `--bypass-permissions` is the deliberate
 exception --- runner-agnostic, so an unattended caller need not know its runner.
 
 ```sh

@@ -1,0 +1,25 @@
+[project]
+name = "pkb-tools"
+version = "0.1.0"
+description = "Scheduled EA loops over Ben's nb notebook: task runner, briefing, triage, health"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["cronsim>=2.6"]
+
+[project.scripts]
+pkb-agent = "pkb_tools.agent_cli:main"
+pkb-briefing = "pkb_tools.briefing_cli:main"
+pkb-health = "pkb_tools.health:main"
+pkb-triage = "pkb_tools.triage:main"
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+addopts = "-n auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[dependency-groups]
+dev = ["pytest>=8.0.0", "pytest-xdist>=3.8.0", "ty>=0.0.57"]

@@ -1,13 +1,18 @@
 [Unit]
-Description=Run due pkb-agent EA tasks (headless claude over the notebook)
-Documentation=file:///home/ben/.dotfiles/bin/pkb-agent
+Description=Run due pkb-agent EA tasks over the notebook
+Documentation=file:///home/ben/.dotfiles/pkb/README.md
 # No `After=network-online.target` here: that is a system target, so in the
 # user manager it silently resolves to nothing and orders nothing. The real
 # guard is the ExecStartPre below. (2026-07-27)
+# A task that fails (provider quota, early exit, no notebook change) makes
+# run-due exit non-zero, and this is what turns that into a todo.
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
 
 [Service]
 Type=oneshot
 ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
 Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/home/ben/.dotfiles/bin/pkb-agent run-due
+# ~/.local/bin/pkb-agent is the uv-tool entry point installed from ~/.dotfiles/pkb
+ExecStart=/home/ben/.local/bin/pkb-agent run-due
 TimeoutStartSec=2h

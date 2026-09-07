@@ -3,6 +3,8 @@ Description=Sync all nb notebooks
 # No `After=network-online.target` here: that is a system target, so in the
 # user manager it silently resolves to nothing and orders nothing. The real
 # guard is the ExecStartPre below. (2026-07-27)
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
 
 [Service]
 Type=oneshot

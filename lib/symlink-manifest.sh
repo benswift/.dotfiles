@@ -65,6 +65,11 @@ SYMLINK_MANIFEST=(
     # OnFailure=unit-oncall@%n.service / OnSuccess=unit-oncall-clear@%n.service
     "systemd/user/unit-oncall@.service:~/.config/systemd/user/unit-oncall@.service"
     "systemd/user/unit-oncall-clear@.service:~/.config/systemd/user/unit-oncall-clear@.service"
+    # oncall drop-ins for units that other repos own: linked file-by-file
+    # because the .d/ dirs also hold machine-local overrides
+    "systemd/user/aps-scrape.service.d/oncall.conf:~/.config/systemd/user/aps-scrape.service.d/oncall.conf"
+    "systemd/user/ooc-find-gigs.service.d/oncall.conf:~/.config/systemd/user/ooc-find-gigs.service.d/oncall.conf"
+    "systemd/user/ooc-verify-gigs.service.d/oncall.conf:~/.config/systemd/user/ooc-verify-gigs.service.d/oncall.conf"
     # whole-directory configs
     "ghostty:~/.config/ghostty"
     "helix:~/.config/helix"
