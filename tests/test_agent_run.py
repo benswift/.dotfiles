@@ -298,3 +298,43 @@ def test_child_does_not_inherit_the_dispatcher_script_venv() -> None:
     assert "VIRTUAL_ENV" not in child
     assert child["PATH"] == "/usr/bin:/bin"
     assert environ["VIRTUAL_ENV"]  # caller untouched
+
+
+def test_registry_default_profile(tmp_path: Path) -> None:
+    config = tmp_path / "profiles.toml"
+    config.write_text(
+        'version = 1\ndefault = "codex-sub"\n'
+        '[profiles.claude-sub]\nrunner = "claude"\n'
+        '[profiles.codex-sub]\nrunner = "codex"\n'
+    )
+    profiles, default = mod.load_registry(config)
+    assert default == "codex-sub"
+    assert set(profiles) == {"claude-sub", "codex-sub"}
+
+
+def test_registry_rejects_unknown_default(tmp_path: Path) -> None:
+    config = tmp_path / "profiles.toml"
+    config.write_text(
+        'version = 1\ndefault = "missing"\n[profiles.claude-sub]\nrunner = "claude"\n'
+    )
+    with pytest.raises(ValueError, match="default profile"):
+        mod.load_registry(config)
+
+
+def test_main_falls_back_to_default_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = tmp_path / "profiles.toml"
+    config.write_text(
+        'version = 1\ndefault = "codex-sub"\n[profiles.codex-sub]\nrunner = "codex"\n'
+    )
+    monkeypatch.delenv("AGENT_PROFILE", raising=False)
+    seen: list[list[str]] = []
+
+    def fake_run(command: list[str], **_kwargs: object) -> object:
+        seen.append(command)
+        return argparse.Namespace(returncode=0)
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    assert mod.main(["--config", str(config), "hello"]) == 0
+    assert seen[0][:2] == ["codex", "exec"]

@@ -49,6 +49,16 @@ class Profile:
 
 def load_profiles(path: Path) -> dict[str, Profile]:
     """Load and validate the profile registry at ``path``."""
+    return load_registry(path)[0]
+
+
+def load_registry(path: Path) -> tuple[dict[str, Profile], str]:
+    """Load the profile registry and the name of its default profile.
+
+    The default is the one place a subscription change lands: every
+    scheduled caller that passes no --profile follows it, so moving from
+    one provider to another is one line in profiles.toml.
+    """
     with path.open("rb") as config_file:
         data = tomllib.load(config_file)
     if data.get("version") != 1:
@@ -71,7 +81,10 @@ def load_profiles(path: Path) -> dict[str, Profile]:
         )
     if not profiles:
         raise ValueError(f"{path}: no [profiles.*] blocks")
-    return profiles
+    default = str(data.get("default", ""))
+    if default and default not in profiles:
+        raise ValueError(f"{path}: default profile {default!r} is not defined")
+    return profiles, default
 
 
 def _strip_script_venv(child: dict[str, str]) -> None:
@@ -223,13 +236,18 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        profiles = load_profiles(args.config.expanduser())
+        profiles, default = load_registry(args.config.expanduser())
         if args.list_profiles:
             for name in profiles:
-                print(name)
+                print(f"{name} (default)" if name == default else name)
             return 0
         if not args.profile:
-            raise ValueError("no profile selected; pass --profile or set AGENT_PROFILE")
+            args.profile = default
+        if not args.profile:
+            raise ValueError(
+                "no profile selected; pass --profile, set AGENT_PROFILE, "
+                "or set `default` in profiles.toml"
+            )
         if args.profile not in profiles:
             known = ", ".join(profiles)
             raise ValueError(f"unknown profile {args.profile!r} (known: {known})")

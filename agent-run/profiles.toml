@@ -1,5 +1,11 @@
 version = 1
 
+# The profile a caller gets when it passes no --profile and AGENT_PROFILE is
+# unset. Scheduled pkb tasks rely on this, so changing subscription provider
+# (Claude to Codex, say) is this one line plus any runner-specific `model:`
+# a task file names.
+default = "claude-sub"
+
 [profiles.claude-sub]
 runner = "claude"
 unset_env = [
