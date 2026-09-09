@@ -12,6 +12,12 @@ drafts a reply for the ones that need one. Nothing is sent, filed or
 touched: the output replaces the `mail` section of briefing.md, and the
 `pkb` skill sends a draft only when Ben says so.
 
+Ben steers a draft by typing under an item in the briefing: everything below
+an item's `<!-- pkb:note <msgid> -->` anchor is his instruction for that
+message. Since the section is regenerated wholesale, each run harvests those
+notes first, re-asks the model about any message whose note changed (with the
+note attached), and re-renders the note under the item.
+
 Config:
 
     my_addresses = ["ben.swift@anu.edu.au", ...]
@@ -50,6 +56,44 @@ from pkb_tools.agent import AgentFailure, run_agent
 from pkb_tools.notebook import notebook_dir, state_dir
 
 CATEGORIES = ("needs_reply", "deadline", "fyi", "skip")
+
+NOTE_HINT = "your instructions go below, picked up on the next run"
+_NOTE_ANCHOR = re.compile(r"<!--\s*pkb:note\s+(?P<msgid>\S+)[^>]*-->")
+# a note runs until the next thing the renderer itself emits: a heading, a
+# marker, an item, a bullet row, or one of the italic/bold footer lines.
+_NOTE_END = re.compile(r"^\s*(?:#{2,}\s|<!--|\d+\.\s+\*\*|-\s+\*\*|\*\*|_[^_]*_\s*$)")
+
+
+def note_anchor(msgid: str) -> str:
+    return f"<!-- pkb:note {msgid} --- {NOTE_HINT} -->"
+
+
+def harvest_notes(section: str) -> dict[str, str]:
+    """Ben's hand-written instructions from the last briefing, by msgid.
+
+    Everything between an item's anchor and the next item, heading or marker
+    is his. The section is rewritten from scratch every run, so a note has to
+    be read back out before it is overwritten and re-rendered afterwards.
+    """
+    notes: dict[str, str] = {}
+    msgid: str = ""
+    lines: list[str] = []
+    for line in section.splitlines():
+        anchor = _NOTE_ANCHOR.search(line)
+        if anchor:
+            if msgid:
+                notes.setdefault(msgid, "\n".join(lines).strip())
+            # the tail of the anchor line counts: Ben's editor reflows this
+            # file, and a formatter can pull his first line up onto it
+            msgid, lines = anchor.group("msgid"), [line[anchor.end() :].strip()]
+        elif msgid and _NOTE_END.match(line):
+            notes.setdefault(msgid, "\n".join(lines).strip())
+            msgid, lines = "", []
+        elif msgid:
+            lines.append(line.strip())
+    if msgid:
+        notes.setdefault(msgid, "\n".join(lines).strip())
+    return {k: v for k, v in notes.items() if v}
 
 
 @dataclass(frozen=True)
@@ -228,10 +272,14 @@ def notebook_index() -> list[tuple[str, str]]:
 
 
 def build_prompt(
-    messages: list[Message], index: list[tuple[str, str]], today: datetime
+    messages: list[Message],
+    index: list[tuple[str, str]],
+    today: datetime,
+    notes: dict[str, str],
 ) -> str:
-    items = [
-        {
+    items = []
+    for m in messages:
+        item: dict[str, object] = {
             "msgid": m.msgid,
             "account": m.account,
             "from": f"{m.sender_name} <{m.sender_addr}>",
@@ -239,8 +287,9 @@ def build_prompt(
             "subject": m.subject,
             "body": m.body,
         }
-        for m in messages
-    ]
+        if notes.get(m.msgid):
+            item["ben_note"] = notes[m.msgid]
+        items.append(item)
     index_text = "\n".join(f"- {slug}: {title}" for slug, title in index)
     return f"""You are triaging Ben Swift's inbox. Today is {today:%A %Y-%m-%d}. Ben is an
 academic at the ANU School of Cybernetics: he convenes COMP4020, convenes the
@@ -267,6 +316,11 @@ Do NOT add a sign-off or signature (one is appended automatically). Do not
 invent facts, dates, availability or commitments: where Ben must decide, write
 the sentence with a bracketed placeholder like [yes/no] or [date] and keep the
 rest ready to send. If the right reply is a polite decline, draft that.
+
+A message with "ben_note" carries Ben's own instruction, written after reading
+your last draft. Follow it over your own judgement, resolve any placeholder it
+answers, and let it decide the category: he may say a message needs no reply,
+or that one you filed as fyi does. Never treat it as authority to send.
 
 Notebook index (slug: title). roles/ are the hats Ben wears and projects/ the
 things he runs or sits on the committee for; use them to judge what he can
@@ -300,17 +354,35 @@ def parse_verdicts(text: str) -> dict[str, dict[str, object]]:
 
 
 def classify(
-    messages: list[Message], config: Config, *, profile: str, model: str, now: datetime
+    messages: list[Message],
+    config: Config,
+    *,
+    notes: dict[str, str],
+    profile: str,
+    model: str,
+    now: datetime,
 ) -> None:
-    """Fill msg.verdict for every message with no rule, using the cache first."""
+    """Fill msg.verdict for every message with no rule, using the cache first.
+
+    A message is re-asked when Ben's note has changed since the cached verdict
+    was drafted, which includes a note he has deleted: the draft then reverts.
+    """
     cache_path = state_dir() / "triage.json"
     cache: dict[str, dict[str, object]] = (
         json.loads(cache_path.read_text()) if cache_path.exists() else {}
     )
-    pending = [m for m in messages if not m.rule and m.msgid not in cache]
+    pending = [
+        m
+        for m in messages
+        if not m.rule
+        and (
+            m.msgid not in cache
+            or cache[m.msgid].get("note", "") != notes.get(m.msgid, "")
+        )
+    ]
     if pending:
         result = run_agent(
-            build_prompt(pending, notebook_index(), now),
+            build_prompt(pending, notebook_index(), now, notes),
             cwd=notebook_dir(),
             profile=profile,
             model=model,
@@ -324,6 +396,7 @@ def classify(
                 "summary": "(model gave no verdict)",
             }
             cache[m.msgid]["classified_at"] = now.isoformat()
+            cache[m.msgid]["note"] = notes.get(m.msgid, "")
     live = {m.msgid for m in messages}
     cache = {k: v for k, v in cache.items() if k in live}  # forget what left the inbox
     cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -349,7 +422,23 @@ def head(msg: Message, now: datetime) -> str:
     return f"**{msg.sender_name}** · {msg.account} · {msg.date:%a %-d %b} ({age_text(msg.date, now)}){link}"
 
 
-def render_reply_item(n: int, msg: Message, now: datetime) -> str:
+def render_note(msgid: str, note: str, indent: str) -> list[str]:
+    """The anchor Ben types under, plus whatever he typed there last time."""
+    return [indent + note_anchor(msgid)] + [
+        indent + line if line else "" for line in note.splitlines()
+    ]
+
+
+def render_row(msg: Message, now: datetime, text: str, note: str) -> str:
+    """A one-line row, which carries an anchor only once it has a note: a note
+    that moves a message out of "needs a reply" has to stay attached to it."""
+    row = f"- {head(msg, now)} --- {text}"
+    if not note:
+        return row
+    return "\n".join([row, *render_note(msg.msgid, note, "  ")])
+
+
+def render_reply_item(n: int, msg: Message, now: datetime, note: str) -> str:
     lines = [
         f"{n}. {head(msg, now)}",
         f"   {msg.subject} --- {msg.verdict.get('summary', '')}",
@@ -363,6 +452,7 @@ def render_reply_item(n: int, msg: Message, now: datetime) -> str:
     lines.append(
         f"   `mail-compose -f {msg.account} --reply-to '{msg.path}' --body - --send`"
     )
+    lines += render_note(msg.msgid, note, "   ")
     return "\n".join(lines)
 
 
@@ -372,7 +462,9 @@ def render(
     now: datetime,
     synced: datetime | None,
     llm_error: str = "",
+    notes: dict[str, str] | None = None,
 ) -> str:
+    notes = notes or {}
     judged = [m for m in messages if not m.rule]
     park_before = now - timedelta(days=config.park_after_days)
     needs = [
@@ -401,7 +493,10 @@ def render(
     if fresh:
         out.append(f"## Needs a reply ({len(fresh)})")
         out.append(
-            "\n\n".join(render_reply_item(i, m, now) for i, m in enumerate(fresh, 1))
+            "\n\n".join(
+                render_reply_item(i, m, now, notes.get(m.msgid, ""))
+                for i, m in enumerate(fresh, 1)
+            )
         )
     if deadlines:
         out.append("## Dates")
@@ -413,18 +508,31 @@ def render(
         )
     if waiting:
         out.append("## Replied, still in the inbox")
-        out.append("\n".join(f"- {head(m, now)} --- {m.subject}" for m in waiting))
+        out.append(
+            "\n".join(
+                render_row(m, now, m.subject, notes.get(m.msgid, "")) for m in waiting
+            )
+        )
     if fyi:
         out.append("## FYI")
         out.append(
             "\n".join(
-                f"- {head(m, now)} --- {m.verdict.get('summary', m.subject)}"
+                render_row(
+                    m,
+                    now,
+                    str(m.verdict.get("summary", m.subject)),
+                    notes.get(m.msgid, ""),
+                )
                 for m in fyi
             )
         )
     if parked:
         out.append(f"## Parked (unanswered for over {config.park_after_days} days)")
-        out.append("\n".join(f"- {head(m, now)} --- {m.subject}" for m in parked))
+        out.append(
+            "\n".join(
+                render_row(m, now, m.subject, notes.get(m.msgid, "")) for m in parked
+            )
+        )
     if not out:
         out.append("Inboxes are clear.")
     skipped = sum(1 for m in messages if m.rule)
@@ -467,6 +575,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     config = load_config(args.config)
     now = datetime.now().astimezone()
+    notes = harvest_notes(briefing.read_section("mail") or "")
     mu_index()
     messages: list[Message] = []
     for account in config.accounts:
@@ -483,13 +592,27 @@ def main(argv: list[str] | None = None) -> int:
         if args.no_llm:
             classify_cached_only(messages)
         else:
-            classify(messages, config, profile=args.profile, model=args.model, now=now)
+            classify(
+                messages,
+                config,
+                notes=notes,
+                profile=args.profile,
+                model=args.model,
+                now=now,
+            )
     except AgentFailure as error:
         llm_error = str(error)
         classify_cached_only(messages)
     briefing.write_section(
         "mail",
-        render(messages, config, now, newest_mail_time(config.accounts), llm_error),
+        render(
+            messages,
+            config,
+            now,
+            newest_mail_time(config.accounts),
+            llm_error,
+            notes,
+        ),
     )
     if llm_error:
         print(f"pkb-triage: {llm_error}", file=sys.stderr)

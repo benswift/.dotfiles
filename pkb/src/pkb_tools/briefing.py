@@ -18,8 +18,10 @@ SECTION_ORDER = ("mail", "health", "retro")
 HEADER = """# Briefing
 
 Generated on weddle by the pkb loops (see [[ea-workflow]]); every section is
-replaced on its own schedule, so edits here do not survive. Act on it from any
-agent session with the `pkb` skill, or by hand.
+replaced on its own schedule, so edits here do not survive --- except a note
+typed under a mail item's `pkb:note` anchor, which the next triage run reads
+back, drafts from and re-renders. Act on it from any agent session with the
+`pkb` skill, or by hand.
 """
 
 _SECTION = re.compile(
