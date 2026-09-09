@@ -107,9 +107,14 @@ else
     sync_errors=$((sync_errors + 1))
 fi
 
-# Update mu index
+# Update mu index. The progress spinner is for a terminal; from launchd it
+# is thousands of log lines a day.
 print_status "Updating search index..."
-mu index
+if [ -t 1 ]; then
+    mu index
+else
+    mu index --quiet
+fi
 
 # Summary. Exit non-zero on sync errors so mailsync-scheduled can page ---
 # neomutt's `,s` macro ignores the exit code, so this only feeds the timer.
