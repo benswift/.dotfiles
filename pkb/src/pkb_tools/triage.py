@@ -61,7 +61,13 @@ NOTE_HINT = "your instructions go below, picked up on the next run"
 _NOTE_ANCHOR = re.compile(r"<!--\s*pkb:note\s+(?P<msgid>\S+)[^>]*-->")
 # a note runs until the next thing the renderer itself emits: a heading, a
 # marker, an item, a bullet row, or one of the italic/bold footer lines.
-_NOTE_END = re.compile(r"^\s*(?:#{2,}\s|<!--|\d+\.\s+\*\*|-\s+\*\*|\*\*|_[^_]*_\s*$)")
+_NOTE_END = re.compile(r"^\s*(?:#{2,}\s|<!--|\d+\.\s+\*\*|-\s+\*\*|\*\*|_[^\s_])")
+
+
+def same_note(a: str, b: str) -> bool:
+    """Wrapping is not an edit: both the formatter and Ben's editor rewrap a
+    note, and a rewrapped note must not cost a fresh draft."""
+    return a.split() == b.split()
 
 
 def note_anchor(msgid: str) -> str:
@@ -377,7 +383,9 @@ def classify(
         if not m.rule
         and (
             m.msgid not in cache
-            or cache[m.msgid].get("note", "") != notes.get(m.msgid, "")
+            or not same_note(
+                str(cache[m.msgid].get("note", "")), notes.get(m.msgid, "")
+            )
         )
     ]
     if pending:
@@ -430,9 +438,10 @@ def render_note(msgid: str, note: str, indent: str) -> list[str]:
     """
     if not msgid:
         return []
-    return [indent + note_anchor(msgid)] + [
-        indent + line if line else "" for line in note.splitlines()
-    ]
+    lines = ["", indent + note_anchor(msgid)]
+    if note:
+        lines += ["", *(indent + line if line else "" for line in note.splitlines())]
+    return lines
 
 
 def render_row(msg: Message, now: datetime, text: str, note: str) -> str:
@@ -446,18 +455,20 @@ def render_row(msg: Message, now: datetime, text: str, note: str) -> str:
 
 def render_reply_item(n: int, msg: Message, now: datetime, note: str) -> str:
     lines = [
-        f"{n}. {head(msg, now)}",
+        f"{n}. {head(msg, now)}  ",
         f"   {msg.subject} --- {msg.verdict.get('summary', '')}",
     ]
     draft = msg.verdict.get("draft")
     if isinstance(draft, str) and draft.strip():
-        lines.append("   Draft:")
+        lines[-1] += "  "
+        lines += ["   Draft:", ""]
         lines += [
             f"   > {line}" if line else "   >" for line in draft.strip().splitlines()
         ]
-    lines.append(
-        f"   `mail-compose -f {msg.account} --reply-to '{msg.path}' --body - --send`"
-    )
+    lines += [
+        "",
+        f"   `mail-compose -f {msg.account} --reply-to '{msg.path}' --body - --send`",
+    ]
     lines += render_note(msg.msgid, note, "   ")
     return "\n".join(lines)
 

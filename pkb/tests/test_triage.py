@@ -428,5 +428,9 @@ def test_a_changed_note_reasks_the_model(
     triage.classify([msg], config, notes=notes, profile="", model="", now=NOW)
     assert len(asked) == 1  # unchanged note: cache still stands
 
+    rewrapped = {"f": "Say yes,\nThursday 2pm."}
+    triage.classify([msg], config, notes=rewrapped, profile="", model="", now=NOW)
+    assert len(asked) == 1  # the formatter rewrapped it; that is not an edit
+
     triage.classify([msg], config, notes={}, profile="", model="", now=NOW)
     assert len(asked) == 2  # deleted note: redraft without it
