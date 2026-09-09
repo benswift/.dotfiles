@@ -3,9 +3,13 @@
 # Generates neomutt commands to attach and group plain+HTML versions
 set -euo pipefail
 
-TXT_FILE="/tmp/neomutt-msg.txt"
-HTML_FILE="/tmp/neomutt-msg.html"
-MACRO_FILE="/tmp/neomutt-multipart-commands"
+# Scratch files live in neomutt's own tmpdir (private to the user) rather
+# than the shared /tmp, since neomuttrc sources MACRO_FILE as commands.
+SCRATCH="$HOME/.cache/neomutt/temp"
+mkdir -p "$SCRATCH"
+TXT_FILE="$SCRATCH/msg.txt"
+HTML_FILE="$SCRATCH/msg.html"
+MACRO_FILE="$SCRATCH/multipart-commands"
 TEMPLATE_PATH="$HOME/.config/neomutt/templates"
 
 # Save the piped markdown content

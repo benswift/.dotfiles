@@ -23,6 +23,7 @@ Usage from a shell for debugging:
 import subprocess
 import sys
 from email.errors import MessageError
+from pathlib import Path
 from urllib.parse import unquote
 
 from mail_utils.clipboard import copy_to_clipboard
@@ -32,8 +33,10 @@ from mail_utils.email import (
 )
 from mail_utils.urls import Link, extract_links
 
-# Sourced by the ,b neomutt macro after this command exits.
-NEOMUTT_CMD_FILE = "/tmp/neomutt-urls-commands"
+# Sourced by the ,b neomutt macro after this command exits. Lives in neomutt's
+# own tmpdir (private to the user) rather than the shared /tmp, since neomutt
+# executes whatever it finds here.
+NEOMUTT_CMD_FILE = Path.home() / ".cache/neomutt/temp/urls-commands"
 
 
 def _parse(data: bytes) -> list[Link]:
@@ -51,8 +54,8 @@ def _parse(data: bytes) -> list[Link]:
 def _write_neomutt_commands(text: str) -> None:
     """Write the follow-up command file the ,b macro sources (best effort)."""
     try:
-        with open(NEOMUTT_CMD_FILE, "w") as f:
-            f.write(text)
+        NEOMUTT_CMD_FILE.parent.mkdir(parents=True, exist_ok=True)
+        NEOMUTT_CMD_FILE.write_text(text)
     except OSError:
         pass
 

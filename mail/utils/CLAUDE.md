@@ -129,11 +129,11 @@ regex-over-decoded-text approach missed most links in HTML mail.
 
 A selected `mailto:` link is composed in neomutt itself rather than handed to a
 GUI mail client: `mail-urls` writes `push "<mail>ADDR<enter>"` to
-`/tmp/neomutt-urls-commands`, which the `,b` macro sources after the pipe
-returns (the same command-file pattern as the markdown-compose macro). The file
-is always rewritten --- empty when there's nothing for neomutt to do --- so the
-`source` is a harmless no-op otherwise. Only the address is carried across (any
-`?subject=`/`?body=` in the mailto is dropped); the compose lands at the
+`~/.cache/neomutt/temp/urls-commands`, which the `,b` macro sources after the
+pipe returns (the same command-file pattern as the markdown-compose macro). The
+file is always rewritten --- empty when there's nothing for neomutt to do --- so
+the `source` is a harmless no-op otherwise. Only the address is carried across
+(any `?subject=`/`?body=` in the mailto is dropped); the compose lands at the
 `Subject:` prompt.
 
 ## Compose LSP
