@@ -210,11 +210,12 @@ become pay-as-you-go. API-billed escape hatches are named `*-api`. `openrouter`
 and `deepseek` reach third-party endpoints through Claude Code's
 Anthropic-compatible surface; put their keys in the untracked mise env.
 
-A caller that passes no `--profile` (and no `AGENT_PROFILE`) gets the
-registry's `default`, which is the one line to change when the subscription
-provider changes. Options are namespaced per runner (`--claude-*`, `--codex-*`,
-`--grok-*`) and a mismatched one is refused, not dropped. `--bypass-permissions` is the deliberate
-exception --- runner-agnostic, so an unattended caller need not know its runner.
+A caller that passes no `--profile` (and no `AGENT_PROFILE`) gets the registry's
+`default`, which is the one line to change when the subscription provider
+changes. Options are namespaced per runner (`--claude-*`, `--codex-*`,
+`--grok-*`) and a mismatched one is refused, not dropped. `--bypass-permissions`
+is the deliberate exception --- runner-agnostic, so an unattended caller need
+not know its runner.
 
 ```sh
 agent-run --profile claude-sub --model sonnet \
