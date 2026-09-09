@@ -1,7 +1,7 @@
 # mailcap file for neomutt
 
 # HTML emails - convert to plain text with pandoc
-text/html; pandoc -f html -t plain | less; copiousoutput; nametemplate=%s.html
+text/html; pandoc -f html -t plain; copiousoutput; nametemplate=%s.html
 
 # Plain text - just view with less (neomutt handles colorization internally)
 text/plain; less; needsterminal
