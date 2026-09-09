@@ -24,7 +24,10 @@ SubFolders Verbatim
 Channel personal
 Far :personal-remote:
 Near :personal-local:
-Patterns INBOX Archive "Sent Items" Drafts Trash "Junk Mail"
+# DMARC: a server-side Fastmail rule files the daily aggregate reports
+# there, out of the inbox. Synced so mu indexes them and they stay
+# greppable offline.
+Patterns INBOX Archive "Sent Items" Drafts Trash "Junk Mail" DMARC
 Create Near
 Sync All
 Expunge Both
