@@ -423,7 +423,13 @@ def head(msg: Message, now: datetime) -> str:
 
 
 def render_note(msgid: str, note: str, indent: str) -> list[str]:
-    """The anchor Ben types under, plus whatever he typed there last time."""
+    """The anchor Ben types under, plus whatever he typed there last time.
+
+    A message with no Message-ID has nothing to key a note to, so it gets no
+    anchor rather than one that never matches.
+    """
+    if not msgid:
+        return []
     return [indent + note_anchor(msgid)] + [
         indent + line if line else "" for line in note.splitlines()
     ]

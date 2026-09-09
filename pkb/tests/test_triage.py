@@ -382,6 +382,8 @@ def test_rendered_notes_round_trip(config: triage.Config, inbox: Path) -> None:
     # an un-noted one-line row stays a one-liner
     plain = triage.render([fresh, told], config, NOW, None, "", {})
     assert "<!-- pkb:note i " not in plain and "<!-- pkb:note f " in plain
+    fresh.msgid = ""  # nothing to key a note to
+    assert "pkb:note" not in triage.render([fresh], config, NOW, None, "", {})
 
 
 def test_a_changed_note_reasks_the_model(
