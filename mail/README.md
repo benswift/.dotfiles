@@ -43,6 +43,9 @@ Setup on such a host:
 
 ```sh
 sudo apt install maildir-utils msmtp
+# msmtprc logs here; sending still works without the directory, but every
+# send then prints a "cannot log" error
+mkdir -p -m 700 ~/.local/state/msmtp
 mu init --maildir ~/Maildir --my-address u2548636@anu.edu.au \
   --my-address ben.swift@anu.edu.au \
   --my-address phdconvenor.cybernetics@anu.edu.au \
