@@ -160,6 +160,9 @@ Each script's header has the detail. Notable ones:
   mail/utils). Task definitions live in `~/.nb/home/tasks/`; one systemd timer
   (weddle only) fires everything due. The notebook's CLAUDE.md is the format
   reference; @pkb/README.md the map
+- `dmarc-summary` --- report on the DMARC aggregate reports a Fastmail rule
+  files into `~/Maildir/personal/DMARC`. Exits non-zero when a message failed
+  DMARC, which under `p=reject` means it bounced
 - `ai-tropes` --- screen a draft for AI-writing tells; taxonomy lives in the
   `ben:benswift-writer` skill's `ai-tropes.md`, cross-referenced by pattern id
 - `pangram` --- the paid second opinion behind `ai-tropes`, against Pangram's

@@ -1,0 +1,301 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""Summarise the DMARC aggregate reports filed in a maildir.
+
+A Fastmail rule files the daily reports into ~/Maildir/personal/DMARC (see
+mail/mbsyncrc), where they pile up as gzip/zip XML attachments that nobody is
+going to read by hand. This turns the pile into the one answer worth having:
+which mail claiming to be from the domain failed DMARC, and would therefore be
+rejected outright under `p=reject`.
+
+DMARC passes when *either* identifier aligns, so a message is only in trouble
+when both the aligned SPF and the aligned DKIM result fail. Mail forwarded
+through a third party routinely fails aligned SPF and survives on DKIM alone;
+that is normal and is reported separately rather than as a problem.
+
+Reports are deduplicated on (reporter, report id) --- some reporters deliver
+the same report more than once.
+
+  dmarc-summary                    # the default maildir, last 30 days
+  dmarc-summary --days 90
+  dmarc-summary --all              # list every source, not just failures
+  mu find --fields l maildir:/personal/DMARC | dmarc-summary -
+
+Exits 1 when any message failed DMARC, 2 on a bad invocation, else 0.
+"""
+
+from __future__ import annotations
+
+import argparse
+import email
+import email.policy
+import gzip
+import io
+import sys
+import xml.etree.ElementTree as ET
+import zipfile
+from collections import Counter
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
+DEFAULT_MAILDIR = Path("~/Maildir/personal/DMARC").expanduser()
+
+
+@dataclass(frozen=True)
+class Record:
+    """One row of a report: a source IP and how its mail was judged."""
+
+    org: str
+    report_id: str
+    begin: datetime
+    source_ip: str
+    count: int
+    disposition: str
+    dkim_aligned: str
+    spf_aligned: str
+    header_from: str
+    auth_spf: tuple[tuple[str, str], ...]
+    auth_dkim: tuple[tuple[str, str], ...]
+
+    @property
+    def passed(self) -> bool:
+        """DMARC is satisfied by either identifier aligning."""
+        return self.dkim_aligned == "pass" or self.spf_aligned == "pass"
+
+    @property
+    def dkim_only(self) -> bool:
+        return self.dkim_aligned == "pass" and self.spf_aligned != "pass"
+
+
+@dataclass
+class Summary:
+    records: list[Record] = field(default_factory=list)
+    policies: set[str] = field(default_factory=set)
+    domains: set[str] = field(default_factory=set)
+    report_ids: set[tuple[str, str]] = field(default_factory=set)
+    unreadable: list[Path] = field(default_factory=list)
+
+
+def maildir_messages(maildir: Path) -> list[Path]:
+    """Every message file in a maildir, across both cur/ and new/."""
+    return sorted(
+        path
+        for sub in ("cur", "new")
+        for path in (maildir / sub).glob("*")
+        if path.is_file()
+    )
+
+
+def report_payloads(path: Path) -> list[bytes]:
+    """The decompressed XML of every report attached to one message."""
+    message = email.message_from_bytes(path.read_bytes(), policy=email.policy.default)
+    payloads: list[bytes] = []
+    for part in message.walk():
+        name = (part.get_filename() or "").lower()
+        if not name.endswith((".gz", ".zip", ".xml")):
+            continue
+        data = part.get_payload(decode=True)
+        # decode=True yields a Message for a multipart part, which is not a
+        # report; only the leaf attachments carry one.
+        if not isinstance(data, bytes):
+            continue
+        if name.endswith(".gz"):
+            payloads.append(gzip.decompress(data))
+        elif name.endswith(".zip"):
+            archive = zipfile.ZipFile(io.BytesIO(data))
+            payloads.extend(archive.read(entry) for entry in archive.namelist())
+        else:
+            payloads.append(data)
+    return payloads
+
+
+def text(node: ET.Element | None, path: str, default: str = "") -> str:
+    if node is None:
+        return default
+    return (node.findtext(path) or default).strip()
+
+
+def parse_report(xml: bytes, summary: Summary) -> None:
+    root = ET.fromstring(xml)
+    meta = root.find("report_metadata")
+    org = text(meta, "org_name", "unknown")
+    report_id = text(meta, "report_id")
+    if (org, report_id) in summary.report_ids:
+        return
+    summary.report_ids.add((org, report_id))
+
+    begin = datetime.fromtimestamp(int(text(meta, "date_range/begin", "0")), UTC)
+
+    published = root.find("policy_published")
+    summary.domains.add(text(published, "domain"))
+    summary.policies.add(
+        f"p={text(published, 'p', '?')}"
+        f" adkim={text(published, 'adkim', 'r')}"
+        f" aspf={text(published, 'aspf', 'r')}"
+    )
+
+    for row in root.findall("record"):
+        auth = row.find("auth_results")
+        summary.records.append(
+            Record(
+                org=org,
+                report_id=report_id,
+                begin=begin,
+                source_ip=text(row, "row/source_ip", "?"),
+                count=int(text(row, "row/count", "0") or 0),
+                disposition=text(row, "row/policy_evaluated/disposition", "?"),
+                dkim_aligned=text(row, "row/policy_evaluated/dkim", "?"),
+                spf_aligned=text(row, "row/policy_evaluated/spf", "?"),
+                header_from=text(row, "identifiers/header_from"),
+                auth_spf=tuple(
+                    (text(e, "domain"), text(e, "result"))
+                    for e in (auth.findall("spf") if auth is not None else [])
+                ),
+                auth_dkim=tuple(
+                    (text(e, "domain"), text(e, "result"))
+                    for e in (auth.findall("dkim") if auth is not None else [])
+                ),
+            )
+        )
+
+
+def describe_auth(record: Record) -> str:
+    spf = ", ".join(f"{d}={r}" for d, r in record.auth_spf) or "none"
+    dkim = ", ".join(f"{d}={r}" for d, r in record.auth_dkim) or "none"
+    return f"spf[{spf}]  dkim[{dkim}]"
+
+
+def report(summary: Summary, show_all: bool) -> int:
+    records = summary.records
+    if not records:
+        print("No DMARC reports found in the selected window.")
+        return 0
+
+    messages = sum(r.count for r in records)
+    failed = [r for r in records if not r.passed]
+    dkim_only = [r for r in records if r.dkim_only]
+    start = min(r.begin for r in records)
+    end = max(r.begin for r in records)
+
+    domains = ", ".join(sorted(d for d in summary.domains if d)) or "unknown"
+    print(f"DMARC aggregate reports --- {domains}")
+    print(
+        f"{len(summary.report_ids)} reports from"
+        f" {len({r.org for r in records})} reporters,"
+        f" {start:%Y-%m-%d} to {end:%Y-%m-%d}"
+    )
+    for policy in sorted(summary.policies):
+        print(f"Policy published: {policy}")
+    print()
+    print(
+        f"{messages} messages --- {messages - sum(r.count for r in failed)} passed,"
+        f" {sum(r.count for r in failed)} failed"
+    )
+
+    if failed:
+        print()
+        print("FAILED --- neither identifier aligned; rejected under p=reject:")
+        for record in sorted(failed, key=lambda r: r.begin):
+            print(
+                f"  {record.begin:%Y-%m-%d}  {record.source_ip}"
+                f"  n={record.count}  disposition={record.disposition}"
+                f"  from={record.header_from}"
+            )
+            print(f"      {describe_auth(record)}  [reported by {record.org}]")
+
+    if dkim_only:
+        total = sum(r.count for r in dkim_only)
+        ips = sorted({r.source_ip for r in dkim_only})
+        print()
+        print(
+            f"Passed on DKIM alone ({total} messages) --- normal for forwarded"
+            " mail, no action needed:"
+        )
+        for ip in ips[:10]:
+            print(f"  {ip}")
+        if len(ips) > 10:
+            print(f"  ... and {len(ips) - 10} more sources")
+
+    if show_all:
+        print()
+        print("All sources by volume:")
+        volume: Counter[str] = Counter()
+        for record in records:
+            volume[record.source_ip] += record.count
+        for ip, count in volume.most_common():
+            verdict = (
+                "FAIL"
+                if any(r.source_ip == ip and not r.passed for r in records)
+                else "pass"
+            )
+            print(f"  {count:5}  {ip:42} {verdict}")
+
+    if summary.unreadable:
+        print()
+        print(f"{len(summary.unreadable)} message(s) could not be parsed:")
+        for path in summary.unreadable[:5]:
+            print(f"  {path}")
+
+    return 1 if failed else 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Summarise DMARC aggregate reports filed in a maildir."
+    )
+    parser.add_argument("--maildir", type=Path, default=DEFAULT_MAILDIR)
+    parser.add_argument(
+        "--days", type=int, default=30, help="only reports this recent (0 = all)"
+    )
+    parser.add_argument(
+        "--all", action="store_true", help="list every source, not just failures"
+    )
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        help="message files to read instead of the maildir; '-' reads stdin",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+
+    if args.paths == ["-"]:
+        paths = [Path(line) for line in sys.stdin.read().split("\n") if line.strip()]
+    elif args.paths:
+        paths = [Path(p) for p in args.paths]
+    else:
+        maildir = args.maildir.expanduser()
+        if not maildir.is_dir():
+            print(f"dmarc-summary: no maildir at {maildir}", file=sys.stderr)
+            return 2
+        paths = maildir_messages(maildir)
+
+    cutoff = datetime.now(UTC) - timedelta(days=args.days) if args.days > 0 else None
+
+    summary = Summary()
+    for path in paths:
+        try:
+            payloads = report_payloads(path)
+        except (OSError, ValueError, zipfile.BadZipFile, gzip.BadGzipFile):
+            summary.unreadable.append(path)
+            continue
+        for payload in payloads:
+            try:
+                parse_report(payload, summary)
+            except ET.ParseError:
+                summary.unreadable.append(path)
+
+    if cutoff is not None:
+        summary.records = [r for r in summary.records if r.begin >= cutoff]
+
+    return report(summary, show_all=args.all)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
