@@ -7,7 +7,7 @@ Host imap.fastmail.com
 Port 993
 # Host imaps-proxy.fastmail.com
 # Port 80
-AuthMech LOGIN
+AuthMech PLAIN
 User benswift@fastmail.com
 PassCmd "$HOME/.dotfiles/bin/mail-secret get benswift@fastmail.com mbsync-fastmail"
 TLSType IMAPS
@@ -29,6 +29,7 @@ Create Near
 Sync All
 Expunge Both
 SyncState *
+CopyArrivalDate yes
 
 #################
 # ANU Office365 #
@@ -60,6 +61,7 @@ Create Near
 Sync All
 Expunge Both
 SyncState *
+CopyArrivalDate yes
 # Skip messages larger than Office365's ~35MB IMAP APPEND limit. Exchange
 # rejects oversized mail on receipt too, so nothing this large can legitimately
 # live on the server --- MaxSize only suppresses doomed local->server uploads
@@ -96,6 +98,7 @@ Create Near
 Sync All
 Expunge Both
 SyncState *
+CopyArrivalDate yes
 
 Channel phdconvenor-sent
 Far :phdconvenor-remote:"Sent Items"
@@ -104,6 +107,7 @@ Create Near
 Sync All
 Expunge Both
 SyncState *
+CopyArrivalDate yes
 
 Channel phdconvenor-drafts
 Far :phdconvenor-remote:Drafts
@@ -112,6 +116,7 @@ Create Near
 Sync All
 Expunge Both
 SyncState *
+CopyArrivalDate yes
 
 Channel phdconvenor-archive
 Far :phdconvenor-remote:Archive
@@ -120,6 +125,7 @@ Create Near
 Sync All
 Expunge Both
 SyncState *
+CopyArrivalDate yes
 
 Channel phdconvenor-deleted
 Far :phdconvenor-remote:"Deleted Items"
@@ -128,6 +134,7 @@ Create Near
 Sync All
 Expunge Both
 SyncState *
+CopyArrivalDate yes
 
 Group phdconvenor
 Channel phdconvenor-inbox
