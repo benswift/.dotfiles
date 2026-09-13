@@ -9,6 +9,7 @@ REMOTE="${RCLONE_REMOTE:-weddle}"
 REMOTE_BASE="${RCLONE_REMOTE_BASE:-backup/$(hostname -s)}"
 DRY_RUN="${DRY_RUN:-false}"
 MAILDIR_ONLY=false
+FORCE=false
 
 # Exclude patterns for build artifacts and regeneratable content
 EXCLUDES=(
@@ -44,6 +45,7 @@ Options:
   -m, --maildir    Sync only ~/Maildir (the hourly launchd job on daysy, so
                    weddle's read-only mirror stays fresh for pkb-triage)
   -r, --remote     Set remote name (default: weddle)
+  -f, --force      Run even on a metered network (tethered phone)
   -h, --help       Show this help message
 
 Environment variables:
@@ -62,6 +64,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -m|--maildir)
       MAILDIR_ONLY=true
+      shift
+      ;;
+    -f|--force)
+      FORCE=true
       shift
       ;;
     -r|--remote)
@@ -87,6 +93,13 @@ done
 if [[ "$(hostname -s)" == "weddle" ]]; then
   echo "backup: weddle is the backup destination --- run this from a laptop/desktop instead." >&2
   exit 1
+fi
+
+# Tens of GB to list and whatever changed to push: never on a tethered phone's
+# data. Exits 0, so the hourly launchd run records a skip, not a failure.
+if [[ "$FORCE" != "true" ]] && "$(dirname "$0")/on-metered-network"; then
+  echo "backup: on a metered network --- skipping (--force to run anyway)." >&2
+  exit 0
 fi
 
 # `rclone sync` makes the remote a mirror, so a file deleted or corrupted here

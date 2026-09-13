@@ -20,6 +20,12 @@ REARM_MINUTES=1440
 
 mkdir -p "$STATE"
 
+# Tethered? Skip the timer run; `mailsync` by hand still syncs.
+if "$(dirname "$0")/on-metered-network"; then
+    echo "[$(date '+%H:%M:%S')] on a metered network; skipping"
+    exit 0
+fi
+
 # Offline? Try again next interval.
 if ! nc -z -w 5 outlook.office365.com 993 2>/dev/null; then
     echo "[$(date '+%H:%M:%S')] offline (outlook.office365.com:993 unreachable); skipping"
