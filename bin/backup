@@ -48,7 +48,7 @@ Options:
 
 Environment variables:
   RCLONE_REMOTE       Remote name (default: weddle)
-  RCLONE_REMOTE_BASE  Remote base path (default: backup/mitch)
+  RCLONE_REMOTE_BASE  Remote base path (default: backup/<hostname>)
   DRY_RUN             Set to 'true' for dry run mode
 EOF
 }
@@ -89,6 +89,51 @@ if [[ "$(hostname -s)" == "weddle" ]]; then
   exit 1
 fi
 
+# `rclone sync` makes the remote a mirror, so a file deleted or corrupted here
+# is deleted or corrupted on weddle at the next run. --backup-dir turns each
+# of those destructive operations into a server-side move: whatever a run would
+# overwrite or delete lands under versions/<run>/ instead. The mirror stays an
+# exact mirror, and nothing it discards is lost for RETENTION_DAYS.
+RUN_STAMP="$(date +%Y-%m-%dT%H%M%S)"
+VERSIONS="$REMOTE_BASE/versions"
+RETENTION_DAYS=90
+
+# Prune on the run stamp in the directory name, never with --min-age: a
+# displaced file keeps its original modtime, so an age filter would delete a
+# years-old document the moment it was displaced.
+prune_versions() {
+  local cutoff dir
+  cutoff="$(date -v-"${RETENTION_DAYS}"d +%Y-%m-%dT%H%M%S 2>/dev/null ||
+    date -d "$RETENTION_DAYS days ago" +%Y-%m-%dT%H%M%S)"
+  rclone lsf --dirs-only "$REMOTE:$VERSIONS" 2>/dev/null | while IFS= read -r dir; do
+    dir="${dir%/}"
+    [[ "$dir" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}$ && "$dir" < "$cutoff" ]] || continue
+    echo "Pruning $REMOTE:$VERSIONS/$dir"
+    rclone purge "$REMOTE:$VERSIONS/$dir"
+  done
+}
+
+# An attached disk image is a live filesystem, so copying its backing file can
+# capture a torn write (the vault sparseimage is the one that matters). Leave
+# any image attached from under $1 out of this run: sync never deletes excluded
+# files at the destination, so weddle keeps the last copy taken while ejected.
+# Emits rclone filter args one per line. hdiutil and plutil live in /usr/bin,
+# so this needs nothing from a launchd job's PATH.
+attached_image_excludes() {
+  local root="$1" plist image rel i=0
+  plist="$(hdiutil info -plist)"
+  while image="$(plutil -extract "images.$i.image-path" raw -o - - <<<"$plist" 2>/dev/null)"; do
+    i=$((i + 1))
+    [[ "$image" == "$root/"* ]] || continue
+    # sed, not ${//}: escaping needs the matched character back, and & in a
+    # parameter substitution is bash 5.2+ only.
+    # shellcheck disable=SC2001
+    rel="$(sed 's/[][*?{}\\]/\\&/g' <<<"${image#"$root"}")"
+    echo "Skipping attached disk image (eject it to back it up): $image" >&2
+    printf '%s\n' --exclude "$rel" --exclude "$rel/**"
+  done
+}
+
 # Build exclude arguments for Documents
 EXCLUDE_ARGS=()
 for pattern in "${EXCLUDES[@]}"; do
@@ -106,11 +151,22 @@ if [[ "$MAILDIR_ONLY" != "true" ]]; then
   echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
   echo "Excluding: ${EXCLUDES[*]}"
   echo
-  rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
+  while IFS= read -r arg; do
+    EXCLUDE_ARGS+=("$arg")
+  done < <(attached_image_excludes "$HOME/Documents")
+  rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" \
+    --backup-dir "$REMOTE:$VERSIONS/$RUN_STAMP/Documents" \
+    "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
   echo
 fi
 
 echo "=== Maildir ==="
 echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
 echo
-rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" "$HOME/Maildir" "$REMOTE:Maildir"
+rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
+  --backup-dir "$REMOTE:$VERSIONS/$RUN_STAMP/Maildir" \
+  "$HOME/Maildir" "$REMOTE:Maildir"
+
+if [[ "$DRY_RUN" != "true" ]]; then
+  prune_versions
+fi
