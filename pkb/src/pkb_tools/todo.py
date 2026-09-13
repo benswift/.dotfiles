@@ -10,8 +10,11 @@ edits that need no editor.
 
 A todo is "bot" when it carries the #bot tag, which is how unit-oncall files
 job failures; everything else is human. "blocked" is the #blocked tag on a
-human todo. Listing reads the files directly: `nb todos open` takes seconds
-over a notebook this size and cannot exclude a tag.
+human todo, kept as `tags: #blocked` in YAML frontmatter like the rest of the
+notebook's tags (nb's tag search is line-based, so it finds it there too, and
+nb reads past the frontmatter to the `# [ ]` line). Listing reads the files
+directly: `nb todos open` takes seconds over a notebook this size and cannot
+exclude a tag.
 
 Bot todos with the same title (a job that keeps failing past the 24h re-arm)
 collapse to one row under the most recent id, whose journal tail is the
@@ -34,6 +37,7 @@ BOT = "bot"
 BLOCKED = "blocked"
 OPEN_PREFIX = "# [ ] "
 TAG_RE = re.compile(r"(?<![\w#])#([A-Za-z][\w-]*)")
+FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 INDEX = ".index"
 
 
@@ -67,7 +71,8 @@ def open_todos(root: Path) -> list[Todo]:
     todos = []
     for path in sorted(root.glob("*.todo.md"), reverse=True):
         text = path.read_text()
-        first, _, _ = text.partition("\n")
+        body = FRONTMATTER_RE.sub("", text, count=1).lstrip("\n")
+        first, _, _ = body.partition("\n")
         if not first.startswith(OPEN_PREFIX):
             continue
         todos.append(
@@ -156,23 +161,28 @@ def resolve(root: Path, id_str: str) -> Path:
 
 
 def add_tag(text: str, tag: str) -> str:
+    """Add #tag to the frontmatter `tags:` line, creating either as needed."""
     if tag in TAG_RE.findall(text):
         return text
-    text = text.rstrip("\n") + "\n"
-    lines = text.split("\n")
-    if "## Tags" in lines:
-        # nb's own layout: the tag line is the first non-blank line after the
-        # heading, so extend it rather than opening a second section.
-        for i in range(lines.index("## Tags") + 1, len(lines)):
-            if lines[i].strip():
-                lines[i] = f"{lines[i]} #{tag}"
-                return "\n".join(lines)
-    return f"{text}\n## Tags\n\n#{tag}\n"
+    m = FRONTMATTER_RE.match(text)
+    if m is None:
+        return f"---\ntags: #{tag}\n---\n\n{text.lstrip(chr(10))}"
+    fields = m.group(1).split("\n")
+    for i, line in enumerate(fields):
+        if line.startswith("tags:"):
+            fields[i] = f"{line.rstrip()} #{tag}"
+            break
+    else:
+        fields.append(f"tags: #{tag}")
+    return "---\n" + "\n".join(fields) + "\n---\n" + text[m.end() :]
 
 
 def remove_tag(text: str, tag: str) -> str:
     text = re.sub(rf"[ \t]*(?<![\w#])#{re.escape(tag)}(?![\w-])", "", text)
-    # A Tags section left with nothing in it is noise, not state.
+    # Empty leftovers are noise, not state: a bare `tags:` line, frontmatter
+    # with nothing in it, or an nb-style Tags section at the end.
+    text = re.sub(r"(?m)^tags:[ \t]*\n", "", text)
+    text = re.sub(r"\A---\n---\n\n?", "", text)
     return re.sub(r"\n+## Tags\n\s*\Z", "\n", text)
 
 
