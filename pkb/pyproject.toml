@@ -11,6 +11,7 @@ pkb-agent = "pkb_tools.agent_cli:main"
 pkb-briefing = "pkb_tools.briefing_cli:main"
 pkb-health = "pkb_tools.health:main"
 pkb-triage = "pkb_tools.triage:main"
+pkb-todo = "pkb_tools.todo:main"
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]

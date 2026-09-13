@@ -1,6 +1,6 @@
 # pkb-tools
 
-The scheduled "EA" side of Ben's personal knowledge base. Four commands, one
+The scheduled "EA" side of Ben's personal knowledge base. Five commands, one
 generated file:
 
 - `pkb-agent` --- runs the task files in `~/.nb/home/tasks/` on their cron
@@ -9,6 +9,8 @@ generated file:
 - `pkb-health` --- freshness and failure checks over the other scheduled jobs
 - `pkb-briefing` --- reads and replaces named sections of
   `~/.nb/home/briefing.md`, the single file the loops write into
+- `pkb-todo` --- the shell's `todo`: open todos in three sections (todos,
+  blocked, bot), plus do/undo/block/unblock and quote-free creation
 
 Installed editable by `install.sh` and `dotfiles update`
 (`uv tool install --force -e ~/.dotfiles/pkb`). The notebook's own `CLAUDE.md`

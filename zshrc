@@ -54,15 +54,7 @@ sysup() {
   dotfiles update
 }
 alias task="backlog task"
-todo() {
-  if [[ "$1" == "add" && $# -eq 1 ]]; then
-    nb add --filename "$(date +%Y%m%d%H%M%S).todo.md" --content "# [ ] " --edit
-  elif [[ $# -eq 0 ]]; then
-    nb todo undone
-  else
-    nb todo "$@"
-  fi
-}
+alias todo="pkb-todo"  # list / do / block / add, or bare words for a new todo
 daily() {
   local filename="$(date +%Y%m%d).md"
   local path="$HOME/.nb/home/$filename"
