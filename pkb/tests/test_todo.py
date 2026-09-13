@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
 from pkb_tools import todo
 
 
@@ -122,10 +123,13 @@ def test_repeated_bot_failures_collapse_to_the_newest(notebook: Path) -> None:
     assert todo.duplicates(todos, human) == [human]
 
 
-def test_color_only_decorates(notebook: Path) -> None:
+def test_color_only_decorates(notebook: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     write(notebook, "20260101000000.todo.md", "# [ ] plain\n")
     (notebook / ".index").write_text("20260101000000.todo.md\n")
     todos = todo.open_todos(notebook)
+    monkeypatch.setenv("COLORTERM", "truecolor")
     coloured = todo.render(todos, color=True)
-    assert "\033[1mtodos\033[0m" in coloured
+    assert "\033[1;38;2;180;190;254mtodos\033[0m" in coloured
     assert re.sub(r"\033\[[0-9;]*m", "", coloured) == todo.render(todos)
+    monkeypatch.delenv("COLORTERM")
+    assert "\033[1;35mtodos\033[0m" in todo.render(todos, color=True)

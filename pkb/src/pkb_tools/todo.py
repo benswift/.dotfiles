@@ -101,16 +101,33 @@ def collapse(rows: list[Todo]) -> list[tuple[Todo, int]]:
     return out
 
 
-SECTION_STYLE = {"todos": "1", "blocked": "1;33", "bot": "1;34"}
+# Catppuccin Mocha, the theme every terminal thing in the dotfiles uses
+# (ghostty, helix, zellij, neomutt, claude-statusline). Truecolour when the
+# terminal says so, else the nearest of the 16 ANSI colours, which the same
+# theme maps back onto the palette.
+MOCHA = {
+    "lavender": ((180, 190, 254), 35),
+    "yellow": ((249, 226, 175), 33),
+    "mauve": ((203, 166, 247), 35),
+    "overlay1": ((127, 132, 156), 90),
+}
+SECTION_STYLE = {"todos": "lavender", "blocked": "yellow", "bot": "mauve"}
 
 
 def use_color() -> bool:
     return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
 
 
+def sgr(name: str, bold: bool = False) -> str:
+    rgb, ansi = MOCHA[name]
+    truecolor = os.environ.get("COLORTERM") in ("truecolor", "24bit")
+    fg = "38;2;{};{};{}".format(*rgb) if truecolor else str(ansi)
+    return f"\033[{'1;' if bold else ''}{fg}m"
+
+
 def render(todos: list[Todo], color: bool = False) -> str:
-    def paint(code: str, text: str) -> str:
-        return f"\033[{code}m{text}\033[0m" if color else text
+    def paint(name: str, text: str, bold: bool = False) -> str:
+        return f"{sgr(name, bold)}{text}\033[0m" if color else text
 
     if not todos:
         return "(no open todos)\n"
@@ -120,10 +137,10 @@ def render(todos: list[Todo], color: bool = False) -> str:
         if not rows:
             continue
         out.append("")
-        out.append(paint(SECTION_STYLE[name], name))
+        out.append(paint(SECTION_STYLE[name], name, bold=True))
         for t, n in collapse(rows):
-            id_ = paint("2", f"{t.id if t.id is not None else '?':>5}")
-            count = paint("2", f"  ×{n}") if n > 1 else ""
+            id_ = paint("overlay1", f"{t.id if t.id is not None else '?':>5}")
+            count = paint("overlay1", f"  ×{n}") if n > 1 else ""
             out.append(f"  {id_}  {t.title}{count}")
     out.append("")
     return "\n".join(out)
