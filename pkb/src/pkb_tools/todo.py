@@ -2,9 +2,9 @@
 edits that need no editor.
 
   todo                  list open todos: todos, blocked, bot
-  todo do <id>          mark done (nb todo do)
-  todo undo <id>        reopen
-  todo block <id>       tag #blocked; `unblock` removes it
+  todo do <id>...       mark done (nb todo do)
+  todo undo <id>...     reopen
+  todo block <id>...    tag #blocked; `unblock` removes it
   todo add              a new todo in the editor
   todo <words...>       a new todo titled from the words, no quoting needed
 
@@ -198,23 +198,28 @@ def main(argv: list[str] | None = None) -> int:
         case []:
             print(render(open_todos(root), color=use_color()), end="")
             return 0
-        case ["do", id_str] if id_str.isdigit():
-            path = resolve(root, id_str)
-            todos = open_todos(root)
-            target = next((t for t in todos if t.path == path), None)
-            if target is None:
-                return nb_interactive("todo", "do", id_str)
-            for t in duplicates(todos, target):
-                if nb_interactive("todo", "do", str(t.id)) != 0:
+        case ["do" | "undo" | "block" | "unblock" as verb, *ids] if ids and all(
+            i.isdigit() for i in ids
+        ):
+            # Resolve every id before touching anything, so a typo in the
+            # second id does not leave the first one half-applied.
+            paths = [resolve(root, i) for i in ids]
+            if verb in ("block", "unblock"):
+                edit = add_tag if verb == "block" else remove_tag
+                for path in paths:
+                    path.write_text(edit(path.read_text(), BLOCKED))
+                return 0
+            todos = {t.path: t for t in open_todos(root)}
+            targets: dict[Path, int | None] = {}
+            for path, id_str in zip(paths, ids, strict=True):
+                if verb == "do" and path in todos:
+                    for t in duplicates(list(todos.values()), todos[path]):
+                        targets[t.path] = t.id
+                else:
+                    targets[path] = int(id_str)
+            for id_ in targets.values():
+                if nb_interactive("todo", verb, str(id_)) != 0:
                     return 1
-            return 0
-        case ["undo", id_str] if id_str.isdigit():
-            resolve(root, id_str)
-            return nb_interactive("todo", "undo", id_str)
-        case ["block" | "unblock" as verb, id_str] if id_str.isdigit():
-            path = resolve(root, id_str)
-            edit = add_tag if verb == "block" else remove_tag
-            path.write_text(edit(path.read_text(), BLOCKED))
             return 0
         case ["add"]:
             filename = time.strftime("%Y%m%d%H%M%S") + ".todo.md"

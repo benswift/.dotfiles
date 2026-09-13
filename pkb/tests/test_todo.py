@@ -144,3 +144,35 @@ def test_color_only_decorates(notebook: Path, monkeypatch: pytest.MonkeyPatch) -
     assert re.sub(r"\033\[[0-9;]*m", "", coloured) == todo.render(todos)
     monkeypatch.delenv("COLORTERM")
     assert "\033[1;35mtodos\033[0m" in todo.render(todos, color=True)
+
+
+def test_block_takes_several_ids_and_resolves_all_first(notebook: Path) -> None:
+    a = write(notebook, "20260101000000.todo.md", "# [ ] a\n")
+    b = write(notebook, "20260102000000.todo.md", "# [ ] b\n")
+    (notebook / ".index").write_text("20260101000000.todo.md\n20260102000000.todo.md\n")
+    assert todo.main(["block", "1", "2"]) == 0
+    assert "#blocked" in a.read_text() and "#blocked" in b.read_text()
+    with pytest.raises(SystemExit):
+        todo.main(["unblock", "1", "9"])
+    assert "#blocked" in a.read_text()
+    assert todo.main(["unblock", "2", "1"]) == 0
+    assert a.read_text() == "# [ ] a\n" and b.read_text() == "# [ ] b\n"
+
+
+def test_do_with_several_ids_closes_each_once(
+    notebook: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bot(notebook, "20260101000000", "x failed")
+    bot(notebook, "20260102000000", "x failed")
+    write(notebook, "20260103000000.todo.md", "# [ ] human\n")
+    (notebook / ".index").write_text(
+        "20260101000000.todo.md\n20260102000000.todo.md\n20260103000000.todo.md\n"
+    )
+    calls: list[tuple[str, ...]] = []
+    monkeypatch.setattr(todo, "nb_interactive", lambda *a: calls.append(a) or 0)
+    assert todo.main(["do", "1", "3", "2"]) == 0
+    assert sorted(calls) == [
+        ("todo", "do", "1"),
+        ("todo", "do", "2"),
+        ("todo", "do", "3"),
+    ]
