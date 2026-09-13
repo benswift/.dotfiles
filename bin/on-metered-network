@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# on-metered-network: exit 0 when this Mac's connection costs data, 1 when it
+# doesn't. Scheduled transfer jobs (backup, mailsync-scheduled,
+# ship-claude-logs) skip their run on a 0.
+#
+#   on-metered-network [-v]     -v prints what each probe saw
+#
+# Either probe counts:
+#
+#   * NWPath's isExpensive/isConstrained: the OS's own metering flags, the
+#     ones it uses to hold back iCloud Photos and software updates. Set for an
+#     iPhone hotspot and for cellular, and for any network marked Low Data Mode
+#     in System Settings, which is how to teach it about any other hotspot.
+#     NWPath describes the physical path, so it sees through a VPN.
+#   * an address in 172.20.10.0/28, the subnet an iPhone hotspot hands out
+#     over Wi-Fi, USB or Bluetooth. Read off the interfaces, not the default
+#     route: with Tailscale or a VPN up, the route names the tunnel.
+#
+# A probe that fails counts as "not metered", so a broken probe costs data
+# rather than silently stalling every job. Anything but macOS is never
+# metered. Commands are called by absolute path, so a launchd job's minimal
+# PATH cannot break this.
+
+set -uo pipefail
+
+verbose=false
+[[ "${1:-}" == "-v" ]] && verbose=true
+say() { [[ "$verbose" == true ]] && echo "on-metered-network: $*" >&2; return 0; }
+
+[[ "$OSTYPE" == darwin* ]] || { say "not macOS"; exit 1; }
+
+flags="$(/usr/bin/swift - 2>/dev/null <<'SWIFT' || echo unknown
+import Network
+import Foundation
+let m = NWPathMonitor()
+let sem = DispatchSemaphore(value: 0)
+m.pathUpdateHandler = { p in
+    print("expensive=\(p.isExpensive) constrained=\(p.isConstrained)")
+    sem.signal()
+}
+m.start(queue: DispatchQueue.global())
+_ = sem.wait(timeout: .now() + 5)
+SWIFT
+)"
+say "NWPath: ${flags:-no answer}"
+[[ "$flags" == *"=true"* ]] && exit 0
+
+if /sbin/ifconfig 2>/dev/null | grep -qE 'inet 172\.20\.10\.([0-9]|1[0-5]) '; then
+    say "iPhone hotspot address present"
+    exit 0
+fi
+say "no hotspot address"
+exit 1

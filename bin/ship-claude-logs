@@ -73,44 +73,8 @@ hours_since_success() {
   echo $(( (now - last) / 3600 ))
 }
 
-# Is this an expensive connection? macOS redacts the SSID from headless
-# processes, so we can't match on network name; instead check (a)
-# NWPath.isExpensive, Apple's own metered flag, and (b) the default gateway
-# --- an iPhone hotspot always NATs through 172.20.10.1 whether tethered over
-# Wi-Fi, USB, or Bluetooth.
-#
-# `route` lives in /sbin, which a launchd agent's PATH does not include unless
-# it is spelled out. Under `set -euo pipefail` that made the gateway probe
-# exit 127 and kill the whole script *before* rclone ran --- five weeks of
-# daysy shipping nothing, with only the launchd exit status to show for it.
-# So the probe is guarded here as well as fixed in the plist: this script must
-# not care what PATH its caller hands it. (2026-08-13)
-on_metered_network() {
-  [[ "$OSTYPE" == darwin* ]] || return 1
-
-  local expensive gateway
-  expensive="$(swift - 2>/dev/null <<'EOF' || echo unknown
-import Network
-import Foundation
-let m = NWPathMonitor()
-let sem = DispatchSemaphore(value: 0)
-var expensive = false
-m.pathUpdateHandler = { p in expensive = p.isExpensive; sem.signal() }
-m.start(queue: DispatchQueue.global())
-_ = sem.wait(timeout: .now() + 5)
-print(expensive ? "expensive" : "ok")
-EOF
-)"
-  [[ "$expensive" == "expensive" ]] && return 0
-
-  local route_bin
-  route_bin="$(command -v route || echo /sbin/route)"
-  [[ -x "$route_bin" ]] || return 1
-  gateway="$("$route_bin" -n get default 2>/dev/null | awk '/gateway:/{print $2}')" || return 1
-  [[ "$gateway" == 172.20.10.* ]]
-}
-
-if on_metered_network; then
+# The probe is bin/on-metered-network, shared with the other transfer jobs.
+if "$(dirname "$0")/on-metered-network"; then
   stalled="$(hours_since_success)"
   if (( stalled < METERED_GRACE_HOURS )); then
     echo "On a metered network --- skipping ship (last success ${stalled}h ago)."
