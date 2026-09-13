@@ -12,10 +12,15 @@ A todo is "bot" when it carries the #bot tag, which is how unit-oncall files
 job failures; everything else is human. "blocked" is the #blocked tag on a
 human todo. Listing reads the files directly: `nb todos open` takes seconds
 over a notebook this size and cannot exclude a tag.
+
+Bot todos with the same title (a job that keeps failing past the 24h re-arm)
+collapse to one row under the most recent id, whose journal tail is the
+current one, and `do` on any of them closes the whole run.
 """
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -76,7 +81,37 @@ def open_todos(root: Path) -> list[Todo]:
     return todos
 
 
-def render(todos: list[Todo]) -> str:
+def duplicates(todos: list[Todo], todo: Todo) -> list[Todo]:
+    """The open bot todos sharing this bot todo's title (itself included)."""
+    if BOT not in todo.tags:
+        return [todo]
+    return [t for t in todos if BOT in t.tags and t.title == todo.title]
+
+
+def collapse(rows: list[Todo]) -> list[tuple[Todo, int]]:
+    """Bot rows grouped by title, newest kept; a human row is its own group."""
+    out: list[tuple[Todo, int]] = []
+    seen: set[str] = set()
+    for t in rows:
+        if BOT not in t.tags:
+            out.append((t, 1))
+        elif t.title not in seen:
+            seen.add(t.title)
+            out.append((t, sum(1 for u in rows if u.title == t.title)))
+    return out
+
+
+SECTION_STYLE = {"todos": "1", "blocked": "1;33", "bot": "1;34"}
+
+
+def use_color() -> bool:
+    return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
+
+
+def render(todos: list[Todo], color: bool = False) -> str:
+    def paint(code: str, text: str) -> str:
+        return f"\033[{code}m{text}\033[0m" if color else text
+
     if not todos:
         return "(no open todos)\n"
     out = []
@@ -84,10 +119,13 @@ def render(todos: list[Todo]) -> str:
         rows = [t for t in todos if t.section == name]
         if not rows:
             continue
-        out.append(name)
-        for t in rows:
-            out.append(f"  {t.id if t.id is not None else '?':>5}  {t.title}")
         out.append("")
+        out.append(paint(SECTION_STYLE[name], name))
+        for t, n in collapse(rows):
+            id_ = paint("2", f"{t.id if t.id is not None else '?':>5}")
+            count = paint("2", f"  ×{n}") if n > 1 else ""
+            out.append(f"  {id_}  {t.title}{count}")
+    out.append("")
     return "\n".join(out)
 
 
@@ -131,11 +169,21 @@ def main(argv: list[str] | None = None) -> int:
     root = notebook_dir()
     match args:
         case []:
-            print(render(open_todos(root)), end="")
+            print(render(open_todos(root), color=use_color()), end="")
             return 0
-        case ["do" | "undo" as verb, id_str] if id_str.isdigit():
+        case ["do", id_str] if id_str.isdigit():
+            path = resolve(root, id_str)
+            todos = open_todos(root)
+            target = next((t for t in todos if t.path == path), None)
+            if target is None:
+                return nb_interactive("todo", "do", id_str)
+            for t in duplicates(todos, target):
+                if nb_interactive("todo", "do", str(t.id)) != 0:
+                    return 1
+            return 0
+        case ["undo", id_str] if id_str.isdigit():
             resolve(root, id_str)
-            return nb_interactive("todo", verb, id_str)
+            return nb_interactive("todo", "undo", id_str)
         case ["block" | "unblock" as verb, id_str] if id_str.isdigit():
             path = resolve(root, id_str)
             edit = add_tag if verb == "block" else remove_tag
