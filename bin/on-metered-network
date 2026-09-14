@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # on-metered-network: exit 0 when this Mac's connection costs data, 1 when it
-# doesn't. Scheduled transfer jobs (backup, mailsync-scheduled,
-# ship-claude-logs) skip their run on a 0.
+# doesn't. Scheduled transfer jobs (backup, ship-claude-logs,
+# mailsync-scheduled) skip their run on a 0.
 #
 #   on-metered-network [-v]     -v prints what each probe saw
 #

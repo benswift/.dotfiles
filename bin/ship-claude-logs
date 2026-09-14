@@ -105,7 +105,14 @@ for entry in "${SOURCES[@]}"; do
     echo "Local copy: $source_dir/ -> $dest/"
     rsync "${rsync_args[@]}" "$source_dir/" "$dest/"
   else
-    rclone_args=(copy --progress)
+    # --progress redraws twice a second, which in a log file is thousands of
+    # lines a day. Off a terminal, log each transfer and one summary line.
+    rclone_args=(copy --no-update-dir-modtime)
+    if [[ -t 1 ]]; then
+      rclone_args+=(--progress)
+    else
+      rclone_args+=(-v --stats-one-line)
+    fi
     [[ "$DRY_RUN" == "true" ]] && rclone_args+=(--dry-run)
     echo "Shipping: $source_dir -> $REMOTE:$tree/$HOST"
     rclone "${rclone_args[@]}" "$source_dir" "$REMOTE:$tree/$HOST"
