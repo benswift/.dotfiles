@@ -22,6 +22,7 @@ mail-analyze --help
 | ------------------ | ----------------------------------------------------- |
 | `mail-copy-path`   | Copy message file path to clipboard (uses mu to find) |
 | `mail-urls`        | Extract URLs from a piped message and pick one in fzf |
+| `mail-local-date`  | Pager display filter: Date: header in local time      |
 | `mail-compose`     | Compose and send emails with Jinja2 templating        |
 | `mail-dedupe`      | Deduplicate messages by Message-ID                    |
 | `mail-analyze`     | Analyze maildir format and identify issues            |
@@ -119,6 +120,7 @@ The following neomutt macros use this package:
 
 - `,p` - copy file path to clipboard
 - `,b` - extract URLs; open in browser or compose a mailto (`mail-urls`)
+- `$display_filter` - `mail-local-date`, so the pager's Date: header is local
 
 `mail-urls` reads the raw RFC822 message on stdin (the macro clears
 `pipe_decode` first so the full MIME structure is preserved), parses the HTML

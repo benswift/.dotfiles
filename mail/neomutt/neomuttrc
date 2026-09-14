@@ -95,6 +95,8 @@ set menu_scroll = yes
 set smart_wrap = yes
 set tilde = yes
 set markers = no
+# The pager shows Date: in the sender's zone and has no setting to change it
+set display_filter = "mail-local-date"
 
 # === Sidebar configuration ===
 set sidebar_visible = yes

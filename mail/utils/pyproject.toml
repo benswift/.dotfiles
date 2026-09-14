@@ -17,6 +17,7 @@ dependencies = [
 mail-copy-path = "mail_utils.cli.copy_path:main"
 mail-copy-attachment-name = "mail_utils.cli.copy_attachment_name:main"
 mail-urls = "mail_utils.cli.urls:main"
+mail-local-date = "mail_utils.cli.local_date:main"
 mail-dedupe = "mail_utils.cli.dedupe:app"
 mail-analyze = "mail_utils.cli.analyze:app"
 mail-compose = "mail_utils.cli.compose:app"
