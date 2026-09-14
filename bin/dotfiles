@@ -289,6 +289,48 @@ check_directories() {
     done
 }
 
+# The plists in launchd/ are installed by hand (see each header), so this is
+# what notices an installed copy drifting from the tracked one, a job that was
+# never bootstrapped, or one whose last run failed.
+check_launchd() {
+    [[ "$OSTYPE" == darwin* ]] || return 0
+    section "Checking launchd jobs..."
+
+    local plist label installed info code
+    for plist in "$DOTFILES_DIR"/launchd/*.plist; do
+        label=$(basename "$plist" .plist)
+        installed="$HOME/Library/LaunchAgents/$label.plist"
+        if [[ ! -f "$installed" ]]; then
+            check_fail "$label not installed (see launchd/$label.plist header)"
+            continue
+        fi
+        if ! cmp -s "$plist" "$installed"; then
+            check_fail "$label installed copy differs from launchd/$label.plist"
+            continue
+        fi
+        if ! info=$(launchctl print "gui/$(id -u)/$label" 2>/dev/null); then
+            check_fail "$label not loaded (launchctl bootstrap it)"
+            continue
+        fi
+        code=$(sed -n 's/.*last exit code = \([^ ]*\).*/\1/p' <<<"$info" | head -1)
+        if [[ -z "$code" || "$code" == "0" || "$code" == "(never" ]]; then
+            check_pass "$label loaded"
+        else
+            check_fail "$label last exit $code (see ~/Library/Logs/)"
+        fi
+    done
+
+    # A plist left behind by a job that no longer exists in launchd/ keeps
+    # running whatever it pointed at.
+    local stray
+    for stray in "$HOME"/Library/LaunchAgents/com.benswift.*.plist "$HOME"/Library/LaunchAgents/com.xwmx.*.plist; do
+        [[ -f "$stray" ]] || continue
+        label=$(basename "$stray" .plist)
+        [[ -f "$DOTFILES_DIR/launchd/$label.plist" ]] ||
+            check_warn "$label installed but not in launchd/ (bootout and remove it)"
+    done
+}
+
 check_skill_yaml() {
     local skills_dir="$1"
 
@@ -364,6 +406,7 @@ doctor() {
     check_script_deps
     check_mise_tools
     check_directories
+    check_launchd
     check_agent_config
 
     echo ""
