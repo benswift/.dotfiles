@@ -229,7 +229,8 @@ agent-run --profile openrouter --model "provider/model:free" "prompt"
 ### Session log analytics
 
 @bin/ship-claude-logs sends each host's `~/.claude/projects` and
-`~/.codex/sessions` to weddle (systemd timer there, launchd on macOS).
+`~/.codex/sessions` to weddle hourly (systemd timer there; on macOS it is one
+step of the push-to-weddle launchd job, with the rclone backup).
 @bin/ingest-claude-logs summarises both hourly into
 `~/claude-logs/analytics.db`, one `sessions` row per session file, keyed on path
 so ingest is incremental. Purpose: cross-machine introspection of agent usage.

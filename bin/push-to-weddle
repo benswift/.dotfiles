@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# Everything this Mac keeps on weddle, pushed in one hourly launchd job
+# (launchd/com.benswift.push-to-weddle.plist, under bin/launchd-run):
+#
+#   ~/Documents and ~/Maildir   bin/backup
+#   agent session logs           bin/ship-claude-logs
+#
+# One job rather than three because they share a remote and a metered-network
+# policy, and a sequence is what keeps two rclone syncs off one tree at once.
+# Each step runs even if the one before it failed, and the exit status is
+# non-zero if any did, so launchd-run pages on either.
+#
+# weddle off the tailnet is not a failure worth paging for: the run is skipped
+# with exit 0, the log records it, and the next hour retries. What catches a
+# long stall is on weddle's side --- the briefing's "mail synced N ago" line
+# and ingest-claude-logs' staleness check.
+
+set -uo pipefail
+
+if ! nc -z -w 5 weddle 22 2>/dev/null; then
+	echo "push-to-weddle: weddle unreachable; skipping"
+	exit 0
+fi
+
+status=0
+backup || status=1
+ship-claude-logs || status=1
+exit "$status"

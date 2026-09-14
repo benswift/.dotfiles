@@ -8,8 +8,6 @@ set -euo pipefail
 REMOTE="${RCLONE_REMOTE:-weddle}"
 REMOTE_BASE="${RCLONE_REMOTE_BASE:-backup/$(hostname -s)}"
 DRY_RUN="${DRY_RUN:-false}"
-MAILDIR_ONLY=false
-DOCUMENTS_ONLY=false
 FORCE=false
 
 # Exclude patterns for build artifacts and regeneratable content
@@ -39,14 +37,12 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Sync ~/Documents and ~/Maildir to remote storage using rclone.
+Sync ~/Documents and ~/Maildir to remote storage using rclone. The hourly
+push-to-weddle launchd job runs this; weddle's read-only Maildir mirror is
+only as fresh as the last run.
 
 Options:
   -n, --dry-run    Show what would be transferred without making changes
-  -m, --maildir    Sync only ~/Maildir (the hourly launchd job on daysy, so
-                   weddle's read-only mirror stays fresh for pkb-triage)
-  -d, --documents  Sync only ~/Documents (the scheduled launchd job, kept
-                   apart from -m so the two can never sync Maildir at once)
   -r, --remote     Set remote name (default: weddle)
   -f, --force      Run even on a metered network (tethered phone)
   -h, --help       Show this help message
@@ -63,14 +59,6 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -n|--dry-run)
       DRY_RUN=true
-      shift
-      ;;
-    -m|--maildir)
-      MAILDIR_ONLY=true
-      shift
-      ;;
-    -d|--documents)
-      DOCUMENTS_ONLY=true
       shift
       ;;
     -f|--force)
@@ -92,11 +80,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-if [[ "$MAILDIR_ONLY" == "true" && "$DOCUMENTS_ONLY" == "true" ]]; then
-  echo "backup: --maildir and --documents are exclusive; pass neither to sync both." >&2
-  exit 1
-fi
 
 # weddle is the backup destination, not a source: it has no ~/Documents or
 # ~/Maildir worth pushing, and `rclone sync` to a remote pointing back at this
@@ -165,37 +148,40 @@ for pattern in "${EXCLUDES[@]}"; do
   EXCLUDE_ARGS+=(--exclude "$pattern")
 done
 
-BASE_ARGS=(sync --progress)
+# Directory mtimes on the mirror are never read, and setting them is a write
+# per directory per run (and a log line each under -v).
+BASE_ARGS=(sync --no-update-dir-modtime)
+# --progress redraws twice a second, which in a log file is thousands of lines
+# per long run. Off a terminal, log each transfer and one summary line instead.
+if [[ -t 1 ]]; then
+  BASE_ARGS+=(--progress)
+else
+  BASE_ARGS+=(-v --stats-one-line)
+fi
 if [[ "$DRY_RUN" == "true" ]]; then
   BASE_ARGS+=(--dry-run)
   echo "DRY RUN MODE - no changes will be made"
 fi
 
-if [[ "$MAILDIR_ONLY" != "true" ]]; then
-  echo "=== Documents ==="
-  echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
-  echo "Excluding: ${EXCLUDES[*]}"
-  echo
-  while IFS= read -r arg; do
-    EXCLUDE_ARGS+=("$arg")
-  done < <(attached_image_excludes "$HOME/Documents")
-  rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" \
-    --backup-dir "$REMOTE:$VERSIONS/$RUN_STAMP/Documents" \
-    "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
-  echo
-fi
+echo "=== Documents ==="
+echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
+echo "Excluding: ${EXCLUDES[*]}"
+echo
+while IFS= read -r arg; do
+  EXCLUDE_ARGS+=("$arg")
+done < <(attached_image_excludes "$HOME/Documents")
+rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" \
+  --backup-dir "$REMOTE:$VERSIONS/$RUN_STAMP/Documents" \
+  "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
+echo
 
-if [[ "$DOCUMENTS_ONLY" != "true" ]]; then
-  echo "=== Maildir ==="
-  echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
-  echo
-  rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
-    --backup-dir "$REMOTE:$VERSIONS/$RUN_STAMP/Maildir" \
-    "$HOME/Maildir" "$REMOTE:Maildir"
-fi
+echo "=== Maildir ==="
+echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
+echo
+rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
+  --backup-dir "$REMOTE:$VERSIONS/$RUN_STAMP/Maildir" \
+  "$HOME/Maildir" "$REMOTE:Maildir"
 
-# Pruning rides on the Documents runs only, so the hourly Maildir job and the
-# Documents job never purge the same directory concurrently.
-if [[ "$DRY_RUN" != "true" && "$MAILDIR_ONLY" != "true" ]]; then
+if [[ "$DRY_RUN" != "true" ]]; then
   prune_versions
 fi

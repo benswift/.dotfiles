@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hourly push of everything this Mac keeps on weddle: bin/push-to-weddle, run
+  under bin/launchd-run (PATH, timeout, failure paging --- see its header).
+
+  Hourly is cheap: a run with little to push takes seconds, and launchd never
+  starts a second copy of a job that is still running. StartInterval rather
+  than a calendar slot because a laptop is asleep at any given minute; the
+  interval simply resumes on wake. A 45-minute cap is generous for the
+  incremental case and bounds a run that straddles sleep; a genuinely large
+  change lands over a couple of runs.
+
+  Install (not in the symlink manifest because ~/Library only exists on
+  macOS):
+
+    cp ~/.dotfiles/launchd/com.benswift.push-to-weddle.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.benswift.push-to-weddle.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.benswift.push-to-weddle</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/ben/.dotfiles/bin/launchd-run</string>
+        <string>push-to-weddle</string>
+        <string>-t</string>
+        <string>2700</string>
+        <string>--</string>
+        <string>push-to-weddle</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>3600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/ben/Library/Logs/push-to-weddle.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/ben/Library/Logs/push-to-weddle.log</string>
+</dict>
+</plist>
