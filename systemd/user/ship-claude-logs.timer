@@ -1,11 +1,15 @@
 [Unit]
-Description=Trigger ship-claude-logs every 15 minutes
+Description=Trigger ship-claude-logs hourly
 # Deliberately no Requires=<service>: in [Unit] that means "start the service
 # when the timer starts", firing a spurious run at every boot. Unit= in
 # [Timer] is what binds the two. (2026-08-06)
 
 [Timer]
-OnCalendar=*:0/15
+# Shipping is a backup, not a feed: nothing downstream waits on it, and
+# ingest-claude-logs' staleness alarm is days wide. On the hour so the :10
+# ingest picks up a fresh copy; the macOS hosts ship on the same cadence from
+# their push-to-weddle launchd job.
+OnCalendar=hourly
 RandomizedDelaySec=1min
 Persistent=true
 Unit=ship-claude-logs.service
