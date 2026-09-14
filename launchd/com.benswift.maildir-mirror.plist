@@ -5,8 +5,8 @@
 
   weddle's Maildir is a read-only mirror of this one (mail/README.md), and
   pkb-triage there reads it every morning: without this the mirror is only as
-  fresh as the last manual `backup`, which has been days. Documents are not
-  included; a full `backup` is still a manual run.
+  fresh as the last manual `backup`, which has been days. Documents go on their
+  own schedule, in com.benswift.documents-backup.
 
   weddle unreachable (laptop off the tailnet) is not a failure worth paging
   for: rclone exits non-zero, the log records it, and the next hour retries.
