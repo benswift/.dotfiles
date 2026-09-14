@@ -9,7 +9,10 @@ alias supervisors SOCY HDR Supervisors <HDRSupervisors.Cybernetics@lists.anu.edu
 alias adirh SOCY ADirHDR <adir.hdr.cybernetics@anu.edu.au>
 alias adire SOCY ADirE <adire.cybernetics@anu.edu.au>
 alias admin SOCY Admin <admin.cybernetics@anu.edu.au>
-alias hdradmin CSS HDR Admin <hdr.css@anu.edu.au>
+alias hdrcand ANU HDR Candidature <hdr.candidature@anu.edu.au>
+alias hdradmit ANU HDR Admissions <hdr.admissions@anu.edu.au>
+alias hdrsup ANU HDR Supervision <hdr.supervision@anu.edu.au>
+alias hdrexam ANU HDR Examinations <hdr.examinations@anu.edu.au>
 alias servicedesk ANU Service Desk <servicedesk@anu.edu.au>
 alias leadership SOCY Director <director.cybernetics@anu.edu.au>, SOCY Deputy Director <deputydirector.cybernetics@anu.edu.au>, SOCY School Manager <sm.cybernetics@anu.edu.au>
 alias phd1 Sui Jackson <Sui.Jackson@anu.edu.au>, Thomas Griffiths <thomas.griffiths1@anu.edu.au>, Joshua Jay Castle <JoshuaJay.Castle@anu.edu.au>, Nadereh Ghelich Khani <Nadereh.GhelichKhani@anu.edu.au>, Thomas McEvoy Zafiropulos <ThomasDimitry.McEvoyZafiropulos@anu.edu.au>, Charlie Paulk <charlie.paulk@anu.edu.au>, Gareth Jones <Gareth.Jones@anu.edu.au>, Zhuotao Fang <ZhuotaoF@outlook.com>
