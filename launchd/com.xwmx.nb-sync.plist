@@ -2,26 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   Hourly nb sync on macOS hosts (the notebook's ~/.nb/home/CLAUDE.md Sync
-  section refers to this). weddle runs the same cadence from nb-sync.timer.
+  section refers to this), run under bin/launchd-run (PATH, timeout, failure
+  paging --- see its header). weddle runs the same cadence from nb-sync.timer,
+  seven minutes past the hour so the two hosts never push at once.
 
   Hourly rather than daily because the notebook is written from several hosts
   at once: a daily sync left weddle nineteen commits behind by mid-afternoon
   and diverged by evening, so each side kept merging the other's day.
-  (2026-07-28. pkb-agent also syncs, but only on a tick that has a due task,
-  so it is not a cadence to rely on.)
 
   StartCalendarInterval is not a wall-clock guarantee: on a laptop asleep at
-  00:00, launchd defers the run until the machine wakes and then fires it
-  immediately --- before wifi has associated. `nb sync` resolves github.com as
-  its first real act, so it died there, reporting only its generic "Sync
-  failed. Reason unknown, but likely ... Network unavailable." (2026-07-28:
-  twice in twenty runs. The log carried no timestamps to place them, hence the
-  per-run date stamp below.) bin/wait-for-network is the same guard the systemd
-  units use as ExecStartPre, and it fails loudly if the network never arrives.
-
-  `mise exec` resolves the nb version pinned in mise/config.toml. launchd jobs
-  get no login shell, so PATH below includes both supported mise install
-  locations explicitly rather than relying on zshenv.
+  the hour, launchd defers the run until the machine wakes and then fires it
+  immediately, before wifi has associated, and `nb sync` dies resolving
+  github.com. bin/wait-for-network is the same guard the systemd units use as
+  ExecStartPre. If the network never arrives the run is skipped with exit 0:
+  being offline is not a failure, and the next hour retries.
 
   Install:
     cp ~/.dotfiles/launchd/com.xwmx.nb-sync.plist ~/Library/LaunchAgents/
@@ -33,15 +27,15 @@
     <string>com.xwmx.nb-sync</string>
     <key>ProgramArguments</key>
     <array>
+        <string>/Users/ben/.dotfiles/bin/launchd-run</string>
+        <string>nb-sync</string>
+        <string>-t</string>
+        <string>900</string>
+        <string>--</string>
         <string>/bin/sh</string>
         <string>-c</string>
-        <string>printf '=== %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S %z')"; /Users/ben/.dotfiles/bin/wait-for-network &amp;&amp; mise exec -- nb sync --all</string>
+        <string>wait-for-network || exit 0; nb sync --all</string>
     </array>
-    <key>EnvironmentVariables</key>
-    <dict>
-        <key>PATH</key>
-        <string>/Users/ben/.local/bin:/Users/ben/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
-    </dict>
     <!-- Minute alone, with no Hour key, means every hour on the hour. A run
          missed while the machine slept is coalesced into a single run at
          wake, not replayed once per hour skipped. -->

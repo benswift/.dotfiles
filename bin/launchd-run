@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+#
+# launchd-run: the wrapper every launchd job in launchd/ runs under. It is the
+# macOS counterpart of the boilerplate weddle's systemd units carry (explicit
+# PATH, TimeoutStartSec, OnFailure=unit-oncall@), so a plist is left with only
+# a label, a schedule and a command.
+#
+#   launchd-run <job> [-t SECONDS] [-n FAILURES] -- <command> [args...]
+#
+# PATH      launchd hands a job only what its plist spells out, so it is set
+#           here once: dotfiles bin, uv tools, mise shims (rclone, nb), homebrew
+#           (mbsync, mu, timeout) and the system dirs (nc, route, hdiutil).
+# Header    a dated line per run; launchd's log redirection adds none.
+# Timeout   -t caps the wall clock (default 30 min). Without it a run that
+#           straddles the laptop's sleep lives for hours, holds launchd's
+#           one-instance slot, and rclone has re-uploaded whole trees after
+#           the reconnects.
+# Failures  launchd has no OnFailure equivalent, so it lives here: -n
+#           consecutive non-zero exits (default 3, so a transient blip stays
+#           quiet) file a pkb todo and send a Pushover page, once per breakage.
+#           Repeats while still broken stay quiet, a success re-arms, and a
+#           breakage older than REARM_HOURS pages again so a persistent one
+#           cannot go silent. Offline or metered is not a failure --- the job
+#           itself exits 0 for those (bin/mailsync-scheduled, bin/push-to-weddle).
+#
+# The job's output goes wherever the plist points stdout, by convention
+# ~/Library/Logs/<job>.log, and the tail of that log rides along in the todo
+# and the page. This wrapper's own actions are logged to
+# ~/.local/state/launchd-run/launchd-run.log.
+
+set -uo pipefail
+
+export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/launchd-run"
+LOG="$STATE/launchd-run.log"
+REARM_HOURS="${REARM_HOURS:-24}"
+TAIL_LINES=20
+
+usage() {
+	echo "usage: launchd-run <job> [-t SECONDS] [-n FAILURES] -- <command> [args...]" >&2
+	exit 2
+}
+
+[[ $# -ge 1 && "$1" != -* ]] || usage
+job="$1"
+shift
+timeout_s=1800
+threshold=3
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	-t) timeout_s="$2"; shift 2 ;;
+	-n) threshold="$2"; shift 2 ;;
+	--) shift; break ;;
+	*) usage ;;
+	esac
+done
+[[ $# -gt 0 ]] || usage
+
+mkdir -p "$STATE"
+marker="$STATE/$job.failed"
+count_file="$STATE/$job.count"
+job_log="$HOME/Library/Logs/$job.log"
+host="$(hostname -s)"
+
+say() { printf '[%s] %s: %s\n' "$(date -Iseconds)" "$job" "$*" >>"$LOG"; }
+
+printf '=== %s %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S %z')" "$job"
+
+# GNU coreutils timeout (brew). Without it, run unguarded rather than not at
+# all. The command runs in its own process group, so the kill reaches a
+# `sh -c` child as well as the shell.
+timeout_bin="$(command -v timeout || command -v gtimeout || true)"
+if [[ -n "$timeout_bin" ]]; then
+	"$timeout_bin" --kill-after=60 "$timeout_s" "$@"
+else
+	echo "launchd-run: coreutils timeout not found; running unguarded" >&2
+	"$@"
+fi
+status=$?
+# 124: timeout fired. 137: it had to escalate to SIGKILL.
+if ((status == 124 || status == 137)); then
+	echo "launchd-run: $job exceeded ${timeout_s}s and was killed" >&2
+fi
+
+if ((status == 0)); then
+	rm -f "$count_file"
+	if [[ -f "$marker" ]]; then
+		rm -f "$marker"
+		echo "launchd-run: $job recovered"
+		say "recovered; marker cleared"
+	fi
+	exit 0
+fi
+
+count=$(($(cat "$count_file" 2>/dev/null || echo 0) + 1))
+echo "$count" >"$count_file"
+if ((count < threshold)); then
+	echo "launchd-run: $job failed (exit $status), $count of $threshold before paging"
+	exit "$status"
+fi
+
+# Marker still fresh? Record the repeat and stay quiet. Age comes from the
+# first-failure line inside the marker, not the file's mtime, which the
+# append below bumps on every repeat.
+if [[ -f "$marker" ]]; then
+	first_s="$(sed -n '1s/^first failure \([0-9]*\).*/\1/p' "$marker")"
+	[[ "$first_s" =~ ^[0-9]+$ ]] || first_s="$(stat -f %m "$marker")"
+	age_h=$((($(date +%s) - first_s) / 3600))
+	if ((age_h < REARM_HOURS)); then
+		printf 'repeat failure %s\n' "$(date -Iseconds)" >>"$marker"
+		echo "launchd-run: $job still failing; already paged"
+		say "repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new todo"
+		exit "$status"
+	fi
+	say "still failing ${age_h}h on; re-arming"
+fi
+
+tail_out="$(tail -n "$TAIL_LINES" "$job_log" 2>/dev/null || echo '(no log)')"
+title="$job failed on $host (exit $status) --- check ~/Library/Logs/$job.log"
+description="$(
+	cat <<EOT
+Filed automatically by launchd-run at $(date -Iseconds).
+
+  launchctl print gui/\$(id -u)/<label>
+  tail -200 ~/Library/Logs/$job.log
+
+Last $TAIL_LINES log lines:
+
+$tail_out
+EOT
+)"
+
+# The todo is the record; the page is the nudge towards it. Both best effort:
+# neither a notebook nor a Pushover outage must mask the log, which already
+# has the full story. stdin from /dev/null because nb hangs on a terminal.
+if nb todo add "$title" --description "$description" --tags bot,oncall </dev/null >/dev/null 2>>"$LOG"; then
+	say "filed a todo"
+else
+	say "FAILED to file a todo --- the log is the only record"
+fi
+printf 'first failure %s %s\n' "$(date +%s)" "$(date -Iseconds)" >"$marker"
+
+# mise exec supplies PUSHOVER_TOKEN/PUSHOVER_USER_KEY from the untracked [env]
+# block in ~/.config/mise/config.local.toml.
+if printf 'exit=%s\n%s\n' "$status" "$(printf '%s\n' "$tail_out" | tail -3)" |
+	mise exec -- notify-pushover --title "oncall: $job on $host" >/dev/null 2>>"$LOG"; then
+	say "paged"
+else
+	say "pushover failed --- the todo is still filed"
+fi
+exit "$status"
