@@ -1,0 +1,19 @@
+# Headless Chrome (agent-browser, puppeteer) D-Bus-activates the desktop portal
+# for appearance settings. With no display, portal-gtk exits and every caller
+# hangs until the 90s start timeout. A masked unit fails activation at once, so
+# this holds a runtime mask (in /run, so gone at reboot) until a GNOME login
+# starts graphical-session-pre.target, whose Conflicts= stops it and lifts the
+# mask. Nothing re-masks after that session ends: run
+# `systemctl --user start portal-headless` or reboot.
+[Unit]
+Description=Mask the desktop portals outside a graphical session
+Conflicts=graphical-session-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=systemctl --user mask --runtime xdg-desktop-portal.service xdg-desktop-portal-gtk.service
+ExecStop=systemctl --user unmask --runtime xdg-desktop-portal.service xdg-desktop-portal-gtk.service
+
+[Install]
+WantedBy=default.target

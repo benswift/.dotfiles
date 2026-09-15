@@ -65,6 +65,8 @@ SYMLINK_MANIFEST=(
     # OnFailure=unit-oncall@%n.service / OnSuccess=unit-oncall-clear@%n.service
     "systemd/user/unit-oncall@.service:~/.config/systemd/user/unit-oncall@.service"
     "systemd/user/unit-oncall-clear@.service:~/.config/systemd/user/unit-oncall-clear@.service"
+    # enable on headless Linux hosts (see its header)
+    "systemd/user/portal-headless.service:~/.config/systemd/user/portal-headless.service"
     # oncall drop-ins for units that other repos own: linked file-by-file
     # because the .d/ dirs also hold machine-local overrides
     "systemd/user/aps-scrape.service.d/oncall.conf:~/.config/systemd/user/aps-scrape.service.d/oncall.conf"
