@@ -10,10 +10,9 @@
 # that logged-in session in a dedicated, persistent Chrome profile and read the
 # accessibility tree --- no message API, just the rendered web UI.
 #
-# This is UI automation, so it's inherently more brittle than the calendar tool
-# (bin/agenda, which uses EventKit): expect occasional fix-ups when Microsoft
-# reshuffles the Teams web client. Parsing leans on roles/labels (treeitem,
-# group) rather than positions to stay as durable as possible.
+# This is UI automation, so it's inherently brittle: expect occasional fix-ups
+# when Microsoft reshuffles the Teams web client. Parsing leans on roles/labels
+# (treeitem, group) rather than positions to stay as durable as possible.
 #
 #   teams login                 # one-time interactive sign-in (opens a window)
 #   teams chats [N]             # list recent chats (default 25)

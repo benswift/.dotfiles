@@ -153,7 +153,6 @@ Each script's header has the detail. Notable ones:
   with each session's running agents
 - `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to
   `⚠ <reason>` while an agent is blocked (undone on the next prompt)
-- `agenda` --- ANU Exchange calendar via EventKit (macOS only)
 - `teams` --- Teams DMs via the web client
 - `pkb-agent`, `pkb-triage`, `pkb-health`, `pkb-briefing` --- the notebook's
   scheduled loops, a uv-tool package at @pkb/ (installed editable like
@@ -284,16 +283,15 @@ plain text and do **not** show the cursor row (it's a background colour), so
 probe position with a side-effect key like `<space>` (tag-entry) and see which
 row gets the `*`.
 
-## Microsoft 365 (calendar and Teams)
+## Microsoft 365 (Teams)
 
 ANU locks down third-party Graph app registrations and the device-code flow, so
 **there is no API path to ANU calendar or Teams data --- don't reach for
-Graph.** Two scripts use channels ANU does permit:
+Graph.** @bin/teams drives the Teams web client via `agent-browser`, signed in
+as yourself in a persistent Chrome profile, which is a channel ANU does permit.
+Being UI automation it's brittle; expect fix-ups when Microsoft reshuffles the
+web client.
 
-- @bin/agenda --- EventKit against the ANU Exchange account already synced into
-  macOS Calendar.app (the calendar titled "Calendar" under the "ANU Exchange"
-  source). macOS only; first run prompts for Calendar access. Creates personal
-  time-blocks only --- there is no `--attendee` option by design.
-- @bin/teams --- drives the Teams web client via `agent-browser`, signed in as
-  yourself in a persistent Chrome profile. Being UI automation it's brittle;
-  expect fix-ups when Microsoft reshuffles the web client.
+There is no calendar tool, and don't write one against EventKit: ANU's Exchange
+sync into macOS Calendar.app is too flaky to give answers worth trusting (it is
+reliable on iOS, which is where Ben reads the work calendar).

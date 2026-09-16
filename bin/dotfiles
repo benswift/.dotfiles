@@ -225,15 +225,6 @@ check_script_deps() {
     else
         check_warn "agent-browser not installed (bin/teams needs it)"
     fi
-
-    # bin/agenda is a swift script (macOS only)
-    if [[ "$OSTYPE" == darwin* ]]; then
-        if command_exists swift; then
-            check_pass "swift (bin/agenda)"
-        else
-            check_warn "swift not installed (bin/agenda needs it)"
-        fi
-    fi
 }
 
 check_mise_tools() {
