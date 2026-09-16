@@ -149,6 +149,10 @@ Each script's header has the detail. Notable ones:
 - `mailsync` --- sync all email accounts
 - `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers
 - `agent-run` --- headless agent dispatcher (see below)
+- `hx-ghostty` --- open files in helix in a Ghostty tab. `hx-ghostty --register`
+  (once per Mac) builds the applet in `~/Applications` that makes it macOS's
+  handler for markdown, so a double-clicked `.md` lands in helix rather than
+  Xcode
 - `zj-switch` --- `Alt s` session switcher, live sessions MRU-first, annotated
   with each session's running agents
 - `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to

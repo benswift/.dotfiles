@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+# hx-ghostty --- open files in helix, in a tab of the running Ghostty, and be
+# the macOS handler that sends double-clicked documents there.
+#
+#   hx-ghostty FILE...       open FILEs in helix in a new Ghostty tab (a new
+#                            window if Ghostty isn't running yet)
+#   hx-ghostty --register    build the LaunchServices handler and make it the
+#                            default app for HANDLED_UTIS (markdown, so Finder
+#                            and `open` stop routing .md files to Xcode)
+#   hx-ghostty --unregister  remove the handler app again
+#
+# The tab is created through Ghostty's AppleScript dictionary (1.3+, see
+# Ghostty.app/Contents/Resources/Ghostty.sdef): `ghostty +new-window` refuses
+# to run on macOS. Note `new tab` needs an explicit `in <window>` --- without
+# it Ghostty answers errAEEventNotHandled. The tab closes when helix exits,
+# the same as a shell tab would.
+#
+# macOS hands documents to an .app, never to a script, so --register compiles
+# a tiny AppleScript applet into ~/Applications whose `on open` handler calls
+# this script. It is ad-hoc signed so TCC keys the Automation permission
+# ("Open in Helix" controlling Ghostty, granted once on first open) to a stable
+# identity rather than re-prompting.
+set -euo pipefail
+
+SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+
+APP_NAME="Open in Helix"
+APP="$HOME/Applications/$APP_NAME.app"
+BUNDLE_ID="me.benswift.open-in-helix"
+LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+
+# UTIs the handler claims. On a Mac with the developer tools installed Xcode
+# is the default claimant for markdown, which is the whole reason this exists.
+HANDLED_UTIS=(net.daringfireball.markdown)
+
+usage() {
+    sed -n '3,/^$/p' "$SELF" | sed 's/^# \{0,1\}//' >&2
+    exit 2
+}
+
+# helix is a source build in ~/.local/bin (see bin/helix-build), which is not
+# on the stub PATH `do shell script` hands the applet.
+hx_bin() {
+    if [[ -x "$HOME/.local/bin/hx" ]]; then
+        echo "$HOME/.local/bin/hx"
+    elif command -v hx >/dev/null 2>&1; then
+        command -v hx
+    else
+        echo "hx-ghostty: no hx found --- run helix-build" >&2
+        exit 1
+    fi
+}
+
+# Ghostty runs a command with arguments through `/bin/sh -c`, so the command
+# string is shell syntax and the paths in it need shell quoting.
+shq() {
+    local s=${1//\'/\'\\\'\'}
+    printf "'%s'" "$s"
+}
+
+# ... and the command string then goes inside an AppleScript literal.
+as_string() {
+    local s=${1//\\/\\\\}
+    s=${s//\"/\\\"}
+    printf '"%s"' "$s"
+}
+
+abspath() { printf '%s\n' "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")"; }
+
+open_files() {
+    local hx file paths=() cmd dir
+    hx="$(hx_bin)"
+    for file in "$@"; do paths+=("$(abspath "$file")"); done
+    dir="$(dirname "${paths[0]}")"
+
+    # `application "X" is running` rather than pgrep: the executable inside
+    # Ghostty.app is lowercase `ghostty`, and unlike a `tell` block this query
+    # does not launch the app.
+    if [[ "$(osascript -e 'application "Ghostty" is running')" != "true" ]]; then
+        # Let the launch itself run helix: opening a tab afterwards would
+        # leave the window Ghostty starts with sitting there as a stray shell.
+        open -na Ghostty.app --args -e "$hx" "${paths[@]}"
+        return
+    fi
+
+    cmd="$(shq "$hx")"
+    for file in "${paths[@]}"; do cmd="$cmd $(shq "$file")"; done
+
+    osascript <<EOF >/dev/null
+tell application "Ghostty"
+  set cfg to new surface configuration from {command:$(as_string "$cmd"), initial working directory:$(as_string "$dir")}
+  if (count of windows) is 0 then
+    new window with configuration cfg
+  else
+    new tab in front window with configuration cfg
+  end if
+  activate
+end tell
+EOF
+}
+
+register() {
+    command -v duti >/dev/null 2>&1 || {
+        echo "hx-ghostty: duti is required (brew install duti)" >&2
+        exit 1
+    }
+
+    local work
+    work="$(mktemp -d)"
+    cat >"$work/applet.applescript" <<EOF
+on open theFiles
+  set args to ""
+  repeat with f in theFiles
+    set args to args & " " & quoted form of POSIX path of f
+  end repeat
+  do shell script "$SELF" & args
+end open
+
+-- Launched with no document (from Spotlight, say): nothing to edit, so just
+-- bring the terminal up.
+on run
+  do shell script "/usr/bin/open -a Ghostty"
+end run
+EOF
+
+    mkdir -p "$(dirname "$APP")"
+    rm -rf "$APP"
+    osacompile -o "$APP" "$work/applet.applescript"
+    rm -rf "$work"
+
+    local plist="$APP/Contents/Info.plist"
+    plutil -replace CFBundleIdentifier -string "$BUNDLE_ID" "$plist"
+    plutil -replace CFBundleName -string "$APP_NAME" "$plist"
+    # No dock icon or menu bar: this app exists only to forward an odoc event.
+    plutil -replace LSUIElement -bool true "$plist"
+    plutil -replace CFBundleDocumentTypes -json '[{
+        "CFBundleTypeName": "Markdown document",
+        "CFBundleTypeRole": "Editor",
+        "LSHandlerRank": "Owner",
+        "LSItemContentTypes": ["net.daringfireball.markdown"]
+    }]' "$plist"
+
+    codesign --force --sign - "$APP" >/dev/null 2>&1 ||
+        echo "hx-ghostty: could not ad-hoc sign $APP (TCC may re-prompt)" >&2
+    "$LSREGISTER" -f "$APP"
+
+    # lsregister returns before the claim is visible, and a duti -s that
+    # lands in that gap exits 0 having changed nothing --- so set, verify,
+    # and retry rather than trusting the exit status.
+    local uti tries
+    for uti in "${HANDLED_UTIS[@]}"; do
+        tries=0
+        while ((tries++ < 10)); do
+            duti -s "$BUNDLE_ID" "$uti" all
+            [[ "$(duti -x "$uti" | tail -1)" == "$BUNDLE_ID" ]] && break
+            sleep 1
+        done
+        echo "hx-ghostty: $uti -> $(duti -x "$uti" | head -1)"
+    done
+}
+
+unregister() {
+    [[ -d "$APP" ]] || {
+        echo "hx-ghostty: no handler installed at $APP"
+        return
+    }
+    "$LSREGISTER" -u "$APP" || true
+    rm -rf "$APP"
+    echo "hx-ghostty: removed $APP --- macOS falls back to the next claimant"
+    echo "            (Xcode, for markdown). Set another with:"
+    echo "            duti -s <bundle id> net.daringfireball.markdown all"
+}
+
+[[ $# -ge 1 ]] || usage
+case "$1" in
+--register) register ;;
+--unregister) unregister ;;
+-h | --help) usage ;;
+-*) usage ;;
+*) open_files "$@" ;;
+esac
