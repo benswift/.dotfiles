@@ -140,9 +140,38 @@ if [[ -f "$marker" ]]; then
 	say "$unit: still failing ${age_h}h on; re-arming"
 fi
 
-result="$(systemctl --user show -p Result --value "$unit" 2>/dev/null || echo unknown)"
-status="$(systemctl --user show -p ExecMainStatus --value "$unit" 2>/dev/null || echo '?')"
-tail_out="$(journalctl --user -u "$unit" -n "$JOURNAL_LINES" --no-pager -o short-iso 2>&1 || echo '(journal unavailable)')"
+# systemd hands an OnFailure= handler the MONITOR_* variables describing the run
+# that actually failed. Prefer them: `systemctl show` reads live state, and a
+# unit that restarts back to back (the publish generators) is already into its
+# next run by the time this handler is scheduled --- which is how a failure gets
+# filed as "result=success, exit=0". systemd omits them when it coalesces two
+# triggers into one handler, so the live read stays as the fallback.
+result="${MONITOR_SERVICE_RESULT:-}"
+status="${MONITOR_EXIT_STATUS:-}"
+[[ -n "$result" ]] || result="$(systemctl --user show -p Result --value "$unit" 2>/dev/null || echo unknown)"
+[[ -n "$status" ]] || status="$(systemctl --user show -p ExecMainStatus --value "$unit" 2>/dev/null || echo '?')"
+
+# The body races the same way, and quoting the *next* run's happy output is how
+# a todo comes to argue with its own title. Scope the tail to the failed
+# invocation when systemd named it: the id alone identifies the run, so this
+# does not want `-u` as well (that would OR the whole unit back in). Three
+# fields carry the id --- the job's own output is tagged
+# `_SYSTEMD_INVOCATION_ID`, and the manager's lines about it
+# `USER_INVOCATION_ID` here, `INVOCATION_ID` under a system manager --- and
+# `+` is journalctl's OR between match groups.
+tail_out=""
+if [[ -n "${MONITOR_INVOCATION_ID:-}" ]]; then
+	tail_out="$(journalctl --user \
+		"_SYSTEMD_INVOCATION_ID=$MONITOR_INVOCATION_ID" \
+		+ "USER_INVOCATION_ID=$MONITOR_INVOCATION_ID" \
+		+ "INVOCATION_ID=$MONITOR_INVOCATION_ID" \
+		-n "$JOURNAL_LINES" --no-pager -o short-iso 2>/dev/null || true)"
+fi
+tail_label="failed run's journal"
+if [[ -z "$tail_out" ]]; then
+	tail_out="$(journalctl --user -u "$unit" -n "$JOURNAL_LINES" --no-pager -o short-iso 2>&1 || echo '(journal unavailable)')"
+	tail_label="last $JOURNAL_LINES journal lines"
+fi
 
 title="$unit failed on weddle (result=$result, exit=$status) --- check the journal"
 description="$(
@@ -152,7 +181,7 @@ Filed automatically by unit-oncall at $(date -Is).
   systemctl --user status $unit
   journalctl --user -u $unit -n 200
 
-Last $JOURNAL_LINES journal lines:
+The $tail_label:
 
 $tail_out
 EOF
