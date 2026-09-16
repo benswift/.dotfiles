@@ -5,8 +5,9 @@
 #   hx-ghostty FILE...       open FILEs in helix in a new Ghostty tab (a new
 #                            window if Ghostty isn't running yet)
 #   hx-ghostty --register    build the LaunchServices handler and make it the
-#                            default app for HANDLED_UTIS (markdown, so Finder
-#                            and `open` stop routing .md files to Xcode)
+#                            default app for every type listed below, so
+#                            Finder and `open` stop routing text at Xcode,
+#                            VLC, GarageBand and friends
 #   hx-ghostty --unregister  remove the handler app again
 #
 # The tab is created through Ghostty's AppleScript dictionary (1.3+, see
@@ -29,9 +30,73 @@ APP="$HOME/Applications/$APP_NAME.app"
 BUNDLE_ID="me.benswift.open-in-helix"
 LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
 
-# UTIs the handler claims. On a Mac with the developer tools installed Xcode
-# is the default claimant for markdown, which is the whole reason this exists.
-HANDLED_UTIS=(net.daringfireball.markdown)
+# Types the handler claims, in two halves.
+#
+# HANDLED_UTIS are the types macOS already knows, each of which had a default
+# that was an accident of what installed last rather than a choice: markdown
+# and most source files to Xcode, `.ts` to VLC (it is also the extension for
+# an MPEG transport stream), `.exs` to GarageBand (a Logic sampler
+# instrument), `.toml` to Kontakt.
+#
+# Deliberately absent: `public.html` (Safari renders it), and the binary
+# formats `com.apple.property-list` and `com.apple.applescript.script`, which
+# helix would show as mojibake.
+HANDLED_UTIS=(
+    net.daringfireball.markdown
+    public.plain-text
+    public.source-code
+    public.script
+    public.json
+    public.yaml
+    public.toml
+    public.xml
+    public.css
+    public.svg-image
+    public.comma-separated-values-text
+    public.tab-separated-values-text
+    com.netscape.javascript-source
+    com.microsoft.typescript
+    public.mpeg-2-transport-stream
+    public.python-script
+    public.ruby-script
+    public.perl-script
+    public.php-script
+    public.shell-script
+    public.bash-script
+    public.zsh-script
+    public.csh-script
+    public.c-source
+    public.c-header
+    public.c-plus-plus-source
+    public.c-plus-plus-header
+    public.objective-c-source
+    public.objective-c-plus-plus-source
+    public.swift-source
+    com.sun.java-source
+    public.make-source
+    org.iso.sql
+    public.patch-file
+    com.apple.log
+    com.microsoft.ini
+    com.apple.logic.exs
+    com.apple.rez-source
+    com.apple.applescript.text
+)
+
+# The other half have no UTI at all: macOS invents a per-extension `dyn.*`
+# type, which cannot be claimed. So the applet exports one type of its own
+# covering the lot --- being the only declaration, it becomes the system's
+# answer for these extensions, and duti then has something to point at.
+OWN_UTI="me.benswift.plain-text-source"
+CLAIMED_EXTENSIONS=(
+    mdx svx qmd rmd rst org
+    typ tex sty cls bib
+    kdl conf env fish jsonc json5 lock properties
+    ex eex heex erl el clj cljs edn
+    rs go lua jsx hs zig nix vim
+    astro svelte vue scss sass less
+    ipynb
+)
 
 usage() {
     sed -n '3,/^$/p' "$SELF" | sed 's/^# \{0,1\}//' >&2
@@ -63,6 +128,13 @@ as_string() {
     local s=${1//\\/\\\\}
     s=${s//\"/\\\"}
     printf '"%s"' "$s"
+}
+
+# A JSON array literal, for the plutil -json calls in register().
+json_array() {
+    local out="" item
+    for item in "$@"; do out="${out:+$out, }\"$item\""; done
+    printf '[%s]' "$out"
 }
 
 abspath() { printf '%s\n' "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")"; }
@@ -133,12 +205,33 @@ EOF
     plutil -replace CFBundleName -string "$APP_NAME" "$plist"
     # No dock icon or menu bar: this app exists only to forward an odoc event.
     plutil -replace LSUIElement -bool true "$plist"
-    plutil -replace CFBundleDocumentTypes -json '[{
-        "CFBundleTypeName": "Markdown document",
-        "CFBundleTypeRole": "Editor",
-        "LSHandlerRank": "Owner",
-        "LSItemContentTypes": ["net.daringfireball.markdown"]
-    }]' "$plist"
+    plutil -replace CFBundleDocumentTypes -json "[
+        {
+            \"CFBundleTypeName\": \"Text file\",
+            \"CFBundleTypeRole\": \"Editor\",
+            \"LSHandlerRank\": \"Owner\",
+            \"LSItemContentTypes\": $(json_array "${HANDLED_UTIS[@]}")
+        },
+        {
+            \"CFBundleTypeName\": \"Plain-text source file\",
+            \"CFBundleTypeRole\": \"Editor\",
+            \"LSHandlerRank\": \"Owner\",
+            \"LSItemContentTypes\": [\"$OWN_UTI\"],
+            \"CFBundleTypeExtensions\": $(json_array "${CLAIMED_EXTENSIONS[@]}")
+        }
+    ]" "$plist"
+
+    # Claiming the extensions above also means declaring what they are. The
+    # extension list here is what makes LaunchServices resolve them to this
+    # type instead of a dyn.* one.
+    plutil -replace UTExportedTypeDeclarations -json "[{
+        \"UTTypeIdentifier\": \"$OWN_UTI\",
+        \"UTTypeDescription\": \"Plain-text source file\",
+        \"UTTypeConformsTo\": [\"public.plain-text\"],
+        \"UTTypeTagSpecification\": {
+            \"public.filename-extension\": $(json_array "${CLAIMED_EXTENSIONS[@]}")
+        }
+    }]" "$plist"
 
     codesign --force --sign - "$APP" >/dev/null 2>&1 ||
         echo "hx-ghostty: could not ad-hoc sign $APP (TCC may re-prompt)" >&2
@@ -146,17 +239,25 @@ EOF
 
     # lsregister returns before the claim is visible, and a duti -s that
     # lands in that gap exits 0 having changed nothing --- so set, verify,
-    # and retry rather than trusting the exit status.
-    local uti tries
-    for uti in "${HANDLED_UTIS[@]}"; do
+    # and retry rather than trusting the exit status. `duti -d` is the query
+    # that takes a UTI; `duti -x` parses its argument as a filename extension.
+    local uti tries failed=()
+    sleep 1
+    for uti in "${HANDLED_UTIS[@]}" "$OWN_UTI"; do
         tries=0
-        while ((tries++ < 10)); do
+        while ((tries++ < 5)); do
             duti -s "$BUNDLE_ID" "$uti" all
-            [[ "$(duti -x "$uti" | tail -1)" == "$BUNDLE_ID" ]] && break
+            [[ "$(duti -d "$uti" 2>/dev/null)" == "$BUNDLE_ID" ]] && break
             sleep 1
         done
-        echo "hx-ghostty: $uti -> $(duti -x "$uti" | head -1)"
+        [[ "$(duti -d "$uti" 2>/dev/null)" == "$BUNDLE_ID" ]] || failed+=("$uti")
     done
+
+    if ((${#failed[@]})); then
+        echo "hx-ghostty: could not claim: ${failed[*]}" >&2
+    fi
+    echo "hx-ghostty: claiming $((${#HANDLED_UTIS[@]} + 1 - ${#failed[@]})) types" \
+        "and ${#CLAIMED_EXTENSIONS[@]} extensions"
 }
 
 unregister() {
@@ -166,9 +267,9 @@ unregister() {
     }
     "$LSREGISTER" -u "$APP" || true
     rm -rf "$APP"
-    echo "hx-ghostty: removed $APP --- macOS falls back to the next claimant"
-    echo "            (Xcode, for markdown). Set another with:"
-    echo "            duti -s <bundle id> net.daringfireball.markdown all"
+    echo "hx-ghostty: removed $APP --- every type it claimed falls back to"
+    echo "            the next claimant (Xcode, mostly). Set one by hand with:"
+    echo "            duti -s <bundle id> <uti> all"
 }
 
 [[ $# -ge 1 ]] || usage

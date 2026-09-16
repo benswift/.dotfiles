@@ -151,8 +151,10 @@ Each script's header has the detail. Notable ones:
 - `agent-run` --- headless agent dispatcher (see below)
 - `hx-ghostty` --- open files in helix in a Ghostty tab. `hx-ghostty --register`
   (once per Mac) builds the applet in `~/Applications` that makes it macOS's
-  handler for markdown, so a double-clicked `.md` lands in helix rather than
-  Xcode
+  default for every text and source type the two lists in the script name, so a
+  double-clicked file lands in helix rather than in whichever app claimed the
+  extension loudest. Deliberately not claimed: `.html` (Safari) and the binary
+  `.plist` and `.scpt`
 - `zj-switch` --- `Alt s` session switcher, live sessions MRU-first, annotated
   with each session's running agents
 - `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to
