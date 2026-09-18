@@ -140,31 +140,55 @@ if [[ -f "$marker" ]]; then
 	say "$unit: still failing ${age_h}h on; re-arming"
 fi
 
-# systemd hands an OnFailure= handler the MONITOR_* variables describing the run
-# that actually failed. Prefer them: `systemctl show` reads live state, and a
-# unit that restarts back to back (the publish generators) is already into its
-# next run by the time this handler is scheduled --- which is how a failure gets
-# filed as "result=success, exit=0". systemd omits them when it coalesces two
-# triggers into one handler, so the live read stays as the fallback.
-result="${MONITOR_SERVICE_RESULT:-}"
-status="${MONITOR_EXIT_STATUS:-}"
+# Which run failed, and how. Neither `systemctl show` nor the MONITOR_* variables
+# systemd hands an OnFailure= handler can say: both read the unit's live state
+# when the handler starts, and a unit that restarts back to back (the publish
+# generators) is already into its next run by then --- which is how a failure
+# gets filed as "result=success, exit=0", quoting the next run's journal.
+#
+# The journal records the failed run itself: the manager's "Failed with result"
+# line (MESSAGE_ID d9b373ed...) carries its invocation id and UNIT_RESULT, and
+# the "Main process exited" line (98e32220...) for that id carries EXIT_STATUS.
+# Only a failure from the last few minutes counts, so an old one is never
+# mistaken for this one; journald can lag the handler slightly, hence the retry.
+# With no such line (a manual `unit-oncall fail`), fall back to live state.
+MSG_UNIT_FAILED=d9b373ed55a64feb8242e02dbe79a49c
+MSG_PROCESS_EXIT=98e322203f7a4ed290d09fe03c09fe15
+
+journal_field() { # <field> <match>...
+	local field="$1"
+	shift
+	journalctl --user "$@" --since -10min -n 1 -o json --no-pager 2>/dev/null \
+		| jq -r --arg f "$field" '.[$f] // empty' 2>/dev/null || true
+}
+
+failed_inv=""
+result=""
+status=""
+for _ in 1 2 3 4 5; do
+	failed_inv="$(journal_field USER_INVOCATION_ID "USER_UNIT=$unit" "MESSAGE_ID=$MSG_UNIT_FAILED")"
+	[[ -n "$failed_inv" ]] && break
+	sleep 1
+done
+if [[ -n "$failed_inv" ]]; then
+	result="$(journal_field UNIT_RESULT "USER_INVOCATION_ID=$failed_inv" "MESSAGE_ID=$MSG_UNIT_FAILED")"
+	status="$(journal_field EXIT_STATUS "USER_INVOCATION_ID=$failed_inv" "MESSAGE_ID=$MSG_PROCESS_EXIT")"
+	# A run killed by a timeout or signal has no exit status to report.
+	[[ -n "$status" ]] || status='?'
+fi
 [[ -n "$result" ]] || result="$(systemctl --user show -p Result --value "$unit" 2>/dev/null || echo unknown)"
 [[ -n "$status" ]] || status="$(systemctl --user show -p ExecMainStatus --value "$unit" 2>/dev/null || echo '?')"
 
-# The body races the same way, and quoting the *next* run's happy output is how
-# a todo comes to argue with its own title. Scope the tail to the failed
-# invocation when systemd named it: the id alone identifies the run, so this
-# does not want `-u` as well (that would OR the whole unit back in). Three
-# fields carry the id --- the job's own output is tagged
-# `_SYSTEMD_INVOCATION_ID`, and the manager's lines about it
-# `USER_INVOCATION_ID` here, `INVOCATION_ID` under a system manager --- and
-# `+` is journalctl's OR between match groups.
+# Scope the body to the failed invocation too, or it quotes the next run's
+# happy output and argues with its own title. The id alone identifies the run,
+# so this does not want `-u` as well (that would OR the whole unit back in). The
+# job's own output is tagged `_SYSTEMD_INVOCATION_ID`, the manager's lines about
+# it `USER_INVOCATION_ID`, and `+` is journalctl's OR between match groups.
 tail_out=""
-if [[ -n "${MONITOR_INVOCATION_ID:-}" ]]; then
+if [[ -n "$failed_inv" ]]; then
 	tail_out="$(journalctl --user \
-		"_SYSTEMD_INVOCATION_ID=$MONITOR_INVOCATION_ID" \
-		+ "USER_INVOCATION_ID=$MONITOR_INVOCATION_ID" \
-		+ "INVOCATION_ID=$MONITOR_INVOCATION_ID" \
+		"_SYSTEMD_INVOCATION_ID=$failed_inv" \
+		+ "USER_INVOCATION_ID=$failed_inv" \
 		-n "$JOURNAL_LINES" --no-pager -o short-iso 2>/dev/null || true)"
 fi
 tail_label="failed run's journal"
