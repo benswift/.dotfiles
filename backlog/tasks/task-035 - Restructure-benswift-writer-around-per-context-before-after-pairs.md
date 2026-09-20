@@ -4,7 +4,7 @@ title: Restructure benswift-writer around per-context before/after pairs
 status: To Do
 assignee: []
 created_date: '2026-08-29 01:14'
-updated_date: '2026-08-29 01:23'
+updated_date: '2026-09-20 22:10'
 labels: []
 dependencies: []
 references:
@@ -37,6 +37,8 @@ Candidate material (real paragraphs with content briefs) is already collected in
 - [ ] #8 Holdout check done: for each context one brief was held back from the file, the skill's output on that brief compared blind against Ben's real version, and the result recorded in the task notes
 - [ ] #9 Email excerpts in the skill are anonymised (no names, addresses, student IDs) and no candidate material is committed to the public dotfiles repo
 - [ ] #10 Changes committed and pushed in claude-plugin-personal, and the benswift-writer entry in ~/.claude/CLAUDE.md's writing-rules paragraph still describes the skill chain accurately
+- [ ] #11 SKILL.md's workflow ends with a capture step that fires only when Ben rewrites the model's output (not as a standing offer): it anonymises, appends the pair --- model draft, Ben's version, the context it was drafting in --- to inbox.md, commits and pushes in the plugin repo, and prints the running inbox count
+- [ ] #12 inbox.md sits beside SKILL.md, outside contexts/, and is never read while drafting; its own header documents the promote rule --- on 'promote the writer inbox' entries move into the matching contexts/ file under a hard cap of five pairs, so adding one retires the weakest
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -44,21 +46,25 @@ Candidate material (real paragraphs with content briefs) is already collected in
 <!-- SECTION:PLAN:BEGIN -->
 Work in the marketplace clone (~/.claude/plugins/marketplaces/ben), never a second checkout, and push after every commit: `dotfiles update` re-clones it and discards local-only commits.
 
+pairs.md (step 3) is single-use scaffolding: one file for Ben to make his whole pass in, thrown away at step 7. The split at step 4 is one-way --- from there on `skills/benswift-writer/contexts/` is canonical, and a later gloss fix, a swapped pair or a new context is edited there directly. Never reassemble a working file from the shipped ones.
+
 1. Candidates are in drafts/benswift-writer/candidates-{blog,email,academic}.md. Each candidate has a neutral content `brief` and Ben's real text. Read the `## Notes` at the end of each file for what was rejected and why; candidates flagged AI-assisted are only usable as befores, not afters.
 
-2. Generate the blind befores. For each candidate, spawn a fresh sonnet subagent with NO writing skill loaded, given only: the audience (from the context), the brief, and a target length. It must not see Ben's text. Save its output alongside the candidate as `before:`. This is the model's honest default and is exactly what the pair needs to teach against. Do not have one agent write several befores in a row; each one fresh, so they don't converge.
+2. Generate the blind befores, **with opus**. For each candidate, spawn a fresh opus subagent with NO writing skill loaded, given only: the audience (from the context), the brief, and a target length. It must not see Ben's text. Opus rather than the usual sonnet default because the before has to be the honest default of the model Ben actually writes with --- a sonnet before would teach the overlay to correct a draft he never receives. Do not have one agent write several befores in a row; each one fresh, so they don't converge.
 
-3. Ben's pass (needs a real keyboard). For each candidate, either (a) keep the real text as the after, or (b) hand-edit the before into an after where the real text is too long or too situational. Write the one-line gloss for each pair naming the move: what the before did that Ben's version doesn't (e.g. 'dropped the pre-emptive apology; the ask goes first', 'no summary sentence at the end', 'one concrete number instead of three adjectives'). Pick 3-5 pairs per context with distinct topics. Mark one candidate per context as HOLDOUT and leave it out of the file.
+3. Assemble drafts/benswift-writer/pairs.md: one throwaway working file, all four contexts, already in the shape the shipped files take. Per context: a draft register brief (audience, length, formality, sign-off, jamesian preset, out of bounds), then every candidate as before-then-after with an empty gloss line. Ben's pass happens here and nowhere else --- keep or hand-edit each after, write the gloss naming the move (what the before did that his version doesn't: 'dropped the pre-emptive apology; the ask goes first', 'no summary sentence at the end', 'one concrete number instead of three adjectives'), correct the register briefs, keep 3-5 pairs per context on distinct topics, and mark the cuts and one HOLDOUT per context inline rather than deleting them.
 
-4. Write contexts/{blog,email-colleague,email-student,academic}.md. Structure: register brief (audience, length, formality, sign-off, jamesian preset, out of bounds), then the pairs, `before` first and `after` second, gloss last. Keep under ~1500 words each. Op-ed is deferred: no real corpus yet.
+4. Split pairs.md into skills/benswift-writer/contexts/{blog,email-colleague,email-student,academic}.md: drop the cut pairs and the holdouts, carry the briefs and surviving pairs across verbatim, and check each file lands under ~1500 words. Diff the pair count per context against pairs.md before moving on --- the split is the one place a pair can go missing. Op-ed is deferred: no real corpus yet.
 
 5. Rewrite SKILL.md into a router: keep Language/Structure/Voice quirks and the whole AI-trope pass; move 'Email: Cheers' and the jamesian preset choice into the context briefs; add the step 'identify the context, read exactly one contexts/ file; for an unlisted context pick the nearest and say which'. Description as a folded scalar listing the contexts and trigger phrases.
 
-6. Holdout check: with the new skill loaded, generate each context's holdout brief and read it next to Ben's real version. Record pass/fail per context in the notes. A fail means the pairs teach the wrong move; adjust glosses or swap a pair, don't add more pairs.
+6. Add the capture step as the last workflow item in SKILL.md, and ship inbox.md beside it (empty but for the header). Capture is event-triggered --- Ben rewrote the output --- never a standing offer, because a step that asks after every draft is one he learns to skip. It anonymises before it writes (most captures come from real student and colleague mail) and pushes in the same breath, or the next `dotfiles update` re-clone eats the entry. The gloss is left blank: naming the move is curation-time work and is easier across three failures than one. inbox.md's header carries the promote rule, so the file explains itself whenever it is next opened.
 
-7. Commit in the plugin repo (scope: benswift-writer), push, then `claude plugin marketplace update` so the served cache matches. Update the writing-rules paragraph in ~/.claude/CLAUDE.md only if the chain changed.
+7. Holdout check: with the new skill loaded, generate each context's holdout brief and read it next to Ben's real version. Record pass/fail per context in the notes. A fail means the pairs teach the wrong move; adjust glosses or swap a pair, don't add more pairs.
 
-Later, once the pairs are in use: mine real failures from session logs (~/claude-logs, AI drafts Ben actually rewrote) as a second source of befores, and add an op-ed context when there is a corpus.
+8. Delete drafts/benswift-writer/ (pairs.md and the candidate files both), commit in the plugin repo (scope: benswift-writer), push, then `claude plugin marketplace update` so the served cache matches. Update the writing-rules paragraph in ~/.claude/CLAUDE.md only if the chain changed.
+
+Later, once the pairs are in use: mine real failures from session logs (~/claude-logs, AI drafts Ben actually rewrote) as a second source of befores, and add an op-ed context when there is a corpus. Both land as direct edits to contexts/, under the five-pair cap.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
