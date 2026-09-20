@@ -244,7 +244,7 @@ if ((page_n <= PUSH_CAP)); then
 	say "$unit: paged ($page_n/$PUSH_CAP this ${PUSH_WINDOW_MIN}m window)"
 elif ((page_n == PUSH_CAP + 1)); then
 	page "oncall: burst on weddle" \
-		"More than $PUSH_CAP units failing within ${PUSH_WINDOW_MIN}m; pages suppressed for the rest of the window. Todos are still being filed --- see the bot section of `todo`"
+		"More than $PUSH_CAP units failing within ${PUSH_WINDOW_MIN}m; pages suppressed for the rest of the window. Todos are still being filed --- see the bot section of \`todo\`"
 	say "$unit: paged the burst summary; further pages suppressed this window"
 else
 	say "$unit: page suppressed (burst, page $page_n this ${PUSH_WINDOW_MIN}m window)"
