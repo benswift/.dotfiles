@@ -17,6 +17,13 @@
   ExecStartPre. If the network never arrives the run is skipped with exit 0:
   being offline is not a failure, and the next hour retries.
 
+  The wake launchd fires that deferred run in may be a DarkWake --- powerd's
+  screen-off maintenance window --- which can end seconds later with the sync
+  still running. Nothing runs while suspended, so the -t alarm below does not
+  fire either: one such run held launchd's one-instance slot for two hours and
+  the next hourly sync never started. bin/in-darkwake skips those, also with
+  exit 0, since launchd re-fires the deferred run at the following wake.
+
   Install:
     cp ~/.dotfiles/launchd/com.xwmx.nb-sync.plist ~/Library/LaunchAgents/
     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.xwmx.nb-sync.plist
@@ -34,7 +41,7 @@
         <string>--</string>
         <string>/bin/sh</string>
         <string>-c</string>
-        <string>wait-for-network || exit 0; nb sync --all</string>
+        <string>in-darkwake &amp;&amp; exit 0; wait-for-network || exit 0; nb sync --all</string>
     </array>
     <!-- Minute alone, with no Hour key, means every hour on the hour. A run
          missed while the machine slept is coalesced into a single run at

@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# in-darkwake: exit 0 when this Mac is in a DarkWake, 1 when it is properly
+# awake. Scheduled jobs that cannot survive the machine sleeping mid-run skip
+# their run on a 0.
+#
+#   in-darkwake [-v]     -v prints what the probe saw
+#
+# A DarkWake is the brief, screen-off wake powerd grants for maintenance
+# (`pmset -g log` calls it "DarkWake from Deep Idle", with a SleepService
+# window of a couple of minutes). launchd fires a StartCalendarInterval job
+# deferred by sleep inside one of these, and the machine can go back to sleep
+# seconds later --- "Sleep Service Back to Sleep" --- with the job still
+# running. That is not idle sleep, so `caffeinate -i` does not hold it off,
+# and `caffeinate -s` is documented as AC-only, which a laptop on battery is
+# not. Skipping is the honest answer: launchd coalesces the deferred run and
+# fires it again at the next wake, including the user's own lid-open.
+#
+# The tell is the capability set. A full wake has Graphics; a DarkWake has
+# CPU and Network but no display:
+#
+#   awake      Current System Capabilities are: CPU Graphics Audio Network
+#   DarkWake   Current System Capabilities are: CPU Network
+#
+# A probe that fails counts as "awake", so a broken probe runs the job rather
+# than silently skipping it forever. Anything but macOS is never in DarkWake.
+# pmset is called by absolute path, so a launchd job's minimal PATH cannot
+# break this.
+
+set -uo pipefail
+
+verbose=false
+[[ "${1:-}" == "-v" ]] && verbose=true
+say() { [[ "$verbose" == true ]] && echo "in-darkwake: $*" >&2; return 0; }
+
+[[ "$OSTYPE" == darwin* ]] || { say "not macOS"; exit 1; }
+
+capabilities="$(/usr/bin/pmset -g systemstate 2>/dev/null |
+    sed -n 's/.*System Capabilities are: *//p')"
+
+if [[ -z "$capabilities" ]]; then
+    say "pmset gave no capability line --- treating as awake"
+    exit 1
+fi
+
+say "capabilities: $capabilities"
+
+if [[ " $capabilities " == *" Graphics "* ]]; then
+    say "Graphics present --- fully awake"
+    exit 1
+fi
+
+say "no Graphics --- DarkWake"
+exit 0
