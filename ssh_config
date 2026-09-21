@@ -7,6 +7,17 @@ Host *
   IgnoreUnknown UseKeychain
   AddKeysToAgent yes
   UseKeychain yes
+  # Bound every stalled connection. Without these, ssh has ConnectTimeout none
+  # and ServerAliveInterval 0, so a session whose TCP died under the laptop ---
+  # a sleep mid-transfer, a wifi roam --- blocks until the kernel's 2-hour
+  # keepalive gives up. That is how a scheduled `nb sync` held launchd's
+  # one-instance slot for two hours and skipped the next hourly run. Probes go
+  # out regardless of traffic and the server answers them, so an idle but
+  # healthy session is untouched; only a dead path is reaped, after ~60s.
+  # First-obtained-value-wins, and this block is first, so these are global.
+  ConnectTimeout 20
+  ServerAliveInterval 20
+  ServerAliveCountMax 3
 
 # git remotes
 Host github.com
