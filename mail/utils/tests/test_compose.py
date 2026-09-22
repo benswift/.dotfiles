@@ -83,18 +83,49 @@ class TestBuildEmail:
 
         assert msg.is_multipart()
 
-    def test_ignores_nonexistent_attachment(self, tmp_path: Path):
-        nonexistent = tmp_path / "nonexistent.txt"
+    def test_missing_attachment_raises(self, tmp_path: Path):
+        """A typo'd --attach must not send the body on its own: the mail then
+        says "photo attached" with nothing on it and nobody is told."""
+        with pytest.raises(FileNotFoundError):
+            build_email(
+                from_addr="sender@example.com",
+                to="recipient@example.com",
+                subject="Test",
+                body="Body",
+                attachments=[tmp_path / "nonexistent.txt"],
+            )
+
+    def test_attachment_type_comes_from_the_extension(self, tmp_path: Path):
+        """image/jpeg gets an inline preview in most clients;
+        application/octet-stream gets an anonymous paperclip."""
+        photo = tmp_path / "portrait.jpg"
+        photo.write_bytes(b"\xff\xd8\xff not really a jpeg")
 
         msg = build_email(
             from_addr="sender@example.com",
             to="recipient@example.com",
             subject="Test",
             body="Body",
-            attachments=[nonexistent],
+            attachments=[photo],
         )
 
-        assert not msg.is_multipart()
+        attached = next(part for part in msg.iter_attachments())
+        assert attached.get_content_type() == "image/jpeg"
+
+    def test_unknown_extension_falls_back_to_octet_stream(self, tmp_path: Path):
+        blob = tmp_path / "data.wibble"
+        blob.write_bytes(b"\x00\x01")
+
+        msg = build_email(
+            from_addr="sender@example.com",
+            to="recipient@example.com",
+            subject="Test",
+            body="Body",
+            attachments=[blob],
+        )
+
+        attached = next(part for part in msg.iter_attachments())
+        assert attached.get_content_type() == "application/octet-stream"
 
 
 class TestStripFrontmatter:

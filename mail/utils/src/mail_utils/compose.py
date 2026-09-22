@@ -2,6 +2,7 @@
 
 import email
 import imaplib
+import mimetypes
 import os
 import re
 import subprocess
@@ -132,6 +133,18 @@ def msgid_domain(from_addr: str) -> str | None:
     return addr.rsplit("@", 1)[1] or None
 
 
+def guess_attachment_type(path: Path) -> tuple[str, str]:
+    """The (maintype, subtype) to attach `path` as, from its extension.
+
+    Everything used to go out as application/octet-stream, which clients show
+    as an anonymous paperclip; a real image/* or application/pdf gets an inline
+    preview instead. octet-stream stays the fallback for unknown extensions.
+    """
+    guessed, _ = mimetypes.guess_type(path.name)
+    maintype, _, subtype = (guessed or "application/octet-stream").partition("/")
+    return maintype, subtype
+
+
 def build_email(
     from_addr: str,
     to: str,
@@ -160,16 +173,18 @@ def build_email(
 
     msg.set_content(append_signature(body, signature))
 
-    if attachments:
-        for attachment in attachments:
-            if attachment.exists():
-                content = attachment.read_bytes()
-                msg.add_attachment(
-                    content,
-                    maintype="application",
-                    subtype="octet-stream",
-                    filename=attachment.name,
-                )
+    # No existence check: a path that isn't there raises FileNotFoundError from
+    # read_bytes() and the send dies. Skipping it silently sent the body alone,
+    # so a typo'd --attach produced a mail whose text said "photo attached"
+    # with nothing on it, and nothing anywhere said so.
+    for attachment in attachments or ():
+        maintype, subtype = guess_attachment_type(attachment)
+        msg.add_attachment(
+            attachment.read_bytes(),
+            maintype=maintype,
+            subtype=subtype,
+            filename=attachment.name,
+        )
 
     return msg
 
