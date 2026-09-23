@@ -36,10 +36,10 @@ This snapshots a mirror, so the chain is delete-on-daysy, mirror, snapshot: rete
 - [x] #1 restic is pinned in mise/config.toml and resolves on both weddle and daysy
 - [x] #2 A B2 bucket and a bucket-scoped application key exist; the key and the repo password live only in the untracked mise [env] block, never in a tracked file
 - [x] #3 The repo password is recorded somewhere off weddle, so losing weddle does not lose the archive
-- [ ] #4 bin/restic-backup snapshots the tier-1 set (/data/backup, /data/Maildir, ~/claude-logs, ~/codex-logs, ~/.nb) and excludes the regenerable trees (/data/huggingface, /data/uv-cache, /data/panic_tda, ~/projects/panic_tda)
+- [ ] #4 bin/restic-backup snapshots the tier-1 set (/data/backup, /data/Maildir, ~/claude-logs, ~/codex-logs, ~/.nb) plus weddle's own ~/projects, ~/.config and ~/.local/state, and excludes the regenerable trees (/data/huggingface, /data/uv-cache, /data/panic_tda, ~/projects/panic_tda, build and dependency dirs)
 - [ ] #5 A systemd user timer runs it hourly on weddle, staggered clear of push-to-weddle, with OnFailure=unit-oncall@%n.service
 - [ ] #6 Retention is one declarative forget policy (--keep-hourly 48 --keep-daily 14 --keep-weekly 8 --keep-monthly 24), with prune on a monthly schedule rather than every run
-- [ ] #7 The job exits non-zero when the newest snapshot is older than a staleness threshold, so a run that succeeds and stores nothing pages --- the same guard as ingest-claude-logs
+- [ ] #7 The job exits non-zero when the newest snapshot is older than a staleness threshold, or when a laptop's /data/backup/<host>/.last-push stamp is, so a run that succeeds and stores nothing pages --- the same guard as ingest-claude-logs
 - [ ] #8 restic check --read-data-subset runs on a schedule and pages on failure
 - [ ] #9 A test restore of a known file from the B2 repo succeeds using only the recorded password and credentials
 - [ ] #10 Every new symlink target is added to lib/symlink-manifest.sh, and dotfiles doctor verifies the setup
