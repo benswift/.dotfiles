@@ -1,9 +1,10 @@
 ---
 id: TASK-036
 title: Add an offsite restic/B2 backup of weddle aggregated data
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-20 00:28'
+updated_date: '2026-09-23 04:32'
 labels:
   - enhancement
 dependencies: []
@@ -33,8 +34,8 @@ This snapshots a mirror, so the chain is delete-on-daysy, mirror, snapshot: rete
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 restic is pinned in mise/config.toml and resolves on both weddle and daysy
-- [ ] #2 A B2 bucket and a bucket-scoped application key exist; the key and the repo password live only in the untracked mise [env] block, never in a tracked file
-- [ ] #3 The repo password is recorded somewhere off weddle, so losing weddle does not lose the archive
+- [x] #2 A B2 bucket and a bucket-scoped application key exist; the key and the repo password live only in the untracked mise [env] block, never in a tracked file
+- [x] #3 The repo password is recorded somewhere off weddle, so losing weddle does not lose the archive
 - [ ] #4 bin/restic-backup snapshots the tier-1 set (/data/backup, /data/Maildir, ~/claude-logs, ~/codex-logs, ~/.nb) and excludes the regenerable trees (/data/huggingface, /data/uv-cache, /data/panic_tda, ~/projects/panic_tda)
 - [ ] #5 A systemd user timer runs it hourly on weddle, staggered clear of push-to-weddle, with OnFailure=unit-oncall@%n.service
 - [ ] #6 Retention is one declarative forget policy (--keep-hourly 48 --keep-daily 14 --keep-weekly 8 --keep-monthly 24), with prune on a monthly schedule rather than every run
