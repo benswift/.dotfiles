@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# restic-backup --- weddle's offsite copy: encrypted restic snapshots of
-# everything the other hosts aggregate here, in a Backblaze B2 bucket.
+# restic-backup --- weddle's offsite copy: encrypted restic snapshots, in a
+# Backblaze B2 bucket, of everything the other hosts aggregate here plus
+# weddle's own working state.
 #
 #   restic-backup [backup]   snapshot SOURCES, apply the forget policy
 #   restic-backup prune      drop the data no snapshot references (monthly)
@@ -15,7 +16,7 @@
 # even in a systemd unit's bare environment --- so restic must be the shim,
 # which the units' PATH ensures.
 #
-# This snapshots mirrors (daysy's Documents and Maildir arrive via
+# Much of this is a mirror (daysy's Documents, Zotero and Maildir arrive via
 # bin/backup), so a file deleted on daysy is gone from the next snapshot.
 # Retention depth is the protection, not the snapshot.
 
@@ -27,6 +28,11 @@ SOURCES=(
     "$HOME/claude-logs"
     "$HOME/codex-logs"
     "$HOME/.nb"
+    # weddle's own: unpushed work and gitignored job state (comp4020/agents
+    # is not a git repo at all), the secrets file, run stamps
+    "$HOME/projects"
+    "$HOME/.config"
+    "$HOME/.local/state"
 )
 
 EXCLUDES=(
@@ -36,6 +42,14 @@ EXCLUDES=(
     # regenerated hourly from the logs beside it, and rewritten in place
     "$HOME/claude-logs/analytics.db"
     "$HOME/.nb/.cache"
+    # regenerable: experiment outputs, and a browser profile that churns hourly
+    "$HOME/projects/panic_tda"
+    "$HOME/.config/google-chrome-for-testing"
+    # build and dependency trees, by name wherever they appear in a project
+    # (--exclude-caches also drops any directory carrying a CACHEDIR.TAG)
+    node_modules .venv venv target _build deps .nerves __pycache__
+    .pytest_cache .ruff_cache .mypy_cache .elixir_ls .expert
+    .astro .svelte-kit .next _site
 )
 
 # --group-by host so the policy spans a change to SOURCES, rather than leaving
@@ -56,6 +70,12 @@ CHECK_SUBSET=5%
 # The newest snapshot must be younger than this. An hourly backup that runs
 # and fails already pages; this is for the one that stops running at all.
 STALE_HOURS="${RESTIC_STALE_HOURS:-6}"
+
+# Each laptop's bin/backup stamps /data/backup/<host>/.last-push on success.
+# It exits 0 when it skips (metered network, weddle unreachable), so a host
+# that has stopped pushing is only visible from here. A week, because a
+# laptop can sit shut that long without anything being wrong.
+PUSH_STALE_DAYS="${PUSH_STALE_DAYS:-7}"
 
 HOST="$(hostname -s)"
 
@@ -80,6 +100,24 @@ check_fresh() {
     echo "Newest snapshot for $HOST: $newest (${age}h old)"
 }
 
+check_pushes() {
+    local dir host age status=0
+    for dir in /data/backup/*/; do
+        host="$(basename "$dir")"
+        if [[ ! -f "$dir/.last-push" ]]; then
+            echo "restic-backup: $host has never stamped $dir.last-push" >&2
+            status=1
+            continue
+        fi
+        age=$(( ($(date +%s) - $(<"$dir/.last-push")) / 86400 ))
+        if (( age >= PUSH_STALE_DAYS )); then
+            echo "restic-backup: $host last pushed ${age} days ago --- check its push-to-weddle job" >&2
+            status=1
+        fi
+    done
+    return "$status"
+}
+
 backup() {
     # A missing or empty source (/data not mounted, a tree moved) would
     # otherwise become a snapshot that quietly lacks it.
@@ -91,7 +129,7 @@ backup() {
         fi
     done
 
-    local args=(backup --host "$HOST" --retry-lock "$LOCK_WAIT")
+    local args=(backup --host "$HOST" --retry-lock "$LOCK_WAIT" --exclude-caches)
     local pattern
     for pattern in "${EXCLUDES[@]}"; do
         args+=(--exclude "$pattern")
@@ -111,6 +149,8 @@ backup() {
 
     restic forget --host "$HOST" --retry-lock "$LOCK_WAIT" "${FORGET_POLICY[@]}"
     check_fresh
+    # Last, so a stale laptop fails the unit without costing weddle a snapshot.
+    check_pushes
 }
 
 prune() {
