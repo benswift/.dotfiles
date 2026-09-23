@@ -95,6 +95,9 @@ marksman = "latest"
 # registry default) covers both hosts.
 expert = "latest"
 rclone = "latest"
+# weddle's offsite backup to B2 (TASK-036). Pinned, not latest: every host
+# reads and writes the same repo, so a new release should land deliberately.
+restic = "0.19.1"
 # mergiraf is Codeberg-only (no GitHub releases, not in mise's registry), so
 # it's the one formatter here with no cross-platform prebuilt binary --- cargo
 # compiles it everywhere. The rest below pull prebuilt release binaries.
