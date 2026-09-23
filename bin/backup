@@ -37,7 +37,7 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Sync ~/Documents and ~/Maildir to remote storage using rclone. The hourly
+Sync ~/Documents, ~/Zotero and ~/Maildir to remote storage using rclone. The hourly
 push-to-weddle launchd job runs this; weddle's read-only Maildir mirror is
 only as fresh as the last run.
 
@@ -175,6 +175,14 @@ rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" \
   "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
 echo
 
+echo "=== Zotero ==="
+echo "Syncing $HOME/Zotero to $REMOTE:$REMOTE_BASE/Zotero"
+echo
+rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
+  --backup-dir "$REMOTE:$VERSIONS/$RUN_STAMP/Zotero" \
+  "$HOME/Zotero" "$REMOTE:$REMOTE_BASE/Zotero"
+echo
+
 echo "=== Maildir ==="
 echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
 echo
@@ -184,4 +192,7 @@ rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
 
 if [[ "$DRY_RUN" != "true" ]]; then
   prune_versions
+  # weddle's restic-backup fails when this goes stale: a skipped run exits 0
+  # here, so a laptop that stops pushing is only visible from the far end.
+  rclone rcat "$REMOTE:$REMOTE_BASE/.last-push" <<<"$(date +%s)"
 fi
