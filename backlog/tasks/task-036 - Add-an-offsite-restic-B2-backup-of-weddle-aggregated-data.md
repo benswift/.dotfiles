@@ -4,7 +4,7 @@ title: Add an offsite restic/B2 backup of weddle aggregated data
 status: In Progress
 assignee: []
 created_date: '2026-09-20 00:28'
-updated_date: '2026-09-23 04:32'
+updated_date: '2026-09-23 04:34'
 labels:
   - enhancement
 dependencies: []
@@ -33,7 +33,7 @@ This snapshots a mirror, so the chain is delete-on-daysy, mirror, snapshot: rete
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 restic is pinned in mise/config.toml and resolves on both weddle and daysy
+- [x] #1 restic is pinned in mise/config.toml and resolves on both weddle and daysy
 - [x] #2 A B2 bucket and a bucket-scoped application key exist; the key and the repo password live only in the untracked mise [env] block, never in a tracked file
 - [x] #3 The repo password is recorded somewhere off weddle, so losing weddle does not lose the archive
 - [ ] #4 bin/restic-backup snapshots the tier-1 set (/data/backup, /data/Maildir, ~/claude-logs, ~/codex-logs, ~/.nb) and excludes the regenerable trees (/data/huggingface, /data/uv-cache, /data/panic_tda, ~/projects/panic_tda)
