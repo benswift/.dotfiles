@@ -1,0 +1,16 @@
+[Unit]
+Description=Prune unreferenced data from the offsite restic repo
+Documentation=file:///home/ben/.dotfiles/bin/restic-backup
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
+# The mise shims must come first: the restic shim is what brings in the repo
+# credentials from the mise [env] block.
+Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ben/.dotfiles/bin/restic-backup prune
+TimeoutStartSec=6h
+Nice=10
+IOSchedulingClass=idle

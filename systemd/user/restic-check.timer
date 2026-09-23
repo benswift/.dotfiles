@@ -1,0 +1,15 @@
+[Unit]
+Description=Trigger restic-backup check weekly
+# Deliberately no Requires=<service>: in [Unit] that means "start the service
+# when the timer starts", firing a spurious run at every boot. Unit= in
+# [Timer] is what binds the two.
+
+[Timer]
+# An hour after the prune slot, so when the 1st is a Sunday the check
+# verifies the freshly pruned repo.
+OnCalendar=Sun 04:20
+Persistent=true
+Unit=restic-check.service
+
+[Install]
+WantedBy=timers.target

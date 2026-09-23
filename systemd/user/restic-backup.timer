@@ -1,0 +1,16 @@
+[Unit]
+Description=Trigger restic-backup hourly at :40
+# Deliberately no Requires=<service>: in [Unit] that means "start the service
+# when the timer starts", firing a spurious run at every boot. Unit= in
+# [Timer] is what binds the two.
+
+[Timer]
+# :40 stays clear of this host's :00 ship-claude-logs, :07 nb-sync and :10
+# ingest. daysy's push-to-weddle runs on an interval, not a clock slot, so it
+# can't be dodged --- restic-backup tolerates files it lands mid-run.
+OnCalendar=*:40
+Persistent=true
+Unit=restic-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Trigger restic-backup prune monthly
+# Deliberately no Requires=<service>: in [Unit] that means "start the service
+# when the timer starts", firing a spurious run at every boot. Unit= in
+# [Timer] is what binds the two.
+
+[Timer]
+# Prune rewrites packs and holds an exclusive lock; the hourly backup waits
+# for it (see LOCK_WAIT in the script).
+OnCalendar=*-*-01 03:20
+Persistent=true
+Unit=restic-prune.service
+
+[Install]
+WantedBy=timers.target

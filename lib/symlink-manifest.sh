@@ -60,6 +60,14 @@ SYMLINK_MANIFEST=(
     # machine-local, so a second machine would re-run every task)
     "systemd/user/pkb-agent.service:~/.config/systemd/user/pkb-agent.service"
     "systemd/user/pkb-agent.timer:~/.config/systemd/user/pkb-agent.timer"
+    # restic-backup: enable the timers on weddle ONLY (it snapshots weddle's
+    # aggregated data, see bin/restic-backup)
+    "systemd/user/restic-backup.service:~/.config/systemd/user/restic-backup.service"
+    "systemd/user/restic-backup.timer:~/.config/systemd/user/restic-backup.timer"
+    "systemd/user/restic-prune.service:~/.config/systemd/user/restic-prune.service"
+    "systemd/user/restic-prune.timer:~/.config/systemd/user/restic-prune.timer"
+    "systemd/user/restic-check.service:~/.config/systemd/user/restic-check.service"
+    "systemd/user/restic-check.timer:~/.config/systemd/user/restic-check.timer"
     # unit-oncall: template units, instanced by any timer that wants a failure
     # to reach the notebook. Never enabled themselves --- a job opts in with
     # OnFailure=unit-oncall@%n.service / OnSuccess=unit-oncall-clear@%n.service

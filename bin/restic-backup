@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+#
+# restic-backup --- weddle's offsite copy: encrypted restic snapshots of
+# everything the other hosts aggregate here, in a Backblaze B2 bucket.
+#
+#   restic-backup [backup]   snapshot SOURCES, apply the forget policy
+#   restic-backup prune      drop the data no snapshot references (monthly)
+#   restic-backup check      verify the repo and a random slice of its data
+#
+# Each has its own systemd timer (systemd/user/restic-*.timer), with
+# OnFailure=unit-oncall@%n.service.
+#
+# Repo address, B2 key and repo password are in the untracked mise [env]
+# block. They reach restic through its mise shim, which applies that block
+# even in a systemd unit's bare environment --- so restic must be the shim,
+# which the units' PATH ensures.
+#
+# This snapshots mirrors (daysy's Documents and Maildir arrive via
+# bin/backup), so a file deleted on daysy is gone from the next snapshot.
+# Retention depth is the protection, not the snapshot.
+
+set -euo pipefail
+
+SOURCES=(
+    /data/backup
+    /data/Maildir
+    "$HOME/claude-logs"
+    "$HOME/codex-logs"
+    "$HOME/.nb"
+)
+
+EXCLUDES=(
+    # rclone uploads to <name>.<hash>.partial and renames on completion, so a
+    # snapshot taken mid-push must not keep the half-written file
+    "*.partial"
+    # regenerated hourly from the logs beside it, and rewritten in place
+    "$HOME/claude-logs/analytics.db"
+    "$HOME/.nb/.cache"
+)
+
+# --group-by host so the policy spans a change to SOURCES, rather than leaving
+# the old path set as a separate group that is never forgotten.
+FORGET_POLICY=(
+    --group-by host
+    --keep-hourly 48 --keep-daily 14 --keep-weekly 8 --keep-monthly 24
+)
+
+# A prune holds an exclusive lock for as long as it runs; the hourly backup
+# waits it out rather than failing.
+LOCK_WAIT=2h
+
+# Fraction of pack data `check` downloads and verifies each run. B2 egress is
+# free up to 3x stored data a month, so this is well inside it.
+CHECK_SUBSET=5%
+
+# The newest snapshot must be younger than this. An hourly backup that runs
+# and fails already pages; this is for the one that stops running at all.
+STALE_HOURS="${RESTIC_STALE_HOURS:-6}"
+
+HOST="$(hostname -s)"
+
+usage() {
+    sed -n '/^#   restic-backup/s/^# \{0,1\}//p' "$0" >&2
+    exit 2
+}
+
+# The newest snapshot for this host, or a failure if it is too old.
+check_fresh() {
+    local newest age
+    newest="$(restic snapshots --host "$HOST" --latest 1 --json | jq -r '.[0].time // empty')"
+    if [[ -z "$newest" ]]; then
+        echo "restic-backup: no snapshots for $HOST in the repository" >&2
+        return 1
+    fi
+    age=$(( ($(date +%s) - $(date -d "$newest" +%s)) / 3600 ))
+    if (( age >= STALE_HOURS )); then
+        echo "restic-backup: newest snapshot for $HOST is ${age}h old ($newest)" >&2
+        return 1
+    fi
+    echo "Newest snapshot for $HOST: $newest (${age}h old)"
+}
+
+backup() {
+    # A missing or empty source (/data not mounted, a tree moved) would
+    # otherwise become a snapshot that quietly lacks it.
+    local src
+    for src in "${SOURCES[@]}"; do
+        if [[ ! -d "$src" ]] || [[ -z "$(ls -A "$src")" ]]; then
+            echo "restic-backup: source $src is missing or empty" >&2
+            return 1
+        fi
+    done
+
+    local args=(backup --host "$HOST" --retry-lock "$LOCK_WAIT")
+    local pattern
+    for pattern in "${EXCLUDES[@]}"; do
+        args+=(--exclude "$pattern")
+    done
+
+    # Exit 3 is a snapshot that is missing files which vanished mid-read ---
+    # expected when an rclone push lands during the run, and the next hour
+    # picks them up. Every source was checked above, so a whole tree going
+    # missing can't hide behind it.
+    local status=0
+    restic "${args[@]}" "${SOURCES[@]}" || status=$?
+    case "$status" in
+    0) ;;
+    3) echo "restic-backup: some files could not be read; snapshot saved without them" >&2 ;;
+    *) return "$status" ;;
+    esac
+
+    restic forget --host "$HOST" --retry-lock "$LOCK_WAIT" "${FORGET_POLICY[@]}"
+    check_fresh
+}
+
+prune() {
+    restic prune --retry-lock "$LOCK_WAIT"
+}
+
+check() {
+    restic check --retry-lock "$LOCK_WAIT" --read-data-subset "$CHECK_SUBSET"
+    check_fresh
+}
+
+case "${1:-backup}" in
+backup) backup ;;
+prune) prune ;;
+check) check ;;
+*) usage ;;
+esac
