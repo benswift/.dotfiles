@@ -1,10 +1,10 @@
 ---
 id: TASK-036
 title: Add an offsite restic/B2 backup of weddle aggregated data
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-09-20 00:28'
-updated_date: '2026-09-24 00:42'
+updated_date: '2026-09-24 03:30'
 labels:
   - enhancement
 dependencies: []
@@ -40,7 +40,12 @@ This snapshots a mirror, so the chain is delete-on-daysy, mirror, snapshot: rete
 - [x] #5 A systemd user timer runs it hourly on weddle, staggered clear of push-to-weddle, with OnFailure=unit-oncall@%n.service
 - [x] #6 Retention is one declarative forget policy (--keep-hourly 48 --keep-daily 14 --keep-weekly 8 --keep-monthly 24), with prune on a monthly schedule rather than every run
 - [x] #7 The job exits non-zero when the newest snapshot is older than a staleness threshold, or when a laptop's /data/backup/<host>/.last-push stamp is, so a run that succeeds and stores nothing pages --- the same guard as ingest-claude-logs
-- [ ] #8 restic check --read-data-subset runs on a schedule and pages on failure
+- [x] #8 restic check --read-data-subset runs on a schedule and pages on failure
 - [x] #9 A test restore of a known file from the B2 repo succeeds using only the recorded password and credentials
-- [ ] #10 Every new symlink target is added to lib/symlink-manifest.sh, and dotfiles doctor verifies the setup
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+restic 0.19.1 (pinned in mise) snapshots weddle's aggregated data and its own ~/projects, ~/.config and ~/.local/state to a B2 bucket through its S3 API. bin/restic-backup has hourly backup, monthly prune and weekly check timers, each with unit-oncall. It fails on a missing source, a stale snapshot, or a laptop whose .last-push stamp is 7 or more days old. First snapshot e1135842 (2026-09-24): 490 GiB, 377 GiB stored; test restore and restic check passed. The dotfiles doctor check moved to TASK-039.
+<!-- SECTION:FINAL_SUMMARY:END -->
