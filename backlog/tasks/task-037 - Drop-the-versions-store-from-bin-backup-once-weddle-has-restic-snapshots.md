@@ -1,9 +1,10 @@
 ---
 id: TASK-037
 title: Drop the versions/ store from bin/backup once weddle has restic snapshots
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-20 00:29'
+updated_date: '2026-09-24 04:30'
 labels:
   - chore
 dependencies: []
@@ -24,11 +25,17 @@ Depends on TASK-036: landing this first leaves a window with neither versions/ n
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 RUN_STAMP, VERSIONS, RETENTION_DAYS, prune_versions() and both --backup-dir arguments are gone from bin/backup
-- [ ] #2 The comment blocks explaining displaced files and stamp-based pruning are deleted rather than annotated, per the harness-instruction rule that git holds the history
-- [ ] #3 attached_image_excludes(), the metered-network guard and the weddle-is-not-a-source guard are unchanged --- a torn sparseimage copy is snapshotted just as faithfully as it was mirrored
-- [ ] #4 The usage text and any CLAUDE.md or README reference to versioned copies on weddle are updated to point at the restic repo instead
-- [ ] #5 bin/backup --dry-run on daysy reports the same three syncs (Documents, Zotero, Maildir) as before, and the .last-push stamp that restic-backup checks is kept
-- [ ] #6 shellcheck passes on bin/backup
-- [ ] #7 The existing /data/backup/daysy/versions tree is removed only after a verified restic snapshot covering it exists
+- [x] #1 RUN_STAMP, VERSIONS, RETENTION_DAYS, prune_versions() and both --backup-dir arguments are gone from bin/backup
+- [x] #2 The comment blocks explaining displaced files and stamp-based pruning are deleted rather than annotated, per the harness-instruction rule that git holds the history
+- [x] #3 attached_image_excludes(), the metered-network guard and the weddle-is-not-a-source guard are unchanged --- a torn sparseimage copy is snapshotted just as faithfully as it was mirrored
+- [x] #4 The usage text and any CLAUDE.md or README reference to versioned copies on weddle are updated to point at the restic repo instead
+- [x] #5 bin/backup --dry-run on daysy reports the same three syncs (Documents, Zotero, Maildir) as before, and the .last-push stamp that restic-backup checks is kept
+- [x] #6 shellcheck passes on bin/backup
+- [x] #7 The existing /data/backup/daysy/versions tree is removed only after a verified restic snapshot covering it exists
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+bin/backup is now plain rclone syncs (Documents, Zotero, Maildir) behind the metered-network and weddle guards, plus the .last-push stamp; RUN_STAMP, VERSIONS, RETENTION_DAYS, prune_versions and the --backup-dir arguments are gone. A dry run on daysy showed the three syncs and exited 0. Snapshot bbf8bb8f held all 1303 files of /data/backup/daysy/versions (checked by listing, and one file restored and compared), after which the tree was deleted. Nothing else in the repo referred to it.
+<!-- SECTION:FINAL_SUMMARY:END -->
