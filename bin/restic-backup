@@ -7,6 +7,7 @@
 #   restic-backup [backup]   snapshot SOURCES, apply the forget policy
 #   restic-backup prune      drop the data no snapshot references (monthly)
 #   restic-backup check      verify the repo and a random slice of its data
+#   restic-backup status     are the snapshots and every laptop's push fresh?
 #
 # Each has its own systemd timer (systemd/user/restic-*.timer), with
 # OnFailure=unit-oncall@%n.service.
@@ -166,5 +167,11 @@ case "${1:-backup}" in
 backup) backup ;;
 prune) prune ;;
 check) check ;;
+status)
+    rc=0
+    check_fresh || rc=1
+    check_pushes || rc=1
+    exit "$rc"
+    ;;
 *) usage ;;
 esac

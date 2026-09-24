@@ -322,6 +322,32 @@ check_launchd() {
     done
 }
 
+# weddle only: bin/restic-backup snapshots weddle's data, so no other host
+# runs its timers.
+check_restic() {
+    [[ "$(hostname -s)" == weddle ]] || return 0
+    section "Checking restic backup..."
+
+    local timer
+    for timer in restic-backup restic-prune restic-check; do
+        if systemctl --user is-enabled --quiet "$timer.timer" 2>/dev/null; then
+            check_pass "$timer.timer enabled"
+        else
+            check_fail "$timer.timer not enabled (systemctl --user enable --now $timer.timer)"
+        fi
+    done
+
+    # restic-backup owns the staleness thresholds; this only reports them.
+    local out line
+    if out=$("$DOTFILES_DIR/bin/restic-backup" status 2>&1); then
+        check_pass "${out%%$'\n'*}"
+    else
+        while IFS= read -r line; do
+            check_warn "${line#restic-backup: }"
+        done <<<"$out"
+    fi
+}
+
 check_skill_yaml() {
     local skills_dir="$1"
 
@@ -398,6 +424,7 @@ doctor() {
     check_mise_tools
     check_directories
     check_launchd
+    check_restic
     check_agent_config
 
     echo ""
