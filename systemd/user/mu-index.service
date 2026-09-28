@@ -1,0 +1,8 @@
+[Unit]
+Description=Index the Maildir mirror with mu
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mu index --quiet
+Nice=10
+IOSchedulingClass=idle

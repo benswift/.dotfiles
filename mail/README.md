@@ -34,7 +34,8 @@ deletes anything written locally anyway. What runs:
 - `mu` (apt `maildir-utils`) indexes the mirror --- it writes only to
   `~/.cache/mu`, never to the maildir --- so `mu find`, `mu view`,
   `mail-copy-path` and the compose LSP's address completion all work, as fresh
-  as the last backup run
+  as the last backup run: `systemd/user/mu-index.path` re-indexes after each
+  push (enable it with `systemctl --user enable --now mu-index.path`)
 - `msmtp` (apt) sends, using the same rc file. `mail-compose --send` works; its
   sent copy never touches the maildir (see `utils/CLAUDE.md`)
 - no mbsync, no neomutt
