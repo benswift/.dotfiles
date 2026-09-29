@@ -2,9 +2,13 @@
 #
 # ts-cat --- print a file to stdout with tree-sitter syntax highlighting.
 #
+#   ts-cat FILE
+#   ts-cat --ext EXT -     highlight stdin as if it were a .EXT file
+#
 # Written for yazi's preview pane (see yazi/yazi.toml, which pipes it through
-# piper.yazi), but it works as a standalone `cat` too. Unlike yazi's built-in
-# previewer --- and unlike bat --- this understands language injections, so
+# piper.yazi) and nb's highlighter (nb/lumis-highlight.nb-plugin, which uses
+# the stdin form), but it works as a standalone `cat` too. Unlike yazi's
+# built-in previewer --- and unlike bat --- this understands injections, so
 # YAML frontmatter in a markdown file and the TypeScript fence at the top of
 # an .astro component get highlighted as YAML and TypeScript.
 #
@@ -25,11 +29,32 @@
 
 set -uo pipefail
 
+ext=""
+if [[ "${1:-}" == "--ext" ]]; then
+    ext="${2:-}"
+    shift 2 || exit 0
+fi
 file="${1:-}"
+
+tmp=""
+scratch() {
+    [[ -n "$tmp" ]] && return
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+}
+
+# Stdin goes into a scratch file named for its extension, so it takes the same
+# path through language selection, truncation and fallback as a real file.
+if [[ "$file" == "-" ]]; then
+    scratch
+    file="$tmp/stdin.${ext:-txt}"
+    cat >"$file"
+fi
 [[ -n "$file" && -r "$file" ]] || exit 0
 
 # Parsing a whole 100k-line file to render 40 visible lines is wasted work,
 # and tree-sitter is error-tolerant enough that a truncated tail is harmless.
+# 0 turns truncation off, for callers that show the whole file.
 MAX_LINES="${TS_CAT_MAX_LINES:-5000}"
 
 # Matches the theme Helix and zj-switch use.
@@ -69,11 +94,10 @@ command -v lumis >/dev/null 2>&1 || fallback
 # Truncate into a scratch file that keeps the original name, so the extension
 # still drives language selection.
 src="$file"
-tmp=""
-if [[ "$(wc -l <"$file" 2>/dev/null || echo 0)" -gt "$MAX_LINES" ]]; then
-    tmp="$(mktemp -d)"
-    trap 'rm -rf "$tmp"' EXIT
-    src="$tmp/$(basename -- "$file")"
+if [[ "$MAX_LINES" -gt 0 && "$(wc -l <"$file" 2>/dev/null || echo 0)" -gt "$MAX_LINES" ]]; then
+    scratch
+    mkdir -p "$tmp/head"
+    src="$tmp/head/$(basename -- "$file")"
     head -n "$MAX_LINES" -- "$file" >"$src" 2>/dev/null || fallback
 fi
 
