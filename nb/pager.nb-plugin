@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+###############################################################################
+# pager.nb-plugin
+#
+# nb's own _pager() minus `--mouse`. With it, less grabs mouse reporting and
+# the terminal can no longer select text in `nb show`. Without it, wheel and
+# trackpad scrolling still work: less runs on the alternate screen, where
+# Ghostty and zellij turn scroll events into arrow keys.
+#
+# Overriding an internal function works because nb sources plugins after its
+# own definitions (see lumis-highlight.nb-plugin). If an nb update changes
+# _pager(), re-copy it from the pinned nb and drop `--mouse` again, or delete
+# this plugin to get nb's behaviour back.
+#
+# Installation: symlinked into ~/.nb/.plugins by create_symlinks.sh.
+###############################################################################
+
+_pager() {
+  local _less_options=()
+  _less_options=(-R --CLEAR-SCREEN --prompt="$(_less_prompt)")
+
+  if [[ -n "${PAGER:-}" ]]; then
+    local _pager_command=()
+    IFS=" " read -r -a _pager_command <<< "${PAGER:-}"
+
+    if [[ "${PAGER:-}" =~ less ]]; then
+      "${_pager_command[@]:-less}" "${_less_options[@]:-}"
+    else
+      "${_pager_command[@]:-cat}"
+    fi
+  elif _command_exists "less"; then
+    less "${_less_options[@]:-}"
+  elif _bat --command-exists; then
+    _bat --style numbers,grid
+  else
+    cat
+  fi
+}
