@@ -2,10 +2,19 @@
 # oxfmt-helix --- run oxfmt with the global dotfiles config, portably, and
 # refuse the three MDX outputs prettier's markdown printer gets wrong.
 #
+# Usage: oxfmt-helix --stdin-filepath <name> [buffer-path]   (stdin -> stdout)
+#
+# <name> is a synthetic file name (file.md, file.mdx, file.toml) that picks
+# oxfmt's parser --- the real name can't, since PULLREQ_EDITMSG and *.deck.svx
+# are markdown to Helix but not to oxfmt. [buffer-path] is the real file, if
+# known: when the project's .oxfmtrc.json excludes it via ignorePatterns, the
+# buffer passes through untouched (see ignored() below). Helix passes it as
+# %{file_path_absolute}; bin/claude-format passes the edited path.
+#
 # Helix passes formatter args verbatim (no shell), and oxfmt expands neither ~
 # nor $HOME, so the config path can't be templated in languages.toml. This
 # wrapper is the shell layer that expands $HOME (/Users/ben on macOS,
-# /home/ben on Linux). Referenced as the markdown/mdx formatter in
+# /home/ben on Linux). Referenced as the markdown/mdx/toml formatter in
 # ~/.config/helix/languages.toml, and by bin/claude-format.
 #
 # MDX carries three failure modes, all of them prettier's markdown printer and
@@ -35,68 +44,122 @@
 set -euo pipefail
 config="$HOME/.dotfiles/oxfmtrc.json"
 
-# The name oxfmt infers its parser from. Helix and claude-format both pass a
-# synthetic one (--stdin-filepath file.mdx), so this is the only clue we get.
-name=""
-prev=""
-for a in "$@"; do
-    case "$a" in --stdin-filepath=*) name="${a#*=}" ;; esac
-    [[ "$prev" == "--stdin-filepath" ]] && name="$a"
-    prev="$a"
+name="" buffer=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --stdin-filepath)
+        name="${2:-}"
+        shift 2 || shift
+        ;;
+    --stdin-filepath=*)
+        name="${1#*=}"
+        shift
+        ;;
+    *)
+        buffer="$1"
+        shift
+        ;;
+    esac
 done
 
-# Anything that isn't MDX on stdin goes straight through, as before.
-case "$name" in
-*.mdx) ;;
-*) exec oxfmt -c "$config" "$@" ;;
-esac
-
-src=$(mktemp) norm=$(mktemp) p1=$(mktemp) p2=$(mktemp) cfgdir=""
-trap 'rm -f "$src" "$norm" "$p1" "$p2"; [ -n "$cfgdir" ] && rm -rf "$cfgdir"' EXIT
+src=$(mktemp) out=$(mktemp) norm=$(mktemp) p1=$(mktemp) p2=$(mktemp) cfgdir=""
+trap 'rm -f "$src" "$out" "$norm" "$p1" "$p2"; [ -n "$cfgdir" ] && rm -rf "$cfgdir"' EXIT
 cat >"$src"
 
-# Failure mode 1: a `{/*` with no `*/` on the same line.
-if awk '/\{\/\*/ && !/\*\//{ found = 1 } END { exit !found }' "$src"; then
-    cat "$src"
-    exit 0
-fi
+# Nearest .oxfmtrc.json at or above $1; echoes the directory holding it.
+project_root() {
+    local dir="$1"
+    while :; do
+        [[ -f "$dir/.oxfmtrc.json" ]] && {
+            printf '%s\n' "$dir"
+            return 0
+        }
+        [[ "$dir" == "/" ]] && return 1
+        dir="$(dirname "$dir")"
+    done
+}
 
-# Failure mode 2, prevented: separate two adjacent single-line MDX comments so
-# the markdown printer cannot fold them into one paragraph.
-awk '
-    { cur = ($0 ~ /^\{\/\*.*\*\/\}$/) }
-    NR > 1 && prevdir && cur { print "" }
-    { print; prevdir = cur }
-' "$src" >"$norm" && cat "$norm" >"$src"
+# Does the project's .oxfmtrc.json exclude the buffer? `-c` points oxfmt at the
+# global config, so the project's ignorePatterns never apply on their own ---
+# ask oxfmt rather than reimplement its globs. The patterns are anchored to the
+# config's directory, so the probe runs there with a project-relative path.
+# --check only reports. Any other outcome (no buffer path, no such file, no
+# project config, nothing ignored) means "not ignored". The file must exist:
+# --check reports a missing path with the same "excluded by ignore rules"
+# message as an ignored one.
+#
+# Formatting options still come from the global config, not the project's:
+# several project configs are bare ({} or {"svelte": true}) and lean on the
+# global proseWrap/printWidth, so adopting them would unwrap their markdown.
+ignored() {
+    local path="$buffer" proj out
+    [[ -n "$path" ]] || return 1
+    [[ "$path" == /* ]] || path="$PWD/$path"
+    [[ -f "$path" ]] || return 1
+    proj="$(project_root "$(dirname "$path")")" || return 1
+    jq -e '(.ignorePatterns // []) | length > 0' "$proj/.oxfmtrc.json" &>/dev/null || return 1
+    out="$(cd "$proj" && oxfmt --check --threads=1 "${path#"$proj"/}" 2>&1)" || true
+    [[ "$out" == *"excluded by ignore rules"* ]]
+}
 
-# Format, then format the output. Anything unexpected (a parse error, a
-# missing oxfmt) leaves the buffer alone rather than mangling it.
-if ! oxfmt -c "$config" --stdin-filepath "$name" <"$src" >"$p1" 2>/dev/null ||
-    ! oxfmt -c "$config" --stdin-filepath "$name" <"$p1" >"$p2" 2>/dev/null; then
-    cat "$src"
-    exit 0
-fi
-
-if cmp -s "$p1" "$p2"; then
-    # Failure mode 2, verified: no line may carry two directive comments.
-    if grep -qE '\{/\*[^*]*\*/\}[[:space:]]*\{/\*' "$p1"; then
+format_mdx() {
+    # Failure mode 1: a `{/*` with no `*/` on the same line.
+    if awk '/\{\/\*/ && !/\*\//{ found = 1 } END { exit !found }' "$src"; then
         cat "$src"
-        exit 0
+        return
     fi
-    cat "$p1"
-    exit 0
-fi
 
-# Failure mode 3. Fall back to preserve, derived from the one config so the
-# two can't drift; with no jq to derive it, leave the buffer alone.
-if command -v jq &>/dev/null; then
-    # oxfmt infers the config format from the name, so it must end .json ---
-    # mktemp -d is the portable way to get one (macOS has no --suffix).
-    cfgdir=$(mktemp -d) cfg="$cfgdir/oxfmtrc.json"
-    if jq '.proseWrap = "preserve"' "$config" >"$cfg" 2>/dev/null &&
-        oxfmt -c "$cfg" --stdin-filepath "$name" <"$src" >"$p1" 2>/dev/null; then
-        cat "$p1"
-        exit 0
+    # Failure mode 2, prevented: separate two adjacent single-line MDX comments
+    # so the markdown printer cannot fold them into one paragraph.
+    awk '
+        { cur = ($0 ~ /^\{\/\*.*\*\/\}$/) }
+        NR > 1 && prevdir && cur { print "" }
+        { print; prevdir = cur }
+    ' "$src" >"$norm"
+
+    # Format, then format the output. Anything unexpected (a parse error, a
+    # missing oxfmt) leaves the buffer alone rather than mangling it.
+    if ! oxfmt -c "$config" --stdin-filepath "$name" <"$norm" >"$p1" 2>/dev/null ||
+        ! oxfmt -c "$config" --stdin-filepath "$name" <"$p1" >"$p2" 2>/dev/null; then
+        cat "$norm"
+        return
     fi
+
+    if cmp -s "$p1" "$p2"; then
+        # Failure mode 2, verified: no line may carry two directive comments.
+        if grep -qE '\{/\*[^*]*\*/\}[[:space:]]*\{/\*' "$p1"; then
+            cat "$norm"
+        else
+            cat "$p1"
+        fi
+        return
+    fi
+
+    # Failure mode 3. Fall back to preserve, derived from the one config so the
+    # two can't drift; with no jq to derive it, leave the buffer alone.
+    if command -v jq &>/dev/null; then
+        # oxfmt infers the config format from the name, so it must end .json
+        # --- mktemp -d is the portable way to get one (macOS has no --suffix).
+        cfgdir=$(mktemp -d)
+        local cfg="$cfgdir/oxfmtrc.json"
+        if jq '.proseWrap = "preserve"' "$config" >"$cfg" 2>/dev/null &&
+            oxfmt -c "$cfg" --stdin-filepath "$name" <"$norm" >"$p1" 2>/dev/null; then
+            cat "$p1"
+            return
+        fi
+    fi
+    cat "$norm"
+}
+
+case "$name" in
+*.mdx) format_mdx >"$out" ;;
+*) oxfmt -c "$config" --stdin-filepath "$name" <"$src" >"$out" ;;
+esac
+
+# The probe costs an oxfmt run, so it gates only a buffer the formatter would
+# change: an unchanged one needs no verdict on whether it's excluded.
+if ! cmp -s "$src" "$out" && ignored; then
+    cat "$src"
+else
+    cat "$out"
 fi
-cat "$src"

@@ -22,8 +22,8 @@ set -euo pipefail
 f="${1:-}"
 [[ -n "$f" ]] || f="$PWD/buffer"
 
-# Helix expands %{buffer_name} to the path as typed, which may be relative to
-# its cwd; the walk-up needs an absolute path.
+# Helix passes %{file_path_absolute}, but a path from any other caller may be
+# relative; the walk-up needs an absolute path.
 case "$f" in
 /*) ;;
 *) f="$PWD/$f" ;;

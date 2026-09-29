@@ -105,8 +105,8 @@ FORMATTER_SAMPLES = {
     "jsx": "const x = () => <div />;\n",
 }
 
-# Extension to hand the formatter for the %{buffer_name} expansion, where the
-# language name isn't the extension.
+# Extension to hand the formatter for the %{file_path_absolute} expansion,
+# where the language name isn't the extension.
 FORMATTER_EXTENSIONS = {
     "astromotion-deck": ".deck.mdx",
     "javascript": ".js",
@@ -418,7 +418,7 @@ def test_formatter_round_trips(tmp_path: Path, name: str) -> None:
 
     command = [entry["formatter"]["command"]]
     command += [
-        str(buffer) if arg == "%{buffer_name}" else arg
+        str(buffer) if arg == "%{file_path_absolute}" else arg
         for arg in entry["formatter"].get("args", [])
     ]
 

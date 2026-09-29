@@ -4,8 +4,7 @@
 # Claude and Helix never leave formatting-only git diffs behind.
 #
 # Keep the dispatch table in sync with ~/.dotfiles/helix/languages.toml ---
-# same commands, same args, same exclusions. The one place this hook does more
-# than Helix is oxfmt's ignorePatterns --- see fmt_oxfmt.
+# same commands, same args, same exclusions.
 #
 # Reads the hook JSON payload on stdin and extracts the file path.
 set -euo pipefail
@@ -13,7 +12,8 @@ set -euo pipefail
 f="$(jq -r '.tool_input.file_path // .tool_response.filePath // empty')"
 [[ -n "$f" && -f "$f" ]] || exit 0
 
-# Absolute, so the oxfmt probe below can cd to the project root and still read it.
+# Absolute, so formatters that walk up from it (mix, cargo, oxfmt-helix's
+# ignorePatterns probe) can cd elsewhere and still read it.
 f="$(cd "$(dirname "$f")" && pwd -P)/$(basename "$f")"
 
 # Run a stdin->stdout formatter exactly as Helix would; write back only on
@@ -62,62 +62,6 @@ fmt_rust() {
     fmt rustfmt --edition "$ed" --emit stdout
 }
 
-# Nearest .oxfmtrc.json at or above $1; echoes the directory holding it.
-oxfmt_project_root() {
-    local dir="$1"
-    while :; do
-        [[ -f "$dir/.oxfmtrc.json" ]] && {
-            printf '%s\n' "$dir"
-            return 0
-        }
-        [[ "$dir" == "/" ]] && return 1
-        dir="$(dirname "$dir")"
-    done
-}
-
-# Does the project's .oxfmtrc.json exclude $f? Ask oxfmt rather than reimplement
-# its globs. ignorePatterns are anchored to the config file's own directory, so
-# the probe runs from the project root with a project-relative path. --check
-# only reports; it never writes. Any other outcome (no config, nothing ignored,
-# unparseable config, a missing svelte dep, an extension oxfmt can't infer)
-# means "not ignored", so the worst case is the pre-existing behaviour.
-oxfmt_ignored() {
-    local proj out
-    command -v oxfmt &>/dev/null || return 1
-    proj="$(oxfmt_project_root "$(dirname "$f")")" || return 1
-    jq -e '(.ignorePatterns // []) | length > 0' "$proj/.oxfmtrc.json" &>/dev/null || return 1
-    out="$(cd "$proj" && oxfmt --check --threads=1 "${f#"$proj"/}" 2>&1)" || true
-    [[ "$out" == *"excluded by ignore rules"* ]]
-}
-
-# A project's .oxfmtrc.json can exclude paths via ignorePatterns (backlog/ task
-# files, .claude/, generated dirs). Helix passes formatter args verbatim and
-# can't interpolate the buffer name, so oxfmt-helix pins a synthetic
-# --stdin-filepath and -c to the global config -- oxfmt never learns the real
-# path, and the exclusions never apply. Both Helix and this hook therefore
-# reformat files the project excludes; a one-line Edit to a backlog task lands
-# as a whole-file reflow.
-#
-# Helix can't be fixed from here, but this hook knows the real path, so skip the
-# file when the project excludes it. Formatting itself is untouched: options
-# still come from the global config via oxfmt-helix, because several project
-# configs are bare ({} or {"svelte": true}) and lean on the global
-# proseWrap/printWidth -- adopting the project config wholesale would unwrap
-# their markdown.
-#
-# The probe costs an oxfmt run, so it gates the *write*, not the format: a file
-# the formatter wouldn't change needs no verdict on whether it's excluded.
-fmt_oxfmt() {
-    local fallback="$1" tmp
-    command -v oxfmt-helix &>/dev/null || return 0
-    tmp="$(mktemp)"
-    if oxfmt-helix --stdin-filepath "$fallback" <"$f" >"$tmp" 2>/dev/null &&
-        ! cmp -s "$tmp" "$f" && ! oxfmt_ignored; then
-        cat "$tmp" >"$f"
-    fi
-    rm -f "$tmp"
-}
-
 # Is this a Python file wearing no extension? The tools in bin/ are executable
 # and extensionless, and Helix detects them as Python from the shebang and
 # formats them on save --- so without this the hook and the editor disagree,
@@ -153,11 +97,11 @@ fmt_prettier() { fmt prettier-helix "$f"; }
 # dotfiles config is tuned for prose (80 columns, proseWrap) and code takes
 # oxfmt's own defaults (100 columns). Run from the file's directory so the
 # nearest project .oxfmtrc.json applies when there is one --- Helix runs the
-# same command from the project root and resolves the same config. The real
-# path goes in --stdin-filepath so the project's ignorePatterns apply too.
+# same command from the project root and resolves the same config. oxfmt
+# finds that config from the real path in --stdin-filepath, so the project's
+# ignorePatterns apply too: an excluded file comes back unchanged.
 fmt_oxfmt_code() {
     command -v oxfmt &>/dev/null || return 0
-    oxfmt_ignored && return 0
     local tmp
     tmp="$(mktemp)"
     if (cd "$(dirname "$f")" && oxfmt --stdin-filepath "$f") <"$f" >"$tmp" 2>/dev/null &&
@@ -169,11 +113,11 @@ fmt_oxfmt_code() {
 
 case "$f" in
 */backlog/*.md) ;; # Backlog.md CLI owns these files' serialisation
-*.md | *.markdown | *.deck.svx) fmt_oxfmt file.md ;;
-*.mdx) fmt_oxfmt file.mdx ;;
+*.md | *.markdown | *.deck.svx) fmt oxfmt-helix --stdin-filepath file.md "$f" ;;
+*.mdx) fmt oxfmt-helix --stdin-filepath file.mdx "$f" ;;
 *.typ) fmt typstyle --wrap-text ;;
 *.tex) fmt tex-fmt --stdin ;;
-*.toml) fmt_oxfmt file.toml ;;
+*.toml) fmt oxfmt-helix --stdin-filepath file.toml "$f" ;;
 *.kdl) fmt kdlfmt format --kdl-version v1 - ;; # zellij parses KDL v1 only
 *.astro) fmt_prettier ;;
 *.ts | *.tsx | *.mts | *.cts | *.js | *.jsx | *.mjs | *.cjs) fmt_oxfmt_code ;;
