@@ -1,0 +1,30 @@
+// zellij's built-in `compact` layout with zjstatus in place of compact-bar,
+// which has no clock. The clock shells out to `date` rather than using
+// zjstatus's {datetime}: the plugin's wasm sandbox can't see the system
+// timezone, so {datetime} shows UTC unless a zone is hardcoded.
+//
+// Pinned rather than `latest`, and the URL is the key in zellij's permission
+// cache, so a bump re-prompts once for the three permissions it asks for.
+layout {
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="https://github.com/dj95/zjstatus/releases/download/v0.25.0/zjstatus.wasm" {
+                format_left "{mode} #[fg=#89b4fa,bold]{session} {tabs}"
+                format_right "{command_clock}"
+                format_space ""
+                mode_normal "#[bg=#a6e3a1,fg=#1e1e2e,bold] {name} "
+                mode_locked "#[bg=#6c7086,fg=#1e1e2e,bold] {name} "
+                mode_tmux "#[bg=#fab387,fg=#1e1e2e,bold] {name} "
+                mode_default_to_mode "normal"
+                tab_normal "#[fg=#6c7086] {name} "
+                tab_active "#[fg=#cdd6f4,bold] {name} "
+                command_clock_command "date +%H:%M"
+                command_clock_format "#[fg=#cdd6f4] {stdout} "
+                command_clock_interval "60"
+                command_clock_rendermode "static"
+            }
+        }
+    }
+}
+

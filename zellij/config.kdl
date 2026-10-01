@@ -667,13 +667,12 @@ theme "catppuccin-mocha"
 // Choose the path to override cwd that zellij will use for opening new panes
 //
 // default_cwd "/tmp"
-// The name of the default layout to load on startup. `compact` is zellij's own
-// (no file in this repo): one `compact-bar` line at the bottom carrying both
-// the tab list and the mode indicator, against `default`'s two lines --- a
-// `tab-bar` on top and a `status-bar` underneath.
+// The name of the default layout to load on startup. `compact-clock` is
+// zellij's own `compact` (one bar line at the bottom, against `default`'s two)
+// with a clock on the right; see layouts/compact-clock.kdl.
 // Default: "default"
 //
-default_layout "compact"
+default_layout "compact-clock"
 // The folder in which Zellij will look for layouts
 // (Requires restart)
 //
@@ -878,3 +877,4 @@ show_startup_tips false
 // can be useful for removing wrappers around commands
 // Note: be sure to escape backslashes and similar characters properly
 // post_command_discovery_hook "echo $RESURRECT_COMMAND | sed <your_regex_here>"
+
