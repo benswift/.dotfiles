@@ -112,7 +112,7 @@ gsy() {
 [[ "$GIT_SSH_COMMAND" == *weddle-gh* ]] && unset GIT_SSH_COMMAND
 
 # zellij shortcuts
-zs() { zellij --session "${PWD##*/}" "$@"; }
+zs() { zellij --session "${1:-${PWD##*/}}" "${@:2}"; }
 alias za="zellij attach"
 zl() { local out; out=$(zellij list-sessions); echo "$out" | grep -v EXITED; echo; echo "$out" | grep EXITED; }
 alias zr="zellij run --"
