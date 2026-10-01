@@ -15,7 +15,6 @@ layout {
                 format_space ""
                 mode_normal "#[bg=#a6e3a1,fg=#1e1e2e,bold] {name} "
                 mode_locked "#[bg=#6c7086,fg=#1e1e2e,bold] {name} "
-                mode_tmux "#[bg=#fab387,fg=#1e1e2e,bold] {name} "
                 mode_default_to_mode "normal"
                 tab_normal "#[fg=#6c7086] {name} "
                 tab_active "#[fg=#cdd6f4,bold] {name} "

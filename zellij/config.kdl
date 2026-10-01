@@ -419,11 +419,6 @@ keybinds clear-defaults=true {
             SwitchToMode "session"
         }
     }
-    shared_except "locked" "scroll" "search" "tmux" {
-        bind "Ctrl b" {
-            SwitchToMode "tmux"
-        }
-    }
     shared_except "locked" "scroll" "search" {
         bind "Ctrl s" {
             SwitchToMode "scroll"
@@ -454,7 +449,7 @@ keybinds clear-defaults=true {
             SwitchToMode "normal"
         }
     }
-    shared_among "pane" "tmux" {
+    shared_among "pane" {
         bind "x" {
             CloseFocus
             SwitchToMode "normal"
@@ -539,83 +534,9 @@ keybinds clear-defaults=true {
             SwitchToMode "pane"
         }
     }
-    shared_among "session" "tmux" {
+    shared_among "session" {
         bind "d" {
             Detach
-        }
-    }
-    tmux {
-        bind "left" {
-            MoveFocus "left"
-            SwitchToMode "normal"
-        }
-        bind "down" {
-            MoveFocus "down"
-            SwitchToMode "normal"
-        }
-        bind "up" {
-            MoveFocus "up"
-            SwitchToMode "normal"
-        }
-        bind "right" {
-            MoveFocus "right"
-            SwitchToMode "normal"
-        }
-        bind "space" {
-            NextSwapLayout
-        }
-        bind "\"" {
-            NewPane "down"
-            SwitchToMode "normal"
-        }
-        bind "%" {
-            NewPane "right"
-            SwitchToMode "normal"
-        }
-        bind "," {
-            SwitchToMode "renametab"
-        }
-        bind "[" {
-            SwitchToMode "scroll"
-        }
-        bind "Ctrl b" {
-            Write 2
-            SwitchToMode "normal"
-        }
-        bind "c" {
-            NewTab
-            SwitchToMode "normal"
-        }
-        bind "h" {
-            MoveFocus "left"
-            SwitchToMode "normal"
-        }
-        bind "j" {
-            MoveFocus "down"
-            SwitchToMode "normal"
-        }
-        bind "k" {
-            MoveFocus "up"
-            SwitchToMode "normal"
-        }
-        bind "l" {
-            MoveFocus "right"
-            SwitchToMode "normal"
-        }
-        bind "n" {
-            GoToNextTab
-            SwitchToMode "normal"
-        }
-        bind "o" {
-            FocusNextPane
-        }
-        bind "p" {
-            GoToPreviousTab
-            SwitchToMode "normal"
-        }
-        bind "z" {
-            ToggleFocusFullscreen
-            SwitchToMode "normal"
         }
     }
 }
