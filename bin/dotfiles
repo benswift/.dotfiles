@@ -462,11 +462,14 @@ update() {
     fi
 
     "$DOTFILES_DIR/create_symlinks.sh"
-    # nb is infrastructure for scheduled jobs, not an optional interactive
-    # tool. Install its configured pin immediately when an update changes it;
-    # waiting for an interactive shell's later `mise upgrade` would leave the
-    # timers broken in the meantime.
-    mise install --yes github:xwmx/nb
+    # Install whatever the pull just changed in mise/config.toml, before the
+    # steps below run scripts written against the new versions. A pin that
+    # moved is the case that matters: nb's is infrastructure for the scheduled
+    # jobs, and lumis's CLI is what bin/lumis-parsers drives. A tool on
+    # "latest" that is already installed is left alone --- upgrading those is
+    # `mise upgrade`'s job. From $HOME, so only the global config is in scope
+    # and not a mise.toml in whatever directory this was run from.
+    mise --cd "$HOME" install --yes
     # A no-op unless the pull just moved helix/pinned-rev; only then does this
     # pay for a compile.
     "$DOTFILES_DIR/bin/helix-build" ||
