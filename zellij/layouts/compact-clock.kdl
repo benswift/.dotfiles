@@ -10,7 +10,7 @@ layout {
         children
         pane size=1 borderless=true {
             plugin location="https://github.com/dj95/zjstatus/releases/download/v0.25.0/zjstatus.wasm" {
-                format_left "{mode} #[fg=#89b4fa,bold]{session} {tabs}"
+                format_left "{mode} #[fg=#fab387,bold]{session} {tabs}"
                 format_right "{command_clock}"
                 format_space ""
                 mode_normal "#[bg=#a6e3a1,fg=#1e1e2e,bold] {name} "
