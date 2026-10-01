@@ -81,11 +81,10 @@ fzf = "latest"
 bat = "latest"
 # bin/ts-cat's highlighter (tree-sitter with nvim-treesitter queries; WASM
 # parsers cached in ~/.local/share/lumis by bin/lumis-parsers). The supported
-# npm CLI installs the matching prebuilt `lumis` binary for each platform. Pin
-# 0.4.1: the newer npm wrapper requests an as-yet unpublished CLI release.
-"npm:@lumis-sh/cli" = { version = "0.4.1", allow_low_downloads = true, allow_builds = [
-  "@lumis-sh/cli",
-] }
+# npm CLI installs the matching prebuilt `lumis` binary for each platform as an
+# optional dependency. Pinned because its subcommands still move between minor
+# releases, and bin/lumis-parsers and bin/ts-cat call them by name.
+"npm:@lumis-sh/cli" = { version = "0.6.4", allow_low_downloads = true }
 # Editor tooling invoked as bare binaries (helix LSP/formatters and the
 # bin/claude-format hook), never via `uv run`, so they must be on PATH globally.
 ruff = "latest"
