@@ -116,7 +116,7 @@ shellcheck = "latest"
 # bin/check-secrets' scanner
 gitleaks = "latest"
 gh = "latest"
-trufflehog = "3.96.0"
+trufflehog = "3.97.9"
 
 [settings]
 idiomatic_version_file_enable_tools = []
