@@ -175,7 +175,6 @@ esac
 _prompt_precmd() {
   local exit_status=$?
   local sep_color='%F{#45475a}'
-  local time_color='%F{#a6adc8}'
   local dir_color='%F{#89b4fa}'
   local vcs_color='%F{#cba6f7}'
 
@@ -187,7 +186,7 @@ _prompt_precmd() {
   local host=""
   [[ -n "$_prompt_host_color" ]] && host="%B${_prompt_host_color}%m%f%b "
 
-  PROMPT="${time_color}%T%f ${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{#a6e3a1}.%F{#f38ba8})❯%f "
+  PROMPT="${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{#a6e3a1}.%F{#f38ba8})❯%f "
 }
 autoload -Uz add-zsh-hook
 add-zsh-hook precmd _prompt_precmd
