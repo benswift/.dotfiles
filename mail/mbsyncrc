@@ -93,58 +93,15 @@ Path ~/Maildir/phdconvenor/
 Inbox ~/Maildir/phdconvenor/INBOX
 SubFolders Verbatim
 
-# Channels for each folder (pattern matching doesn't work with this delegated mailbox)
-Channel phdconvenor-inbox
-Far :phdconvenor-remote:INBOX
-Near :phdconvenor-local:INBOX
+Channel phdconvenor
+Far :phdconvenor-remote:
+Near :phdconvenor-local:
+Patterns INBOX Archive "Sent Items" Drafts "Deleted Items"
 Create Near
 Sync All
 Expunge Both
 SyncState *
 CopyArrivalDate yes
-
-Channel phdconvenor-sent
-Far :phdconvenor-remote:"Sent Items"
-Near :phdconvenor-local:"Sent Items"
-Create Near
-Sync All
-Expunge Both
-SyncState *
-CopyArrivalDate yes
-
-Channel phdconvenor-drafts
-Far :phdconvenor-remote:Drafts
-Near :phdconvenor-local:Drafts
-Create Near
-Sync All
-Expunge Both
-SyncState *
-CopyArrivalDate yes
-
-Channel phdconvenor-archive
-Far :phdconvenor-remote:Archive
-Near :phdconvenor-local:Archive
-Create Near
-Sync All
-Expunge Both
-SyncState *
-CopyArrivalDate yes
-
-Channel phdconvenor-deleted
-Far :phdconvenor-remote:"Deleted Items"
-Near :phdconvenor-local:"Deleted Items"
-Create Near
-Sync All
-Expunge Both
-SyncState *
-CopyArrivalDate yes
-
-Group phdconvenor
-Channel phdconvenor-inbox
-Channel phdconvenor-sent
-Channel phdconvenor-drafts
-Channel phdconvenor-archive
-Channel phdconvenor-deleted
 
 ###########################################
 # Associate Director HDR (shared mailbox) #
