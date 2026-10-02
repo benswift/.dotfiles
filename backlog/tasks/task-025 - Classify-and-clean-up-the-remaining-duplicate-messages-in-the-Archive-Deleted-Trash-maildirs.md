@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-08-12 08:02'
-updated_date: '2026-08-26 07:37'
+updated_date: '2026-10-02 02:56'
 labels:
   - mail
   - maildir
@@ -89,3 +89,11 @@ The remaining ~876 uncharacterised sets are untouched and still investigate-only
 - [ ] #6 A repeat of the duplicate scan reports zero remaining rule-matched sets, and counts for unmatched sets are unchanged
 - [x] #7 After a few weeks on the 5-minute timer, a rescan confirms the new-duplicate rate has collapsed (the 2026-08-13 baseline was ~2/day with a four-hour sync gap)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## adirh joins the race (2026-10-02)
+
+The `adirh` account (the ADir HDR shared mailbox, `~/Maildir/adirh`) is now synced two-way with `Expunge Both`, like the others. It differs in one way that matters here: it is a shared mailbox with a second person working it, so the cross-device race is no longer just Ben's laptop against Ben's phone. An archive in neomutt and a move by the other holder inside one sync interval produces the same same-folder, same-Message-ID, `X-TUID`-only duplicate, and it can land in any folder they file into, not only Archive. Expect a higher residual rate there than the other accounts show, and include `adirh/` in any future scan or cleanup. The cleanup rule is unchanged.
+<!-- SECTION:NOTES:END -->
