@@ -246,6 +246,7 @@ class TestAppendToSent:
         ):
             append_to_sent(self._msg(), Account.anu)
             append_to_sent(self._msg(), Account.phdconvenor)
+            append_to_sent(self._msg(), Account.adirh)
 
         mock_run.assert_not_called()
         imap_ssl.assert_not_called()

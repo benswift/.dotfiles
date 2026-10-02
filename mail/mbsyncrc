@@ -146,6 +146,40 @@ Channel phdconvenor-drafts
 Channel phdconvenor-archive
 Channel phdconvenor-deleted
 
+###########################################
+# Associate Director HDR (shared mailbox) #
+###########################################
+
+# Shared with the other holders of the role address: an archive or delete
+# here moves the message for everyone, exactly as it would in Outlook.
+IMAPAccount adirh
+Host outlook.office365.com
+Port 993
+AuthMech XOAUTH2
+User adir.hdr.cybernetics@anu.edu.au
+PassCmd "$HOME/.dotfiles/bin/mail-secret oauth anu"
+TLSType IMAPS
+PipelineDepth 1
+Timeout 120
+
+IMAPStore adirh-remote
+Account adirh
+
+MaildirStore adirh-local
+Path ~/Maildir/adirh/
+Inbox ~/Maildir/adirh/INBOX
+SubFolders Verbatim
+
+Channel adirh
+Far :adirh-remote:
+Near :adirh-local:
+Patterns INBOX Archive "Sent Items" Drafts "Deleted Items"
+Create Near
+Sync All
+Expunge Both
+SyncState *
+CopyArrivalDate yes
+
 ## Local Variables:
 ## mode: conf-unix
 ## End:

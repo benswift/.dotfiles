@@ -56,7 +56,7 @@ sign-off. `--no-signature` covers the exceptions.
 The text is read from `set signature` in the account's neomutt config
 (`mail/neomutt/accounts/<account>`) rather than recorded again in `accounts.py`,
 so an interactive neomutt and `mail-compose` cannot disagree about what gets
-appended. `anu` and `phdconvenor` share `signature-anu`.
+appended. `anu` and `phdconvenor` share `signature-anu`; `adirh` has none.
 
 This is also why `open_neomutt_compose` passes `resume_draft_files=yes`: the
 signature is already in the draft by then, and without the flag neomutt appends
@@ -66,12 +66,12 @@ signature is already in the draft by then, and without the flag neomutt appends
 
 `mail-compose --send` never writes into `~/Maildir`. Exchange files its own copy
 of anything submitted over SMTP AUTH (the `unset record` note in
-`mail/neomutt/accounts/anu`), so for `anu` and `phdconvenor` there is nothing to
-do. Fastmail doesn't, so `personal` gets an IMAP APPEND to its Sent Items on the
-server, with the password from `mail-secret`. A local maildir write only reaches
-the server from a host running mbsync in push mode, and on a host that mirrors
-daysy's maildir (weddle) it would be the sole record, deleted by the next backup
-run.
+`mail/neomutt/accounts/anu`), so for `anu`, `phdconvenor` and `adirh` there is
+nothing to do. Fastmail doesn't, so `personal` gets an IMAP APPEND to its Sent
+Items on the server, with the password from `mail-secret`. A local maildir write
+only reaches the server from a host running mbsync in push mode, and on a host
+that mirrors daysy's maildir (weddle) it would be the sole record, deleted by
+the next backup run.
 
 ## Student database
 

@@ -1,0 +1,38 @@
+# Associate Director HDR (shared mailbox) account settings
+
+# Email addresses for this account
+alternates ^adir\\.hdr\\.cybernetics@anu\\.edu\\.au$
+
+# Folder settings
+set from = "adir.hdr.cybernetics@anu.edu.au"
+
+# Message-ID domain (without this neomutt uses the system FQDN, which
+# here is a Tailscale name that doesn't resolve publicly --- a spam
+# signal at some receivers).
+set hostname = "anu.edu.au"
+set folder = ~/Maildir/adirh/
+set spoolfile = +INBOX
+set postponed = +Drafts
+# No Fcc --- same reason as the anu account: Exchange files its own copy of
+# anything submitted over SMTP AUTH.
+unset record
+set trash = +"Deleted Items"
+
+# Sending mail via msmtp
+set sendmail = "msmtp"
+set use_from = yes
+set envelope_from = yes
+
+# No signature: mail from the role address isn't signed as Ben. Explicitly
+# unset, because the folder-hook sources this over whichever account was
+# active before and would otherwise inherit its signature.
+unset signature
+
+# ADir HDR specific settings
+set status_format = "[ADIR HDR] %f [%M/%m] %?n?%n new? %?d?%d del? %?t?%t tag?"
+
+# Account-specific colours (catppuccin mocha — blue)
+color status #1e1e2e #89b4fa
+
+# Account-specific search (restricted to this account)
+macro index / "<shell-escape>~/.config/neomutt/scripts/mu-search.sh /adirh/<enter><change-folder-readonly>~/.mu/results<enter>" "search adirh"

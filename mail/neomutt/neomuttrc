@@ -128,6 +128,11 @@ named-mailboxes "  Archive" =phdconvenor/Archive
 named-mailboxes "  Drafts" =phdconvenor/Drafts
 named-mailboxes "  Sent" =phdconvenor/"Sent Items"
 named-mailboxes "  Deleted" =phdconvenor/"Deleted Items"
+named-mailboxes "ADir HDR" =adirh/INBOX
+named-mailboxes "  Archive" =adirh/Archive
+named-mailboxes "  Drafts" =adirh/Drafts
+named-mailboxes "  Sent" =adirh/"Sent Items"
+named-mailboxes "  Deleted" =adirh/"Deleted Items"
 
 # === External configuration files ===
 # Enable true color support (must be set before color commands)
@@ -145,6 +150,7 @@ source ~/.config/neomutt/accounts/personal
 folder-hook personal/* source ~/.config/neomutt/accounts/personal
 folder-hook anu/* source ~/.config/neomutt/accounts/anu
 folder-hook phdconvenor/* source ~/.config/neomutt/accounts/phdconvenor
+folder-hook adirh/* source ~/.config/neomutt/accounts/adirh
 
 # === Attachments configuration ===
 set abort_noattach = ask-yes
@@ -191,6 +197,7 @@ macro index,pager ,u "<shell-escape>mu find --clearlinks --format=links --linksd
 macro index,pager ,f '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/personal<enter><change-folder>!<enter>'
 macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/anu<enter><change-folder>!<enter>'
 macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
+macro index,pager ,h '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/adirh<enter><change-folder>!<enter>'
 
 # === Sync operations ===
 # In a maildir, neomutt keeps flag changes (read/unread, flagged, and the

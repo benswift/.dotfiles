@@ -9,6 +9,7 @@ class Account(str, Enum):
     personal = "personal"
     anu = "anu"
     phdconvenor = "phdconvenor"
+    adirh = "adirh"
 
 
 @dataclass(frozen=True)
@@ -69,6 +70,14 @@ ACCOUNTS: dict[Account, AccountConfig] = {
         maildir=Path.home() / "Maildir/phdconvenor",
         sent_folder="Sent Items",
         neomutt_config=Path.home() / ".config/neomutt/accounts/phdconvenor",
+        sent_append=None,
+    ),
+    Account.adirh: AccountConfig(
+        from_addr="Ben Swift <adir.hdr.cybernetics@anu.edu.au>",
+        msmtp="adirh",
+        maildir=Path.home() / "Maildir/adirh",
+        sent_folder="Sent Items",
+        neomutt_config=Path.home() / ".config/neomutt/accounts/adirh",
         sent_append=None,
     ),
 }
