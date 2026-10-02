@@ -21,7 +21,8 @@
 #           Repeats while still broken stay quiet, a success re-arms, and a
 #           breakage older than REARM_HOURS pages again so a persistent one
 #           cannot go silent. Offline or metered is not a failure --- the job
-#           itself exits 0 for those (bin/mailsync-scheduled, bin/push-to-weddle).
+#           itself exits 0 for those (bin/mailsync-scheduled, bin/push-to-weddle)
+#           --- and nor is a failed run the machine slept through.
 #
 # The job's output goes wherever the plist points stdout, by convention
 # ~/Library/Logs/<job>.log, and the tail of that log rides along in the todo
@@ -67,6 +68,10 @@ say() { printf '[%s] %s: %s\n' "$(date -Iseconds)" "$job" "$*" >>"$LOG"; }
 
 printf '=== %s %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S %z')" "$job"
 
+# The epoch second of the last system sleep, from `{ sec = N, usec = ... }`.
+last_sleep() { sysctl -n kern.sleeptime 2>/dev/null | sed -n 's/^{ sec = \([0-9]*\),.*/\1/p'; }
+started_s="$(date +%s)"
+
 # GNU coreutils timeout (brew). Without it, run unguarded rather than not at
 # all. The command runs in its own process group, so the kill reaches a
 # `sh -c` child as well as the shell.
@@ -91,6 +96,17 @@ if ((status == 0)); then
 		say "recovered; marker cleared"
 	fi
 	exit 0
+fi
+
+# Slept mid-run: inconclusive, so neither counted nor reset. With the lid shut,
+# launchd fires the overdue job in a maintenance DarkWake that lasts under a
+# minute; the run freezes mid-transfer and wakes later to a dead socket, which
+# is how a closed laptop used to page every night.
+slept_s="$(last_sleep)"
+if [[ "$slept_s" =~ ^[0-9]+$ ]] && ((slept_s >= started_s)); then
+	echo "launchd-run: $job failed (exit $status), but the machine slept mid-run; not counted"
+	say "failed (exit $status) across a sleep; not counted"
+	exit "$status"
 fi
 
 count=$(($(cat "$count_file" 2>/dev/null || echo 0) + 1))
