@@ -1,6 +1,10 @@
 # Associate Director HDR (shared mailbox) account settings
 
-# Email addresses for this account
+# Email addresses for this account. The address is shared, so "from me" is
+# only half true here: mail the other holders send from it is marked as Ben's
+# own too (the F flag, "To <recipient>" in the index), and it is a mu personal
+# address on the same terms. Kept regardless, because it is what makes Sent
+# Items readable and lets reverse_name reply from the role address.
 alternates ^adir\\.hdr\\.cybernetics@anu\\.edu\\.au$
 
 # Folder settings
