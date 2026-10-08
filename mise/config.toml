@@ -17,6 +17,7 @@ bun = "latest"
 # which every unit already resolves first.
 "npm:agent-browser" = "latest"
 "npm:backlog.md" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
 # Matilda Code, Maincode's coding agent CLI (a Gemini-CLI fork). Published
 # only to npm, so the npm backend is the only route; the native optional deps
 # (node-pty, clipboard) ship prebuilt for linux-x64 and darwin-arm64, and its
