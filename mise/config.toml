@@ -116,6 +116,14 @@ shellcheck = "latest"
 # bin/check-secrets' scanner
 gitleaks = "latest"
 gh = "latest"
+# Read and send iMessage/SMS from the CLI: reads ~/Library/Messages/chat.db
+# (so the host terminal needs Full Disk Access) and sends through Messages.app
+# automation. macOS only --- the Linux build just reads a copied chat.db.
+# Pinned because it reads every message and can send as me, so a new release
+# should land deliberately. Leave its IMCore features alone (read receipts,
+# typing, message edits): they inject a helper into Messages.app and need SIP
+# off.
+"github:openclaw/imsg" = { version = "0.15.10", os = ["macos"] }
 trufflehog = "3.97.9"
 
 [settings]
