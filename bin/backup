@@ -9,6 +9,8 @@ REMOTE="${RCLONE_REMOTE:-weddle}"
 REMOTE_BASE="${RCLONE_REMOTE_BASE:-backup/$(hostname -s)}"
 DRY_RUN="${DRY_RUN:-false}"
 FORCE=false
+# Sections named on the command line, space-separated; empty means all three.
+SECTIONS=""
 
 # Exclude patterns for build artifacts and regeneratable content
 EXCLUDES=(
@@ -35,16 +37,20 @@ EXCLUDES=(
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") [OPTIONS]
+Usage: $(basename "$0") [OPTIONS] [SECTION...]
 
 Sync ~/Documents, ~/Zotero and ~/Maildir to remote storage using rclone. The hourly
 push-to-weddle launchd job runs this; weddle's read-only Maildir mirror is
 only as fresh as the last run.
 
+Sections: documents, zotero, mail. With none named, all three are synced.
+Naming one is a deliberate act, so it runs even on a metered network:
+\`$(basename "$0") mail\` pushes just the mail from a tethered phone.
+
 Options:
   -n, --dry-run    Show what would be transferred without making changes
   -r, --remote     Set remote name (default: weddle)
-  -f, --force      Run even on a metered network (tethered phone)
+  -f, --force      Run everything even on a metered network (tethered phone)
   -h, --help       Show this help message
 
 Environment variables:
@@ -73,8 +79,12 @@ while [[ $# -gt 0 ]]; do
       usage
       exit 0
       ;;
+    documents|zotero|mail)
+      SECTIONS+=" $1"
+      shift
+      ;;
     *)
-      echo "Unknown option: $1"
+      echo "Unknown option or section: $1"
       usage
       exit 1
       ;;
@@ -92,7 +102,9 @@ fi
 
 # Tens of GB to list and whatever changed to push: never on a tethered phone's
 # data. Exits 0, so the hourly launchd run records a skip, not a failure.
-if [[ "$FORCE" != "true" ]] && "$(dirname "$0")/on-metered-network"; then
+# Only the bare run is guarded: nothing unattended names a section, so one
+# that does was typed by someone who knows what network they are on.
+if [[ "$FORCE" != "true" && -z "$SECTIONS" ]] && "$(dirname "$0")/on-metered-network"; then
   echo "backup: on a metered network --- skipping (--force to run anyway)." >&2
   exit 0
 fi
@@ -122,6 +134,8 @@ attached_image_excludes() {
   done
 }
 
+wants() { [[ -z "$SECTIONS" || " $SECTIONS " == *" $1 "* ]]; }
+
 # Build exclude arguments for Documents
 EXCLUDE_ARGS=()
 for pattern in "${EXCLUDES[@]}"; do
@@ -143,32 +157,40 @@ if [[ "$DRY_RUN" == "true" ]]; then
   echo "DRY RUN MODE - no changes will be made"
 fi
 
-echo "=== Documents ==="
-echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
-echo "Excluding: ${EXCLUDES[*]}"
-echo
-while IFS= read -r arg; do
-  EXCLUDE_ARGS+=("$arg")
-done < <(attached_image_excludes "$HOME/Documents")
-rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" \
-  "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
-echo
+if wants documents; then
+  echo "=== Documents ==="
+  echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
+  echo "Excluding: ${EXCLUDES[*]}"
+  echo
+  while IFS= read -r arg; do
+    EXCLUDE_ARGS+=("$arg")
+  done < <(attached_image_excludes "$HOME/Documents")
+  rclone "${BASE_ARGS[@]}" "${EXCLUDE_ARGS[@]}" \
+    "$HOME/Documents" "$REMOTE:$REMOTE_BASE/Documents"
+  echo
+fi
 
-echo "=== Zotero ==="
-echo "Syncing $HOME/Zotero to $REMOTE:$REMOTE_BASE/Zotero"
-echo
-rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
-  "$HOME/Zotero" "$REMOTE:$REMOTE_BASE/Zotero"
-echo
+if wants zotero; then
+  echo "=== Zotero ==="
+  echo "Syncing $HOME/Zotero to $REMOTE:$REMOTE_BASE/Zotero"
+  echo
+  rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
+    "$HOME/Zotero" "$REMOTE:$REMOTE_BASE/Zotero"
+  echo
+fi
 
-echo "=== Maildir ==="
-echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
-echo
-rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
-  "$HOME/Maildir" "$REMOTE:Maildir"
+if wants mail; then
+  echo "=== Maildir ==="
+  echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
+  echo
+  rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
+    "$HOME/Maildir" "$REMOTE:Maildir"
+fi
 
-if [[ "$DRY_RUN" != "true" ]]; then
+if [[ "$DRY_RUN" != "true" ]] && wants documents && wants zotero && wants mail; then
   # weddle's restic-backup fails when this goes stale: a skipped run exits 0
   # here, so a laptop that stops pushing is only visible from the far end.
+  # Stamped only when everything was pushed, or a run of mail-only syncs would
+  # vouch for a Documents mirror that has not moved.
   rclone rcat "$REMOTE:$REMOTE_BASE/.last-push" <<<"$(date +%s)"
 fi
