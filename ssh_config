@@ -84,6 +84,13 @@ Host daysy
   Hostname daysy.tail2b9b56.ts.net
   HostKeyAlias daysy
 
+# imgres-mini — the Mac mini on the tailnet. The machine is `imgres-mini`; the
+# macOS account on it is `bateson`.
+Host imgres-mini
+  User bateson
+  Hostname imgres-mini.tail2b9b56.ts.net
+  HostKeyAlias imgres-mini
+
 # strproxy
 Host strproxy
   User u2548636
