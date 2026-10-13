@@ -84,12 +84,12 @@ Host daysy
   Hostname daysy.tail2b9b56.ts.net
   HostKeyAlias daysy
 
-# imgres-mini — the Mac mini on the tailnet. The machine is `imgres-mini`; the
-# macOS account on it is `bateson`.
-Host imgres-mini
-  User bateson
-  Hostname imgres-mini.tail2b9b56.ts.net
-  HostKeyAlias imgres-mini
+# watson — the headless M1 Mac mini on the tailnet. MagicDNS FQDN resolves on
+# any network; HostKeyAlias keeps known_hosts stable across address changes.
+Host watson
+  User ben
+  Hostname watson.tail2b9b56.ts.net
+  HostKeyAlias watson
 
 # strproxy
 Host strproxy
