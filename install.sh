@@ -185,7 +185,11 @@ install_agent_skills() {
     info "Installing agent-browser skill..."
     # mise exec rather than bare bunx: in this non-interactive shell mise's
     # activation hook never fires, so mise-managed bun isn't on PATH yet
-    mise exec -- bunx skills add vercel-labs/agent-browser
+    # --global --agent --yes answer the three prompts (scope, agents, confirm):
+    # without them the CLI refuses to run off a terminal, and installs nothing.
+    # "universal" is ~/.agents/skills, the directory Codex and Matilda read.
+    mise exec -- bunx skills add vercel-labs/agent-browser \
+        --global --agent universal --yes
 }
 
 sync_agent_config() {
