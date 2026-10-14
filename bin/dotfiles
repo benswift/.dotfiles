@@ -147,8 +147,7 @@ check_symlinks() {
 check_tools() {
     section "Checking tools..."
 
-    local required_tools=(tmux)
-    local optional_tools=(neomutt mu mbsync msmtp rclone fzf mosh)
+    local optional_tools=(neomutt mu mbsync msmtp rclone fzf mosh tmux)
 
     # helix is built from source by bin/helix-build, not installed by mise, so
     # `hx` merely being on PATH proves nothing: it must be the pinned build,
@@ -159,16 +158,6 @@ check_tools() {
     else
         check_fail "helix: $(tail -1 <<<"$helix_status")"
     fi
-
-    for tool in "${required_tools[@]}"; do
-        local name="${tool%%:*}"
-        local cmd="${tool##*:}"
-        if command_exists "$cmd"; then
-            check_pass "$name"
-        else
-            check_fail "$name not installed"
-        fi
-    done
 
     for tool in "${optional_tools[@]}"; do
         if command_exists "$tool"; then
