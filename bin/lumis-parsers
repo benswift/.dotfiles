@@ -85,5 +85,7 @@ command -v lumis >/dev/null || {
 args=()
 [[ "$UPDATE" == "true" ]] && args+=(--force)
 
-lumis languages download "${args[@]}" "${PARSERS[@]}" >/dev/null
+# The ${args[@]+...} guard is for macOS's stock bash 3.2, which install.sh runs
+# this under on a fresh machine: there an empty array is "unbound" to set -u.
+lumis languages download ${args[@]+"${args[@]}"} "${PARSERS[@]}" >/dev/null
 info "Fetched ${#PARSERS[@]} parsers into lumis's cache"
