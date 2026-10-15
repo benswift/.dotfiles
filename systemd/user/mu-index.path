@@ -2,8 +2,8 @@
 Description=Re-index the Maildir mirror after each push from daysy
 
 [Path]
-# bin/backup writes .last-push after the Maildir sync, so it marks a finished push
-PathChanged=%h/backup/daysy/.last-push
+# bin/backup writes .last-mail-push after every Maildir sync, full run or `backup mail`
+PathChanged=%h/backup/daysy/.last-mail-push
 
 [Install]
 WantedBy=paths.target

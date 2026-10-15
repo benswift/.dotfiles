@@ -157,6 +157,22 @@ if [[ "$DRY_RUN" == "true" ]]; then
   echo "DRY RUN MODE - no changes will be made"
 fi
 
+# Mail first: it is the small, time-sensitive section, and a slow Documents
+# listing would otherwise hold fresh mail back from weddle's mirror.
+if wants mail; then
+  echo "=== Maildir ==="
+  echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
+  echo
+  rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
+    "$HOME/Maildir" "$REMOTE:Maildir"
+  # weddle's mu-index.path watches this to re-index the mirror. Separate from
+  # .last-push below, which must only vouch for a full run.
+  if [[ "$DRY_RUN" != "true" ]]; then
+    rclone rcat "$REMOTE:$REMOTE_BASE/.last-mail-push" <<<"$(date +%s)"
+  fi
+  echo
+fi
+
 if wants documents; then
   echo "=== Documents ==="
   echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
@@ -177,14 +193,6 @@ if wants zotero; then
   rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
     "$HOME/Zotero" "$REMOTE:$REMOTE_BASE/Zotero"
   echo
-fi
-
-if wants mail; then
-  echo "=== Maildir ==="
-  echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
-  echo
-  rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
-    "$HOME/Maildir" "$REMOTE:Maildir"
 fi
 
 if [[ "$DRY_RUN" != "true" ]] && wants documents && wants zotero && wants mail; then
