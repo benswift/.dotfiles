@@ -71,6 +71,9 @@ SYMLINK_MANIFEST=(
     # mu-index: enable the .path on weddle ONLY (it indexes the Maildir mirror)
     "systemd/user/mu-index.service:~/.config/systemd/user/mu-index.service"
     "systemd/user/mu-index.path:~/.config/systemd/user/mu-index.path"
+    # wiz-validate: enable the timer on weddle ONLY (it starts the job on watson)
+    "systemd/user/wiz-validate.service:~/.config/systemd/user/wiz-validate.service"
+    "systemd/user/wiz-validate.timer:~/.config/systemd/user/wiz-validate.timer"
     # unit-oncall: template units, instanced by any timer that wants a failure
     # to reach the notebook. Never enabled themselves --- a job opts in with
     # OnFailure=unit-oncall@%n.service / OnSuccess=unit-oncall-clear@%n.service

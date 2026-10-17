@@ -1,0 +1,12 @@
+[Unit]
+Description=Validate the wiz vault on watson and share the report
+Documentation=file:///home/ben/.nb/wiz/admin/tools/watson-run
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
+# The job runs on watson; its exit status fails this unit, which pages Ben.
+ExecStart=/usr/bin/ssh -o BatchMode=yes -o ConnectTimeout=30 watson wiz/admin/tools/watson-run
+TimeoutStartSec=10min
