@@ -192,6 +192,7 @@ macro index n "<search-next>" "next search result"
 macro index N "<search-opposite>" "previous search result"
 macro index ,r "<change-folder-readonly>~/.mu/results<enter>" "mu results"
 macro index,pager ,u "<shell-escape>mu find --clearlinks --format=links --linksdir=~/.mu/results flag:unread<enter><change-folder-readonly>~/.mu/results<enter>" "show unread"
+macro index,pager ,t "<enter-command>unset pipe_decode<enter><pipe-message>~/.config/neomutt/scripts/mu-thread.sh<enter><enter-command>set pipe_decode<enter><change-folder-readonly>~/.mu/results<enter>" "full thread across all folders"
 
 # === Account switching ===
 macro index,pager ,f '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/personal<enter><change-folder>!<enter>'
@@ -251,7 +252,6 @@ bind index zA collapse-all
 # === Quick filters ===
 macro index ,l "<limit>all<enter>" "remove limit"
 macro index ,L "<limit>~U<enter>" "limit to unread in folder"
-macro index ,t "<limit>~d <1w<enter>" "limit to this week"
 macro index ,y "<limit>~d <1d<enter>" "limit to today"
 
 # === URL and HTML handling ===
