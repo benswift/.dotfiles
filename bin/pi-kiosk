@@ -24,9 +24,14 @@
 #     RAM plus a known Chromium-on-Pi-3 regression make that best-effort.
 #   - Tailscale is installed on first boot, so the Pi needs network then
 #     (it's an online kiosk; it needs network anyway).
-#   - Tailscale auth keys expire (90 days max). For kiosks that should never
-#     drop off the tailnet, use a key that tags the device (tagged nodes
-#     never expire) or disable key expiry in the admin console after join.
+#   - With --tailscale-tag, the auth key is minted per card through the
+#     Tailscale OAuth client in TS_OAUTH_CLIENT_ID/TS_OAUTH_CLIENT_SECRET
+#     (scopes: auth keys + devices core, owning the tag), and any existing
+#     node with the same name and tag is removed once the card is written.
+#     Only the single-use key goes on the card, never the client secret.
+#     Tagged nodes never expire, so the kiosk stays on the tailnet.
+#   - A watchdog timer restarts Chromium when it is showing an error page or
+#     a crashed renderer rather than the kiosk URL's site.
 
 set -euo pipefail
 # Bash 5.2+ expands & in ${var//pat/repl} replacements to the matched pattern,
@@ -71,6 +76,8 @@ Network:
     --wifi-enterprise-pass <p>   Enterprise (802.1X) WiFi password
     --wifi-country <cc>          WiFi regulatory country (default: AU)
     --tailscale-authkey <key>    Tailscale auth key for automatic join
+    --tailscale-tag <tag[,tag]>  Mint a single-use key with these tags via the
+                                 OAuth client (instead of --tailscale-authkey)
 
 Other:
     --device <dev>               SD card device (default: auto-detect)
@@ -80,6 +87,11 @@ Examples:
     pi-kiosk --url https://panic.fly.dev/ --hostname panic-lobby \\
         --wifi-ssid MyNet --wifi-password secret \\
         --tailscale-authkey tskey-auth-... --ssh-key ~/.ssh/id_ed25519.pub
+
+    pi-kiosk --url https://slop.university/signage/portrait/ \\
+        --hostname slopu-kiosk-1 --wifi-ssid ANU-Secure \\
+        --wifi-enterprise-user "\$RPI_SSID" --wifi-enterprise-pass "\$RPI_PASSWORD" \\
+        --tailscale-tag tag:signage --ssh-key ~/.ssh/id_ed25519.pub
 EOF
     exit "${1:-1}"
 }
@@ -191,6 +203,51 @@ boot_partition() {
 }
 
 # ---------------------------------------------------------------------------
+# Tailscale API via the OAuth client. Secrets go to curl on stdin or through
+# process substitution, so they never appear in the process list.
+readonly TS_API="https://api.tailscale.com/api/v2"
+
+ts_token() {
+    printf 'client_id=%s&client_secret=%s' "$TS_OAUTH_CLIENT_ID" "$TS_OAUTH_CLIENT_SECRET" |
+        curl -fsS -d @- "$TS_API/oauth/token" | jq -er .access_token
+}
+
+ts_api() {
+    local token="$1"
+    shift
+    curl -fsS -H @<(printf 'Authorization: Bearer %s\n' "$token") "$@"
+}
+
+# Single-use, preauthorized, tagged; a week to get the card into the Pi.
+ts_mint_authkey() {
+    local token="$1" tags="$2" hostname="$3" body
+    body=$(jq -nc --arg tags "$tags" --arg desc "pi-kiosk $hostname" '{
+        capabilities: {devices: {create: {
+            reusable: false, ephemeral: false, preauthorized: true,
+            tags: ($tags | split(","))}}},
+        expirySeconds: 604800, description: $desc}')
+    ts_api "$token" -H 'Content-Type: application/json' -d "$body" \
+        "$TS_API/tailnet/-/keys" | jq -er .key
+}
+
+# The card's previous incarnation would otherwise keep the name, and the new
+# node would join as <hostname>-1. Only nodes carrying one of the card's tags
+# are touched, so a same-named personal machine is safe.
+ts_remove_stale_nodes() {
+    local token="$1" tags="$2" hostname="$3" id name
+    while IFS=$'\t' read -r id name; do
+        warn "Removing previous tailnet node $name"
+        ts_api "$token" -X DELETE "$TS_API/device/$id" >/dev/null
+    done < <(ts_api "$token" "$TS_API/tailnet/-/devices" |
+        jq -r --arg h "$hostname" --arg tags "$tags" '
+            ($tags | split(",")) as $want
+            | .devices[]
+            | select((.name | split(".")[0]) == $h)
+            | select((.tags // []) | any(. as $t | $want | index($t)))
+            | [.id, .name] | @tsv')
+}
+
+# ---------------------------------------------------------------------------
 # cloud-init config generation. Templates use @TOKEN@ placeholders substituted
 # with bash string replacement, so no value ever meets a shell-quoting or
 # sed-delimiter edge case.
@@ -262,7 +319,7 @@ write_files:
       Type=simple
       Environment="WAYLAND_DISPLAY=wayland-0"
       ExecStartPre=/bin/bash -c 'while [ ! -S "/run/user/$(id -u)/${WAYLAND_DISPLAY}" ]; do sleep 0.5; done'
-      ExecStart=/bin/bash -c 'URL=$(cat /boot/firmware/kiosk-url.txt 2>/dev/null || echo "@URL@"); BROWSER=$(command -v chromium || command -v chromium-browser); exec "$BROWSER" --kiosk --password-store=basic --no-first-run --noerrdialogs --disable-infobars --disable-pinch --disable-component-update --autoplay-policy=no-user-gesture-required --check-for-update-interval=31536000 --ozone-platform=wayland "$URL"'
+      ExecStart=/bin/bash -c 'URL=$(cat /boot/firmware/kiosk-url.txt 2>/dev/null || echo "@URL@"); BROWSER=$(command -v chromium || command -v chromium-browser); exec "$BROWSER" --kiosk --password-store=basic --user-data-dir=%h/.cache/chromium-kiosk --remote-debugging-port=9222 --no-first-run --noerrdialogs --disable-infobars --disable-pinch --disable-component-update --autoplay-policy=no-user-gesture-required --check-for-update-interval=31536000 --ozone-platform=wayland "$URL"'
       Restart=always
       RestartSec=5
 
@@ -296,6 +353,162 @@ write_files:
       [Install]
       WantedBy=timers.target
 
+  - path: /home/@USERNAME@/.config/systemd/user/chromium-watchdog.service
+    owner: "@USERNAME@:@USERNAME@"
+    permissions: "0644"
+    defer: true
+    content: |
+      [Unit]
+      Description=Restart Chromium kiosk if it is stuck on an error page
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/kiosk-watchdog
+
+  - path: /home/@USERNAME@/.config/systemd/user/chromium-watchdog.timer
+    owner: "@USERNAME@:@USERNAME@"
+    permissions: "0644"
+    defer: true
+    content: |
+      [Unit]
+      Description=Check the Chromium kiosk every 5 minutes
+
+      [Timer]
+      OnBootSec=10min
+      OnUnitActiveSec=5min
+
+      [Install]
+      WantedBy=timers.target
+
+  - path: /usr/local/bin/kiosk-watchdog
+    owner: "root:root"
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env python3
+      """Restart the kiosk browser unless it shows a live page from the kiosk URL.
+
+      Chromium's own error pages (no network yet, an upstream 5xx) and a crashed
+      renderer ("Aw, Snap!") otherwise stay on screen until the nightly restart.
+      A page counts as live when it is on the kiosk URL's origin and its renderer
+      answers a script evaluation over the local DevTools port. A second check a
+      minute later keeps a page that is merely mid-load from triggering a restart.
+      """
+
+      import base64
+      import json
+      import os
+      import socket
+      import struct
+      import subprocess
+      import time
+      import urllib.request
+      from pathlib import Path
+      from urllib.parse import urlsplit
+
+      DEVTOOLS = "http://127.0.0.1:9222"
+      URL_FILE = Path("/boot/firmware/kiosk-url.txt")
+      DEFAULT_URL = "@URL@"
+      UNIT = "chromium-kiosk.service"
+
+
+      def kiosk_origin() -> str:
+          url = URL_FILE.read_text().strip() if URL_FILE.exists() else DEFAULT_URL
+          parts = urlsplit(url)
+          return f"{parts.scheme}://{parts.netloc}/"
+
+
+      def recv_exact(sock: socket.socket, n: int, buf: bytes) -> tuple[bytes, bytes]:
+          while len(buf) < n:
+              chunk = sock.recv(4096)
+              if not chunk:
+                  raise ConnectionError("DevTools socket closed")
+              buf += chunk
+          return buf[:n], buf[n:]
+
+
+      def renderer_answers(ws_url: str) -> bool:
+          """Evaluate 1 + 1 in the page over a minimal websocket client."""
+          parts = urlsplit(ws_url)
+          with socket.create_connection((parts.hostname, parts.port), timeout=10) as sock:
+              key = base64.b64encode(os.urandom(16)).decode()
+              sock.sendall(
+                  f"GET {parts.path} HTTP/1.1\r\nHost: {parts.netloc}\r\n"
+                  "Upgrade: websocket\r\nConnection: Upgrade\r\n"
+                  f"Sec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n".encode()
+              )
+              buf = b""
+              while b"\r\n\r\n" not in buf:
+                  chunk = sock.recv(4096)
+                  if not chunk:
+                      raise ConnectionError("DevTools socket closed")
+                  buf += chunk
+              head, buf = buf.split(b"\r\n\r\n", 1)
+              if b" 101 " not in head.split(b"\r\n", 1)[0]:
+                  return False
+
+              msg = json.dumps(
+                  {
+                      "id": 1,
+                      "method": "Runtime.evaluate",
+                      "params": {"expression": "1 + 1", "returnByValue": True},
+                  }
+              ).encode()
+              mask = os.urandom(4)
+              length = (
+                  bytes([0x80 | len(msg)])
+                  if len(msg) < 126
+                  else bytes([0x80 | 126]) + struct.pack(">H", len(msg))
+              )
+              masked = bytes(b ^ mask[i % 4] for i, b in enumerate(msg))
+              sock.sendall(bytes([0x81]) + length + mask + masked)
+
+              while True:
+                  header, buf = recv_exact(sock, 2, buf)
+                  n = header[1] & 0x7F
+                  if n == 126:
+                      ext, buf = recv_exact(sock, 2, buf)
+                      n = struct.unpack(">H", ext)[0]
+                  elif n == 127:
+                      ext, buf = recv_exact(sock, 8, buf)
+                      n = struct.unpack(">Q", ext)[0]
+                  payload, buf = recv_exact(sock, n, buf)
+                  if header[0] & 0x0F != 1:
+                      continue
+                  reply = json.loads(payload)
+                  if reply.get("id") == 1:
+                      return reply.get("result", {}).get("result", {}).get("value") == 2
+
+
+      def healthy() -> bool:
+          origin = kiosk_origin()
+          try:
+              with urllib.request.urlopen(f"{DEVTOOLS}/json/list", timeout=5) as resp:
+                  targets = json.load(resp)
+              return any(
+                  renderer_answers(t["webSocketDebuggerUrl"])
+                  for t in targets
+                  if t.get("type") == "page"
+                  and t.get("url", "").startswith(origin)
+                  and "webSocketDebuggerUrl" in t
+              )
+          except (OSError, ValueError):
+              return False
+
+
+      def main() -> None:
+          active = subprocess.run(["systemctl", "--user", "is-active", "--quiet", UNIT])
+          if active.returncode != 0 or healthy():
+              return
+          time.sleep(60)
+          if healthy():
+              return
+          print("kiosk not showing a live page from the kiosk URL; restarting")
+          subprocess.run(["systemctl", "--user", "restart", UNIT], check=True)
+
+
+      if __name__ == "__main__":
+          main()
+
   - path: /usr/local/bin/kiosk-set-url
     owner: "root:root"
     permissions: "0755"
@@ -323,7 +536,8 @@ runcmd:
   - install -d -o @USERNAME@ -g @USERNAME@ /home/@USERNAME@/.config/systemd/user/default.target.wants /home/@USERNAME@/.config/systemd/user/timers.target.wants
   - ln -sf ../chromium-kiosk.service /home/@USERNAME@/.config/systemd/user/default.target.wants/chromium-kiosk.service
   - ln -sf ../chromium-restart.timer /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-restart.timer
-  - chown -h @USERNAME@:@USERNAME@ /home/@USERNAME@/.config/systemd/user/default.target.wants/chromium-kiosk.service /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-restart.timer
+  - ln -sf ../chromium-watchdog.timer /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-watchdog.timer
+  - chown -h @USERNAME@:@USERNAME@ /home/@USERNAME@/.config/systemd/user/default.target.wants/chromium-kiosk.service /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-restart.timer /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-watchdog.timer
   # hide the cursor: no Wayland-native option, so blank the theme's pointer
   - if [ -f /usr/share/icons/PiXflat/cursors/left_ptr ]; then mv /usr/share/icons/PiXflat/cursors/left_ptr /usr/share/icons/PiXflat/cursors/left_ptr.bak; fi
 @TAILSCALE_CMDS@
@@ -448,7 +662,7 @@ EOF
 main() {
     local url="" hostname="pi-kiosk" username="kiosk" password="kiosk"
     local wifi_ssid="" wifi_password="" wifi_enterprise_user="" wifi_enterprise_pass=""
-    local wifi_country="AU" tailscale_authkey="" ssh_key_file="" device="" test_mode=false
+    local wifi_country="AU" tailscale_authkey="" tailscale_tag="" ssh_key_file="" device="" test_mode=false
 
     (($# > 0)) || usage 0
     while (($# > 0)); do
@@ -464,6 +678,7 @@ main() {
         --wifi-enterprise-pass) wifi_enterprise_pass="$2"; shift 2 ;;
         --wifi-country) wifi_country="$2"; shift 2 ;;
         --tailscale-authkey) tailscale_authkey="$2"; shift 2 ;;
+        --tailscale-tag) tailscale_tag="$2"; shift 2 ;;
         --device) device="$2"; shift 2 ;;
         --test) test_mode=true; shift ;;
         -h | --help) usage 0 ;;
@@ -484,6 +699,12 @@ main() {
         fi
     fi
     [[ -z "$ssh_key_file" || -f "$ssh_key_file" ]] || die "SSH key not found: $ssh_key_file"
+    if [[ -n "$tailscale_tag" ]]; then
+        [[ -z "$tailscale_authkey" ]] || die "pass --tailscale-tag or --tailscale-authkey, not both"
+        [[ -n "${TS_OAUTH_CLIENT_ID:-}" && -n "${TS_OAUTH_CLIENT_SECRET:-}" ]] ||
+            die "--tailscale-tag needs TS_OAUTH_CLIENT_ID and TS_OAUTH_CLIENT_SECRET in the environment"
+        command -v jq >/dev/null 2>&1 || die "--tailscale-tag needs jq"
+    fi
     check_required_tools
 
     local passwd_hash timezone
@@ -501,18 +722,22 @@ main() {
     else
         echo "  WiFi:      none (ethernet)"
     fi
-    echo "  Tailscale: $([[ -n "$tailscale_authkey" ]] && echo yes || echo no)"
+    if [[ -n "$tailscale_tag" ]]; then
+        echo "  Tailscale: minted key, $tailscale_tag"
+    else
+        echo "  Tailscale: $([[ -n "$tailscale_authkey" ]] && echo "given key" || echo no)"
+    fi
     echo "  SSH key:   ${ssh_key_file:-none}"
     echo
 
-    # --- generate config -------------------------------------------------
     local work
     work=$(mktemp -d -t pi-kiosk-XXXXX)
-    generate_user_data "$work/user-data"
-    generate_network_config "$work/network-config"
-    printf '%s\n' "$url" >"$work/kiosk-url.txt"
 
     if [[ "$test_mode" == true ]]; then
+        [[ -z "$tailscale_tag" ]] || tailscale_authkey="tskey-auth-TEST-PLACEHOLDER"
+        generate_user_data "$work/user-data"
+        generate_network_config "$work/network-config"
+        printf '%s\n' "$url" >"$work/kiosk-url.txt"
         warn "TEST MODE: config generated in $work (not flashing)"
         ls -l "$work"
         exit 0
@@ -527,6 +752,19 @@ main() {
     local confirm
     read -r -p "Continue? (yes/no): " confirm
     [[ "$confirm" == yes ]] || { echo "Aborted."; rm -rf "$work"; exit 0; }
+
+    # Mint before erasing anything, so an API failure leaves the card as it was.
+    local ts_bearer=""
+    if [[ -n "$tailscale_tag" ]]; then
+        ts_bearer=$(ts_token) || die "Tailscale OAuth token request failed"
+        tailscale_authkey=$(ts_mint_authkey "$ts_bearer" "$tailscale_tag" "$hostname") ||
+            die "Tailscale auth key mint failed (does the OAuth client own $tailscale_tag?)"
+        info "✓ Minted single-use Tailscale auth key"
+    fi
+
+    generate_user_data "$work/user-data"
+    generate_network_config "$work/network-config"
+    printf '%s\n' "$url" >"$work/kiosk-url.txt"
 
     local image
     image=$(fetch_image)
@@ -544,6 +782,8 @@ main() {
     rmdir "$mnt"
     rm -rf "$work"
     sync
+
+    [[ -z "$ts_bearer" ]] || ts_remove_stale_nodes "$ts_bearer" "$tailscale_tag" "$hostname"
 
     info "✓ SD card ready --- eject it and boot the Pi."
     echo
