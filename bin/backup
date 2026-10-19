@@ -136,16 +136,6 @@ attached_image_excludes() {
 
 wants() { [[ -z "$SECTIONS" || " $SECTIONS " == *" $1 "* ]]; }
 
-# A host without one of the source directories (watson keeps no mail or
-# Zotero) has nothing to push for that section. Skip it rather than let rclone
-# fail every hour. A skipped mail section leaves .last-mail-push unstamped, so
-# a Maildir that vanishes from a laptop still shows up as stale mail on weddle.
-present() {
-  [[ -d "$1" ]] && return 0
-  echo "Skipping $1: not present on this host"
-  return 1
-}
-
 # Build exclude arguments for Documents
 EXCLUDE_ARGS=()
 for pattern in "${EXCLUDES[@]}"; do
@@ -169,7 +159,7 @@ fi
 
 # Mail first: it is the small, time-sensitive section, and a slow Documents
 # listing would otherwise hold fresh mail back from weddle's mirror.
-if wants mail && present "$HOME/Maildir"; then
+if wants mail; then
   echo "=== Maildir ==="
   echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
   echo
@@ -183,7 +173,7 @@ if wants mail && present "$HOME/Maildir"; then
   echo
 fi
 
-if wants documents && present "$HOME/Documents"; then
+if wants documents; then
   echo "=== Documents ==="
   echo "Syncing $HOME/Documents to $REMOTE:$REMOTE_BASE/Documents"
   echo "Excluding: ${EXCLUDES[*]}"
@@ -196,7 +186,7 @@ if wants documents && present "$HOME/Documents"; then
   echo
 fi
 
-if wants zotero && present "$HOME/Zotero"; then
+if wants zotero; then
   echo "=== Zotero ==="
   echo "Syncing $HOME/Zotero to $REMOTE:$REMOTE_BASE/Zotero"
   echo
