@@ -205,7 +205,7 @@ macro index,pager ,f '<sync-mailbox><enter-command>source ~/.config/neomutt/acco
 macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/anu<enter><change-folder>!<enter>'
 macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
 macro index,pager ,h '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/adirh<enter><change-folder>!<enter>'
-macro index,pager ,x '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/lxconvenor<enter><change-folder>!<enter>'
+macro index,pager ,l '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/lxconvenor<enter><change-folder>!<enter>'
 
 # === Sync operations ===
 # In a maildir, neomutt keeps flag changes (read/unread, flagged, and the
@@ -257,7 +257,6 @@ bind index za collapse-thread
 bind index zA collapse-all
 
 # === Quick filters ===
-macro index ,l "<limit>all<enter>" "remove limit"
 macro index ,L "<limit>~U<enter>" "limit to unread in folder"
 macro index ,y "<limit>~d <1d<enter>" "limit to today"
 
