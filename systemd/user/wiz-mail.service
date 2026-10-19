@@ -1,0 +1,11 @@
+[Unit]
+Description=Copy the LX convenor mailbox to watson for wiz
+Documentation=file:///home/ben/.dotfiles/bin/wiz-mail-copy
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
+ExecStart=/home/ben/.dotfiles/bin/wiz-mail-copy
+TimeoutStartSec=30min

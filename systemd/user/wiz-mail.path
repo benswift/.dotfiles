@@ -1,0 +1,10 @@
+[Unit]
+Description=Copy the LX convenor mailbox to watson after each push from daysy
+
+[Path]
+# bin/backup writes .last-mail-push after every Maildir sync, full run or `backup mail`
+PathChanged=%h/backup/daysy/.last-mail-push
+Unit=wiz-mail.service
+
+[Install]
+WantedBy=paths.target
