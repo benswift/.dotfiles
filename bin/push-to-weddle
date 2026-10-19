@@ -24,6 +24,10 @@ if ! nc -z -w 5 weddle 22 2>/dev/null; then
 fi
 
 status=0
-backup || status=1
+# watson keeps nothing that isn't stored elsewhere (wiz lives on GitLab, its
+# mail copy comes from weddle), so it ships only its agent logs.
+if [[ "$(hostname -s)" != "watson" ]]; then
+	backup || status=1
+fi
 ship-claude-logs || status=1
 exit "$status"
