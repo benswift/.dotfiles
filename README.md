@@ -86,7 +86,9 @@ loaded as a Claude Code plugin. The setup:
 
 To propagate changes across machines: push from the marketplace clone, then run
 `dotfiles update` elsewhere. That refreshes Claude plugins and re-syncs Codex
-skill links. Requires SSH auth to GitHub (the repo is private).
+skill links. Requires SSH auth to GitHub (the repo is private). The sync skips
+plugins entirely if `claude` isn't installed yet, so on a fresh host install
+Claude Code before running `dotfiles update`.
 
 ### Elixir projects tip
 

@@ -117,6 +117,12 @@
         "source": "github",
         "repo": "comp4020-agentic-coding-studio/core"
       }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
     }
   },
   "alwaysThinkingEnabled": true,
