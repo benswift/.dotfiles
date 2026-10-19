@@ -137,6 +137,39 @@ Expunge Both
 SyncState *
 CopyArrivalDate yes
 
+#########################################
+# LX Convenor (shared mailbox)          #
+#########################################
+
+# Shared like adirh: moves and deletes here happen for every holder.
+IMAPAccount lxconvenor
+Host outlook.office365.com
+Port 993
+AuthMech XOAUTH2
+User lxconvenor.cybernetics@anu.edu.au
+PassCmd "$HOME/.dotfiles/bin/mail-secret oauth anu"
+TLSType IMAPS
+PipelineDepth 1
+Timeout 120
+
+IMAPStore lxconvenor-remote
+Account lxconvenor
+
+MaildirStore lxconvenor-local
+Path ~/Maildir/lxconvenor/
+Inbox ~/Maildir/lxconvenor/INBOX
+SubFolders Verbatim
+
+Channel lxconvenor
+Far :lxconvenor-remote:
+Near :lxconvenor-local:
+Patterns INBOX Archive "Sent Items" Drafts "Deleted Items"
+Create Near
+Sync All
+Expunge Both
+SyncState *
+CopyArrivalDate yes
+
 ## Local Variables:
 ## mode: conf-unix
 ## End:

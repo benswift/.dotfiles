@@ -51,6 +51,7 @@ mu init --maildir ~/Maildir --my-address u2548636@anu.edu.au \
   --my-address ben.swift@anu.edu.au \
   --my-address phdconvenor.cybernetics@anu.edu.au \
   --my-address adir.hdr.cybernetics@anu.edu.au \
+  --my-address lxconvenor.cybernetics@anu.edu.au \
   --my-address benswift@fastmail.com --my-address ben@benswift.me
 mu index
 # Fastmail: a NEW app password for this host, scoped to IMAP+SMTP (IMAP for
@@ -83,9 +84,9 @@ helpful.
 
 ## Office365 setup
 
-All three Office365 accounts (`anu`, the delegated `phdconvenor` mailbox and the
-shared `adirh` one) authenticate as `u2548636@anu.edu.au` over XOAUTH2 with one
-shared token.
+All four Office365 accounts (`anu`, the delegated `phdconvenor` mailbox and the
+shared `adirh` and `lxconvenor` ones) authenticate as `u2548636@anu.edu.au` over
+XOAUTH2 with one shared token.
 
 1. **mbsync with XOAUTH2 support** (full tier only):
 

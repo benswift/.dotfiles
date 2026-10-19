@@ -10,6 +10,7 @@ class Account(str, Enum):
     anu = "anu"
     phdconvenor = "phdconvenor"
     adirh = "adirh"
+    lxconvenor = "lxconvenor"
 
 
 @dataclass(frozen=True)
@@ -78,6 +79,14 @@ ACCOUNTS: dict[Account, AccountConfig] = {
         maildir=Path.home() / "Maildir/adirh",
         sent_folder="Sent Items",
         neomutt_config=Path.home() / ".config/neomutt/accounts/adirh",
+        sent_append=None,
+    ),
+    Account.lxconvenor: AccountConfig(
+        from_addr="Ben Swift <lxconvenor.cybernetics@anu.edu.au>",
+        msmtp="lxconvenor",
+        maildir=Path.home() / "Maildir/lxconvenor",
+        sent_folder="Sent Items",
+        neomutt_config=Path.home() / ".config/neomutt/accounts/lxconvenor",
         sent_append=None,
     ),
 }

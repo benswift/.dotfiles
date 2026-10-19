@@ -133,6 +133,11 @@ named-mailboxes "  Archive" =adirh/Archive
 named-mailboxes "  Drafts" =adirh/Drafts
 named-mailboxes "  Sent" =adirh/"Sent Items"
 named-mailboxes "  Deleted" =adirh/"Deleted Items"
+named-mailboxes "LX Convenor" =lxconvenor/INBOX
+named-mailboxes "  Archive" =lxconvenor/Archive
+named-mailboxes "  Drafts" =lxconvenor/Drafts
+named-mailboxes "  Sent" =lxconvenor/"Sent Items"
+named-mailboxes "  Deleted" =lxconvenor/"Deleted Items"
 
 # === External configuration files ===
 # Enable true color support (must be set before color commands)
@@ -151,6 +156,7 @@ folder-hook personal/* source ~/.config/neomutt/accounts/personal
 folder-hook anu/* source ~/.config/neomutt/accounts/anu
 folder-hook phdconvenor/* source ~/.config/neomutt/accounts/phdconvenor
 folder-hook adirh/* source ~/.config/neomutt/accounts/adirh
+folder-hook lxconvenor/* source ~/.config/neomutt/accounts/lxconvenor
 
 # === Attachments configuration ===
 set abort_noattach = ask-yes
@@ -199,6 +205,7 @@ macro index,pager ,f '<sync-mailbox><enter-command>source ~/.config/neomutt/acco
 macro index,pager ,a '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/anu<enter><change-folder>!<enter>'
 macro index,pager ,c '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/phdconvenor<enter><change-folder>!<enter>'
 macro index,pager ,h '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/adirh<enter><change-folder>!<enter>'
+macro index,pager ,x '<sync-mailbox><enter-command>source ~/.config/neomutt/accounts/lxconvenor<enter><change-folder>!<enter>'
 
 # === Sync operations ===
 # In a maildir, neomutt keeps flag changes (read/unread, flagged, and the
