@@ -89,6 +89,7 @@ SYMLINK_MANIFEST=(
     "systemd/user/aps-scrape.service.d/oncall.conf:~/.config/systemd/user/aps-scrape.service.d/oncall.conf"
     "systemd/user/ooc-find-gigs.service.d/oncall.conf:~/.config/systemd/user/ooc-find-gigs.service.d/oncall.conf"
     "systemd/user/ooc-verify-gigs.service.d/oncall.conf:~/.config/systemd/user/ooc-verify-gigs.service.d/oncall.conf"
+    "systemd/user/peculiar-interests.service.d/oncall.conf:~/.config/systemd/user/peculiar-interests.service.d/oncall.conf"
     # whole-directory configs
     "ghostty:~/.config/ghostty"
     "helix:~/.config/helix"
