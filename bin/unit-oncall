@@ -13,13 +13,14 @@
 #   OnSuccess=unit-oncall-clear@%n.service
 #
 # Usage: unit-oncall fail  <unit>   # file a todo (deduped, see below)
-#        unit-oncall clear <unit>   # the unit succeeded; re-arm
+#        unit-oncall clear <unit>   # the unit succeeded; re-arm and close its todos
 #
 # DEDUP: a unit that fails every 15 minutes must not file 96 todos a day. The
 # first failure files one and drops a marker; later failures append to the
-# marker instead. A success clears it. A marker older than REARM_HOURS files a
-# fresh todo anyway, so a failure that persists past a ticked-off todo does not
-# go quiet.
+# marker instead. A success clears it and ticks off the todo(s), so the bot
+# section only ever lists units still failing. A marker older than REARM_HOURS
+# files a fresh todo anyway, so a failure that persists past a ticked-off todo
+# does not go quiet.
 #
 # A todo also sends a Pushover page, so a failure reaches a phone rather than
 # waiting for the notebook to be opened. The page sits inside the dedup above,
@@ -103,6 +104,33 @@ clear)
 	if [[ -f "$marker" ]]; then
 		rm -f "$marker"
 		say "$unit: recovered; marker cleared"
+	fi
+
+	# Close every open todo this script filed for the unit (a re-armed failure
+	# leaves more than one). Matched on the title written by `fail` below plus
+	# the oncall tag, so a todo Ben wrote himself is never touched. This runs on
+	# every success, so it must stay cheap: a fixed-string grep over the
+	# notebook's top level, and nb (which commits) only when something matches.
+	notebook="${NB_DIR:-$HOME/.nb}/home"
+	open=()
+	while IFS= read -r file; do
+		grep -qF '#oncall' "$file" && open+=("$(basename "$file")")
+	done < <(grep -lF -- "# [ ] $unit failed on weddle (" "$notebook"/*.todo.md 2>/dev/null || true)
+	((${#open[@]})) || exit 0
+
+	exec 9>"$LOCK"
+	flock 9
+	for todo in "${open[@]}"; do
+		if nb todo "do" "$todo" >/dev/null 2>>"$LOG"; then
+			say "$unit: recovered; closed todo $todo"
+		else
+			say "$unit: recovered, but FAILED to close todo $todo"
+		fi
+	done
+	if nb home:sync >/dev/null 2>>"$LOG"; then
+		say "$unit: synced"
+	else
+		say "$unit: nb sync failed --- closed todos are local until the next sync"
 	fi
 	exit 0
 	;;
