@@ -4,11 +4,10 @@
 
 Deterministic, no model involved. A job is healthy when its timer is active,
 its last run did not fail, and it completed within `max_age`. Host checks run
-a command over ssh and compare stdout to a regex (or expect nothing). The
-result replaces the `health` section of briefing.md --- one line when all is
-well --- and a problem that was not in the previous run's state gets a
-Pushover page, so a job that stops firing is noticed the day it happens
-rather than when someone reads the briefing. Config format:
+a command over ssh and compare stdout to a regex (or expect nothing). A
+problem that was not in the previous run's state gets a Pushover page, so a
+job that stops firing is noticed the day it happens. The full result goes to
+stdout, which pkb-agent keeps in the task's log. Config format:
 
     [[unit]]
     name = "aps-scrape"          # <name>.service and <name>.timer
@@ -34,7 +33,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from pkb_tools import briefing
 from pkb_tools.notebook import state_dir
 
 UNITS = {"m": 60, "h": 3600, "d": 86400}
@@ -250,10 +248,8 @@ def main(argv: list[str] | None = None) -> int:
     for host, checks in config.hosts.items():
         problems += check_host(host, checks)
     n_checks = sum(len(c) for c in config.hosts.values())
-    briefing.write_section("health", render(problems, len(config.units), n_checks))
     page_new_problems(problems)
-    for problem in problems:
-        print(re.sub(r"\*\*", "", problem.message))
+    print(re.sub(r"\*\*", "", render(problems, len(config.units), n_checks)))
     return 0
 
 

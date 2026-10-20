@@ -13,8 +13,7 @@
 #
 # weddle off the tailnet is not a failure worth paging for: the run is skipped
 # with exit 0, the log records it, and the next hour retries. What catches a
-# long stall is on weddle's side --- the briefing's "mail synced N ago" line
-# and ingest-claude-logs' staleness check.
+# long stall is on weddle's side --- ingest-claude-logs' staleness check.
 
 set -uo pipefail
 

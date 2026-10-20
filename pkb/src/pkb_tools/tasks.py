@@ -1,9 +1,9 @@
 """Task files: one markdown file per recurring job in the notebook's tasks/.
 
     ---
-    title: Daily inbox triage
-    schedule: 30 6 * * *        # cron syntax, local time
-    command: pkb-triage         # optional: run this instead of an agent
+    title: Morning job health check
+    schedule: 0 7 * * *         # cron syntax, local time
+    command: pkb-health         # optional: run this instead of an agent
     profile: codex-sub          # optional: agent-run profile (default: its default)
     model: sonnet               # optional, runner-specific
     ---

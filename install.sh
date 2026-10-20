@@ -163,8 +163,8 @@ install_python_tools() {
     # changes on re-runs.
     uv tool install --force -e "$DOTFILES_DIR/mail/utils" ||
         warn "mail-utils install failed --- mail-* commands and mutt-compose-lsp will be missing"
-    # pkb-agent, pkb-triage, pkb-health, pkb-briefing: the notebook's scheduled
-    # loops. Only weddle runs the timer, but the commands work anywhere.
+    # pkb-agent, pkb-health, pkb-todo: the notebook's scheduled loops and
+    # the shell's `todo`. Only weddle runs the timer, but the commands work anywhere.
     uv tool install --force -e "$DOTFILES_DIR/pkb" ||
         warn "pkb-tools install failed --- pkb-* commands will be missing"
 }
