@@ -183,7 +183,7 @@ check_tools() {
 check_script_deps() {
     section "Checking script dependencies..."
 
-    # Hard requirements of bin/ scripts: jq (teams, sync-agent-config),
+    # Hard requirements of bin/ scripts: jq (sync-agent-config),
     # uv (mail utils and the python scripts), ast-grep (the preferred
     # code-search tool per claude/CLAUDE.md). Fall back to 'mise which'
     # so mise-managed tools resolve even when the parent shell hasn't
@@ -208,11 +208,11 @@ check_script_deps() {
         check_fail "nb not installed by mise (run 'mise install github:xwmx/nb')"
     fi
 
-    # agent-browser drives the teams script (installed as a Claude plugin)
+    # agent-browser is the browser-automation CLI claude/CLAUDE.md prescribes
     if command_exists agent-browser; then
         check_pass "agent-browser"
     else
-        check_warn "agent-browser not installed (bin/teams needs it)"
+        check_warn "agent-browser not installed"
     fi
 }
 

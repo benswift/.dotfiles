@@ -159,7 +159,6 @@ Each script's header has the detail. Notable ones:
   with each session's running agents
 - `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to
   `⚠ <reason>` while an agent is blocked (undone on the next prompt)
-- `teams` --- Teams DMs via the web client
 - `pkb-agent`, `pkb-health`, `pkb-todo` --- the notebook's scheduled loops, a
   uv-tool package at @pkb/ (installed editable like mail/utils). Task
   definitions live in `~/.nb/home/tasks/`; one systemd timer (weddle only) fires
@@ -289,14 +288,11 @@ plain text and do **not** show the cursor row (it's a background colour), so
 probe position with a side-effect key like `<space>` (tag-entry) and see which
 row gets the `*`.
 
-## Microsoft 365 (Teams)
+## Microsoft 365
 
 ANU locks down third-party Graph app registrations and the device-code flow, so
 **there is no API path to ANU calendar or Teams data --- don't reach for
-Graph.** @bin/teams drives the Teams web client via `agent-browser`, signed in
-as yourself in a persistent Chrome profile, which is a channel ANU does permit.
-Being UI automation it's brittle; expect fix-ups when Microsoft reshuffles the
-web client.
+Graph.**
 
 There is no calendar tool, and don't write one against EventKit: ANU's Exchange
 sync into macOS Calendar.app is too flaky to give answers worth trusting (it is
