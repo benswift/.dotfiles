@@ -29,11 +29,10 @@ import json
 import re
 import subprocess
 import sys
+import tomllib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-
-import tomllib
 
 from pkb_tools import briefing
 from pkb_tools.notebook import state_dir
