@@ -67,3 +67,18 @@ def test_naive_legacy_stamp_is_read_as_local(notebook: Path) -> None:
     T.stamp_path(task).write_text("2026-09-07T07:00:00")
     last = T.last_run(task)
     assert last is not None and last.tzinfo is not None
+
+
+def test_schedule_keeps_local_time_across_dst(
+    notebook: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A stamp written before a DST change must not drag its UTC offset into
+    the next run: Sydney's clocks went forward on 2026-10-04, and the weekly
+    20:00 run is still due at 20:00 local, not 21:00."""
+    monkeypatch.setenv("TZ", "Australia/Sydney")
+    task = T.Task(name="x", schedule="0 20 * * 0", prompt="p")
+    T.stamp_path(task).parent.mkdir(parents=True)
+    T.stamp_path(task).write_text("2026-09-27T20:01:00+10:00")
+    last = T.last_run(task)
+    assert last is not None
+    assert T.next_elapse(task, last).isoformat() == "2026-10-04T20:00:00+11:00"

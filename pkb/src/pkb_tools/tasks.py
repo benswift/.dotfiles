@@ -16,9 +16,11 @@ which is why only one host runs the timer.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from cronsim import CronSim, CronSimError
 
@@ -85,11 +87,24 @@ def stamp_path(task: Task) -> Path:
     return state_dir() / f"{task.name}.last"
 
 
+def local_zone() -> ZoneInfo:
+    """The machine's timezone with its DST rules.
+
+    `datetime.astimezone()` alone gives a fixed UTC offset, and CronSim steps
+    in whatever zone its base carries, so a stamp from before a DST change
+    would put the next run an hour off local time.
+    """
+    if name := os.environ.get("TZ"):
+        return ZoneInfo(name.removeprefix(":"))
+    with open("/etc/localtime", "rb") as handle:
+        return ZoneInfo.from_file(handle, key="localtime")
+
+
 def last_run(task: Task) -> datetime | None:
     path = stamp_path(task)
     if not path.exists():
         return None
-    return datetime.fromisoformat(path.read_text().strip()).astimezone()
+    return datetime.fromisoformat(path.read_text().strip()).astimezone(local_zone())
 
 
 def record_run(task: Task, when: datetime) -> None:
