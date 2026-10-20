@@ -106,11 +106,6 @@ gsy() {
     return 1
   fi
 }
-# Shed a stale GIT_SSH_COMMAND pointing at the long-deleted weddle-gh key.
-# The value survives in the env of any zellij server started before the key
-# was removed (July 2026); this guard is inert once those servers are gone.
-[[ "$GIT_SSH_COMMAND" == *weddle-gh* ]] && unset GIT_SSH_COMMAND
-
 # zellij shortcuts
 zs() { zellij --session "${1:-${PWD##*/}}" "${@:2}"; }
 alias za="zellij attach"
@@ -129,17 +124,10 @@ fi
 clipboard() { clipboard-copy; }
 cpath() { realpath "${1:-.}" | clipboard && echo "Copied to clipboard: $(realpath "${1:-.}")"; }
 
-# macOS-specific integrations
-[[ -f ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
-
-# Homebrew setup (macOS only)
-if [[ -f /opt/homebrew/bin/brew ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-fi
-
-if [[ -n $HOMEBREW_PREFIX ]]; then
-  FPATH="$HOMEBREW_PREFIX/share/zsh/site-functions:$FPATH"
-fi
+# Completions from Homebrew and OrbStack (macOS); their bin dirs are on PATH
+# via zshenv
+[[ -n $HOMEBREW_PREFIX ]] && fpath=($HOMEBREW_PREFIX/share/zsh/site-functions $fpath)
+[[ -d ~/.orbstack/shell/completions/zsh ]] && fpath+=(~/.orbstack/shell/completions/zsh)
 
 # Initialize completions. The full compinit audits every completion file,
 # which is the slowest part of startup --- only do that when the dump is

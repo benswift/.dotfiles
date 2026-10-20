@@ -23,6 +23,7 @@ SYMLINK_MANIFEST=(
     "gitconfig:~/.gitconfig"
     "gitignore:~/.gitignore"
     "tmux.conf:~/.tmux.conf"
+    "zprofile:~/.zprofile"
     "zshenv:~/.zshenv"
     "zshrc:~/.zshrc"
     # ssh

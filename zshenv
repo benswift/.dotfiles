@@ -1,6 +1,25 @@
 #!/bin/zsh
+# Read by every zsh, interactive or not (scripts, `ssh host cmd`, agent
+# shells), so this is where PATH is built, as the zsh manual prescribes. Keep
+# it cheap and silent: no output, no subprocesses, nothing that assumes a tty.
+# Interactive setup belongs in zshrc.
+#
+# zprofile sources this file again: on macOS /etc/zprofile runs path_helper
+# after this file, which pushes every dir below behind /usr/bin (and behind an
+# old Homebrew nb). Re-running restores the order, and `typeset -U` drops the
+# duplicates that leaves, and the ones nested shells (zellij panes) would pile
+# up.
 
-export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.bun/bin:$PATH"
+typeset -U path
+
+# Static rather than `eval "$(brew shellenv)"`, which forks a bash script
+# on every zsh start. HOMEBREW_PREFIX is all zshrc needs (completions).
+if [[ -d /opt/homebrew ]]; then
+  export HOMEBREW_PREFIX=/opt/homebrew
+  path=(/opt/homebrew/bin /opt/homebrew/sbin $path)
+fi
+
+path=(~/.dotfiles/bin ~/.local/bin ~/.cargo/bin ~/.bun/bin $path ~/.orbstack/bin(N))
 
 # mise's shims, appended last. `mise activate` only runs from .zshrc, so
 # without this a non-interactive shell sees none of the mise-managed tools ---
@@ -9,7 +28,8 @@ export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.bun/bi
 # put this directory on PATH for the same reason. Appending (not prepending)
 # keeps activate's real bin dirs first in an interactive shell, so the shims
 # cost nothing there; each shim exec re-enters mise, at roughly 30ms.
-export PATH="$PATH:$HOME/.local/share/mise/shims"
+path+=(~/.local/share/mise/shims)
+
 export RUBY_YJIT_ENABLE=true
 export EDITOR="hx"
 export EXT_MIDI_OUT_DEVICE_NAME="Maschine 2 Virtual Input"

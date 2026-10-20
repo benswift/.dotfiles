@@ -68,11 +68,11 @@ THEME="${TS_CAT_THEME:-catppuccin_mocha}"
 # in lumis's registry).
 #
 # `*.zshrc` already covers `~/.zshrc`, since `*` matches the empty string. The
-# bare `zshrc`/`zshenv` are this repo's own copies, which carry no leading dot.
+# bare `zshrc`/`zshenv`/`zprofile` are this repo's own copies, which carry no leading dot.
 lang=""
 case "$file" in
 *.mdx | *.markdown | *.mdown | *.mkd) lang="markdown" ;;
-*.zsh | *.zshrc | *.zshenv | zshrc | zshenv) lang="zsh" ;;
+*.zsh | *.zshrc | *.zshenv | *.zprofile | zshrc | zshenv | zprofile) lang="zsh" ;;
 *.jsonc) lang="json" ;;
 *.xtm) lang="scheme" ;;
 esac
