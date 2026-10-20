@@ -4,7 +4,8 @@
   Hourly nb sync on macOS hosts (the notebook's ~/.nb/home/CLAUDE.md Sync
   section refers to this), run under bin/launchd-run (PATH, timeout, failure
   paging --- see its header). weddle runs the same cadence from nb-sync.timer,
-  seven minutes past the hour so the two hosts never push at once.
+  seven minutes past the hour so the two hosts never push at once. Home only,
+  never --all: see the note in systemd/user/nb-sync.service.
 
   Hourly rather than daily because the notebook is written from several hosts
   at once: a daily sync left weddle nineteen commits behind by mid-afternoon
@@ -41,7 +42,7 @@
         <string>--</string>
         <string>/bin/sh</string>
         <string>-c</string>
-        <string>in-darkwake &amp;&amp; exit 0; wait-for-network || exit 0; nb sync --all</string>
+        <string>in-darkwake &amp;&amp; exit 0; wait-for-network || exit 0; nb home:sync</string>
     </array>
     <!-- Minute alone, with no Hour key, means every hour on the hour. A run
          missed while the machine slept is coalesced into a single run at

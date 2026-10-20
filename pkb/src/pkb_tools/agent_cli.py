@@ -93,7 +93,7 @@ def run_task(task: T.Task) -> int:
 
 def sync_notebook(phase: str) -> bool:
     try:
-        result = nb("sync", check=False)
+        result = nb(f"{notebook_dir().name}:sync", check=False)
     except FileNotFoundError as error:
         print(f"pkb-agent: {phase} sync could not start: {error}", file=sys.stderr)
         return False

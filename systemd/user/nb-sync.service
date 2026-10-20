@@ -1,5 +1,5 @@
 [Unit]
-Description=Sync all nb notebooks
+Description=Sync the home nb notebook
 # No `After=network-online.target` here: that is a system target, so in the
 # user manager it silently resolves to nothing and orders nothing. The real
 # guard is the ExecStartPre below. (2026-07-27)
@@ -10,7 +10,9 @@ OnSuccess=unit-oncall-clear@%n.service
 Type=oneshot
 ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
 Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+# Home only, never --all: wiz (~/.nb/wiz) is shared with colleagues and has its
+# own commit-and-push workflow, which an unattended "[nb] Commit" would bypass.
 # Resolve the version pinned in mise/config.toml. /usr/bin/env is intentional:
 # systemd does not use the unit's PATH to resolve the first ExecStart word.
-ExecStart=/usr/bin/env mise exec -- nb sync --all
+ExecStart=/usr/bin/env mise exec -- nb home:sync
 TimeoutStartSec=15min
