@@ -262,6 +262,7 @@ macro index ,y "<limit>~d <1d<enter>" "limit to today"
 
 # === URL and HTML handling ===
 macro index,pager ,p "<enter-command>unset pipe_decode<enter><pipe-message>mail-copy-path<enter><enter-command>set pipe_decode<enter>" "copy file path to clipboard"
+macro index,pager ,m "<enter-command>unset pipe_decode<enter><pipe-message>mail-copy-id<enter><enter-command>set pipe_decode<enter>" "copy msgid:<Message-ID> to clipboard"
 macro index,pager ,b "<enter-command>unset pipe_decode<enter><pipe-message>mail-urls<enter><enter-command>set pipe_decode<enter><enter-command>source ~/.cache/neomutt/temp/urls-commands<enter>" "extract URLs; open in browser or compose mailto"
 macro attach,compose ,b "<enter-command>unset pipe_decode<enter><pipe-entry>mail-urls<enter><enter-command>set pipe_decode<enter><enter-command>source ~/.cache/neomutt/temp/urls-commands<enter>" "extract URLs; open in browser or compose mailto"
 macro attach Y "<enter-command>unset pipe_decode<enter><pipe-message>mail-copy-attachment-name<enter><enter-command>set pipe_decode<enter>" "copy attachment path to clipboard"

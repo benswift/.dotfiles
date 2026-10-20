@@ -21,6 +21,7 @@ mail-analyze --help
 | Command            | Description                                           |
 | ------------------ | ----------------------------------------------------- |
 | `mail-copy-path`   | Copy message file path to clipboard (uses mu to find) |
+| `mail-copy-id`     | Copy `msgid:<Message-ID>` (a mu query) to clipboard   |
 | `mail-urls`        | Extract URLs from a piped message and pick one in fzf |
 | `mail-local-date`  | Pager display filter: Date: header in local time      |
 | `mail-compose`     | Compose and send emails with Jinja2 templating        |
@@ -120,6 +121,7 @@ All four are expected to be clean before a commit.
 The following neomutt macros use this package:
 
 - `,p` - copy file path to clipboard
+- `,m` - copy `msgid:<Message-ID>`, to name a message in an agent session
 - `,b` - extract URLs; open in browser or compose a mailto (`mail-urls`)
 - `$display_filter` - `mail-local-date`, so the pager's Date: header is local
 
