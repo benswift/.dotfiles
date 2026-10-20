@@ -121,7 +121,7 @@ All four are expected to be clean before a commit.
 The following neomutt macros use this package:
 
 - `,p` - copy file path to clipboard
-- `,m` - copy `msgid:<Message-ID>`, to name a message in an agent session
+- `y` - copy `msgid:<Message-ID>`, to name a message in an agent session
 - `,b` - extract URLs; open in browser or compose a mailto (`mail-urls`)
 - `$display_filter` - `mail-local-date`, so the pager's Date: header is local
 
