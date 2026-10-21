@@ -147,7 +147,7 @@ check_symlinks() {
 check_tools() {
     section "Checking tools..."
 
-    local optional_tools=(neomutt mu mbsync msmtp rclone fzf mosh tmux)
+    local optional_tools=(neomutt mu mbsync msmtp rclone fzf mosh)
 
     # helix is built from source by bin/helix-build, not installed by mise, so
     # `hx` merely being on PATH proves nothing: it must be the pinned build,
@@ -240,7 +240,6 @@ check_directories() {
     section "Checking directories..."
 
     local dirs=(
-        "$HOME/.config/zed"
         "$HOME/.config/mise"
         "$HOME/.claude"
         "$HOME/.codex"

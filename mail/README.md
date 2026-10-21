@@ -76,12 +76,6 @@ completions for compose buffers: email addresses via mu, file paths for
 attachments, and greeting expansions (type `hey` + complete to get "Hey
 {Name},"). Configured in helix for the `mutt-compose` language.
 
-## Zed extension
-
-If you're a Zed user, you might find
-[this zed extension for syntax highlighting of muttrc files and mutt compose buffers](https://github.com/benswift/zed-mutt)
-helpful.
-
 ## Office365 setup
 
 All four Office365 accounts (`anu`, the delegated `phdconvenor` mailbox and the

@@ -55,9 +55,10 @@ ROOTS: dict[str, tuple[Path, str]] = {
     "codex": (HOME / "codex-logs", "*/*/*/*/rollout-*.jsonl"),
 }
 
-# Trees that were back-filled once and will never grow again. bin/import-zed-logs
-# wrote ~/zed-logs in Claude's shape, so it needs no parser of its own --- but it
-# has no business in an hourly job either, so it is walked only with --archive.
+# Trees that were back-filled once and will never grow again. ~/zed-logs (the
+# Zed era, before Claude Code) was written in Claude's shape, so it needs no
+# parser of its own --- but it has no business in an hourly job either, so it is
+# walked only with --archive.
 # Its rows stay in the table meanwhile: see the pruning in main(), which is
 # scoped to the agents actually walked. Without that, one run of this script
 # would quietly delete every session it was not asked to look at.

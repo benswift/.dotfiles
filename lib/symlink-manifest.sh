@@ -22,7 +22,6 @@ SYMLINK_MANIFEST=(
     "gitattributes:~/.gitattributes"
     "gitconfig:~/.gitconfig"
     "gitignore:~/.gitignore"
-    "tmux.conf:~/.tmux.conf"
     "zprofile:~/.zprofile"
     "zshenv:~/.zshenv"
     "zshrc:~/.zshrc"
@@ -32,11 +31,6 @@ SYMLINK_MANIFEST=(
     "mail/mbsyncrc:~/.mbsyncrc"
     "mail/msmtprc:~/.msmtprc"
     "mail/neomutt:~/.config/neomutt"
-    # zed
-    "zed/keymap.json:~/.config/zed/keymap.json"
-    "zed/settings.json:~/.config/zed/settings.json"
-    "zed/tasks.json:~/.config/zed/tasks.json"
-    "zed/snippets:~/.config/zed/snippets"
     # AI agents
     "claude/CLAUDE.md:~/.claude/CLAUDE.md"
     "claude/settings.json:~/.claude/settings.json"

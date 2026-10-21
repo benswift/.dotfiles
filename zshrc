@@ -31,7 +31,6 @@ setopt HIST_IGNORE_SPACE
 
 alias y="yazi"
 alias h="hx ."
-alias zp="zed-preview"
 alias ay="claude --dangerously-skip-permissions"
 alias aym="claude --dangerously-skip-permissions --effort max"
 # --setting-sources skips project .claude/settings.json (comp4020 pins the ANU
@@ -115,10 +114,6 @@ alias zk="zellij kill-session"
 alias prettify-md='oxfmt -c ~/.dotfiles/oxfmtrc.json "**/*.md"'
 alias neomutt='TERM=xterm-direct neomutt'
 alias nm='neomutt'
-# macOS-only aliases
-if [[ "$OSTYPE" == darwin* ]]; then
-  alias zed-update-expert='rm -rf "$HOME/Library/Application Support/Zed/extensions/work/elixir/expert-nightly" && echo "Expert cache cleared. Restart Zed to download latest."'
-fi
 # Clipboard via OSC 52 (works locally and over SSH in ghostty); see
 # bin/clipboard-copy for the fallback chain when there's no terminal
 clipboard() { clipboard-copy; }
