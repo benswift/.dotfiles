@@ -1,7 +1,7 @@
-"""pkb-todo (the shell's `todo`): open todos in three sections, and the few
-edits that need no editor.
+"""pkb-todo (the shell's `todo`): open todos in three sections, then Ben's
+open wiz tasks, and the few edits that need no editor.
 
-  todo                  list open todos: todos, blocked, bot
+  todo                  list open todos: todos, blocked, bot, wiz
   todo do <id>...       mark done (nb todo do)
   todo undo <id>...     reopen
   todo block <id>...    tag #blocked; `unblock` removes it
@@ -19,6 +19,10 @@ exclude a tag.
 Bot todos with the same title (a job that keeps failing past the 24h re-arm)
 collapse to one row under the most recent id, whose journal tail is the
 current one, and `do` on any of them closes the whole run.
+
+The wiz section lists the records in wiz's tasks/ whose `status` is open and
+whose `agent` is Ben. They have no nb id, so the verbs don't apply: close one
+in wiz itself, which commits and pushes for the team.
 """
 
 from __future__ import annotations
@@ -31,7 +35,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from pkb_tools.notebook import notebook_dir
+from pkb_tools.notebook import notebook_dir, wiz_dir
 
 BOT = "bot"
 BLOCKED = "blocked"
@@ -39,6 +43,7 @@ OPEN_PREFIX = "# [ ] "
 TAG_RE = re.compile(r"(?<![\w#])#([A-Za-z][\w-]*)")
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 INDEX = ".index"
+WIZ_AGENT = "[[people/ben-swift]]"
 
 
 @dataclass(frozen=True)
@@ -86,6 +91,36 @@ def open_todos(root: Path) -> list[Todo]:
     return todos
 
 
+@dataclass(frozen=True)
+class WizTask:
+    title: str
+    due_date: str | None
+
+
+def frontmatter_fields(text: str) -> dict[str, str]:
+    """Top-level `key: value` lines, quotes and trailing comments stripped."""
+    m = FRONTMATTER_RE.match(text)
+    if m is None:
+        return {}
+    fields = {}
+    for line in m.group(1).split("\n"):
+        key, sep, value = line.partition(":")
+        if sep and key and not key[0].isspace():
+            fields[key] = value.split(" #")[0].strip().strip("'\"")
+    return fields
+
+
+def wiz_tasks(root: Path) -> list[WizTask]:
+    """Ben's open wiz tasks, soonest due first, undated last."""
+    tasks = []
+    for path in sorted((root / "tasks").glob("*.md")):
+        fields = frontmatter_fields(path.read_text())
+        if fields.get("status") == "open" and WIZ_AGENT in fields.get("agent", ""):
+            title = fields.get("title") or path.stem
+            tasks.append(WizTask(title=title, due_date=fields.get("due_date") or None))
+    return sorted(tasks, key=lambda t: (t.due_date is None, t.due_date or ""))
+
+
 def duplicates(todos: list[Todo], todo: Todo) -> list[Todo]:
     """The open bot todos sharing this bot todo's title (itself included)."""
     if BOT not in todo.tags:
@@ -114,9 +149,15 @@ MOCHA = {
     "lavender": ((180, 190, 254), 35),
     "yellow": ((249, 226, 175), 33),
     "mauve": ((203, 166, 247), 35),
+    "teal": ((148, 226, 213), 36),
     "overlay1": ((127, 132, 156), 90),
 }
-SECTION_STYLE = {"todos": "lavender", "blocked": "yellow", "bot": "mauve"}
+SECTION_STYLE = {
+    "todos": "lavender",
+    "blocked": "yellow",
+    "bot": "mauve",
+    "wiz": "teal",
+}
 
 
 def use_color() -> bool:
@@ -130,11 +171,13 @@ def sgr(name: str, bold: bool = False) -> str:
     return f"\033[{'1;' if bold else ''}{fg}m"
 
 
-def render(todos: list[Todo], color: bool = False) -> str:
+def render(
+    todos: list[Todo], wiz: list[WizTask] | None = None, color: bool = False
+) -> str:
     def paint(name: str, text: str, bold: bool = False) -> str:
         return f"{sgr(name, bold)}{text}\033[0m" if color else text
 
-    if not todos:
+    if not todos and not wiz:
         return "(no open todos)\n"
     out = []
     for name in ("todos", "blocked", "bot"):
@@ -147,6 +190,12 @@ def render(todos: list[Todo], color: bool = False) -> str:
             id_ = paint("overlay1", f"{t.id if t.id is not None else '?':>5}")
             count = paint("overlay1", f"  ×{n}") if n > 1 else ""
             out.append(f"  {id_}  {t.title}{count}")
+    if wiz:
+        out.append("")
+        out.append(paint(SECTION_STYLE["wiz"], "wiz", bold=True))
+        for w in wiz:
+            due = paint("overlay1", f"  due {w.due_date}") if w.due_date else ""
+            out.append(f"         {w.title}{due}")
     out.append("")
     return "\n".join(out)
 
@@ -196,7 +245,8 @@ def main(argv: list[str] | None = None) -> int:
     root = notebook_dir()
     match args:
         case []:
-            print(render(open_todos(root), color=use_color()), end="")
+            todos, wiz = open_todos(root), wiz_tasks(wiz_dir())
+            print(render(todos, wiz, color=use_color()), end="")
             return 0
         case ["do" | "undo" | "block" | "unblock" as verb, *ids] if ids and all(
             i.isdigit() for i in ids

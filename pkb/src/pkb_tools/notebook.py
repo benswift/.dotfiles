@@ -11,6 +11,11 @@ def notebook_dir() -> Path:
     return Path(os.environ.get("PKB_NOTEBOOK", "~/.nb/home")).expanduser()
 
 
+def wiz_dir() -> Path:
+    """The LX team's shared wiz notebook, read for the tasks assigned to Ben."""
+    return Path(os.environ.get("PKB_WIZ", "~/.nb/wiz")).expanduser()
+
+
 def state_dir() -> Path:
     """Machine-local run state (stamps, logs, caches). Never synced."""
     return Path(

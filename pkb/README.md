@@ -7,7 +7,8 @@ The scheduled side of Ben's personal knowledge base. Three commands:
 - `pkb-health` --- freshness and failure checks over the other scheduled jobs,
   paging on a new problem
 - `pkb-todo` --- the shell's `todo`: open todos in three sections (todos,
-  blocked, bot), plus do/undo/block/unblock and quote-free creation
+  blocked, bot), then Ben's open wiz tasks, plus do/undo/block/unblock and
+  quote-free creation
 
 Installed editable by `install.sh` and `dotfiles update`
 (`uv tool install --force -e ~/.dotfiles/pkb`). The notebook's own `CLAUDE.md`

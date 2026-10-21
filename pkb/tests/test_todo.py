@@ -176,3 +176,58 @@ def test_do_with_several_ids_closes_each_once(
         ("todo", "do", "2"),
         ("todo", "do", "3"),
     ]
+
+
+def test_lists_my_open_wiz_tasks_soonest_due_first(
+    notebook: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    write(notebook, "20260101000000.todo.md", "# [ ] home todo\n")
+    (notebook / ".index").write_text("20260101000000.todo.md\n")
+    tasks = tmp_path / "wiz" / "tasks"
+    tasks.mkdir(parents=True)
+
+    def task(name: str, title: str, status: str, agent: str, due: str = "") -> None:
+        write(
+            tasks,
+            name,
+            f'---\ntitle: {title}\nstatus: {status}\nagent: "{agent}"\n'
+            f"due_date: {due}\ndelivery:\n---\n\nbody\n",
+        )
+
+    task("2026-10-01-undated.md", "Undated", "open", "[[people/ben-swift]]")
+    task(
+        "2026-10-02-later.md",
+        '"Later one"',
+        "open",
+        "[[people/ben-swift]]",
+        "2026-12-01",
+    )
+    task("2026-10-03-sooner.md", "Sooner", "open", "[[people/ben-swift]]", "2026-11-01")
+    task("2026-10-04-done.md", "Done", "done", "[[people/ben-swift]]")
+    task("2026-10-05-cole.md", "Cole's", "open", "[[people/cole-cooney]]")
+    monkeypatch.setenv("PKB_WIZ", str(tmp_path / "wiz"))
+    assert todo.main([]) == 0
+    assert capsys.readouterr().out == (
+        "\n"
+        "todos\n"
+        "      1  home todo\n"
+        "\n"
+        "wiz\n"
+        "         Sooner  due 2026-11-01\n"
+        "         Later one  due 2026-12-01\n"
+        "         Undated\n"
+    )
+
+
+def test_a_missing_wiz_checkout_lists_no_wiz_section(
+    notebook: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setenv("PKB_WIZ", str(tmp_path / "absent"))
+    assert todo.main([]) == 0
+    assert capsys.readouterr().out == "(no open todos)\n"
