@@ -13,7 +13,7 @@
 #
 #   pi-kiosk --url https://example.com --hostname lobby-pi \
 #            --wifi-ssid MyNet --wifi-password secret \
-#            --tailscale-authkey tskey-auth-...
+#            --tailscale-authkey tskey-auth-... --ssh-key ~/.ssh/id_ed25519.pub
 #
 # The kiosk URL lives at /kiosk-url.txt on the boot partition, so it can be
 # changed later by mounting the card on any machine, or on the running Pi
@@ -66,14 +66,16 @@ Required:
 Identity:
     --hostname <name>            Hostname (default: pi-kiosk)
     --username <user>            Admin account name (default: kiosk)
-    --password <pass>            Admin account password (default: kiosk)
-    --ssh-key <path>             SSH public key for passwordless login
+    --password <pass>            Optional console password (default: locked)
+    --ssh-key <path>             Required SSH public key; SSH is key-only
 
 Network:
     --wifi-ssid <ssid>           WiFi network name
     --wifi-password <pass>       WiFi password (WPA2-PSK)
     --wifi-enterprise-user <u>   Enterprise (802.1X) WiFi username
     --wifi-enterprise-pass <p>   Enterprise (802.1X) WiFi password
+    --wifi-ca-cert <path>        Required PEM CA certificate for enterprise WiFi
+    --wifi-domain-suffix <name>  Required RADIUS server DNS suffix for enterprise WiFi
     --wifi-country <cc>          WiFi regulatory country (default: AU)
     --tailscale-authkey <key>    Tailscale auth key for automatic join
     --tailscale-tag <tag[,tag]>  Mint a single-use key with these tags via the
@@ -91,6 +93,7 @@ Examples:
     pi-kiosk --url https://slop.university/signage/portrait/ \\
         --hostname slopu-kiosk-1 --wifi-ssid ANU-Secure \\
         --wifi-enterprise-user "\$RPI_SSID" --wifi-enterprise-pass "\$RPI_PASSWORD" \\
+        --wifi-ca-cert /path/to/institution-ca.pem --wifi-domain-suffix radius.example.edu \\
         --tailscale-tag tag:signage --ssh-key ~/.ssh/id_ed25519.pub
 EOF
     exit "${1:-1}"
@@ -98,7 +101,7 @@ EOF
 
 check_required_tools() {
     local missing=() cmd
-    for cmd in curl xz dd lsblk openssl mktemp; do
+    for cmd in curl xz dd lsblk openssl mktemp ssh-keygen base64; do
         command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
     done
     ((${#missing[@]} == 0)) || die "missing required tools: ${missing[*]}"
@@ -271,12 +274,12 @@ users:
     gecos: Kiosk
     shell: /bin/bash
     groups: [adm, sudo, video, render, input, audio, tty, netdev, gpio, i2c, spi]
-    lock_passwd: false
+    lock_passwd: @LOCK_PASSWD@
     passwd: "@PASSWD_HASH@"
     sudo: ALL=(ALL) NOPASSWD:ALL
 @SSH_KEYS@
 
-ssh_pwauth: true
+ssh_pwauth: false
 timezone: @TIMEZONE@
 
 write_files:
@@ -556,12 +559,18 @@ EOF
     # --- conditional sections -------------------------------------------
     local ssh_keys=""
     if [[ -n "$ssh_key_file" ]]; then
-        ssh_keys=$'    ssh_authorized_keys:\n      - '"$(cat "$ssh_key_file")"
+        ssh_keys=$'    ssh_authorized_keys:\n      - |\n          '"$(cat "$ssh_key_file")"
     fi
 
     local enterprise_wifi=""
     if [[ -n "$wifi_enterprise_user" ]]; then
         IFS= read -r -d '' enterprise_wifi <<'EOF' || true
+
+  - path: /etc/ssl/certs/kiosk-wifi-ca.pem
+    owner: "root:root"
+    permissions: "0644"
+    encoding: b64
+    content: @WIFI_CA_CERT@
 
   - path: /etc/NetworkManager/system-connections/@WIFI_SSID@.nmconnection
     owner: "root:root"
@@ -585,6 +594,8 @@ EOF
       identity=@WIFI_ENTERPRISE_USER@
       password=@WIFI_ENTERPRISE_PASS@
       phase2-auth=mschapv2
+      ca-cert=/etc/ssl/certs/kiosk-wifi-ca.pem
+      domain-suffix-match=@WIFI_DOMAIN_SUFFIX@
 
       [ipv4]
       method=auto
@@ -624,11 +635,14 @@ EOF
     ud="${ud//@HOSTNAME@/$hostname}"
     ud="${ud//@USERNAME@/$username}"
     ud="${ud//@PASSWD_HASH@/$passwd_hash}"
+    ud="${ud//@LOCK_PASSWD@/$lock_passwd}"
     ud="${ud//@TIMEZONE@/$timezone}"
     ud="${ud//@URL@/$url}"
     ud="${ud//@WIFI_SSID@/$wifi_ssid}"
     ud="${ud//@WIFI_ENTERPRISE_USER@/$wifi_enterprise_user}"
     ud="${ud//@WIFI_ENTERPRISE_PASS@/$wifi_enterprise_pass}"
+    ud="${ud//@WIFI_CA_CERT@/$wifi_ca_data}"
+    ud="${ud//@WIFI_DOMAIN_SUFFIX@/$wifi_domain_suffix}"
     ud="${ud//@WIFI_COUNTRY@/$wifi_country}"
     ud="${ud//@TAILSCALE_AUTHKEY@/$tailscale_authkey}"
 
@@ -660,8 +674,9 @@ EOF
 # ---------------------------------------------------------------------------
 
 main() {
-    local url="" hostname="pi-kiosk" username="kiosk" password="kiosk"
+    local url="" hostname="pi-kiosk" username="kiosk" password=""
     local wifi_ssid="" wifi_password="" wifi_enterprise_user="" wifi_enterprise_pass=""
+    local wifi_ca_cert="" wifi_domain_suffix="" wifi_ca_data=""
     local wifi_country="AU" tailscale_authkey="" tailscale_tag="" ssh_key_file="" device="" test_mode=false
 
     (($# > 0)) || usage 0
@@ -676,6 +691,8 @@ main() {
         --wifi-password) wifi_password="$2"; shift 2 ;;
         --wifi-enterprise-user) wifi_enterprise_user="$2"; shift 2 ;;
         --wifi-enterprise-pass) wifi_enterprise_pass="$2"; shift 2 ;;
+        --wifi-ca-cert) wifi_ca_cert="$2"; shift 2 ;;
+        --wifi-domain-suffix) wifi_domain_suffix="$2"; shift 2 ;;
         --wifi-country) wifi_country="$2"; shift 2 ;;
         --tailscale-authkey) tailscale_authkey="$2"; shift 2 ;;
         --tailscale-tag) tailscale_tag="$2"; shift 2 ;;
@@ -694,11 +711,14 @@ main() {
         if [[ -n "$wifi_enterprise_user" || -n "$wifi_enterprise_pass" ]]; then
             [[ -n "$wifi_enterprise_user" && -n "$wifi_enterprise_pass" ]] ||
                 die "enterprise wifi needs both --wifi-enterprise-user and --wifi-enterprise-pass"
+            [[ -n "$wifi_ca_cert" && -n "$wifi_domain_suffix" ]] ||
+                die "enterprise wifi requires --wifi-ca-cert and --wifi-domain-suffix from your network administrator"
         else
             [[ -n "$wifi_password" ]] || die "--wifi-password required for WPA2-PSK"
         fi
     fi
-    [[ -z "$ssh_key_file" || -f "$ssh_key_file" ]] || die "SSH key not found: $ssh_key_file"
+    [[ -n "$ssh_key_file" && -f "$ssh_key_file" ]] ||
+        die "--ssh-key must name an SSH public key file; password SSH login is disabled"
     if [[ -n "$tailscale_tag" ]]; then
         [[ -z "$tailscale_authkey" ]] || die "pass --tailscale-tag or --tailscale-authkey, not both"
         [[ -n "${TS_OAUTH_CLIENT_ID:-}" && -n "${TS_OAUTH_CLIENT_SECRET:-}" ]] ||
@@ -707,8 +727,27 @@ main() {
     fi
     check_required_tools
 
-    local passwd_hash timezone
-    passwd_hash=$(openssl passwd -6 "$password")
+    local ssh_public_key
+    ssh_public_key=$(cat "$ssh_key_file")
+    if [[ "$ssh_public_key" == *$'\n'* || ! "$ssh_public_key" =~ ^(ssh-|ecdsa-|sk-) ]] ||
+        ! ssh-keygen -l -f "$ssh_key_file" >/dev/null 2>&1; then
+        die "--ssh-key must contain one valid SSH public key, not a private key"
+    fi
+    if [[ -n "$wifi_enterprise_user" ]]; then
+        [[ -n "$wifi_ssid" ]] || die "enterprise wifi requires --wifi-ssid"
+        [[ -f "$wifi_ca_cert" ]] || die "WiFi CA certificate not found: $wifi_ca_cert"
+        [[ "$wifi_domain_suffix" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+$ ]] ||
+            die "--wifi-domain-suffix must be the RADIUS server's DNS domain"
+        openssl x509 -in "$wifi_ca_cert" -noout >/dev/null 2>&1 ||
+            die "--wifi-ca-cert must be a valid PEM CA certificate"
+        wifi_ca_data=$(base64 <"$wifi_ca_cert" | tr -d '\n')
+    fi
+
+    local passwd_hash="!" lock_passwd=true timezone
+    if [[ -n "$password" ]]; then
+        passwd_hash=$(printf '%s\n' "$password" | openssl passwd -6 -stdin)
+        lock_passwd=false
+    fi
     timezone=$(timedatectl show --property=Timezone --value 2>/dev/null || echo UTC)
 
     # --- show config -----------------------------------------------------
