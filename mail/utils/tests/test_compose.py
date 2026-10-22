@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 from mail_utils.accounts import Account, get_account_config
@@ -232,7 +232,7 @@ class TestAppendToSent:
 
         secret_args = mock_run.call_args[0][0]
         assert secret_args[-3:] == ["get", "benswift@fastmail.com", "mbsync-fastmail"]
-        imap_ssl.assert_called_once_with("imap.fastmail.com")
+        imap_ssl.assert_called_once_with("imap.fastmail.com", ssl_context=ANY)
         imap.login.assert_called_once_with("benswift@fastmail.com", "s3cret")
         mailbox, flags, _, body = imap.append.call_args[0]
         assert mailbox == '"Sent Items"'

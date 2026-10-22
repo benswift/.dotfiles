@@ -133,7 +133,7 @@ Tab multi-selects, and Ctrl-Y copies instead. This replaced `urlscan`, whose
 regex-over-decoded-text approach missed most links in HTML mail.
 
 A selected `mailto:` link is composed in neomutt itself rather than handed to a
-GUI mail client: `mail-urls` writes `push "<mail>ADDR<enter>"` to
+GUI mail client: `mail-urls` writes safely encoded `push` commands to
 `~/.cache/neomutt/temp/urls-commands`, which the `,b` macro sources after the
 pipe returns (the same command-file pattern as the markdown-compose macro). The
 file is always rewritten --- empty when there's nothing for neomutt to do --- so

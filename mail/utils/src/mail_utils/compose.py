@@ -5,6 +5,7 @@ import imaplib
 import mimetypes
 import os
 import re
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -210,7 +211,9 @@ def append_to_sent(msg: EmailMessage, account: Account) -> None:
         check=True,
     ).stdout.rstrip("\n")
 
-    with imaplib.IMAP4_SSL(target.host) as imap:
+    with imaplib.IMAP4_SSL(
+        target.host, ssl_context=ssl.create_default_context()
+    ) as imap:
         imap.login(target.user, password)
         status, detail = imap.append(
             f'"{config.sent_folder}"',

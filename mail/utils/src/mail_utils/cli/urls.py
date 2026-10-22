@@ -20,6 +20,7 @@ Usage from a shell for debugging:
     mail-urls --print < message.eml  # just list the extracted URLs
 """
 
+import re
 import subprocess
 import sys
 from email.errors import MessageError
@@ -63,7 +64,28 @@ def _write_neomutt_commands(text: str) -> None:
 def _mailto_address(url: str) -> str:
     """Recipient list from a mailto: URL, minus any ?query and URL-encoding."""
     addr = url[len("mailto:") :].split("?", 1)[0]
-    return unquote(addr).strip()
+    address = unquote(addr)
+    if address and not address.isprintable():
+        raise ValueError("mailto address contains control characters")
+    return address.strip()
+
+
+def _mailto_commands(address: str) -> str:
+    """Queue literal recipient text, never interpreting it as config or keys."""
+    if not address or not address.isprintable():
+        raise ValueError("mailto address must contain printable text")
+
+    # push parses config escapes (including ^X), then <function> tokens.
+    # Separate angle brackets into individual pushes so even a literal
+    # <enter-command> stays text. Each push prepends to the input queue.
+    chunks = re.split(r"([<>])", address)
+    commands = ['push "<enter>"']
+    for chunk in reversed(chunks):
+        if chunk:
+            quoted = "".join("\\" + c if c in '\\"`$^' else c for c in chunk)
+            commands.append(f'push "{quoted}"')
+    commands.append('push "<mail>"')
+    return "\n".join(commands) + "\n"
 
 
 def _display(link: Link) -> str:
@@ -151,9 +173,13 @@ def main() -> None:
     # Hand the first mailto back to neomutt to compose in-terminal. The macro
     # sources NEOMUTT_CMD_FILE once, so only one compose can be started.
     if mailtos:
-        address = _mailto_address(mailtos[0])
+        try:
+            address = _mailto_address(mailtos[0])
+        except ValueError as error:
+            print(f"Cannot compose this link: {error}.", file=sys.stderr)
+            return
         if address:
-            _write_neomutt_commands(f'push "<mail>{address}<enter>"\n')
+            _write_neomutt_commands(_mailto_commands(address))
         if len(mailtos) > 1:
             print(
                 f"Composing to {address}; ignored {len(mailtos) - 1} other "

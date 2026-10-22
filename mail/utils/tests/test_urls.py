@@ -1,8 +1,12 @@
 """Tests for URL extraction from email messages."""
 
 from email.message import EmailMessage
+from io import BytesIO, TextIOWrapper
+from urllib.parse import quote
 
-from mail_utils.cli.urls import _mailto_address
+import pytest
+from mail_utils.cli import urls as cli
+from mail_utils.cli.urls import _mailto_address, _mailto_commands
 from mail_utils.urls import extract_links
 
 
@@ -125,3 +129,41 @@ class TestHtmlInPlainPart:
         links = extract_links(msg)
         assert links[0].url == "https://example.com"
         assert links[0].text == "hi"
+
+
+@pytest.mark.parametrize("control", ["\n", "\r", "\t", "\x00", "\x1b", "\x7f", "\x85"])
+def test_mailto_controls_leave_no_commands(tmp_path, monkeypatch, capsys, control):
+    address = f'person@example.com{control}set realname="injected"'
+    url = "mailto:" + quote(address, safe="")
+    message = _html_msg(f'<a href="{url}">email</a>')
+    command_file = tmp_path / "commands"
+    command_file.write_text('push "stale"\n')
+    monkeypatch.setattr(cli, "NEOMUTT_CMD_FILE", command_file)
+    monkeypatch.setattr(cli.sys, "stdin", TextIOWrapper(BytesIO(message.as_bytes())))
+    monkeypatch.setattr(cli.sys, "argv", ["mail-urls"])
+    monkeypatch.setattr(cli, "_pick", lambda links: ("", [links[0].url]))
+    cli.main()
+    assert command_file.read_text() == ""
+    assert "Cannot compose this link" in capsys.readouterr().err
+
+
+def test_mailto_preserves_common_recipient_forms():
+    address = "o'brien+tag@example.com,second@example.org"
+    assert _mailto_commands(address) == (
+        f'push "<enter>"\npush "{address}"\npush "<mail>"\n'
+    )
+
+
+def test_mailto_quotes_config_metacharacters():
+    address = '"a\\b"`literal`$HOME^M@example.com'
+    assert _mailto_commands(address) == (
+        'push "<enter>"\n'
+        'push "\\"a\\\\b\\"\\`literal\\`\\$HOME\\^M@example.com"\n'
+        'push "<mail>"\n'
+    )
+
+
+def test_mailto_never_queues_recipient_macro_tokens():
+    assert _mailto_commands("<enter-command>") == (
+        'push "<enter>"\npush ">"\npush "enter-command"\npush "<"\npush "<mail>"\n'
+    )

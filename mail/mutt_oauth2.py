@@ -29,6 +29,7 @@ import urllib.request
 import imaplib
 import poplib
 import smtplib
+import ssl
 import base64
 import secrets
 import hashlib
@@ -414,7 +415,8 @@ else:
 if args.test:
     errors = False
 
-    imap_conn = imaplib.IMAP4_SSL(registration['imap_endpoint'])
+    tls_context = ssl.create_default_context()
+    imap_conn = imaplib.IMAP4_SSL(registration['imap_endpoint'], ssl_context=tls_context)
     sasl_string = build_sasl_string('imap')
     if args.debug:
         imap_conn.debug = 4
@@ -431,7 +433,7 @@ if args.test:
         print('IMAP authentication FAILED (does your account allow IMAP?):', e)
         errors = True
 
-    pop_conn = poplib.POP3_SSL(registration['pop_endpoint'])
+    pop_conn = poplib.POP3_SSL(registration['pop_endpoint'], context=tls_context)
     sasl_string = build_sasl_string('pop')
     if args.debug:
         pop_conn.set_debuglevel(2)
@@ -450,7 +452,7 @@ if args.test:
     smtp_conn = smtplib.SMTP(registration['smtp_endpoint'], 587)
     sasl_string = build_sasl_string('smtp')
     smtp_conn.ehlo('test')
-    smtp_conn.starttls()
+    smtp_conn.starttls(context=tls_context)
     smtp_conn.ehlo('test')
     if args.debug:
         smtp_conn.set_debuglevel(2)
