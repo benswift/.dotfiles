@@ -10,10 +10,10 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
-import tomllib
 
 ROOT = Path(__file__).parent.parent
 MISE_CONFIG = ROOT / "mise" / "config.toml"

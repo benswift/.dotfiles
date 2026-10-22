@@ -31,12 +31,12 @@ import sys
 import tempfile
 import termios
 import time
+import tomllib
 from collections.abc import Callable
 from pathlib import Path
 
 import pyte
 import pytest
-import tomllib
 
 ROOT = Path(__file__).parent.parent
 LANGUAGES_TOML = ROOT / "helix" / "languages.toml"

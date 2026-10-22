@@ -360,9 +360,7 @@ def _main_impl(
     if output_filename:
         target_dir = output_dir
     else:
-        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
-            "%Y-%m-%dT%H-%M-%SZ"
-        )
+        timestamp = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H-%M-%SZ")
         target_dir = output_dir / timestamp
     target_dir.mkdir(parents=True, exist_ok=True)
 

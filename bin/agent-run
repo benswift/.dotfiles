@@ -11,11 +11,10 @@ import argparse
 import os
 import subprocess
 import sys
+import tomllib
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-
-import tomllib
 
 DEFAULT_CONFIG = Path("~/.config/agent-run/profiles.toml").expanduser()
 RUNNERS = {"claude", "codex", "grok"}

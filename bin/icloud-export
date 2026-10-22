@@ -31,7 +31,7 @@ import re
 import shutil
 import sqlite3
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -66,7 +66,7 @@ def copy_protected_db(source: Path) -> Path:
 
 
 def mac_seconds_to_utc(mac_seconds: float) -> datetime:
-    return datetime.fromtimestamp(mac_seconds + MAC_EPOCH_OFFSET, tz=timezone.utc)
+    return datetime.fromtimestamp(mac_seconds + MAC_EPOCH_OFFSET, tz=UTC)
 
 
 def mac_date_column_to_utc(raw: float | None) -> datetime | None:
@@ -113,7 +113,7 @@ def extract_safari(since: datetime | None) -> list[dict[str, Any]]:
         JOIN history_items hi ON hi.id = hv.history_item
         ORDER BY hv.visit_time DESC
     """
-    since_utc = since.astimezone(timezone.utc) if since else None
+    since_utc = since.astimezone(UTC) if since else None
     records: list[dict[str, Any]] = []
     with sqlite3.connect(f"file:{db_path}?mode=ro", uri=True) as conn:
         conn.row_factory = sqlite3.Row
@@ -261,7 +261,7 @@ def extract_messages(since: datetime | None) -> list[dict[str, Any]]:
         LEFT JOIN chat c ON c.ROWID = cmj.chat_id
         ORDER BY m.date DESC
     """
-    since_utc = since.astimezone(timezone.utc) if since else None
+    since_utc = since.astimezone(UTC) if since else None
     records: list[dict[str, Any]] = []
     with sqlite3.connect(f"file:{db_path}?mode=ro", uri=True) as conn:
         conn.row_factory = sqlite3.Row
@@ -330,9 +330,7 @@ def _request_calendar_access(store: Any) -> bool:
 def _nsdate_to_iso(d: Any) -> str | None:
     if d is None:
         return None
-    return datetime.fromtimestamp(
-        d.timeIntervalSince1970(), tz=timezone.utc
-    ).isoformat()
+    return datetime.fromtimestamp(d.timeIntervalSince1970(), tz=UTC).isoformat()
 
 
 def extract_calendar(
@@ -354,8 +352,8 @@ def extract_calendar(
             "Privacy & Security --- Calendars and re-run."
         )
 
-    start = since or datetime(1990, 1, 1, tzinfo=timezone.utc)
-    end = until or datetime.now(timezone.utc) + timedelta(days=365 * 5)
+    start = since or datetime(1990, 1, 1, tzinfo=UTC)
+    end = until or datetime.now(UTC) + timedelta(days=365 * 5)
     ns_start = NSDate.dateWithTimeIntervalSince1970_(start.timestamp())
     ns_end = NSDate.dateWithTimeIntervalSince1970_(end.timestamp())
 
@@ -366,8 +364,7 @@ def extract_calendar(
     year = timedelta(days=365)
     while chunk_start.timeIntervalSince1970() < ns_end.timeIntervalSince1970():
         chunk_end_dt = (
-            datetime.fromtimestamp(chunk_start.timeIntervalSince1970(), tz=timezone.utc)
-            + year
+            datetime.fromtimestamp(chunk_start.timeIntervalSince1970(), tz=UTC) + year
         )
         chunk_end_ts = min(chunk_end_dt.timestamp(), ns_end.timeIntervalSince1970())
         chunk_end = NSDate.dateWithTimeIntervalSince1970_(chunk_end_ts)
