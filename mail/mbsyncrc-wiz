@@ -1,0 +1,34 @@
+# watson's pull-only copy of the LX convenor mailbox for wiz (wiz decision-4),
+# run by wiz's admin/tools/watson-run as `mbsync -c ~/.dotfiles/mail/mbsyncrc-wiz
+# lxconvenor`. Pull only: daysy is the one full client (README.md), and wiz
+# never changes the mailbox. The token comes from the file backend because
+# watson is reached over ssh, where its login keychain refuses access.
+
+IMAPAccount lxconvenor
+Host outlook.office365.com
+Port 993
+AuthMech XOAUTH2
+User lxconvenor.cybernetics@anu.edu.au
+PassCmd "MAIL_SECRET_BACKEND=file $HOME/.dotfiles/bin/mail-secret oauth anu"
+TLSType IMAPS
+PipelineDepth 1
+Timeout 120
+
+IMAPStore lxconvenor-remote
+Account lxconvenor
+
+MaildirStore lxconvenor-local
+Path ~/wiz-mail/lxconvenor/
+Inbox ~/wiz-mail/lxconvenor/INBOX
+SubFolders Verbatim
+
+Channel lxconvenor
+Far :lxconvenor-remote:
+Near :lxconvenor-local:
+Patterns INBOX Archive "Sent Items" "Deleted Items"
+Create Near
+Remove Near
+Sync Pull
+Expunge Near
+SyncState *
+CopyArrivalDate yes
