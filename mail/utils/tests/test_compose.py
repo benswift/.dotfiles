@@ -16,6 +16,7 @@ from mail_utils.compose import (
     open_neomutt_compose,
     parse_reply_info,
     read_signature,
+    reply_all_cc,
     send_email,
     strip_frontmatter,
 )
@@ -625,6 +626,20 @@ class TestChooseReplyTarget:
         )
 
 
+class TestReplyAllCc:
+    def test_collects_original_to_and_cc_less_self_and_target(self):
+        reply_info = {
+            "to": "Me <me@example.com>, Bob <bob@example.com>",
+            "cc": "carol@example.com, alice@example.com",
+        }
+        result = reply_all_cc(reply_info, "Me <ME@example.com>", "alice@example.com")
+        assert result == "Bob <bob@example.com>, carol@example.com"
+
+    def test_returns_none_when_nobody_else_was_on_it(self):
+        reply_info = {"to": "me@example.com", "cc": None}
+        assert reply_all_cc(reply_info, "me@example.com", "alice@example.com") is None
+
+
 class TestBuildEmailReply:
     def test_sets_threading_headers(self, tmp_path: Path):
         eml = _write_eml(
@@ -761,6 +776,68 @@ class TestComposeCLIReplyTo:
         )
         assert result.exit_code == 0
         assert "someone-else@example.com" in result.stdout
+
+    def test_reply_all_ccs_the_original_recipients(self, tmp_path: Path):
+        """The case that prompted --reply-all: colleagues on the original To
+        line, not Cc, were dropped by a plain reply."""
+        self_addr = get_account_config("personal").from_addr
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To=f"Bob <bob@example.com>, {self_addr}",
+            Cc="carol@example.com",
+            Subject="Draft",
+            **{"Message-ID": "<orig@example.com>"},
+        )
+        result = self.runner.invoke(
+            app,
+            [
+                "-f",
+                "personal",
+                "--reply-to",
+                str(eml),
+                "--reply-all",
+                "-b",
+                "Hi",
+                "--dry-run",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "To: Alice <alice@example.com>" in result.stdout
+        assert "Cc: Bob <bob@example.com>, carol@example.com" in result.stdout
+
+    def test_plain_reply_keeps_only_the_original_cc(self, tmp_path: Path):
+        eml = _write_eml(
+            tmp_path / "orig.eml",
+            From="Alice <alice@example.com>",
+            To="Bob <bob@example.com>",
+            Cc="carol@example.com",
+            Subject="Draft",
+            **{"Message-ID": "<orig@example.com>"},
+        )
+        result = self.runner.invoke(
+            app,
+            ["-f", "personal", "--reply-to", str(eml), "-b", "Hi", "--dry-run"],
+        )
+        assert result.exit_code == 0
+        assert "Cc: carol@example.com" in result.stdout
+        assert "bob@example.com" not in result.stdout
+
+    def test_reply_all_without_reply_to_is_an_error(self):
+        result = self.runner.invoke(
+            app,
+            [
+                "-f",
+                "personal",
+                "--to",
+                "a@example.com",
+                "--reply-all",
+                "-b",
+                "x",
+                "--dry-run",
+            ],
+        )
+        assert result.exit_code == 1
 
 
 class TestOpenNeomuttCompose:

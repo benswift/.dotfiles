@@ -80,6 +80,19 @@ def choose_reply_target(reply_info: dict, self_from_addr: str) -> str | None:
     return reply_info.get("reply_to_header") or reply_info["from_"]
 
 
+def reply_all_cc(reply_info: dict, self_from_addr: str, to: str) -> str | None:
+    """The Cc: for a reply-all: everyone on the original To and Cc, less
+    ourselves and whoever the reply is already addressed to."""
+    exclude = {addr.lower() for _, addr in getaddresses([self_from_addr, to])}
+    everyone = join_addresses(reply_info["to"], reply_info["cc"])
+    kept = [
+        formataddr((name, addr))
+        for name, addr in getaddresses([everyone or ""])
+        if addr.lower() not in exclude
+    ]
+    return ", ".join(kept) if kept else None
+
+
 # `set signature = ~/.config/neomutt/signature-anu`, optionally quoted.
 SIGNATURE_SETTING = re.compile(
     r'^\s*set\s+signature\s*=\s*"?([^"\n]+?)"?\s*$', re.MULTILINE

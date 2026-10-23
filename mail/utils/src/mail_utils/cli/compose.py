@@ -17,6 +17,7 @@ from mail_utils.compose import (
     open_neomutt_compose,
     parse_reply_info,
     read_signature,
+    reply_all_cc,
     send_email,
     strip_frontmatter,
 )
@@ -75,6 +76,13 @@ def main(
         Path | None,
         typer.Option("--reply-to", help="Maildir message file to reply to"),
     ] = None,
+    reply_all: Annotated[
+        bool,
+        typer.Option(
+            "--reply-all",
+            help="With --reply-to, also Cc everyone on the original To and Cc",
+        ),
+    ] = False,
     data: Annotated[
         Path | None,
         typer.Option(help="JSON array file for batch mode (use '-' for stdin)"),
@@ -101,7 +109,8 @@ def main(
         mail-compose -f anu --to colleague@example.com -c a@example.com \\
             -c b@example.com -s "Hello" -b "Body" --send
 
-        # Reply to an existing message (auto-fills to/cc/subject)
+        # Reply to an existing message (auto-fills To, Subject and the
+        # original Cc; --reply-all also copies the original To recipients)
         msg=$(mu find --fields=l "from:chris subject:Meeting" | head -1)
         mail-compose -f anu --reply-to "$msg" -b "Sounds good" --send
 
@@ -131,6 +140,10 @@ def main(
     elif body:
         email_body = body
 
+    if reply_all and not reply_to:
+        console.print("[red]--reply-all needs --reply-to[/red]")
+        raise typer.Exit(1)
+
     reply_info = None
     if reply_to:
         if not reply_to.exists():
@@ -142,7 +155,12 @@ def main(
             to = [target] if target else None
         if not subject:
             subject = reply_info["subject"]
-        if not cc and reply_info["cc"]:
+        if reply_all:
+            others = reply_all_cc(
+                reply_info, config.from_addr, join_addresses(*(to or [])) or ""
+            )
+            cc = [*(cc or []), *([others] if others else [])]
+        elif not cc and reply_info["cc"]:
             cc = [reply_info["cc"]]
 
     if data:
