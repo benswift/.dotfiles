@@ -1,0 +1,75 @@
+name: Security and tests
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '23 22 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTEST_XDIST_AUTO_NUM_WORKERS: '2'
+      UV_PYTHON: '3.12'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: '0.13.2'
+          enable-cache: false
+      - name: Lint Python and provisioning shell scripts
+        run: |
+          uvx ruff==0.17.1 check .
+          shellcheck bin/pi-kiosk bin/check-secrets lib/pi-kiosk/kiosk-browser lib/pi-kiosk/kiosk-set-url lib/pi-kiosk/kiosk-tailscale lib/pi-kiosk/autostart
+      - name: Test and type-check packages
+        run: |
+          for project in mail/utils pkb; do
+            uv run --locked --project "$project" --group dev pytest "$project/tests" -q
+            uv run --locked --project "$project" --group dev ty check "$project/src"
+          done
+      - name: Test portable tools
+        # Helix needs the locally built editor/grammars/formatters; nb needs
+        # the global mise installation. Their integration suites stay local.
+        run: >-
+          uv run --no-project --with pytest --with pytest-xdist --with lxml
+          --with typer --with pyyaml python -m pytest tests -n 2 -q
+          --ignore=tests/test_helix.py --ignore=tests/test_nb.py
+  dependencies:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: '0.13.2'
+          enable-cache: false
+      - run: uv run --script scripts/audit-locks.py
+  secrets:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install verified Gitleaks release
+        run: |
+          curl -fsSL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+      - name: Scan full history with redacted output
+        run: '"$RUNNER_TEMP/gitleaks" git --log-opts="--all --full-history" --redact --no-banner .'
