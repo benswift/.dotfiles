@@ -1,5 +1,7 @@
 [Unit]
 Description=Index the Maildir mirror with mu
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
 
 [Service]
 Type=oneshot
