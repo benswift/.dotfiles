@@ -5,8 +5,8 @@ title: >-
   Archive/Deleted/Trash maildirs
 status: To Do
 assignee: []
-created_date: '2026-08-12 08:02'
-updated_date: '2026-10-02 02:56'
+created_date: 2026-08-12 08:02
+updated_date: '2026-10-23T21:38:00Z'
 labels:
   - mail
   - maildir
@@ -96,4 +96,6 @@ The remaining ~876 uncharacterised sets are untouched and still investigate-only
 ## adirh joins the race (2026-10-02)
 
 The `adirh` account (the ADir HDR shared mailbox, `~/Maildir/adirh`) is now synced two-way with `Expunge Both`, like the others. It differs in one way that matters here: it is a shared mailbox with a second person working it, so the cross-device race is no longer just Ben's laptop against Ben's phone. An archive in neomutt and a move by the other holder inside one sync interval produces the same same-folder, same-Message-ID, `X-TUID`-only duplicate, and it can land in any folder they file into, not only Archive. Expect a higher residual rate there than the other accounts show, and include `adirh/` in any future scan or cleanup. The cleanup rule is unchanged.
+
+2026-10-24: removed the 1,554 copies that were byte-identical to another copy in the same folder apart from X-TUID (personal Archive 846 and Sent Items 41, anu Archive 574 and Deleted Items 55, phdconvenor Archive 37 and Deleted Items 1). Each set kept the copy carrying every flag. The removed files are in ~/mail-quarantine/task025-20261024/ on daysy, with manifest.tsv mapping each to the copy kept; mailsync then deleted their server twins (Far -1554), and weddle's pull shows no identical sets left on the server. 177 sets that differ in content remain, unexamined.
 <!-- SECTION:NOTES:END -->
