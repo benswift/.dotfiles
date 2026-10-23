@@ -1,5 +1,6 @@
 #!/bin/bash
 # Show or update the kiosk URL (takes effect on next Chromium restart).
+set -euo pipefail
 f=/boot/firmware/kiosk-url.txt
 if [ $# -eq 0 ]; then
     echo "Usage: sudo kiosk-set-url <url>"
