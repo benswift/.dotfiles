@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["httpx"]
+# dependencies = ["httpx", "typer"]
 # ///
 """Check a draft against Pangram's AI-text detector.
 
@@ -25,7 +25,6 @@ PANGRAM_API_KEY lives in the untracked mise env block
 
 from __future__ import annotations
 
-import argparse
 import json
 import math
 import os
@@ -33,9 +32,10 @@ import sys
 import time
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import httpx
+import typer
 
 API = "https://text.external-api.pangram.com"
 SUCCESS_STAGE = "STAGE_SUCCESS"
@@ -205,63 +205,63 @@ def read_sources(paths: list[Path]) -> list[tuple[str, str]]:
     return sources
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Check a draft against Pangram's AI-text detector."
-    )
-    parser.add_argument("files", nargs="*", type=Path, help="default: read stdin")
-    parser.add_argument(
-        "--model",
-        default="default",
-        help='detection model (default: "default"; see --list-models)',
-    )
-    parser.add_argument(
-        "--list-models", action="store_true", help="list available models and exit"
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="print the word count and cost estimate without calling the API",
-    )
-    parser.add_argument(
-        "--dashboard",
-        action="store_true",
-        help="also return a public dashboard link for each result",
-    )
-    parser.add_argument("--json", action="store_true", help="print the raw API result")
-    parser.add_argument(
-        "--timeout",
-        type=float,
-        default=300.0,
-        help="seconds to wait for one task to finish (default: 300)",
-    )
-    parser.add_argument("--poll-interval", type=float, default=0.5)
-    parser.add_argument(
-        "--exit-zero",
-        action="store_true",
-        help="exit 0 even when a draft is not judged human",
-    )
-    return parser
+app = typer.Typer(add_completion=False)
 
 
-def main() -> int:
-    args = build_parser().parse_args()
-
+@app.command(help="Check a draft against Pangram's AI-text detector.")
+def main(
+    files: Annotated[
+        list[Path] | None, typer.Argument(help="default: read stdin")
+    ] = None,
+    model: Annotated[
+        str,
+        typer.Option(help="detection model; see --list-models"),
+    ] = "default",
+    list_models_only: Annotated[
+        bool, typer.Option("--list-models", help="list available models and exit")
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="print the word count and cost estimate without calling the API",
+        ),
+    ] = False,
+    dashboard: Annotated[
+        bool,
+        typer.Option(
+            "--dashboard", help="also return a public dashboard link for each result"
+        ),
+    ] = False,
+    as_json: Annotated[
+        bool, typer.Option("--json", help="print the raw API result")
+    ] = False,
+    timeout: Annotated[
+        float, typer.Option(help="seconds to wait for one task to finish")
+    ] = 300.0,
+    poll_interval: Annotated[float, typer.Option()] = 0.5,
+    exit_zero: Annotated[
+        bool,
+        typer.Option(
+            "--exit-zero", help="exit 0 even when a draft is not judged human"
+        ),
+    ] = False,
+) -> None:
     try:
-        if args.list_models:
+        if list_models_only:
             with httpx.Client(
                 headers={"x-api-key": api_key()}, timeout=HTTP_TIMEOUT_SECONDS
             ) as client:
-                for model in list_models(client):
-                    print(model)
-            return 0
+                for name in list_models(client):
+                    print(name)
+            raise typer.Exit(0)
 
-        sources = read_sources(args.files)
+        sources = read_sources(files or [])
 
-        if args.dry_run:
+        if dry_run:
             for label, text in sources:
                 print(f"{label}: {words(text)} words, ≈${estimate(text):.2f}")
-            return 0
+            raise typer.Exit(0)
 
         payload: list[dict[str, Any]] = []
         flagged = False
@@ -275,15 +275,15 @@ def main() -> int:
                 result = predict(
                     client,
                     text,
-                    model=args.model,
-                    dashboard=args.dashboard,
-                    timeout=args.timeout,
-                    poll_interval=args.poll_interval,
+                    model=model,
+                    dashboard=dashboard,
+                    timeout=timeout,
+                    poll_interval=poll_interval,
                 )
                 if result.get("prediction_short") != "Human":
                     flagged = True
 
-                if args.json:
+                if as_json:
                     payload.append({"source": label, "result": result})
                     continue
 
@@ -293,14 +293,14 @@ def main() -> int:
                 print(f"  {words(text)} words, ≈${estimate(text):.2f} at list price")
                 print()
 
-        if args.json:
+        if as_json:
             print(json.dumps(payload, indent=2))
     except (OSError, ValueError, PangramError, httpx.HTTPError) as error:
         print(f"pangram: {error}", file=sys.stderr)
-        return 2
+        raise typer.Exit(2) from error
 
-    return 0 if args.exit_zero or not flagged else 1
+    raise typer.Exit(0 if exit_zero or not flagged else 1)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    app()
