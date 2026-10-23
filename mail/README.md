@@ -75,6 +75,28 @@ mail-secret set benswift@fastmail.com mbsync-fastmail
 reauth-anu-oauth.sh
 ```
 
+## Recovering a folder
+
+A maildir and its `.mbsyncstate` are one unit: mbsync pairs each server UID with
+a local file, and acts on whichever half is missing. So the obvious repairs are
+the destructive ones on daysy (`Sync All`, `Expunge Both`):
+
+- state deleted, messages kept: every message is unpaired on both sides, so each
+  is copied across, doubling the folder on the server
+- state kept, messages deleted (a botched move, an empty restore): each missing
+  message reads as a local delete, and is deleted on the server
+- messages restored from a backup into a folder whose state no longer lists
+  them: they are unpaired, so they upload as new, duplicating them
+- a maildir copied between hosts with its state: the receiving host inherits the
+  sender's pairs, and any gap in the copy becomes a permanent hole
+
+To rebuild a folder, stop mailsync, move the whole folder aside (messages,
+`.mbsyncstate` and `.uidvalidity` together), let mbsync pull it fresh, then
+reconcile anything local-only from the moved copy by hand. On weddle the same
+move is harmless, since a pull-only channel can't touch the server. A folder
+whose mbsync run failed mid-pull can record the failed messages as done; the fix
+is the same move-aside and re-pull.
+
 ## Markdown email composition
 
 Neomutt is configured with a macro (press `m` in compose mode) to convert
