@@ -127,7 +127,6 @@ Each script's header has the detail. Notable ones:
 
 - `dotfiles` --- doctor, update, edit
 - `mailsync` --- sync all email accounts
-- `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers
 - `agent-run` --- headless agent dispatcher (see below)
 - `hx-ghostty` --- open files in helix in a Ghostty tab; `--register` (once per
   Mac) makes it macOS's default for text and source files
@@ -222,8 +221,8 @@ Both headers have the detail.
   including `mail/utils/src/`, from where it shipped in the built wheel).
 - **Codex** --- `~/.codex/config.toml` is entirely machine-local and
   deliberately untracked; set `project_doc_fallback_filenames = ["CLAUDE.md"]`
-  there on each machine. There is no shared Codex profile: the `oy` alias and
-  @bin/codex-zellij just select full-access mode.
+  there on each machine. There is no shared Codex profile: the `oy` alias just
+  selects full-access mode.
 - **Grok Build** --- installed via mise's aqua backend so it's pinned rather
   than self-updating. `grok login --device-auth` works headless. Reads this
   repo's `CLAUDE.md` and Claude Code skills with no extra config; `grok inspect`
