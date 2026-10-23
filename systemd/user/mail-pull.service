@@ -1,0 +1,17 @@
+[Unit]
+Description=Pull every mail account into weddle's read-only mirror
+Documentation=file:///home/ben/.dotfiles/mail/mbsyncrc-weddle
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
+Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ben/.local/bin/mbsync -c /home/ben/.dotfiles/mail/mbsyncrc-weddle -a
+# Through mu-index.service rather than `mu index` here, so this and the
+# anu-archive push from daysy (mu-index.path) never fight over mu's lock.
+ExecStartPost=/usr/bin/systemctl --user start --no-block mu-index.service
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=30min

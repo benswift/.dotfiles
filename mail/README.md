@@ -11,6 +11,7 @@ per host is which tier of the setup runs there, below.
 ## Files
 
 - `mbsyncrc` - IMAP configuration for syncing mail with mbsync
+- `mbsyncrc-weddle`, `mbsyncrc-wiz` - pull-only variants for weddle and watson
 - `msmtprc` - SMTP configuration for sending mail
 - `neomutt/` - neomutt email client configuration
 - `mutt_oauth2.py` - OAuth2 authentication script (from mutt source), driven by
@@ -21,32 +22,41 @@ per host is which tier of the setup runs there, below.
 
 **Full (daysy).** mbsync pushes and pulls every account into `~/Maildir` on a
 five-minute launchd timer (`launchd/com.benswift.mailsync.plist`), mu indexes
-it, neomutt and `mail-compose` read and send. This is the only host that syncs:
-a second mbsync client on the same mailboxes is a second party to the
+it, neomutt and `mail-compose` read and send. This is the only host that pushes:
+a second pushing client on the same mailboxes is a second party to the
 cross-device archive race described in TASK-025.
 
 **Pull-only (watson).** wiz's automation pulls just the lxconvenor mailbox with
 `mbsyncrc-wiz`, whose header explains why it can't race daysy.
 
-**Read-only plus send (weddle).** `~/Maildir` there is a mirror of daysy's,
-refreshed by `bin/backup` (an `rclone sync` from daysy, sync-state files
-included). Nothing on weddle may write into it --- mbsync would start from
-daysy's stale state and upload local-only files as new, and the next backup
-deletes anything written locally anyway. What runs:
+**Pull-only plus send (weddle).** `systemd/user/mail-pull.timer` pulls every
+account every five minutes with `mbsyncrc-weddle` (pull-only, so it can't race
+daysy either) into `/data/Maildir-imap`, which `~/Maildir` points at. The one
+exception is `anu-archive`, which exists only on daysy and arrives via
+`bin/backup`. Nothing else may write into the tree --- not neomutt, and never
+the full `mbsyncrc`. What runs:
 
+- mbsync 1.5.1, built from source into `~/.local` (below)
 - `mu` (apt `maildir-utils`) indexes the mirror --- it writes only to
   `~/.cache/mu`, never to the maildir --- so `mu find`, `mu view`,
-  `mail-copy-path` and the compose LSP's address completion all work, as fresh
-  as the last backup run: `systemd/user/mu-index.path` re-indexes after each
-  push (enable it with `systemctl --user enable --now mu-index.path`)
+  `mail-copy-path` and the compose LSP's address completion all work.
+  `mu-index.service` runs after each pull and after each anu-archive push
+  (`mu-index.path`); enable both with
+  `systemctl --user enable --now mail-pull.timer mu-index.path`
 - `msmtp` (apt) sends, using the same rc file. `mail-compose --send` works; its
   sent copy never touches the maildir (see `utils/CLAUDE.md`)
-- no mbsync, no neomutt
+- no neomutt
 
 Setup on such a host:
 
 ```sh
-sudo apt install maildir-utils msmtp
+sudo apt install maildir-utils msmtp libsasl2-modules-kdexoauth2 \
+  libssl-dev libsasl2-dev zlib1g-dev libdb-dev
+# isync 1.5.1 (Ubuntu's 1.4 predates TLSType); same tarball as daysy's formula
+curl -fsSLO https://downloads.sourceforge.net/project/isync/isync/1.5.1/isync-1.5.1.tar.gz
+echo "28cc90288036aa5b6f5307bfc7178a397799003b96f7fd6e4bd2478265bb22fa  isync-1.5.1.tar.gz" | sha256sum -c
+tar xzf isync-1.5.1.tar.gz && cd isync-1.5.1
+./configure --prefix="$HOME/.local" && make && make install
 # msmtprc logs here; sending still works without the directory, but every
 # send then prints a "cannot log" error
 mkdir -p -m 700 ~/.local/state/msmtp
@@ -85,7 +95,7 @@ All four Office365 accounts (`anu`, the delegated `phdconvenor` mailbox and the
 shared `adirh` and `lxconvenor` ones) authenticate as `u2548636@anu.edu.au` over
 XOAUTH2 with one shared token.
 
-1. **mbsync with XOAUTH2 support** (full tier only):
+1. **mbsync with XOAUTH2 support** (full and pull-only tiers):
 
    ```sh
    brew install benswift/tap/isync
@@ -98,7 +108,7 @@ XOAUTH2 with one shared token.
    so XOAUTH2 works out of the box --- no `SASL_PATH` and no self-compiled
    binary. `install.sh` runs this automatically on macOS. On Linux, Ubuntu's
    isync (1.4.x) predates the `TLSType` syntax this config uses: build 1.5 from
-   source and install `libsasl2-modules-kdexoauth2`.
+   source and install `libsasl2-modules-kdexoauth2` (weddle's setup, above).
 
 2. **Token management** is `mail-secret oauth anu`: it wraps `mutt_oauth2.py`
    with Thunderbird's client id (a public client ANU permits, no secret) and the

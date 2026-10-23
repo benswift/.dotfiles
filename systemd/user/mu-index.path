@@ -1,5 +1,5 @@
 [Unit]
-Description=Re-index the Maildir mirror after each push from daysy
+Description=Re-index the Maildir mirror after each anu-archive push from daysy
 
 [Path]
 # bin/backup writes .last-mail-push after every Maildir sync, full run or `backup mail`

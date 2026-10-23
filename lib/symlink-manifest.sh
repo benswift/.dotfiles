@@ -63,6 +63,9 @@ SYMLINK_MANIFEST=(
     "systemd/user/restic-prune.timer:~/.config/systemd/user/restic-prune.timer"
     "systemd/user/restic-check.service:~/.config/systemd/user/restic-check.service"
     "systemd/user/restic-check.timer:~/.config/systemd/user/restic-check.timer"
+    # mail-pull: enable the timer on weddle ONLY (mail/mbsyncrc-weddle)
+    "systemd/user/mail-pull.service:~/.config/systemd/user/mail-pull.service"
+    "systemd/user/mail-pull.timer:~/.config/systemd/user/mail-pull.timer"
     # mu-index: enable the .path on weddle ONLY (it indexes the Maildir mirror)
     "systemd/user/mu-index.service:~/.config/systemd/user/mu-index.service"
     "systemd/user/mu-index.path:~/.config/systemd/user/mu-index.path"

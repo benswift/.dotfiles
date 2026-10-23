@@ -1,0 +1,153 @@
+# weddle's pull-only mirror of every account, run by
+# systemd/user/mail-pull.service as `mbsync -c ~/.dotfiles/mail/mbsyncrc-weddle -a`.
+# Sync Pull with Near-only Create/Remove/Expunge never writes to the server,
+# so it can't race daysy, the one full client (README.md).
+#
+# Paths are absolute under /data/Maildir-imap, never via ~/Maildir: that
+# symlink once pointed at daysy's rclone mirror, and mbsync must never run
+# over a tree another host writes into. No MaxSize: in mbsyncrc it only
+# stops doomed uploads, but here it would silently skip large downloads.
+
+IMAPAccount personal
+Host imap.fastmail.com
+Port 993
+AuthMech PLAIN
+User benswift@fastmail.com
+PassCmd "$HOME/.dotfiles/bin/mail-secret get benswift@fastmail.com mbsync-fastmail"
+TLSType IMAPS
+PipelineDepth 50
+
+IMAPStore personal-remote
+Account personal
+
+MaildirStore personal-local
+Path /data/Maildir-imap/personal/
+Inbox /data/Maildir-imap/personal/INBOX
+SubFolders Verbatim
+
+Channel personal
+Far :personal-remote:
+Near :personal-local:
+Patterns INBOX Archive "Sent Items" Drafts Trash "Junk Mail" DMARC
+Create Near
+Remove Near
+Sync Pull
+Expunge Near
+SyncState *
+CopyArrivalDate yes
+
+IMAPAccount anu
+Host outlook.office365.com
+Port 993
+AuthMech XOAUTH2
+User u2548636@anu.edu.au
+PassCmd "$HOME/.dotfiles/bin/mail-secret oauth anu"
+TLSType IMAPS
+PipelineDepth 1
+Timeout 120
+
+IMAPStore anu-remote
+Account anu
+
+MaildirStore anu-local
+Path /data/Maildir-imap/anu/
+Inbox /data/Maildir-imap/anu/INBOX
+SubFolders Verbatim
+
+Channel anu
+Far :anu-remote:
+Near :anu-local:
+Patterns INBOX Archive "Sent Items" Drafts "Deleted Items" "Junk E-Mail"
+Create Near
+Remove Near
+Sync Pull
+Expunge Near
+SyncState *
+CopyArrivalDate yes
+
+IMAPAccount phdconvenor
+Host outlook.office365.com
+Port 993
+AuthMech XOAUTH2
+User phdconvenor.cybernetics@anu.edu.au
+PassCmd "$HOME/.dotfiles/bin/mail-secret oauth anu"
+TLSType IMAPS
+PipelineDepth 1
+Timeout 120
+
+IMAPStore phdconvenor-remote
+Account phdconvenor
+
+MaildirStore phdconvenor-local
+Path /data/Maildir-imap/phdconvenor/
+Inbox /data/Maildir-imap/phdconvenor/INBOX
+SubFolders Verbatim
+
+Channel phdconvenor
+Far :phdconvenor-remote:
+Near :phdconvenor-local:
+Patterns INBOX Archive "Sent Items" Drafts "Deleted Items"
+Create Near
+Remove Near
+Sync Pull
+Expunge Near
+SyncState *
+CopyArrivalDate yes
+
+IMAPAccount adirh
+Host outlook.office365.com
+Port 993
+AuthMech XOAUTH2
+User adir.hdr.cybernetics@anu.edu.au
+PassCmd "$HOME/.dotfiles/bin/mail-secret oauth anu"
+TLSType IMAPS
+PipelineDepth 1
+Timeout 120
+
+IMAPStore adirh-remote
+Account adirh
+
+MaildirStore adirh-local
+Path /data/Maildir-imap/adirh/
+Inbox /data/Maildir-imap/adirh/INBOX
+SubFolders Verbatim
+
+Channel adirh
+Far :adirh-remote:
+Near :adirh-local:
+Patterns INBOX Archive "Sent Items" Drafts "Deleted Items"
+Create Near
+Remove Near
+Sync Pull
+Expunge Near
+SyncState *
+CopyArrivalDate yes
+
+IMAPAccount lxconvenor
+Host outlook.office365.com
+Port 993
+AuthMech XOAUTH2
+User lxconvenor.cybernetics@anu.edu.au
+PassCmd "$HOME/.dotfiles/bin/mail-secret oauth anu"
+TLSType IMAPS
+PipelineDepth 1
+Timeout 120
+
+IMAPStore lxconvenor-remote
+Account lxconvenor
+
+MaildirStore lxconvenor-local
+Path /data/Maildir-imap/lxconvenor/
+Inbox /data/Maildir-imap/lxconvenor/INBOX
+SubFolders Verbatim
+
+Channel lxconvenor
+Far :lxconvenor-remote:
+Near :lxconvenor-local:
+Patterns INBOX Archive "Sent Items" Drafts "Deleted Items"
+Create Near
+Remove Near
+Sync Pull
+Expunge Near
+SyncState *
+CopyArrivalDate yes
