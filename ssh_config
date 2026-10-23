@@ -39,8 +39,7 @@ Host gitlab.comp.anu.edu.au
 # rpis on tailnet
 Host panic-*
   User panic
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking accept-new
 
 # cybersonic
 # bulwark only accepts SSH from on-campus IPs, so off-campus machines hop via
