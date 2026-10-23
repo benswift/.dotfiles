@@ -1,0 +1,13 @@
+#!/bin/bash
+# Cloud-init runs this as root. The auth key is data, never shell source.
+set -euo pipefail
+timeout 300 sh -c 'until timedatectl show -p NTPSynchronized --value | grep -q yes; do sleep 2; done' || true
+installer=/tmp/tailscale-install.sh
+for _ in $(seq 1 30); do
+    if curl -fsSL https://tailscale.com/install.sh -o "$installer" && sh "$installer"; then
+        break
+    fi
+    sleep 10
+done
+tailscale up --auth-key=file:/etc/kiosk-tailscale-authkey --ssh --hostname="$(hostname)" --accept-dns=false
+rm -f /etc/kiosk-tailscale-authkey

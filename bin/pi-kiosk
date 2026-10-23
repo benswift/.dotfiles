@@ -34,10 +34,6 @@
 #     a crashed renderer rather than the kiosk URL's site.
 
 set -euo pipefail
-# Bash 5.2+ expands & in ${var//pat/repl} replacements to the matched pattern,
-# which would corrupt any substituted value containing & (shell commands in
-# the templates, passwords, auth keys). Restore literal replacement.
-shopt -u patsub_replacement 2>/dev/null || true
 
 readonly IMAGE_URL="${PI_KIOSK_IMAGE_URL:-https://downloads.raspberrypi.com/raspios_arm64_latest}"
 readonly CACHE_DIR="${PI_KIOSK_CACHE_DIR:-$HOME/.cache/raspios-images}"
@@ -101,7 +97,7 @@ EOF
 
 check_required_tools() {
     local missing=() cmd
-    for cmd in curl xz dd lsblk openssl mktemp ssh-keygen base64; do
+    for cmd in curl xz dd lsblk openssl mktemp ssh-keygen uv; do
         command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
     done
     ((${#missing[@]} == 0)) || die "missing required tools: ${missing[*]}"
@@ -251,424 +247,14 @@ ts_remove_stale_nodes() {
 }
 
 # ---------------------------------------------------------------------------
-# cloud-init config generation. Templates use @TOKEN@ placeholders substituted
-# with bash string replacement, so no value ever meets a shell-quoting or
-# sed-delimiter edge case.
-
-# The kiosk session, ported from panic/rpi/pi-setup.sh: labwc autostarts a
-# systemd user service that reads the URL from the boot partition on every
-# start, restarts Chromium on crash, and restarts it nightly. The GPU-forcing
-# Chromium flags (--ignore-gpu-blocklist etc.) are deliberately absent ---
-# imaginative-restoration traced Pi 5 lockups to them.
-generate_user_data() {
-    local out="$1"
-    local ud
-
-    IFS= read -r -d '' ud <<'EOF' || true
-#cloud-config
-hostname: @HOSTNAME@
-manage_etc_hosts: true
-
-users:
-  - name: @USERNAME@
-    gecos: Kiosk
-    shell: /bin/bash
-    groups: [adm, sudo, video, render, input, audio, tty, netdev, gpio, i2c, spi]
-    lock_passwd: @LOCK_PASSWD@
-    passwd: "@PASSWD_HASH@"
-    sudo: ALL=(ALL) NOPASSWD:ALL
-@SSH_KEYS@
-
-ssh_pwauth: false
-timezone: @TIMEZONE@
-
-write_files:
-  - path: /home/@USERNAME@/.config/labwc/autostart
-    owner: "@USERNAME@:@USERNAME@"
-    permissions: "0755"
-    defer: true
-    content: |
-      systemctl --user start chromium-kiosk.service &
-
-  - path: /home/@USERNAME@/.config/labwc/rc.xml
-    owner: "@USERNAME@:@USERNAME@"
-    permissions: "0644"
-    defer: true
-    content: |
-      <?xml version="1.0"?>
-      <labwc_config>
-        <core>
-          <decoration>no</decoration>
-          <gap>0</gap>
-        </core>
-        <keyboard>
-          <keybind key="Super-q">
-            <action name="Exit"/>
-          </keybind>
-        </keyboard>
-      </labwc_config>
-
-  - path: /home/@USERNAME@/.config/systemd/user/chromium-kiosk.service
-    owner: "@USERNAME@:@USERNAME@"
-    permissions: "0644"
-    defer: true
-    content: |
-      [Unit]
-      Description=Chromium kiosk browser
-      After=graphical-session.target
-      Requires=graphical-session.target
-
-      [Service]
-      Type=simple
-      Environment="WAYLAND_DISPLAY=wayland-0"
-      ExecStartPre=/bin/bash -c 'while [ ! -S "/run/user/$(id -u)/${WAYLAND_DISPLAY}" ]; do sleep 0.5; done'
-      ExecStart=/bin/bash -c 'URL=$(cat /boot/firmware/kiosk-url.txt 2>/dev/null || echo "@URL@"); BROWSER=$(command -v chromium || command -v chromium-browser); exec "$BROWSER" --kiosk --password-store=basic --user-data-dir=%h/.cache/chromium-kiosk --remote-debugging-port=9222 --no-first-run --noerrdialogs --disable-infobars --disable-pinch --disable-component-update --autoplay-policy=no-user-gesture-required --check-for-update-interval=31536000 --ozone-platform=wayland "$URL"'
-      Restart=always
-      RestartSec=5
-
-      [Install]
-      WantedBy=default.target
-
-  - path: /home/@USERNAME@/.config/systemd/user/chromium-restart.service
-    owner: "@USERNAME@:@USERNAME@"
-    permissions: "0644"
-    defer: true
-    content: |
-      [Unit]
-      Description=Restart Chromium kiosk browser
-
-      [Service]
-      Type=oneshot
-      ExecStart=/usr/bin/systemctl --user restart chromium-kiosk.service
-
-  - path: /home/@USERNAME@/.config/systemd/user/chromium-restart.timer
-    owner: "@USERNAME@:@USERNAME@"
-    permissions: "0644"
-    defer: true
-    content: |
-      [Unit]
-      Description=Restart Chromium kiosk nightly
-
-      [Timer]
-      OnCalendar=daily
-      RandomizedDelaySec=30
-
-      [Install]
-      WantedBy=timers.target
-
-  - path: /home/@USERNAME@/.config/systemd/user/chromium-watchdog.service
-    owner: "@USERNAME@:@USERNAME@"
-    permissions: "0644"
-    defer: true
-    content: |
-      [Unit]
-      Description=Restart Chromium kiosk if it is stuck on an error page
-
-      [Service]
-      Type=oneshot
-      ExecStart=/usr/local/bin/kiosk-watchdog
-
-  - path: /home/@USERNAME@/.config/systemd/user/chromium-watchdog.timer
-    owner: "@USERNAME@:@USERNAME@"
-    permissions: "0644"
-    defer: true
-    content: |
-      [Unit]
-      Description=Check the Chromium kiosk every 5 minutes
-
-      [Timer]
-      OnBootSec=10min
-      OnUnitActiveSec=5min
-
-      [Install]
-      WantedBy=timers.target
-
-  - path: /usr/local/bin/kiosk-watchdog
-    owner: "root:root"
-    permissions: "0755"
-    content: |
-      #!/usr/bin/env python3
-      """Restart the kiosk browser unless it shows a live page from the kiosk URL.
-
-      Chromium's own error pages (no network yet, an upstream 5xx) and a crashed
-      renderer ("Aw, Snap!") otherwise stay on screen until the nightly restart.
-      A page counts as live when it is on the kiosk URL's origin and its renderer
-      answers a script evaluation over the local DevTools port. A second check a
-      minute later keeps a page that is merely mid-load from triggering a restart.
-      """
-
-      import base64
-      import json
-      import os
-      import socket
-      import struct
-      import subprocess
-      import time
-      import urllib.request
-      from pathlib import Path
-      from urllib.parse import urlsplit
-
-      DEVTOOLS = "http://127.0.0.1:9222"
-      URL_FILE = Path("/boot/firmware/kiosk-url.txt")
-      DEFAULT_URL = "@URL@"
-      UNIT = "chromium-kiosk.service"
-
-
-      def kiosk_origin() -> str:
-          url = URL_FILE.read_text().strip() if URL_FILE.exists() else DEFAULT_URL
-          parts = urlsplit(url)
-          return f"{parts.scheme}://{parts.netloc}/"
-
-
-      def recv_exact(sock: socket.socket, n: int, buf: bytes) -> tuple[bytes, bytes]:
-          while len(buf) < n:
-              chunk = sock.recv(4096)
-              if not chunk:
-                  raise ConnectionError("DevTools socket closed")
-              buf += chunk
-          return buf[:n], buf[n:]
-
-
-      def renderer_answers(ws_url: str) -> bool:
-          """Evaluate 1 + 1 in the page over a minimal websocket client."""
-          parts = urlsplit(ws_url)
-          with socket.create_connection((parts.hostname, parts.port), timeout=10) as sock:
-              key = base64.b64encode(os.urandom(16)).decode()
-              sock.sendall(
-                  f"GET {parts.path} HTTP/1.1\r\nHost: {parts.netloc}\r\n"
-                  "Upgrade: websocket\r\nConnection: Upgrade\r\n"
-                  f"Sec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n".encode()
-              )
-              buf = b""
-              while b"\r\n\r\n" not in buf:
-                  chunk = sock.recv(4096)
-                  if not chunk:
-                      raise ConnectionError("DevTools socket closed")
-                  buf += chunk
-              head, buf = buf.split(b"\r\n\r\n", 1)
-              if b" 101 " not in head.split(b"\r\n", 1)[0]:
-                  return False
-
-              msg = json.dumps(
-                  {
-                      "id": 1,
-                      "method": "Runtime.evaluate",
-                      "params": {"expression": "1 + 1", "returnByValue": True},
-                  }
-              ).encode()
-              mask = os.urandom(4)
-              length = (
-                  bytes([0x80 | len(msg)])
-                  if len(msg) < 126
-                  else bytes([0x80 | 126]) + struct.pack(">H", len(msg))
-              )
-              masked = bytes(b ^ mask[i % 4] for i, b in enumerate(msg))
-              sock.sendall(bytes([0x81]) + length + mask + masked)
-
-              while True:
-                  header, buf = recv_exact(sock, 2, buf)
-                  n = header[1] & 0x7F
-                  if n == 126:
-                      ext, buf = recv_exact(sock, 2, buf)
-                      n = struct.unpack(">H", ext)[0]
-                  elif n == 127:
-                      ext, buf = recv_exact(sock, 8, buf)
-                      n = struct.unpack(">Q", ext)[0]
-                  payload, buf = recv_exact(sock, n, buf)
-                  if header[0] & 0x0F != 1:
-                      continue
-                  reply = json.loads(payload)
-                  if reply.get("id") == 1:
-                      return reply.get("result", {}).get("result", {}).get("value") == 2
-
-
-      def healthy() -> bool:
-          origin = kiosk_origin()
-          try:
-              with urllib.request.urlopen(f"{DEVTOOLS}/json/list", timeout=5) as resp:
-                  targets = json.load(resp)
-              return any(
-                  renderer_answers(t["webSocketDebuggerUrl"])
-                  for t in targets
-                  if t.get("type") == "page"
-                  and t.get("url", "").startswith(origin)
-                  and "webSocketDebuggerUrl" in t
-              )
-          except (OSError, ValueError):
-              return False
-
-
-      def main() -> None:
-          active = subprocess.run(["systemctl", "--user", "is-active", "--quiet", UNIT])
-          if active.returncode != 0 or healthy():
-              return
-          time.sleep(60)
-          if healthy():
-              return
-          print("kiosk not showing a live page from the kiosk URL; restarting")
-          subprocess.run(["systemctl", "--user", "restart", UNIT], check=True)
-
-
-      if __name__ == "__main__":
-          main()
-
-  - path: /usr/local/bin/kiosk-set-url
-    owner: "root:root"
-    permissions: "0755"
-    content: |
-      #!/bin/bash
-      # Show or update the kiosk URL (takes effect on next Chromium restart).
-      f=/boot/firmware/kiosk-url.txt
-      if [ $# -eq 0 ]; then
-          echo "Usage: sudo kiosk-set-url <url>"
-          echo "Current URL: $(cat "$f" 2>/dev/null || echo "not set")"
-          exit 1
-      fi
-      echo "$1" > "$f"
-      echo "✓ URL updated. Restart the browser (or reboot) to apply:"
-      echo "  systemctl --user restart chromium-kiosk.service"
-@ENTERPRISE_WIFI@
-
-runcmd:
-  - systemctl enable --now ssh
-  - rm -f /etc/xdg/autostart/piwiz.desktop
-  # autologin to the graphical desktop (B4 targets the first regular user)
-  - raspi-config nonint do_boot_behaviour B4
-@WIFI_CMDS@
-  # enable the kiosk user units without a running user manager
-  - install -d -o @USERNAME@ -g @USERNAME@ /home/@USERNAME@/.config/systemd/user/default.target.wants /home/@USERNAME@/.config/systemd/user/timers.target.wants
-  - ln -sf ../chromium-kiosk.service /home/@USERNAME@/.config/systemd/user/default.target.wants/chromium-kiosk.service
-  - ln -sf ../chromium-restart.timer /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-restart.timer
-  - ln -sf ../chromium-watchdog.timer /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-watchdog.timer
-  - chown -h @USERNAME@:@USERNAME@ /home/@USERNAME@/.config/systemd/user/default.target.wants/chromium-kiosk.service /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-restart.timer /home/@USERNAME@/.config/systemd/user/timers.target.wants/chromium-watchdog.timer
-  # hide the cursor: no Wayland-native option, so blank the theme's pointer
-  - if [ -f /usr/share/icons/PiXflat/cursors/left_ptr ]; then mv /usr/share/icons/PiXflat/cursors/left_ptr /usr/share/icons/PiXflat/cursors/left_ptr.bak; fi
-@TAILSCALE_CMDS@
-
-# The kiosk pieces (autologin, deferred user files, unit enablement) land
-# after the first-boot desktop session has already logged in, so the browser
-# only autostarts from the next boot --- reboot into a working kiosk rather
-# than leaving a bare desktop up.
-power_state:
-  mode: reboot
-  message: pi-kiosk first-boot config complete; rebooting into the kiosk
-
-final_message: "pi-kiosk setup complete after $UPTIME seconds"
-EOF
-
-    # --- conditional sections -------------------------------------------
-    local ssh_keys=""
-    if [[ -n "$ssh_key_file" ]]; then
-        ssh_keys=$'    ssh_authorized_keys:\n      - |\n          '"$(cat "$ssh_key_file")"
-    fi
-
-    local enterprise_wifi=""
-    if [[ -n "$wifi_enterprise_user" ]]; then
-        IFS= read -r -d '' enterprise_wifi <<'EOF' || true
-
-  - path: /etc/ssl/certs/kiosk-wifi-ca.pem
-    owner: "root:root"
-    permissions: "0644"
-    encoding: b64
-    content: @WIFI_CA_CERT@
-
-  - path: /etc/NetworkManager/system-connections/@WIFI_SSID@.nmconnection
-    owner: "root:root"
-    permissions: "0600"
-    content: |
-      [connection]
-      id=@WIFI_SSID@
-      type=wifi
-      interface-name=wlan0
-      autoconnect=true
-
-      [wifi]
-      mode=infrastructure
-      ssid=@WIFI_SSID@
-
-      [wifi-security]
-      key-mgmt=wpa-eap
-
-      [802-1x]
-      eap=peap
-      identity=@WIFI_ENTERPRISE_USER@
-      password=@WIFI_ENTERPRISE_PASS@
-      phase2-auth=mschapv2
-      ca-cert=/etc/ssl/certs/kiosk-wifi-ca.pem
-      domain-suffix-match=@WIFI_DOMAIN_SUFFIX@
-
-      [ipv4]
-      method=auto
-
-      [ipv6]
-      method=auto
-EOF
-    fi
-
-    local wifi_cmds=""
-    if [[ -n "$wifi_ssid" ]]; then
-        wifi_cmds="  - rfkill unblock wifi || true
-  - raspi-config nonint do_wifi_country @WIFI_COUNTRY@ || true
-  # pick up connection files written after NetworkManager started
-  - nmcli connection reload || true"
-    fi
-
-    local tailscale_cmds=""
-    if [[ -n "$tailscale_authkey" ]]; then
-        IFS= read -r -d '' tailscale_cmds <<'EOF' || true
-  # a cold Pi's clock is stuck at the image build date, which makes TLS cert
-  # validation fail --- wait for NTP before fetching the installer
-  - timeout 300 sh -c 'until timedatectl show -p NTPSynchronized --value | grep -q yes; do sleep 2; done' || true
-  # download to a file, then run: `curl | sh` reports success on an empty
-  # download, which would break out of the retry loop with nothing installed
-  - for i in $(seq 1 30); do curl -fsSL https://tailscale.com/install.sh -o /tmp/tailscale-install.sh && sh /tmp/tailscale-install.sh && break; sleep 10; done
-  - tailscale up --authkey=@TAILSCALE_AUTHKEY@ --ssh --hostname=@HOSTNAME@ --accept-dns=false
-EOF
-        tailscale_cmds="${tailscale_cmds%$'\n'}"
-    fi
-
-    # --- substitution ----------------------------------------------------
-    ud="${ud//@SSH_KEYS@/$ssh_keys}"
-    ud="${ud//@ENTERPRISE_WIFI@/$enterprise_wifi}"
-    ud="${ud//@WIFI_CMDS@/$wifi_cmds}"
-    ud="${ud//@TAILSCALE_CMDS@/$tailscale_cmds}"
-    ud="${ud//@HOSTNAME@/$hostname}"
-    ud="${ud//@USERNAME@/$username}"
-    ud="${ud//@PASSWD_HASH@/$passwd_hash}"
-    ud="${ud//@LOCK_PASSWD@/$lock_passwd}"
-    ud="${ud//@TIMEZONE@/$timezone}"
-    ud="${ud//@URL@/$url}"
-    ud="${ud//@WIFI_SSID@/$wifi_ssid}"
-    ud="${ud//@WIFI_ENTERPRISE_USER@/$wifi_enterprise_user}"
-    ud="${ud//@WIFI_ENTERPRISE_PASS@/$wifi_enterprise_pass}"
-    ud="${ud//@WIFI_CA_CERT@/$wifi_ca_data}"
-    ud="${ud//@WIFI_DOMAIN_SUFFIX@/$wifi_domain_suffix}"
-    ud="${ud//@WIFI_COUNTRY@/$wifi_country}"
-    ud="${ud//@TAILSCALE_AUTHKEY@/$tailscale_authkey}"
-
-    printf '%s\n' "$ud" >"$out"
-}
-
-# WPA2-PSK wifi goes in network-config (netplan v2); enterprise wifi is
-# handled by the nmconnection file in user-data instead. Without wifi the
-# stock file is left alone --- ethernet DHCP works out of the box.
-generate_network_config() {
-    local out="$1"
-    [[ -n "$wifi_ssid" && -z "$wifi_enterprise_user" ]] || return 0
-    local nc
-    IFS= read -r -d '' nc <<'EOF' || true
-version: 2
-wifis:
-  wlan0:
-    dhcp4: true
-    optional: true
-    access-points:
-      "@WIFI_SSID@":
-        password: "@WIFI_PASSWORD@"
-EOF
-    nc="${nc//@WIFI_SSID@/$wifi_ssid}"
-    nc="${nc//@WIFI_PASSWORD@/$wifi_password}"
-    printf '%s\n' "$nc" >"$out"
+# Serialize configuration through Python; NUL-delimited stdin keeps values out
+# of executable source and preserves quotes, newlines and shell metacharacters.
+generate_config() {
+    printf '%s\0' "$hostname" "$username" "$passwd_hash" "$lock_passwd" \
+        "$timezone" "$ssh_public_key" "$url" "$wifi_ssid" "$wifi_password" \
+        "$wifi_enterprise_user" "$wifi_enterprise_pass" "$wifi_country" \
+        "$wifi_ca_cert" "$wifi_domain_suffix" "$tailscale_authkey" |
+        uv run --locked --script "$(dirname "$0")/../lib/pi-kiosk/render.py" "$1"
 }
 
 # ---------------------------------------------------------------------------
@@ -676,7 +262,7 @@ EOF
 main() {
     local url="" hostname="pi-kiosk" username="kiosk" password=""
     local wifi_ssid="" wifi_password="" wifi_enterprise_user="" wifi_enterprise_pass=""
-    local wifi_ca_cert="" wifi_domain_suffix="" wifi_ca_data=""
+    local wifi_ca_cert="" wifi_domain_suffix=""
     local wifi_country="AU" tailscale_authkey="" tailscale_tag="" ssh_key_file="" device="" test_mode=false
 
     (($# > 0)) || usage 0
@@ -740,7 +326,6 @@ main() {
             die "--wifi-domain-suffix must be the RADIUS server's DNS domain"
         openssl x509 -in "$wifi_ca_cert" -noout >/dev/null 2>&1 ||
             die "--wifi-ca-cert must be a valid PEM CA certificate"
-        wifi_ca_data=$(base64 <"$wifi_ca_cert" | tr -d '\n')
     fi
 
     local passwd_hash="!" lock_passwd=true timezone
@@ -774,9 +359,7 @@ main() {
 
     if [[ "$test_mode" == true ]]; then
         [[ -z "$tailscale_tag" ]] || tailscale_authkey="tskey-auth-TEST-PLACEHOLDER"
-        generate_user_data "$work/user-data"
-        generate_network_config "$work/network-config"
-        printf '%s\n' "$url" >"$work/kiosk-url.txt"
+        generate_config "$work"
         warn "TEST MODE: config generated in $work (not flashing)"
         ls -l "$work"
         exit 0
@@ -801,9 +384,7 @@ main() {
         info "✓ Minted single-use Tailscale auth key"
     fi
 
-    generate_user_data "$work/user-data"
-    generate_network_config "$work/network-config"
-    printf '%s\n' "$url" >"$work/kiosk-url.txt"
+    generate_config "$work"
 
     local image
     image=$(fetch_image)

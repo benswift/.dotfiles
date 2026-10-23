@@ -1,0 +1,6 @@
+[Unit]
+Description=Restart Chromium kiosk browser
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl --user restart chromium-kiosk.service

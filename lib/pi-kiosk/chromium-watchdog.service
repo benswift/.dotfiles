@@ -1,0 +1,6 @@
+[Unit]
+Description=Restart Chromium kiosk if it is stuck on an error page
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/kiosk-watchdog

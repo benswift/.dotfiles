@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import ast
 import base64
 import os
 import re
@@ -127,7 +128,7 @@ def test_enterprise_embeds_ca_and_checks_server(
     files = {entry["path"]: entry for entry in data["write_files"]}
     ca = files["/etc/ssl/certs/kiosk-wifi-ca.pem"]
     assert base64.b64decode(ca["content"]) == cert.read_bytes()
-    profile = files["/etc/NetworkManager/system-connections/AUDIT-NONREAL.nmconnection"]
+    profile = files["/etc/NetworkManager/system-connections/kiosk-wifi.nmconnection"]
     assert "ca-cert=/etc/ssl/certs/kiosk-wifi-ca.pem" in profile["content"]
     assert "domain-suffix-match=radius.example.edu" in profile["content"]
     result = generate(
@@ -138,6 +139,64 @@ def test_enterprise_embeds_ca_and_checks_server(
     result = generate(tmp_path, *args, "--wifi-domain-suffix", "radius.example.edu")
     assert result.returncode != 0
     assert "valid PEM CA certificate" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        'https://example.com/"; print("INJECTED"); #',
+        "https://example.com/'; touch /tmp/INJECTED; #",
+        "https://example.com/$(id)?a=1&b=@USERNAME@",
+        "https://example.com/\nruncmd: [injected]",
+    ],
+)
+def test_url_stays_data(tmp_path: Path, public_key: Path, url: str) -> None:
+    data = config(generate(tmp_path, "--ssh-key", str(public_key), "--url", url))
+    files = {entry["path"]: entry["content"] for entry in data["write_files"]}
+    assert files["/etc/kiosk-url.txt"] == url + "\n"
+    assets = SCRIPT.parent.parent / "lib/pi-kiosk"
+    assert (
+        files["/usr/local/bin/kiosk-browser"] == (assets / "kiosk-browser").read_text()
+    )
+    watchdog = files["/usr/local/bin/kiosk-watchdog"]
+    assert watchdog == (assets / "kiosk-watchdog.py").read_text()
+    ast.parse(watchdog)
+    assert all(url not in str(command) for command in data["runcmd"])
+
+
+def test_wifi_and_tailscale_values_stay_data(tmp_path: Path, public_key: Path) -> None:
+    ssid = 'WiFi: "quoted" # test'
+    password = 'pass\\word\n"quoted" $(id) @URL@'
+    key = 'synthetic; echo "INJECTED"'
+    result = generate(
+        tmp_path,
+        "--ssh-key",
+        str(public_key),
+        "--wifi-ssid",
+        ssid,
+        "--wifi-password",
+        password,
+        "--tailscale-authkey",
+        key,
+    )
+    data = config(result)
+    match = re.search(r"config generated in (\S+)", result.stdout)
+    assert match is not None
+    network = yaml.safe_load((Path(match[1]) / "network-config").read_text())
+    assert network["wifis"]["wlan0"]["access-points"] == {ssid: {"password": password}}
+    files = {entry["path"]: entry["content"] for entry in data["write_files"]}
+    assert files["/etc/kiosk-tailscale-authkey"] == key
+    assert key not in files["/usr/local/bin/kiosk-tailscale"]
+    assert ["/usr/local/bin/kiosk-tailscale"] in data["runcmd"]
+
+
+@pytest.mark.parametrize("option", ["--hostname", "--username", "--wifi-country"])
+def test_rejects_invalid_system_names(
+    tmp_path: Path, public_key: Path, option: str
+) -> None:
+    result = generate(tmp_path, "--ssh-key", str(public_key), option, "bad\ninjected")
+    assert result.returncode != 0
+    assert "invalid" in result.stderr
 
 
 if __name__ == "__main__":

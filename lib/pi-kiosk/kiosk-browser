@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+url_file=/boot/firmware/kiosk-url.txt
+[[ -r "$url_file" ]] || url_file=/etc/kiosk-url.txt
+url=$(cat "$url_file")
+browser=$(command -v chromium || command -v chromium-browser)
+exec "$browser" --kiosk --password-store=basic \
+    --user-data-dir="$HOME/.cache/chromium-kiosk" --remote-debugging-port=9222 \
+    --no-first-run --noerrdialogs --disable-infobars --disable-pinch \
+    --disable-component-update --autoplay-policy=no-user-gesture-required \
+    --check-for-update-interval=31536000 --ozone-platform=wayland "$url"

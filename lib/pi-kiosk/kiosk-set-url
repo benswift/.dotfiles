@@ -1,0 +1,11 @@
+#!/bin/bash
+# Show or update the kiosk URL (takes effect on next Chromium restart).
+f=/boot/firmware/kiosk-url.txt
+if [ $# -eq 0 ]; then
+    echo "Usage: sudo kiosk-set-url <url>"
+    echo "Current URL: $(cat "$f" 2>/dev/null || echo "not set")"
+    exit 1
+fi
+printf '%s\n' "$1" > "$f"
+echo "✓ URL updated. Restart the browser (or reboot) to apply:"
+echo "  systemctl --user restart chromium-kiosk.service"

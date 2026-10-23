@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<labwc_config>
+  <core>
+    <decoration>no</decoration>
+    <gap>0</gap>
+  </core>
+  <keyboard>
+    <keybind key="Super-q">
+      <action name="Exit"/>
+    </keybind>
+  </keyboard>
+</labwc_config>

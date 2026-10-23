@@ -1,0 +1,15 @@
+[Unit]
+Description=Chromium kiosk browser
+After=graphical-session.target
+Requires=graphical-session.target
+
+[Service]
+Type=simple
+Environment="WAYLAND_DISPLAY=wayland-0"
+ExecStartPre=/bin/bash -c 'while [ ! -S "/run/user/$(id -u)/${WAYLAND_DISPLAY}" ]; do sleep 0.5; done'
+ExecStart=/usr/local/bin/kiosk-browser
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
