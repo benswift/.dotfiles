@@ -164,7 +164,11 @@ if wants mail; then
   echo "=== Maildir/anu-archive ==="
   echo "Syncing $HOME/Maildir/anu-archive to $REMOTE:Maildir/anu-archive"
   echo
-  rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
+  # --max-delete: the archive only grows (a flag change renames one file, a
+  # delete and an upload), so a burst of deletions is damage on daysy, not
+  # filing. rclone stops deleting and exits non-zero, and launchd-run pages,
+  # instead of weddle's only other copy quietly following it.
+  rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" --max-delete 100 \
     "$HOME/Maildir/anu-archive" "$REMOTE:Maildir/anu-archive"
   # weddle's mu-index.path watches this to re-index the mirror. Separate from
   # .last-push below, which must only vouch for a full run.
