@@ -40,8 +40,8 @@ Paths with no symlink targets, so absent from the manifest: @bin/ (on `PATH` via
 `./tests/test_nb.py`), `backlog/` (Backlog.md tasks), @oxfmtrc.json (shared
 markdown/TOML format config).
 
-Editor and multiplexer config: @helix/, @zellij/, @ghostty/. Email:
-@mail/ (see @mail/README.md). AI agents: @claude/, @codex/, @gemini/, @matilda/,
+Editor and multiplexer config: @helix/, @zellij/, @ghostty/. Email: @mail/ (see
+@mail/README.md). AI agents: @claude/, @codex/, @gemini/, @matilda/,
 @agent-run/.
 
 ## Python
