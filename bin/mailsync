@@ -5,11 +5,15 @@
 #
 set -euo pipefail
 
-# Colours for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Colours only at a terminal: launchd appends this to mailsync.log
+if [ -t 1 ]; then
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    NC='\033[0m'
+else
+    RED='' GREEN='' YELLOW='' NC=''
+fi
 
 # Function to print status messages
 print_status() {
@@ -32,12 +36,28 @@ for cmd in mbsync mu; do
     fi
 done
 
+# Every Inbox in ~/.mbsyncrc must exist before syncing. A missing maildir is
+# a moved or unrestored tree, not an empty mailbox, and Sync All would treat
+# its absence as something to reconcile --- so refuse, loudly, so the timer
+# pages instead of mail quietly stopping.
+missing=0
+while read -r _ inbox; do
+    inbox="${inbox/#\~/$HOME}"
+    if [ ! -d "$inbox/cur" ]; then
+        print_error "maildir missing: $inbox"
+        missing=1
+    fi
+done < <(grep '^Inbox ' "$HOME/.mbsyncrc")
+[ "$missing" -eq 0 ] || exit 1
+
 # Two mbsync runs on the same maildir corrupt its sync state (the task-010
 # disaster), and the launchd timer (mailsync-scheduled) can fire while a
 # manual `,s` sync is still going --- so every entry point takes this lock.
 # noclobber write is atomic, and the file holds the owner's PID so a lock
 # left behind by a crashed run is detected and cleared.
-LOCKFILE="$HOME/Maildir/.mailsync.lock"
+LOCKDIR="${XDG_STATE_HOME:-$HOME/.local/state}"
+mkdir -p "$LOCKDIR"
+LOCKFILE="$LOCKDIR/mailsync.lock"
 if ! (set -o noclobber; echo $$ > "$LOCKFILE") 2>/dev/null; then
     otherpid=$(cat "$LOCKFILE" 2>/dev/null || true)
     if [ -n "${otherpid:-}" ] && kill -0 "$otherpid" 2>/dev/null; then
@@ -59,14 +79,14 @@ sync_errors=0
 # Initialize mu if needed
 if [ ! -d ~/.cache/mu ]; then
     print_status "Initializing mu database..."
-    mu init --maildir=~/Maildir \
-        --personal-address=u2548636@anu.edu.au \
-        --personal-address=ben.swift@anu.edu.au \
-        --personal-address=phdconvenor.cybernetics@anu.edu.au \
-        --personal-address=adir.hdr.cybernetics@anu.edu.au \
-        --personal-address=lxconvenor.cybernetics@anu.edu.au \
-        --personal-address=benswift@fastmail.com \
-        --personal-address=ben@benswift.me
+    mu init --maildir "$HOME/Maildir" \
+        --my-address u2548636@anu.edu.au \
+        --my-address ben.swift@anu.edu.au \
+        --my-address phdconvenor.cybernetics@anu.edu.au \
+        --my-address adir.hdr.cybernetics@anu.edu.au \
+        --my-address lxconvenor.cybernetics@anu.edu.au \
+        --my-address benswift@fastmail.com \
+        --my-address ben@benswift.me
 fi
 
 # mbsync can hang rather than fail, which is the worse of the two: a run that
