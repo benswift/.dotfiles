@@ -44,6 +44,11 @@ Editor and multiplexer config: @helix/, @zellij/, @ghostty/. Email: @mail/ (see
 @mail/README.md). AI agents: @claude/, @codex/, @gemini/, @matilda/,
 @agent-run/.
 
+@.github/workflows/security.yml runs ruff, shellcheck, the package and portable
+test suites, ty, a lock audit (@scripts/audit-locks.py) and gitleaks on every
+push. A tool the tests call must be installed there too; the helix and nb suites
+stay local (see the workflow).
+
 ## Python
 
 - `bin/` tools are `uv run --script` with PEP 723 metadata and a committed
@@ -76,13 +81,8 @@ used when a project has no `mise.toml` of its own.
 `~/.config/mise/config.local.toml` is machine-local, untracked, and auto-merged;
 its `[env]` table is **the sole home for secrets** (`PUSHOVER_TOKEN`,
 `PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`, `ANU_PASSWORD`). Nothing here calls
-1Password. Two exceptions, both read through a script rather than inline:
-@bin/vpn reads the macOS login keychain with `security find-generic-password`,
-and everything under @mail/ goes through @bin/mail-secret (login keychain on
-macOS, mode-0600 files under `~/.local/state/mail-secret/` on Linux --- the
-OAuth token is rewritten on every refresh, so it can't be a config value). An
-item saved in the Passwords app syncs via the iCloud keychain, which the
-`security` CLI cannot read --- these must be login-keychain items.
+1Password. Two exceptions, each read through a script whose header explains its
+backend: @bin/vpn, and @bin/mail-secret for everything under @mail/.
 
 ### Package installation hierarchy
 
@@ -106,28 +106,10 @@ from the commit in @helix/pinned-rev and installs `hx` into `~/.local/bin`.
 **Don't put helix back in mise** --- `mise activate` puts its bin dir ahead of
 `~/.local/bin`, so a mise-managed copy silently shadows the source build.
 
-- `helix-build` --- build the pinned commit, a no-op if it is already installed.
-  `dotfiles update` runs it, so a compile only happens when the pin moves
-- `helix-build --update` --- move the pin to the tip of upstream's default
-  branch and rebuild; commit @helix/pinned-rev so the other machines follow
-- `helix-build --rollback` --- return to the previously built commit
-- `helix-build --check` --- what `dotfiles doctor` asks
-
-The checkout lives at `~/.local/share/helix-src`, and its `runtime/` is baked
-into the binary as `HELIX_DEFAULT_RUNTIME`, so `hx` needs no environment
-variable in any context. helix-term's `build.rs` compiles every grammar into
-that same `runtime/` from the _merged_ language config, so the custom grammars
-in @helix/languages.toml are built alongside the upstream ones and cannot fall
-out of step with the binary. **Never run `hx --grammar build` by hand**: with no
-`CARGO_MANIFEST_DIR` set it writes to `~/.config/helix/runtime/grammars`, which
-outranks the baked runtime and shadows every grammar with a stale copy.
-
-@tests/test_helix.py guards all of it, and `helix-build` runs it after each
-build. It drives a real `hx` in a pty to confirm the file-type globs still
-resolve (`*.deck.mdx` to astromotion-deck, `**/backlog/**/*.md` to backlog-task,
-and the rest), that every configured grammar, query, formatter and language
-server still loads, and that the formatters helix runs on save are the ones
-@bin/claude-format runs too.
+The script's header covers the mechanism and its usage (`--update` moves the
+pin; commit @helix/pinned-rev so the other machines follow). **Never run
+`hx --grammar build` by hand**: it writes grammars that shadow the build's own.
+@tests/test_helix.py, run after every build, guards the setup.
 
 ## Formatting
 
@@ -136,10 +118,8 @@ Helix runs on save (dispatch table in the script; mirrors
 @helix/languages.toml). Keep the two in sync.
 
 **KDL files must stay fixed points of `kdlfmt format --kdl-version v1 -`.** The
-`v1` is load-bearing: kdlfmt otherwise formats to whichever version parses, and
-@zellij/layouts/dev.kdl is valid v2, which comes back with strings unquoted
-(`command="hx"` -> `command=hx`). Zellij's parser is v1, where a bare word is
-not a value, so the layout silently breaks.
+`v1` is load-bearing (zellij parses v1 only); the kdl block in
+@helix/languages.toml says why.
 
 ## Utilities (@bin/)
 
@@ -149,12 +129,8 @@ Each script's header has the detail. Notable ones:
 - `mailsync` --- sync all email accounts
 - `claude-zellij`, `codex-zellij`, `gemini-zellij` --- zellij wrappers
 - `agent-run` --- headless agent dispatcher (see below)
-- `hx-ghostty` --- open files in helix in a Ghostty tab. `hx-ghostty --register`
-  (once per Mac) builds the applet in `~/Applications` that makes it macOS's
-  default for every text and source type the two lists in the script name, so a
-  double-clicked file lands in helix rather than in whichever app claimed the
-  extension loudest. Deliberately not claimed: `.html` (Safari) and the binary
-  `.plist` and `.scpt`
+- `hx-ghostty` --- open files in helix in a Ghostty tab; `--register` (once per
+  Mac) makes it macOS's default for text and source files
 - `zj-switch` --- `Alt s` session switcher, live sessions MRU-first, annotated
   with each session's running agents
 - `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to
@@ -211,10 +187,9 @@ symlinks each skill into `~/.agents/skills` so Codex and Matilda see them too.
 
 @bin/agent-run runs unattended agent jobs; profiles in @agent-run/profiles.toml
 select the runner and auth route, the caller supplies prompt, model and
-permissions. Subscription-backed profiles (`claude-sub`, `codex-sub`,
-`grok-sub`) clear API/gateway env vars first, so a scheduled job cannot silently
-become pay-as-you-go. API-billed escape hatches are named `*-api`. `openrouter`
-and `deepseek` reach third-party endpoints through Claude Code's
+permissions. Subscription profiles are `*-sub`, API-billed ones `*-api`
+(@agent-run/profiles.toml's comments say what each clears). `openrouter` and
+`deepseek` reach third-party endpoints through Claude Code's
 Anthropic-compatible surface; put their keys in the untracked mise env.
 
 A caller that passes no `--profile` (and no `AGENT_PROFILE`) gets the registry's
@@ -232,17 +207,11 @@ agent-run --profile openrouter --model "provider/model:free" "prompt"
 
 ### Session log analytics
 
-@bin/ship-claude-logs sends each host's `~/.claude/projects` and
-`~/.codex/sessions` to weddle hourly (systemd timer there; on macOS it is one
-step of the push-to-weddle launchd job, with the rclone backup).
-@bin/ingest-claude-logs summarises both hourly into
-`~/claude-logs/analytics.db`, one `sessions` row per session file, keyed on path
-so ingest is incremental. Purpose: cross-machine introspection of agent usage.
-
-The failure mode is a unit that succeeds and ships nothing, so
-`ingest-claude-logs` exits non-zero when any host's newest session is older than
-`AGENT_LOGS_STALE_DAYS` (default 7), with `OnFailure=unit-oncall@%n.service`.
-weddle's ingester is every other host's alarm.
+@bin/ship-claude-logs sends each host's Claude and Codex session logs to weddle
+hourly (systemd timer there; on macOS a step of the push-to-weddle launchd job).
+@bin/ingest-claude-logs summarises them into `~/claude-logs/analytics.db` and
+fails when a host goes quiet, so weddle's ingester is every other host's alarm.
+Both headers have the detail.
 
 ### Per-agent notes
 
@@ -259,13 +228,10 @@ weddle's ingester is every other host's alarm.
   than self-updating. `grok login --device-auth` works headless. Reads this
   repo's `CLAUDE.md` and Claude Code skills with no extra config; `grok inspect`
   prints what it found.
-- **Matilda Code** --- npm-only, so its mise entry needs `allow_low_downloads`
-  and `allow_builds`. `~/.matilda/settings.json` is Matilda's own (rewritten
-  atomically by `auth login`, replacing a symlink with a real file), so
-  @matilda/system-defaults.json holds the portable half instead, read in place
-  via `MATILDA_CODE_SYSTEM_DEFAULTS_PATH`. It ships pre-stamped `"$version": 5`
-  in Matilda's byte format, missing trailing newline and all --- an unstamped
-  file is migrated in place on first run, dirtying the repo.
+- **Matilda Code** --- `~/.matilda/settings.json` is Matilda's own; the portable
+  half is @matilda/system-defaults.json, read in place (see the `[env]` comment
+  in @mise/config.toml). Keep that file in Matilda's exact byte format, stamp
+  and missing trailing newline included.
   - headless login is loopback-OAuth only, no device-code fallback.
     `MATILDA_AUTH_SKIP_BROWSER=1` (`AUTH`, not `OAUTH`) still prints an
     authorize URL pointing at a random `127.0.0.1:<port>` on that host. Open it
