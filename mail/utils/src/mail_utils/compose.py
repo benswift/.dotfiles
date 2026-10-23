@@ -258,7 +258,17 @@ def send_email(
     )
 
     if result.returncode == 0:
-        append_to_sent(msg, account)
+        # The mail has gone. Reporting a failed filing as a failed send would
+        # invite a retry, and the recipients would get it twice.
+        try:
+            append_to_sent(msg, account)
+        except (
+            OSError,
+            RuntimeError,
+            subprocess.CalledProcessError,
+            imaplib.IMAP4.error,
+        ) as e:
+            return True, f"Sent, but filing the sent copy failed: {e}"
         return True, "Sent successfully"
     else:
         return False, f"Failed to send: {result.stderr.decode()}"

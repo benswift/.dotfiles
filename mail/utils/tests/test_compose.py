@@ -214,6 +214,27 @@ class TestSendEmail:
             assert "-a" in args
             assert "personal" in args
 
+    def test_failed_sent_copy_still_reports_sent(self):
+        msg = build_email(
+            from_addr="sender@example.com",
+            to="recipient@example.com",
+            subject="Test",
+            body="Body",
+        )
+
+        with (
+            patch("subprocess.run") as mock_run,
+            patch(
+                "mail_utils.compose.append_to_sent",
+                side_effect=RuntimeError("IMAP APPEND to Sent Items failed"),
+            ),
+        ):
+            mock_run.return_value = MagicMock(returncode=0)
+            success, message = send_email(msg, Account.personal, dry_run=False)
+
+        assert success is True
+        assert "sent copy failed" in message
+
 
 class TestAppendToSent:
     def _msg(self):
