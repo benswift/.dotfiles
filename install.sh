@@ -64,9 +64,10 @@ install_mise() {
 # isync (mbsync) with OAuth2 --- homebrew-core's isync is built without SASL,
 # so it can't authenticate to Office365 over XOAUTH2, while the benswift/tap
 # build links a cyrus-sasl that bundles the XOAUTH2 plugin (and survives
-# `brew upgrade`, unlike the old self-compiled binary). Linux is read-only
-# plus send: mu to index a maildir and msmtp for mail-compose, no mbsync (the
-# distro isync is too old for the config anyway, and only one host syncs).
+# `brew upgrade`, unlike the old self-compiled binary). Linux gets mu and
+# msmtp only. A pull-only mirror (weddle) also needs isync 1.5 built from
+# source, which mail/README.md's setup steps cover by hand: the distro isync
+# is too old for the config, and no other Linux host wants mbsync at all.
 install_mail_sync() {
     if [[ "$platform" == "macos" ]]; then
         if brew list isync &>/dev/null; then
@@ -81,7 +82,7 @@ install_mail_sync() {
             info "mu and msmtp already installed"
             return
         fi
-        info "Installing mu and msmtp (read-only mail tier)..."
+        info "Installing mu and msmtp..."
         sudo apt-get install -y maildir-utils msmtp
     else
         warn "no known package manager --- install mu and msmtp manually"

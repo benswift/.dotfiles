@@ -71,9 +71,8 @@ of anything submitted over SMTP AUTH (the `unset record` note in
 `mail/neomutt/accounts/anu`), so for the four Exchange accounts there is nothing
 to do. Fastmail doesn't, so `personal` gets an IMAP APPEND to its Sent Items on
 the server, with the password from `mail-secret`. A local maildir write only
-reaches the server from a host running mbsync in push mode, and on a host that
-mirrors daysy's maildir (weddle) it would be the sole record, deleted by the
-next backup run.
+reaches the server from a host running mbsync in push mode; on a pull-only host
+(weddle) it would be an orphan no other client ever sees.
 
 ## Student database
 
