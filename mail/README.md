@@ -25,6 +25,9 @@ it, neomutt and `mail-compose` read and send. This is the only host that syncs:
 a second mbsync client on the same mailboxes is a second party to the
 cross-device archive race described in TASK-025.
 
+**Pull-only (watson).** wiz's automation pulls just the lxconvenor mailbox with
+`mbsyncrc-wiz`, whose header explains why it can't race daysy.
+
 **Read-only plus send (weddle).** `~/Maildir` there is a mirror of daysy's,
 refreshed by `bin/backup` (an `rclone sync` from daysy, sync-state files
 included). Nothing on weddle may write into it --- mbsync would start from
