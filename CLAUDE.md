@@ -163,11 +163,11 @@ symlinked file-by-file rather than as a directory.
 
 ## AI coding agents
 
-All of Claude Code, Codex CLI, Gemini CLI, Matilda Code and Grok Build read
-`CLAUDE.md` as the project instructions file, so one file serves them all.
-Tracked config: @claude/CLAUDE.md (global instructions, symlinked to both
-`~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`), @claude/settings.json,
-@codex/hooks.json, @gemini/settings.json, @matilda/system-defaults.json.
+All of Claude Code, Codex CLI, Gemini CLI and Matilda Code read `CLAUDE.md` as
+the project instructions file, so one file serves them all. Tracked config:
+@claude/CLAUDE.md (global instructions, symlinked to both `~/.claude/CLAUDE.md`
+and `~/.codex/AGENTS.md`), @claude/settings.json, @codex/hooks.json,
+@gemini/settings.json, @matilda/system-defaults.json.
 
 ### Personal skills
 
@@ -193,10 +193,9 @@ Anthropic-compatible surface; put their keys in the untracked mise env.
 
 A caller that passes no `--profile` (and no `AGENT_PROFILE`) gets the registry's
 `default`, which is the one line to change when the subscription provider
-changes. Options are namespaced per runner (`--claude-*`, `--codex-*`,
-`--grok-*`) and a mismatched one is refused, not dropped. `--bypass-permissions`
-is the deliberate exception --- runner-agnostic, so an unattended caller need
-not know its runner.
+changes. Options are namespaced per runner (`--claude-*`, `--codex-*`) and a
+mismatched one is refused, not dropped. `--bypass-permissions` is the deliberate
+exception --- runner-agnostic, so an unattended caller need not know its runner.
 
 ```sh
 agent-run --profile claude-sub --model sonnet \
@@ -223,10 +222,6 @@ Both headers have the detail.
   deliberately untracked; set `project_doc_fallback_filenames = ["CLAUDE.md"]`
   there on each machine. There is no shared Codex profile: the `oy` alias just
   selects full-access mode.
-- **Grok Build** --- installed via mise's aqua backend so it's pinned rather
-  than self-updating. `grok login --device-auth` works headless. Reads this
-  repo's `CLAUDE.md` and Claude Code skills with no extra config; `grok inspect`
-  prints what it found.
 - **Matilda Code** --- `~/.matilda/settings.json` is Matilda's own; the portable
   half is @matilda/system-defaults.json, read in place (see the `[env]` comment
   in @mise/config.toml). Keep that file in Matilda's exact byte format, stamp

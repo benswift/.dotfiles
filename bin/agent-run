@@ -17,9 +17,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 DEFAULT_CONFIG = Path("~/.config/agent-run/profiles.toml").expanduser()
-RUNNERS = {"claude", "codex", "grok"}
+RUNNERS = {"claude", "codex"}
 
-# CLI options only one runner understands. Passing a Claude flag to a Grok
+# CLI options only one runner understands. Passing a Claude flag to a Codex
 # profile is a misunderstanding, and the silent version of that mistake is a
 # scheduled job running without the permission flag its author thought it had
 # set --- so the dispatcher refuses rather than dropping the option.
@@ -30,7 +30,6 @@ RUNNER_OPTIONS: dict[str, tuple[str, ...]] = {
         "claude_effort",
     ),
     "codex": ("codex_sandbox",),
-    "grok": ("grok_permission_mode", "grok_effort", "grok_output_format"),
 }
 
 
@@ -132,17 +131,12 @@ def build_command(
     claude_effort: str,
     codex_sandbox: str,
     environ: dict[str, str],
-    grok_permission_mode: str = "",
-    grok_effort: str = "",
-    grok_output_format: str = "",
     bypass_permissions: bool = False,
 ) -> list[str]:
     """Translate the common headless invocation into the selected CLI."""
     if bypass_permissions:
         if profile.runner == "claude":
             claude_dangerously_skip_permissions = True
-        elif profile.runner == "grok":
-            grok_permission_mode = grok_permission_mode or "bypassPermissions"
         else:
             # Codex spells this as a sandbox profile rather than a permission
             # prompt, so this is a translation to the nearest equivalent rather
@@ -151,7 +145,7 @@ def build_command(
             # its profile's runner, and refusing here left the one caller that
             # needs that --- a cron job whose runner is a drop-in away from
             # changing --- with no portable way to spell it. An explicit
-            # --codex-sandbox still wins, as an explicit grok mode does above.
+            # --codex-sandbox still wins.
             codex_sandbox = codex_sandbox or "danger-full-access"
     if profile.runner == "claude":
         command = [environ.get("CLAUDE_BIN", "claude")]
@@ -165,21 +159,6 @@ def build_command(
         if claude_disallowed_tools:
             command.append(f"--disallowedTools={claude_disallowed_tools}")
         command.append(prompt)
-        return command
-
-    if profile.runner == "grok":
-        command = [environ.get("GROK_BIN", "grok")]
-        if model:
-            command.extend(("--model", model))
-        if grok_permission_mode:
-            command.extend(("--permission-mode", grok_permission_mode))
-        if grok_effort:
-            command.extend(("--effort", grok_effort))
-        if grok_output_format:
-            command.extend(("--output-format", grok_output_format))
-        # -p takes the prompt as its value and makes the run single-turn; the
-        # working directory comes from the child process, as it does for claude.
-        command.extend(("-p", prompt))
         return command
 
     command = [environ.get("CODEX_BIN", "codex"), "exec"]
@@ -222,9 +201,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--claude-disallowed-tools", default="")
     parser.add_argument("--claude-effort", default="")
     parser.add_argument("--codex-sandbox", default="")
-    parser.add_argument("--grok-permission-mode", default="")
-    parser.add_argument("--grok-effort", default="")
-    parser.add_argument("--grok-output-format", default="")
     # Runner-agnostic: lets an unattended consumer say "never stop to ask"
     # without knowing which runner its profile selects.
     parser.add_argument("--bypass-permissions", action="store_true")
@@ -284,9 +260,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             claude_effort=args.claude_effort,
             codex_sandbox=args.codex_sandbox,
             environ=child_env,
-            grok_permission_mode=args.grok_permission_mode,
-            grok_effort=args.grok_effort,
-            grok_output_format=args.grok_output_format,
             bypass_permissions=args.bypass_permissions,
         )
         return subprocess.run(command, cwd=cwd, env=child_env, check=False).returncode
