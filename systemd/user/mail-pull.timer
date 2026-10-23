@@ -2,8 +2,8 @@
 Description=Pull mail into weddle's mirror every five minutes
 
 [Timer]
-# daysy's own mailsync cadence. A run still going when the next is due is
-# skipped, not doubled up, so a slow Exchange day needs no lock.
+# daysy's own mailsync cadence. systemd skips a tick while the last run is
+# still going, so a slow Exchange day needs no lock.
 OnCalendar=*:00/5
 Persistent=true
 Unit=mail-pull.service

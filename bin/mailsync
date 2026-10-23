@@ -36,10 +36,9 @@ for cmd in mbsync mu; do
     fi
 done
 
-# Every Inbox in ~/.mbsyncrc must exist before syncing. A missing maildir is
-# a moved or unrestored tree, not an empty mailbox, and Sync All would treat
-# its absence as something to reconcile --- so refuse, loudly, so the timer
-# pages instead of mail quietly stopping.
+# Every Inbox in ~/.mbsyncrc must exist before syncing. A missing maildir
+# means a moved or unrestored tree, which Sync All would try to reconcile
+# with the server, so exit non-zero and let the timer page.
 missing=0
 while read -r _ inbox; do
     inbox="${inbox/#\~/$HOME}"

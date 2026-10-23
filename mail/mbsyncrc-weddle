@@ -3,10 +3,10 @@
 # Sync Pull with Near-only Create/Remove/Expunge never writes to the server,
 # so it can't race daysy, the one full client (README.md).
 #
-# Paths are absolute under /data/Maildir-imap, never via ~/Maildir: that
-# symlink once pointed at daysy's rclone mirror, and mbsync must never run
-# over a tree another host writes into. No MaxSize: in mbsyncrc it only
-# stops doomed uploads, but here it would silently skip large downloads.
+# Paths are absolute under /data/Maildir-imap rather than via ~/Maildir, so
+# repointing that symlink can never aim mbsync at a tree another host writes
+# into. No MaxSize: in mbsyncrc it stops doomed uploads, but here it would
+# skip large downloads without a word.
 
 IMAPAccount personal
 Host imap.fastmail.com
