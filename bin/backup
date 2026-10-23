@@ -39,9 +39,9 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS] [SECTION...]
 
-Sync ~/Documents, ~/Zotero and ~/Maildir to remote storage using rclone. The hourly
-push-to-weddle launchd job runs this; weddle's read-only Maildir mirror is
-only as fresh as the last run.
+Sync ~/Documents, ~/Zotero and ~/Maildir/anu-archive to remote storage using
+rclone. The hourly push-to-weddle launchd job runs this. The rest of weddle's
+Maildir comes from the servers (mail/mbsyncrc-weddle), not from here.
 
 Sections: documents, zotero, mail. With none named, all three are synced.
 Naming one is a deliberate act, so it runs even on a metered network:
@@ -157,14 +157,15 @@ if [[ "$DRY_RUN" == "true" ]]; then
   echo "DRY RUN MODE - no changes will be made"
 fi
 
-# Mail first: it is the small, time-sensitive section, and a slow Documents
-# listing would otherwise hold fresh mail back from weddle's mirror.
+# Only anu-archive: it is local-only (mail ANU's retention expunged from the
+# server), so the servers can't supply it. Everything else in weddle's Maildir
+# is mbsync's, and an rclone sync of the whole tree would wipe its state.
 if wants mail; then
-  echo "=== Maildir ==="
-  echo "Syncing $HOME/Maildir to $REMOTE:Maildir"
+  echo "=== Maildir/anu-archive ==="
+  echo "Syncing $HOME/Maildir/anu-archive to $REMOTE:Maildir/anu-archive"
   echo
   rclone "${BASE_ARGS[@]}" --exclude ".DS_Store" \
-    "$HOME/Maildir" "$REMOTE:Maildir"
+    "$HOME/Maildir/anu-archive" "$REMOTE:Maildir/anu-archive"
   # weddle's mu-index.path watches this to re-index the mirror. Separate from
   # .last-push below, which must only vouch for a full run.
   if [[ "$DRY_RUN" != "true" ]]; then
