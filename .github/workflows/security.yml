@@ -27,7 +27,6 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
-          version: '0.13.2'
           enable-cache: false
       - name: Install fd
         # mail-utils' attachment completion shells out to fd, and its tests
@@ -38,7 +37,7 @@ jobs:
           sudo ln -s "$(command -v fdfind)" /usr/local/bin/fd
       - name: Lint Python and provisioning shell scripts
         run: |
-          uvx ruff==0.17.1 check .
+          uvx ruff check .
           shellcheck bin/pi-kiosk bin/check-secrets lib/pi-kiosk/kiosk-browser lib/pi-kiosk/kiosk-set-url lib/pi-kiosk/kiosk-tailscale lib/pi-kiosk/autostart
       - name: Test and type-check packages
         run: |
@@ -62,7 +61,6 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
-          version: '0.13.2'
           enable-cache: false
       - run: uv run --script scripts/audit-locks.py
   secrets:
