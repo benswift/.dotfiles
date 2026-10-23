@@ -13,7 +13,7 @@ from mail_utils.accounts import Account, get_account_config
 from mail_utils.compose import (
     build_email,
     choose_reply_target,
-    combine_cc,
+    join_addresses,
     open_neomutt_compose,
     parse_reply_info,
     read_signature,
@@ -43,17 +43,20 @@ def main(
         Account, typer.Option("--from", "-f", help="Account to send from")
     ],
     to: Annotated[
-        str | None,
-        typer.Option(help="Recipient (supports {{field}} templates)"),
+        list[str] | None,
+        typer.Option(help="Recipient, repeatable (supports {{field}} templates)"),
     ] = None,
     cc: Annotated[
-        str | None,
+        list[str] | None,
         typer.Option(
-            "--cc", "-c", help="CC recipient (supports templates in batch mode)"
+            "--cc",
+            "-c",
+            help="CC recipient, repeatable (supports templates in batch mode)",
         ),
     ] = None,
     cc_all: Annotated[
-        str | None, typer.Option("--cc-all", help="CC recipient added to all emails")
+        list[str] | None,
+        typer.Option("--cc-all", help="CC recipient added to all emails, repeatable"),
     ] = None,
     subject: Annotated[
         str | None, typer.Option("--subject", "-s", help="Subject line")
@@ -93,8 +96,10 @@ def main(
         # Interactive compose (opens neomutt)
         mail-compose -f anu --to colleague@example.com -s "Hello" -b "Body"
 
-        # Direct send
-        mail-compose -f anu --to colleague@example.com -s "Hello" -b "Body" --send
+        # Direct send (--to, --cc and --cc-all repeat; each also takes a
+        # comma-separated list)
+        mail-compose -f anu --to colleague@example.com -c a@example.com \\
+            -c b@example.com -s "Hello" -b "Body" --send
 
         # Reply to an existing message (auto-fills to/cc/subject)
         msg=$(mu find --fields=l "from:chris subject:Meeting" | head -1)
@@ -133,11 +138,12 @@ def main(
             raise typer.Exit(1)
         reply_info = parse_reply_info(reply_to)
         if not to:
-            to = choose_reply_target(reply_info, config.from_addr)
+            target = choose_reply_target(reply_info, config.from_addr)
+            to = [target] if target else None
         if not subject:
             subject = reply_info["subject"]
         if not cc and reply_info["cc"]:
-            cc = reply_info["cc"]
+            cc = [reply_info["cc"]]
 
     if data:
         if str(data) == "-":
@@ -182,11 +188,15 @@ def main(
 
         sent, failed = 0, 0
         for i, record in enumerate(records, 1):
-            email_to = substitute_template(to, record)
+            email_to = join_addresses(*(substitute_template(t, record) for t in to))
             email_subject = substitute_template(subject, record)
             email_content = substitute_template(email_body, record)
-            templated_cc = substitute_template(cc, record) if cc else None
-            email_cc = combine_cc(templated_cc, cc_all)
+            templated_cc = [substitute_template(c, record) for c in cc or []]
+            email_cc = join_addresses(*templated_cc, *(cc_all or []))
+            if not email_to:
+                failed += 1
+                console.print(f"[red]Record {i}: --to rendered empty[/red]")
+                continue
 
             msg = build_email(
                 config.from_addr,
@@ -214,17 +224,19 @@ def main(
             console.print(f"Sent: {sent}, Failed: {failed}")
 
     else:
-        if not to:
+        to_header = join_addresses(*(to or []))
+        cc_header = join_addresses(*(cc or []), *(cc_all or []))
+        if not to_header:
             console.print("[red]--to is required[/red]")
             raise typer.Exit(1)
 
         if send or dry_run:
             msg = build_email(
                 config.from_addr,
-                to,
+                to_header,
                 subject or "",
                 email_body,
-                combine_cc(cc, cc_all),
+                cc_header,
                 attach,
                 reply_to,
                 sig,
@@ -235,17 +247,17 @@ def main(
                 if dry_run:
                     console.print(f"{message}\n{msg.as_string()}")
                 else:
-                    console.print(f"Sent to {to}")
+                    console.print(f"Sent to {to_header}")
             else:
                 console.print(f"[red]{message}[/red]")
                 raise typer.Exit(1)
         else:
             open_neomutt_compose(
                 account,
-                to,
+                to_header,
                 subject or "",
                 email_body,
-                combine_cc(cc, cc_all),
+                cc_header,
                 attach,
                 reply_to,
                 sig,

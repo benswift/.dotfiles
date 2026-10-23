@@ -12,7 +12,7 @@ from mail_utils.compose import (
     append_to_sent,
     build_email,
     choose_reply_target,
-    combine_cc,
+    join_addresses,
     open_neomutt_compose,
     parse_reply_info,
     read_signature,
@@ -152,22 +152,28 @@ Body"""
         assert result == "Body"
 
 
-class TestCombineCc:
-    def test_combines_both_cc(self):
-        result = combine_cc("a@example.com", "b@example.com")
+class TestJoinAddresses:
+    def test_joins_separate_values(self):
+        result = join_addresses("a@example.com", "b@example.com")
         assert result == "a@example.com, b@example.com"
 
-    def test_returns_cc_when_no_cc_all(self):
-        result = combine_cc("a@example.com", None)
-        assert result == "a@example.com"
+    def test_splits_comma_separated_values(self):
+        result = join_addresses("a@example.com, b@example.com", "c@example.com")
+        assert result == "a@example.com, b@example.com, c@example.com"
 
-    def test_returns_cc_all_when_no_cc(self):
-        result = combine_cc(None, "b@example.com")
-        assert result == "b@example.com"
+    def test_keeps_commas_inside_quoted_display_names(self):
+        result = join_addresses('"Holt, Matthew" <m@example.com>', "b@example.com")
+        assert result == '"Holt, Matthew" <m@example.com>, b@example.com'
 
-    def test_returns_none_when_both_empty(self):
-        result = combine_cc(None, None)
-        assert result is None
+    def test_drops_repeated_addresses_case_insensitively(self):
+        result = join_addresses("Alice <alice@example.com>", "ALICE@example.com")
+        assert result == "Alice <alice@example.com>"
+
+    def test_skips_none_and_empty_values(self):
+        assert join_addresses(None, "", "b@example.com") == "b@example.com"
+
+    def test_returns_none_when_nothing_given(self):
+        assert join_addresses(None, None) is None
 
 
 class TestSendEmail:
@@ -408,6 +414,53 @@ class TestComposeCLI:
         assert "sup@example.com" in result.stdout
         assert "Re: Student One" in result.stdout
         assert "Dear Sup" in result.stdout
+
+    def test_repeated_cc_flags_all_reach_the_header(self):
+        result = self.runner.invoke(
+            app,
+            [
+                "-f",
+                "personal",
+                "--to",
+                "alice@example.com",
+                "-c",
+                "bob@example.com",
+                "-c",
+                '"Holt, Matthew" <matt@example.com>',
+                "--cc-all",
+                "carol@example.com",
+                "-s",
+                "Hi",
+                "-b",
+                "Body",
+                "--dry-run",
+            ],
+        )
+        assert result.exit_code == 0
+        assert (
+            'Cc: bob@example.com, "Holt, Matthew" <matt@example.com>,' in result.stdout
+        )
+        assert "carol@example.com" in result.stdout
+
+    def test_repeated_to_flags_all_reach_the_header(self):
+        result = self.runner.invoke(
+            app,
+            [
+                "-f",
+                "personal",
+                "--to",
+                "alice@example.com",
+                "--to",
+                "bob@example.com",
+                "-s",
+                "Hi",
+                "-b",
+                "Body",
+                "--dry-run",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "To: alice@example.com, bob@example.com" in result.stdout
 
 
 def _write_eml(path: Path, **headers: str) -> Path:

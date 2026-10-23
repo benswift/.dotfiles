@@ -11,7 +11,7 @@ import sys
 import tempfile
 import time
 from email.message import EmailMessage
-from email.utils import formatdate, make_msgid, parseaddr
+from email.utils import formataddr, formatdate, getaddresses, make_msgid, parseaddr
 from pathlib import Path
 from typing import IO, Any
 
@@ -352,7 +352,18 @@ def strip_frontmatter(content: str) -> str:
     return FRONTMATTER_PATTERN.sub("", content)
 
 
-def combine_cc(cc: str | None, cc_all: str | None) -> str | None:
-    """Combine per-message CC and global CC recipients."""
-    parts = [addr for addr in (cc, cc_all) if addr]
-    return ", ".join(parts) if parts else None
+def join_addresses(*values: str | None) -> str | None:
+    """Merge address lists into one header value, dropping repeats.
+
+    Each value may itself be a comma-separated list. Parsing goes through
+    getaddresses rather than a split on "," so that quoted display names
+    like "Holt, Matthew" <m@example.com> survive intact.
+    """
+    seen: set[str] = set()
+    merged: list[str] = []
+    for name, addr in getaddresses([v for v in values if v]):
+        if not addr or addr.lower() in seen:
+            continue
+        seen.add(addr.lower())
+        merged.append(formataddr((name, addr)))
+    return ", ".join(merged) if merged else None
