@@ -27,7 +27,6 @@ extend-include = [
   "bin/ai-tropes",
   "bin/dmarc-summary",
   "bin/hud",
-  "bin/icloud-export",
   "bin/ingest-claude-logs",
   "bin/pangram",
   "bin/s2",
