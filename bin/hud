@@ -16,6 +16,7 @@ import termios
 import time
 import tty
 from datetime import datetime
+from pathlib import Path
 
 import psutil
 from rich.console import Console, Group
@@ -57,7 +58,7 @@ LISTENER_NAMES = {"extempore"}
 CPU_HOG_THRESHOLD = 10.0
 MAX_CPU_HOGS = 8
 
-HOME = os.path.expanduser("~")
+HOME = str(Path.home())
 
 # Below this terminal width, drop the horizontal tables for a stacked layout
 # that gives each process's cwd its own full-width line (phone terminals).
@@ -112,14 +113,14 @@ def fit_path(path: str, budget: int) -> str:
 
 def zellij_session_name(cmdline: list[str]) -> str | None:
     """Return the session name if cmdline is a `zellij --server <socket>` invocation."""
-    if not cmdline or os.path.basename(cmdline[0]) != "zellij":
+    if not cmdline or Path(cmdline[0]).name != "zellij":
         return None
     if "--server" not in cmdline:
         return None
     idx = cmdline.index("--server")
     if idx + 1 >= len(cmdline):
         return None
-    return os.path.basename(cmdline[idx + 1])
+    return Path(cmdline[idx + 1]).name
 
 
 def safe_cwd(p: psutil.Process) -> str:
@@ -147,7 +148,7 @@ def proc_facts(p: psutil.Process) -> dict:
         cmdline = p.cmdline()
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
         cmdline = []
-    name = os.path.basename(cmdline[0]) if cmdline else ""
+    name = Path(cmdline[0]).name if cmdline else ""
     display_name = name or p.name()
 
     stray_label = None
