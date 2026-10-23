@@ -17,15 +17,16 @@
 # even in a systemd unit's bare environment --- so restic must be the shim,
 # which the units' PATH ensures.
 #
-# Much of this is a mirror (daysy's Documents, Zotero and Maildir arrive via
-# bin/backup), so a file deleted on daysy is gone from the next snapshot.
-# Retention depth is the protection, not the snapshot.
+# Much of this is a mirror (daysy's Documents and Zotero arrive via bin/backup,
+# mail via mail-pull.service), so a file deleted on daysy or the server is gone
+# from the next snapshot. Retention depth is the protection, not the snapshot.
 
 set -euo pipefail
 
 SOURCES=(
     /data/backup
     /data/Maildir
+    /data/Maildir-imap
     "$HOME/claude-logs"
     "$HOME/codex-logs"
     "$HOME/.nb"
