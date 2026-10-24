@@ -46,7 +46,7 @@ OAuth 2.0 authorization-code flow. A one-time browser consent (stdlib `http.serv
 
 ## Secrets
 
-client_id/client_secret and the refresh token live in the untracked `[env]` table in `~/.config/mise/config.local.toml`, which mise exports into every shell (fnox and `op://` were dropped in July 2026). The access token is cached locally (e.g. under $XDG_STATE_HOME) and refreshed on demand. Nothing secret in a tracked file.
+client_id/client_secret and the refresh token live in the untracked `[env]` table in `~/.config/mise/config.local.toml`, which mise exports into every shell. The access token is cached locally (e.g. under $XDG_STATE_HOME) and refreshed on demand. Nothing secret in a tracked file.
 
 ## CLI surface
 
