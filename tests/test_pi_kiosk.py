@@ -20,6 +20,11 @@ import yaml
 
 SCRIPT = Path(__file__).resolve().parents[1] / "bin" / "pi-kiosk"
 
+# pi-kiosk refuses to run off Linux (it flashes raw devices), even in --test.
+pytestmark = pytest.mark.skipif(
+    not sys.platform.startswith("linux"), reason="pi-kiosk is Linux only"
+)
+
 
 @pytest.fixture
 def public_key(tmp_path: Path) -> Path:
