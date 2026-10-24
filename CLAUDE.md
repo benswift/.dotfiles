@@ -151,8 +151,10 @@ Each script's header has the detail. Notable ones:
   `nb show`, via lumis. Add a language to `PARSERS` in `lumis-parsers` if it's
   previewed often; add a `case` override in `ts-cat` if the extension doesn't
   map to a parser (as with `.mdx`)
-- `kiosk` --- flash an SD card booting a Raspberry Pi into a fullscreen
-  Chromium kiosk, with wifi and Tailscale baked in (cloud-init, RPi OS Trixie+)
+- `kiosk` --- provision a fullscreen Chromium kiosk with wifi and Tailscale
+  baked in (cloud-init): `--target pi` flashes an SD card, `--target wyse`
+  network-installs a Dell Wyse thin client cabled to a spare NIC (Debian
+  netboot, on weddle's `eno1`)
 
 `nb` is a pinned `github:xwmx/nb` mise tool; @bin/nb is the launcher that makes
 bare `nb` resolve the pin in non-interactive agent shells. @tests/test_nb.py

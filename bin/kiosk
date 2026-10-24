@@ -1,34 +1,52 @@
 #!/usr/bin/env bash
 #
-# kiosk --- flash an SD card that boots a Raspberry Pi straight into a
-# fullscreen Chromium kiosk at a given URL, joined to Tailscale.
+# kiosk --- provision a machine that boots straight into a fullscreen
+# Chromium kiosk at a given URL, joined to Tailscale. Two targets:
 #
-# The heavy lifting is done by cloud-init, which ships on every Raspberry Pi
-# OS image since the Trixie release (Nov 2025): flash the stock desktop image,
-# then drop `user-data` and `network-config` onto the FAT32 boot partition.
-# First boot creates the user, joins the wifi, installs Tailscale, and wires
-# up a labwc session whose only job is running Chromium in kiosk mode. No SDM,
-# no chroot image surgery --- this replaces the SDM pipeline in the panic and
+#   pi    flash an SD card for a Raspberry Pi 4/5
+#   wyse  network-install a Dell Wyse 5070 thin client cabled to this machine
+#
+# Both targets end up with the same session: cloud-init creates the user,
+# joins the wifi, installs Tailscale, and wires up a labwc session whose only
+# job is running Chromium in kiosk mode (the assets in lib/kiosk/, rendered by
+# lib/kiosk/render.py). Only how the OS gets onto the disk differs.
+#
+# pi: cloud-init ships on every Raspberry Pi OS image since the Trixie release
+# (Nov 2025), so this flashes the stock desktop image and drops `user-data` and
+# `network-config` onto the FAT32 boot partition. No SDM, no chroot image
+# surgery --- this replaces the SDM pipeline in the panic and
 # imaginative-restoration repos, from which the kiosk session config is ported.
-#
-#   kiosk --url https://example.com --hostname lobby-pi \
-#            --wifi-ssid MyNet --wifi-password secret \
-#            --tailscale-authkey tskey-auth-... --ssh-key ~/.ssh/id_ed25519.pub
-#
 # The kiosk URL lives at /kiosk-url.txt on the boot partition, so it can be
-# changed later by mounting the card on any machine, or on the running Pi
-# with `sudo kiosk-set-url <url>` (e.g. over `tailscale ssh`).
+# changed by mounting the card on any machine.
+#
+# wyse: the box's eMMC is soldered on, so it installs over the network instead.
+# Cable the Wyse straight into a spare NIC here and run this; it serves DHCP,
+# DNS and TFTP on that NIC (NAT to this machine's uplink), the Wyse PXE-boots
+# an unattended Debian install (lib/kiosk/wyse/preseed.cfg), late_command
+# seeds cloud-init with the same user-data a Pi gets, and first boot phones
+# home. One box per run. lib/kiosk/wyse/provision.sh has the mechanism, and
+# what to set once in each box's BIOS.
+#
+#   kiosk --target pi --url https://example.com --hostname lobby-pi \
+#         --wifi-ssid MyNet --wifi-password secret \
+#         --tailscale-authkey tskey-auth-... --ssh-key ~/.ssh/id_ed25519.pub
+#   kiosk --target wyse --interface eno1 --url https://example.com \
+#         --hostname lobby-1 --tailscale-tag tag:signage \
+#         --ssh-key ~/.ssh/id_ed25519.pub
+#
+# On either, `sudo kiosk-set-url <url>` changes the URL on the running kiosk
+# (e.g. over `tailscale ssh`).
 #
 # Notes:
-#   - Pi 4/5 are the supported targets. The image boots a Pi 3, but 1 GB of
-#     RAM plus a known Chromium-on-Pi-3 regression make that best-effort.
-#   - Tailscale is installed on first boot, so the Pi needs network then
+#   - The Pi image boots a Pi 3, but 1 GB of RAM plus a known Chromium-on-Pi-3
+#     regression make that best-effort.
+#   - Tailscale is installed on first boot, so the kiosk needs network then
 #     (it's an online kiosk; it needs network anyway).
-#   - With --tailscale-tag, the auth key is minted per card through the
+#   - With --tailscale-tag, the auth key is minted per kiosk through the
 #     Tailscale OAuth client in TS_OAUTH_CLIENT_ID/TS_OAUTH_CLIENT_SECRET
 #     (scopes: auth keys + devices core, owning the tag), and any existing
-#     node with the same name and tag is removed once the card is written.
-#     Only the single-use key goes on the card, never the client secret.
+#     node with the same name and tag is removed once the kiosk is written.
+#     Only the single-use key goes on the kiosk, never the client secret.
 #     Tagged nodes never expire, so the kiosk stays on the tailnet.
 #   - A watchdog timer restarts Chromium when it is showing an error page or
 #     a crashed renderer rather than the kiosk URL's site.
@@ -52,15 +70,17 @@ die() {
 
 usage() {
     cat <<EOF
-Usage: kiosk [OPTIONS]
+Usage: kiosk --target pi|wyse [OPTIONS]
 
-Flash an SD card with Raspberry Pi OS configured as a Chromium web kiosk.
+Provision a Raspberry Pi (SD card) or Dell Wyse thin client (network install)
+as a Chromium web kiosk.
 
 Required:
+    --target <pi|wyse>           What to provision
     --url <url>                  URL to display in kiosk mode
 
 Identity:
-    --hostname <name>            Hostname (default: pi-kiosk)
+    --hostname <name>            Hostname (default: pi-kiosk / wyse-kiosk)
     --username <user>            Admin account name (default: kiosk)
     --password <pass>            Optional console password (default: locked)
     --ssh-key <path>             Required SSH public key; SSH is key-only
@@ -77,20 +97,27 @@ Network:
     --tailscale-tag <tag[,tag]>  Mint a single-use key with these tags via the
                                  OAuth client (instead of --tailscale-authkey)
 
+Target:
+    --device <dev>               pi: SD card device (default: auto-detect)
+    --interface <nic>            wyse: NIC the Wyse is cabled to (required)
+
 Other:
-    --device <dev>               SD card device (default: auto-detect)
-    --test                       Generate config into a temp dir; don't flash
+    --test                       Generate config into a temp dir; don't
+                                 flash or serve
 
 Examples:
-    kiosk --url https://panic.fly.dev/ --hostname panic-lobby \\
+    kiosk --target pi --url https://panic.fly.dev/ --hostname panic-lobby \\
         --wifi-ssid MyNet --wifi-password secret \\
         --tailscale-authkey tskey-auth-... --ssh-key ~/.ssh/id_ed25519.pub
 
-    kiosk --url https://slop.university/signage/portrait/ \\
+    kiosk --target pi --url https://slop.university/signage/portrait/ \\
         --hostname slopu-kiosk-1 --wifi-ssid ANU-Secure \\
         --wifi-enterprise-user "\$RPI_SSID" --wifi-enterprise-pass "\$RPI_PASSWORD" \\
         --wifi-ca-cert /path/to/institution-ca.pem --wifi-domain-suffix radius.example.edu \\
         --tailscale-tag tag:signage --ssh-key ~/.ssh/id_ed25519.pub
+
+    kiosk --target wyse --interface eno1 --url https://example.com/ \\
+        --hostname lobby-1 --tailscale-tag tag:signage --ssh-key ~/.ssh/id_ed25519.pub
 EOF
     exit "${1:-1}"
 }
@@ -250,7 +277,7 @@ ts_remove_stale_nodes() {
 # Serialize configuration through Python; NUL-delimited stdin keeps values out
 # of executable source and preserves quotes, newlines and shell metacharacters.
 generate_config() {
-    printf '%s\0' "$hostname" "$username" "$passwd_hash" "$lock_passwd" \
+    printf '%s\0' "$target" "$server" "$hostname" "$username" "$passwd_hash" "$lock_passwd" \
         "$timezone" "$ssh_public_key" "$url" "$wifi_ssid" "$wifi_password" \
         "$wifi_enterprise_user" "$wifi_enterprise_pass" "$wifi_country" \
         "$wifi_ca_cert" "$wifi_domain_suffix" "$tailscale_authkey" |
@@ -258,9 +285,65 @@ generate_config() {
 }
 
 # ---------------------------------------------------------------------------
+# The two targets. Both run inside main and read its locals (bash scoping is
+# dynamic), so each sees the validated configuration without a parameter list.
+
+provision_pi() {
+    [[ -n "$device" ]] || device=$(find_sd_card)
+    [[ -b "$device" ]] || die "not a block device: $device"
+
+    warn "WARNING: this will ERASE all data on $device"
+    lsblk -d -o NAME,SIZE,MODEL "$device"
+    local confirm
+    read -r -p "Continue? (yes/no): " confirm
+    [[ "$confirm" == yes ]] || { echo "Aborted."; rm -rf "$work"; exit 0; }
+
+    # Mint before erasing anything, so an API failure leaves the card as it was.
+    mint_tailscale_key
+    generate_config "$work"
+
+    local image
+    image=$(fetch_image)
+    flash_image "$image" "$device"
+
+    # --- drop cloud-init config on the boot partition ---------------------
+    local part mnt
+    part=$(boot_partition "$device")
+    mnt=$(mktemp -d -t kiosk-boot-XXXXX)
+    sudo mount "$part" "$mnt"
+    sudo cp "$work/user-data" "$mnt/user-data"
+    [[ -f "$work/network-config" ]] && sudo cp "$work/network-config" "$mnt/network-config"
+    sudo cp "$work/kiosk-url.txt" "$mnt/kiosk-url.txt"
+    sudo umount "$mnt"
+    rmdir "$mnt"
+    rm -rf "$work"
+    sync
+
+    [[ -z "$ts_bearer" ]] || ts_remove_stale_nodes "$ts_bearer" "$tailscale_tag" "$hostname"
+
+    info "✓ SD card ready --- eject it and boot the Pi."
+    echo
+    echo "First boot takes a few minutes (cloud-init + Tailscale install)."
+    if [[ -n "$tailscale_authkey" ]]; then
+        echo "Then: tailscale ssh $username@$hostname"
+    fi
+    echo "Change the URL later with: sudo kiosk-set-url <url>  (or edit kiosk-url.txt on the card)"
+}
+
+# shellcheck source=lib/kiosk/wyse/provision.sh
+source "$(dirname "$0")/../lib/kiosk/wyse/provision.sh"
+
+mint_tailscale_key() {
+    [[ -n "$tailscale_tag" ]] || return 0
+    ts_bearer=$(ts_token) || die "Tailscale OAuth token request failed"
+    tailscale_authkey=$(ts_mint_authkey "$ts_bearer" "$tailscale_tag" "$hostname") ||
+        die "Tailscale auth key mint failed (does the OAuth client own $tailscale_tag?)"
+    info "✓ Minted single-use Tailscale auth key"
+}
 
 main() {
-    local url="" hostname="pi-kiosk" username="kiosk" password=""
+    local target="" server="" interface=""
+    local url="" hostname="" username="kiosk" password=""
     local wifi_ssid="" wifi_password="" wifi_enterprise_user="" wifi_enterprise_pass=""
     local wifi_ca_cert="" wifi_domain_suffix=""
     local wifi_country="AU" tailscale_authkey="" tailscale_tag="" ssh_key_file="" device="" test_mode=false
@@ -282,7 +365,9 @@ main() {
         --wifi-country) wifi_country="$2"; shift 2 ;;
         --tailscale-authkey) tailscale_authkey="$2"; shift 2 ;;
         --tailscale-tag) tailscale_tag="$2"; shift 2 ;;
+        --target) target="$2"; shift 2 ;;
         --device) device="$2"; shift 2 ;;
+        --interface) interface="$2"; shift 2 ;;
         --test) test_mode=true; shift ;;
         -h | --help) usage 0 ;;
         *) die "unknown option: $1 (see --help)" ;;
@@ -290,7 +375,22 @@ main() {
     done
 
     # --- validation ------------------------------------------------------
-    [[ "$OSTYPE" == linux-gnu* ]] || die "Linux only (needs lsblk/dd on raw devices)"
+    [[ "$OSTYPE" == linux-gnu* ]] || die "Linux only (needs raw devices or a spare NIC)"
+    case "$target" in
+    pi)
+        hostname="${hostname:-pi-kiosk}"
+        [[ -z "$interface" ]] || die "--interface is for --target wyse"
+        ;;
+    wyse)
+        hostname="${hostname:-wyse-kiosk}"
+        [[ -z "$device" ]] || die "--device is for --target pi"
+        [[ "$test_mode" == true || -n "$interface" ]] ||
+            die "--target wyse needs --interface (the NIC the Wyse is cabled to)"
+        server="$WYSE_SERVER_IP:$WYSE_HTTP_PORT"
+        ;;
+    "") die "--target is required (pi or wyse)" ;;
+    *) die "unknown --target: $target (pi or wyse)" ;;
+    esac
     [[ -n "$url" ]] || die "--url is required"
     [[ "$url" =~ ^https?:// ]] || die "invalid URL: $url"
     if [[ -n "$wifi_ssid" ]]; then
@@ -336,7 +436,7 @@ main() {
     timezone=$(timedatectl show --property=Timezone --value 2>/dev/null || echo UTC)
 
     # --- show config -----------------------------------------------------
-    info "kiosk"
+    info "kiosk ($target)"
     echo "  URL:       $url"
     echo "  Hostname:  $hostname"
     echo "  User:      $username"
@@ -365,53 +465,11 @@ main() {
         exit 0
     fi
 
-    # --- flash -----------------------------------------------------------
-    [[ -n "$device" ]] || device=$(find_sd_card)
-    [[ -b "$device" ]] || die "not a block device: $device"
-
-    warn "WARNING: this will ERASE all data on $device"
-    lsblk -d -o NAME,SIZE,MODEL "$device"
-    local confirm
-    read -r -p "Continue? (yes/no): " confirm
-    [[ "$confirm" == yes ]] || { echo "Aborted."; rm -rf "$work"; exit 0; }
-
-    # Mint before erasing anything, so an API failure leaves the card as it was.
     local ts_bearer=""
-    if [[ -n "$tailscale_tag" ]]; then
-        ts_bearer=$(ts_token) || die "Tailscale OAuth token request failed"
-        tailscale_authkey=$(ts_mint_authkey "$ts_bearer" "$tailscale_tag" "$hostname") ||
-            die "Tailscale auth key mint failed (does the OAuth client own $tailscale_tag?)"
-        info "✓ Minted single-use Tailscale auth key"
-    fi
-
-    generate_config "$work"
-
-    local image
-    image=$(fetch_image)
-    flash_image "$image" "$device"
-
-    # --- drop cloud-init config on the boot partition ---------------------
-    local part mnt
-    part=$(boot_partition "$device")
-    mnt=$(mktemp -d -t kiosk-boot-XXXXX)
-    sudo mount "$part" "$mnt"
-    sudo cp "$work/user-data" "$mnt/user-data"
-    [[ -f "$work/network-config" ]] && sudo cp "$work/network-config" "$mnt/network-config"
-    sudo cp "$work/kiosk-url.txt" "$mnt/kiosk-url.txt"
-    sudo umount "$mnt"
-    rmdir "$mnt"
-    rm -rf "$work"
-    sync
-
-    [[ -z "$ts_bearer" ]] || ts_remove_stale_nodes "$ts_bearer" "$tailscale_tag" "$hostname"
-
-    info "✓ SD card ready --- eject it and boot the Pi."
-    echo
-    echo "First boot takes a few minutes (cloud-init + Tailscale install)."
-    if [[ -n "$tailscale_authkey" ]]; then
-        echo "Then: tailscale ssh $username@$hostname"
-    fi
-    echo "Change the URL later with: sudo kiosk-set-url <url>  (or edit kiosk-url.txt on the card)"
+    case "$target" in
+    pi) provision_pi ;;
+    wyse) provision_wyse ;;
+    esac
 }
 
 main "$@"

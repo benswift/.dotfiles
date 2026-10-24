@@ -36,9 +36,20 @@ def public_key(tmp_path: Path) -> Path:
     return key.with_suffix(".pub")
 
 
-def generate(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def generate(
+    tmp_path: Path, *args: str, target: str = "pi"
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["bash", str(SCRIPT), "--test", "--url", "https://example.com/", *args],
+        [
+            "bash",
+            str(SCRIPT),
+            "--test",
+            "--target",
+            target,
+            "--url",
+            "https://example.com/",
+            *args,
+        ],
         env={**os.environ, "TMPDIR": str(tmp_path)},
         capture_output=True,
         text=True,
@@ -46,11 +57,24 @@ def generate(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def config(result: subprocess.CompletedProcess[str]) -> dict:
+def output_dir(result: subprocess.CompletedProcess[str]) -> Path:
     assert result.returncode == 0, result.stderr
     match = re.search(r"config generated in (\S+)", result.stdout)
     assert match is not None
-    return yaml.safe_load((Path(match[1]) / "user-data").read_text())
+    return Path(match[1])
+
+
+def config(result: subprocess.CompletedProcess[str]) -> dict:
+    return yaml.safe_load((output_dir(result) / "user-data").read_text())
+
+
+def test_requires_known_target(tmp_path: Path, public_key: Path) -> None:
+    result = generate(tmp_path, "--ssh-key", str(public_key), target="")
+    assert result.returncode != 0
+    assert "--target is required" in result.stderr
+    result = generate(tmp_path, "--ssh-key", str(public_key), target="x86")
+    assert result.returncode != 0
+    assert "unknown --target" in result.stderr
 
 
 def test_requires_public_key(tmp_path: Path) -> None:
@@ -65,14 +89,15 @@ def test_rejects_private_key(tmp_path: Path, public_key: Path) -> None:
     assert "not a private key" in result.stderr
 
 
+@pytest.mark.parametrize("target", ["pi", "wyse"])
 @pytest.mark.parametrize("password", [None, "test-console-password"])
 def test_ssh_stays_key_only(
-    tmp_path: Path, public_key: Path, password: str | None
+    tmp_path: Path, public_key: Path, password: str | None, target: str
 ) -> None:
     args = ["--ssh-key", str(public_key)]
     if password is not None:
         args.extend(["--password", password])
-    data = config(generate(tmp_path, *args))
+    data = config(generate(tmp_path, *args, target=target))
     assert data["ssh_pwauth"] is False
     user = data["users"][0]
     assert user["lock_passwd"] is (password is None)
@@ -195,13 +220,98 @@ def test_wifi_and_tailscale_values_stay_data(tmp_path: Path, public_key: Path) -
     assert ["/usr/local/bin/kiosk-tailscale"] in data["runcmd"]
 
 
+@pytest.mark.parametrize("target", ["pi", "wyse"])
 @pytest.mark.parametrize("option", ["--hostname", "--username", "--wifi-country"])
 def test_rejects_invalid_system_names(
-    tmp_path: Path, public_key: Path, option: str
+    tmp_path: Path, public_key: Path, option: str, target: str
 ) -> None:
-    result = generate(tmp_path, "--ssh-key", str(public_key), option, "bad\ninjected")
+    result = generate(
+        tmp_path,
+        "--ssh-key",
+        str(public_key),
+        option,
+        "bad\ninjected",
+        target=target,
+    )
     assert result.returncode != 0
     assert "invalid" in result.stderr
+
+
+def test_target_options_do_not_cross(tmp_path: Path, public_key: Path) -> None:
+    key = ["--ssh-key", str(public_key)]
+    result = generate(tmp_path, *key, "--interface", "eno1", target="pi")
+    assert result.returncode != 0
+    assert "--interface is for --target wyse" in result.stderr
+    result = generate(tmp_path, *key, "--device", "/dev/sdz", target="wyse")
+    assert result.returncode != 0
+    assert "--device is for --target pi" in result.stderr
+
+
+def test_wyse_installs_and_seeds_the_same_session(
+    tmp_path: Path, public_key: Path
+) -> None:
+    out = output_dir(
+        generate(
+            tmp_path,
+            "--ssh-key",
+            str(public_key),
+            "--hostname",
+            "lobby-1",
+            target="wyse",
+        )
+    )
+    data = yaml.safe_load((out / "user-data").read_text())
+    pi = config(generate(tmp_path, "--ssh-key", str(public_key), target="pi"))
+    session = {
+        entry["path"]: entry["content"]
+        for entry in data["write_files"]
+        if "/labwc/" in entry["path"] or "/systemd/user/" in entry["path"]
+    }
+    assert session == {
+        entry["path"]: entry["content"]
+        for entry in pi["write_files"]
+        if "/labwc/" in entry["path"] or "/systemd/user/" in entry["path"]
+    }
+    assert not any("raspi-config" in command for command in data["runcmd"])
+    assert {"gpio", "i2c", "spi"}.isdisjoint(data["users"][0]["groups"])
+    assert data["phone_home"]["url"] == "http://192.168.242.1:8242/phone-home"
+    files = {entry["path"]: entry["content"] for entry in data["write_files"]}
+    assert 'user = "kiosk"' in files["/etc/greetd/config.toml"]
+    assert yaml.safe_load((out / "meta-data").read_text())["local-hostname"] == (
+        "lobby-1"
+    )
+
+    preseed = (out / "preseed.cfg").read_text()
+    grub = (out / "grub.cfg").read_text()
+    for text in (preseed, grub):
+        body = "\n".join(line for line in text.splitlines() if not line.startswith("#"))
+        assert "@" not in body
+    assert "d-i netcfg/get_hostname string lobby-1" in preseed
+    assert "http://192.168.242.1:8242/late.sh" in preseed
+    assert "chromium" in preseed and "cloud-init" in preseed
+    assert "url=http://192.168.242.1:8242/preseed.cfg hostname=lobby-1 " in grub
+
+
+def test_wyse_psk_wifi_is_an_unpinned_keyfile(tmp_path: Path, public_key: Path) -> None:
+    ssid = 'Home "Net"'
+    password = "pass word\\ $(id)"
+    result = generate(
+        tmp_path,
+        "--ssh-key",
+        str(public_key),
+        "--wifi-ssid",
+        ssid,
+        "--wifi-password",
+        password,
+        target="wyse",
+    )
+    data = config(result)
+    assert not (output_dir(result) / "network-config").exists()
+    files = {entry["path"]: entry for entry in data["write_files"]}
+    profile = files["/etc/NetworkManager/system-connections/kiosk-wifi.nmconnection"]
+    assert profile["permissions"] == "0600"
+    assert "interface-name" not in profile["content"]
+    assert "psk=pass\\sword\\\\\\s$(id)\n" in profile["content"]
 
 
 if __name__ == "__main__":
