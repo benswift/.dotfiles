@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# pi-kiosk --- flash an SD card that boots a Raspberry Pi straight into a
+# kiosk --- flash an SD card that boots a Raspberry Pi straight into a
 # fullscreen Chromium kiosk at a given URL, joined to Tailscale.
 #
 # The heavy lifting is done by cloud-init, which ships on every Raspberry Pi
@@ -11,7 +11,7 @@
 # no chroot image surgery --- this replaces the SDM pipeline in the panic and
 # imaginative-restoration repos, from which the kiosk session config is ported.
 #
-#   pi-kiosk --url https://example.com --hostname lobby-pi \
+#   kiosk --url https://example.com --hostname lobby-pi \
 #            --wifi-ssid MyNet --wifi-password secret \
 #            --tailscale-authkey tskey-auth-... --ssh-key ~/.ssh/id_ed25519.pub
 #
@@ -52,7 +52,7 @@ die() {
 
 usage() {
     cat <<EOF
-Usage: pi-kiosk [OPTIONS]
+Usage: kiosk [OPTIONS]
 
 Flash an SD card with Raspberry Pi OS configured as a Chromium web kiosk.
 
@@ -82,11 +82,11 @@ Other:
     --test                       Generate config into a temp dir; don't flash
 
 Examples:
-    pi-kiosk --url https://panic.fly.dev/ --hostname panic-lobby \\
+    kiosk --url https://panic.fly.dev/ --hostname panic-lobby \\
         --wifi-ssid MyNet --wifi-password secret \\
         --tailscale-authkey tskey-auth-... --ssh-key ~/.ssh/id_ed25519.pub
 
-    pi-kiosk --url https://slop.university/signage/portrait/ \\
+    kiosk --url https://slop.university/signage/portrait/ \\
         --hostname slopu-kiosk-1 --wifi-ssid ANU-Secure \\
         --wifi-enterprise-user "\$RPI_SSID" --wifi-enterprise-pass "\$RPI_PASSWORD" \\
         --wifi-ca-cert /path/to/institution-ca.pem --wifi-domain-suffix radius.example.edu \\
@@ -220,7 +220,7 @@ ts_api() {
 # Single-use, preauthorized, tagged; a week to get the card into the Pi.
 ts_mint_authkey() {
     local token="$1" tags="$2" hostname="$3" body
-    body=$(jq -nc --arg tags "$tags" --arg desc "pi-kiosk $hostname" '{
+    body=$(jq -nc --arg tags "$tags" --arg desc "kiosk $hostname" '{
         capabilities: {devices: {create: {
             reusable: false, ephemeral: false, preauthorized: true,
             tags: ($tags | split(","))}}},
@@ -254,7 +254,7 @@ generate_config() {
         "$timezone" "$ssh_public_key" "$url" "$wifi_ssid" "$wifi_password" \
         "$wifi_enterprise_user" "$wifi_enterprise_pass" "$wifi_country" \
         "$wifi_ca_cert" "$wifi_domain_suffix" "$tailscale_authkey" |
-        uv run --locked --script "$(dirname "$0")/../lib/pi-kiosk/render.py" "$1"
+        uv run --locked --script "$(dirname "$0")/../lib/kiosk/render.py" "$1"
 }
 
 # ---------------------------------------------------------------------------
@@ -336,7 +336,7 @@ main() {
     timezone=$(timedatectl show --property=Timezone --value 2>/dev/null || echo UTC)
 
     # --- show config -----------------------------------------------------
-    info "pi-kiosk"
+    info "kiosk"
     echo "  URL:       $url"
     echo "  Hostname:  $hostname"
     echo "  User:      $username"
@@ -355,7 +355,7 @@ main() {
     echo
 
     local work
-    work=$(mktemp -d -t pi-kiosk-XXXXX)
+    work=$(mktemp -d -t kiosk-XXXXX)
 
     if [[ "$test_mode" == true ]]; then
         [[ -z "$tailscale_tag" ]] || tailscale_authkey="tskey-auth-TEST-PLACEHOLDER"
@@ -393,7 +393,7 @@ main() {
     # --- drop cloud-init config on the boot partition ---------------------
     local part mnt
     part=$(boot_partition "$device")
-    mnt=$(mktemp -d -t pi-kiosk-boot-XXXXX)
+    mnt=$(mktemp -d -t kiosk-boot-XXXXX)
     sudo mount "$part" "$mnt"
     sudo cp "$work/user-data" "$mnt/user-data"
     [[ -f "$work/network-config" ]] && sudo cp "$work/network-config" "$mnt/network-config"

@@ -151,7 +151,7 @@ Each script's header has the detail. Notable ones:
   `nb show`, via lumis. Add a language to `PARSERS` in `lumis-parsers` if it's
   previewed often; add a `case` override in `ts-cat` if the extension doesn't
   map to a parser (as with `.mdx`)
-- `pi-kiosk` --- flash an SD card booting a Raspberry Pi into a fullscreen
+- `kiosk` --- flash an SD card booting a Raspberry Pi into a fullscreen
   Chromium kiosk, with wifi and Tailscale baked in (cloud-init, RPi OS Trixie+)
 
 `nb` is a pinned `github:xwmx/nb` mise tool; @bin/nb is the launcher that makes

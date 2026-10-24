@@ -38,7 +38,7 @@ jobs:
       - name: Lint Python and provisioning shell scripts
         run: |
           uvx ruff check .
-          shellcheck bin/pi-kiosk bin/check-secrets lib/pi-kiosk/kiosk-browser lib/pi-kiosk/kiosk-set-url lib/pi-kiosk/kiosk-tailscale lib/pi-kiosk/autostart
+          shellcheck bin/kiosk bin/check-secrets lib/kiosk/kiosk-browser lib/kiosk/kiosk-set-url lib/kiosk/kiosk-tailscale lib/kiosk/autostart
       - name: Test and type-check packages
         run: |
           for project in mail/utils pkb; do

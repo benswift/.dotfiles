@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-SCRIPT = Path(__file__).resolve().parents[1] / "bin" / "pi-kiosk"
+SCRIPT = Path(__file__).resolve().parents[1] / "bin" / "kiosk"
 
 # pi-kiosk refuses to run off Linux (it flashes raw devices), even in --test.
 pytestmark = pytest.mark.skipif(
@@ -159,7 +159,7 @@ def test_url_stays_data(tmp_path: Path, public_key: Path, url: str) -> None:
     data = config(generate(tmp_path, "--ssh-key", str(public_key), "--url", url))
     files = {entry["path"]: entry["content"] for entry in data["write_files"]}
     assert files["/etc/kiosk-url.txt"] == url + "\n"
-    assets = SCRIPT.parent.parent / "lib/pi-kiosk"
+    assets = SCRIPT.parent.parent / "lib/kiosk"
     assert (
         files["/usr/local/bin/kiosk-browser"] == (assets / "kiosk-browser").read_text()
     )

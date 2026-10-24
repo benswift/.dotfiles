@@ -5,7 +5,7 @@
 # ///
 """Render cloud-init data; executable assets never contain substituted values.
 
-bin/pi-kiosk supplies the ordered fields below as NUL-delimited UTF-8 on stdin.
+bin/kiosk supplies the ordered fields below as NUL-delimited UTF-8 on stdin.
 NetworkManager keyfiles use GLib string escaping, not shell or YAML quoting.
 """
 
@@ -234,9 +234,9 @@ def render(values: dict[str, str], output: Path) -> None:
         "runcmd": commands,
         "power_state": {
             "mode": "reboot",
-            "message": "pi-kiosk first-boot config complete; rebooting into the kiosk",
+            "message": "kiosk first-boot config complete; rebooting into the kiosk",
         },
-        "final_message": "pi-kiosk setup complete after $UPTIME seconds",
+        "final_message": "kiosk setup complete after $UPTIME seconds",
     }
     (output / "user-data").write_text(
         "#cloud-config\n" + yaml.safe_dump(config, sort_keys=False)
