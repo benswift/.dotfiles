@@ -89,7 +89,11 @@ usage() {
 # The newest snapshot for this host, or a failure if it is too old.
 check_fresh() {
     local newest age
-    newest="$(restic snapshots --host "$HOST" --latest 1 --json | jq -r '.[0].time // empty')"
+    # --group-by host for the same reason as FORGET_POLICY: --latest is per
+    # group, and the default groups by path set, so after a change to SOURCES
+    # .[0] would be the old set's last snapshot, frozen at the day of the change.
+    newest="$(restic snapshots --host "$HOST" --group-by host --latest 1 --json |
+        jq -r '.[0].snapshots[0].time // empty')"
     if [[ -z "$newest" ]]; then
         echo "restic-backup: no snapshots for $HOST in the repository" >&2
         return 1
