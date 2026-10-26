@@ -1,0 +1,11 @@
+[Unit]
+Description=Mirror the key ANU GitLab repos daily
+
+[Timer]
+# Ahead of restic-backup's :40, so that hour's snapshot carries the update
+OnCalendar=*-*-* 02:10
+Persistent=true
+Unit=gitlab-mirror.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#
+# gitlab-mirror --- keep bare mirrors of the key ANU GitLab repos on weddle,
+# under $MIRROR_ROOT/<host>/<path>.git, so bin/restic-backup carries them
+# offsite. GitHub repos aren't here: GitHub is not the copy at risk.
+#
+#   gitlab-mirror     clone any new REPOS, update the rest
+#
+# Git data only: issues, MRs and wikis are not mirrored. A repo that fails to
+# fetch (deleted upstream, access lost, an expired key) fails the unit and
+# pages through unit-oncall, but its mirror stays put --- restic's retention
+# holds the history either way. `--prune` drops branches deleted upstream from
+# the mirror; older snapshots still have them.
+
+set -euo pipefail
+
+MIRROR_ROOT="${MIRROR_ROOT:-/data/git-mirrors}"
+
+REPOS=(
+    git@gitlab.anu.edu.au:benswift/acsw-2027-planning.git
+    git@gitlab.anu.edu.au:u2548636/anu-typst-template.git
+    git@gitlab.anu.edu.au:u2548636/astro-theme-anu.git
+    git@gitlab.anu.edu.au:jekyll-anu/computing-website.git
+    git@gitlab.anu.edu.au:u2548636/cybernetics-anu-edu-au.git
+    git@gitlab.anu.edu.au:jekyll-anu/cybernetics-website.git
+    git@gitlab.anu.edu.au:u2548636/cybernetics-website.git
+    git@gitlab.comp.anu.edu.au:u2548636/strproxy-cli.git
+    git@gitlab.comp.anu.edu.au:u2548636/strproxy.git
+    git@gitlab.comp.anu.edu.au:comp4020/lucy.git
+    git@gitlab.comp.anu.edu.au:comp4020/tutors.git
+    git@gitlab.comp.anu.edu.au:courses/comp4020-agentic-coding-studio.git
+)
+
+failed=0
+for url in "${REPOS[@]}"; do
+    host="${url#git@}"
+    host="${host%%:*}"
+    path="${url#*:}"
+    dest="$MIRROR_ROOT/$host/$path"
+    if [[ -d "$dest" ]]; then
+        echo "Updating $host:$path"
+        git -C "$dest" remote update --prune || {
+            echo "gitlab-mirror: fetch failed for $url" >&2
+            failed=1
+        }
+    else
+        echo "Cloning $host:$path"
+        mkdir -p "$(dirname "$dest")"
+        # Into a temporary name, so an interrupted clone is retried next run
+        # rather than mistaken for a mirror and updated.
+        rm -rf "$dest.partial"
+        if git clone --quiet --mirror "$url" "$dest.partial"; then
+            mv "$dest.partial" "$dest"
+        else
+            echo "gitlab-mirror: clone failed for $url" >&2
+            failed=1
+        fi
+    fi
+done
+exit "$failed"
