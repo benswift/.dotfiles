@@ -38,7 +38,7 @@ def retain(
 
         mail-retain --dry-run
 
-        mail-retain --source /tmp/restore/data/Maildir
+        mail-retain --source /tmp/restore/data/Maildir-imap
     """
     captures = plan(source, cold, datetime.now(UTC), timedelta(days=min_age_days))
     copied: Counter[Path] = Counter()
