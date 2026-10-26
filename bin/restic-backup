@@ -25,7 +25,6 @@ set -euo pipefail
 
 SOURCES=(
     /data/backup
-    /data/Maildir
     /data/Maildir-imap
     # bin/gitlab-mirror's bare clones of the key ANU GitLab repos
     /data/git-mirrors
