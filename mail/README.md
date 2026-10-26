@@ -75,6 +75,23 @@ mail-secret set benswift@fastmail.com mbsync-fastmail
 reauth-anu-oauth.sh
 ```
 
+## Retention and the cold store
+
+ANU's retention policy deletes mail from every Exchange mailbox two years after
+it arrives, and mbsync mirrors those deletions into `~/Maildir` on every host.
+`~/Maildir/anu-archive/<account>/<folder>` is the local-only cold store that
+keeps it: `mail-retain` (in `utils/`) copies INBOX, Archive and Sent Items mail
+from all four Exchange accounts in once it is about 21 months old, and
+`bin/backup` runs it on daysy before each hourly push of the store to weddle. No
+mbsync channel touches the store, so nothing ever deletes from it. mu indexes it
+with everything else; during the three-month overlap a message exists in both
+places, which `mu find --skip-dups` hides.
+
+To recover mail the server has already expunged, restore a backup that keeps the
+`<account>/<folder>` layout (a restic snapshot of weddle's `/data/Maildir-imap`,
+say) and run `mail-retain --source <restored-root>`. It copies only what the
+store lacks.
+
 ## Recovering a folder
 
 A maildir and its `.mbsyncstate` are one unit: mbsync pairs each server UID with

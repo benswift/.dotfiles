@@ -18,17 +18,18 @@ mail-analyze --help
 
 ## Commands
 
-| Command            | Description                                           |
-| ------------------ | ----------------------------------------------------- |
-| `mail-copy-path`   | Copy message file path to clipboard (uses mu to find) |
-| `mail-copy-id`     | Copy `msgid:<Message-ID>` (a mu query) to clipboard   |
-| `mail-urls`        | Extract URLs from a piped message and pick one in fzf |
-| `mail-local-date`  | Pager display filter: Date: header in local time      |
-| `mail-compose`     | Compose and send emails with Jinja2 templating        |
-| `mail-dedupe`      | Deduplicate messages by Message-ID                    |
-| `mail-analyze`     | Analyze maildir format and identify issues            |
-| `student-db`       | Query the PhD student database (denormalises from nb) |
-| `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers      |
+| Command            | Description                                               |
+| ------------------ | --------------------------------------------------------- |
+| `mail-copy-path`   | Copy message file path to clipboard (uses mu to find)     |
+| `mail-copy-id`     | Copy `msgid:<Message-ID>` (a mu query) to clipboard       |
+| `mail-urls`        | Extract URLs from a piped message and pick one in fzf     |
+| `mail-local-date`  | Pager display filter: Date: header in local time          |
+| `mail-compose`     | Compose and send emails with Jinja2 templating            |
+| `mail-dedupe`      | Deduplicate messages by Message-ID                        |
+| `mail-analyze`     | Analyze maildir format and identify issues                |
+| `mail-retain`      | Copy ageing Exchange mail into the anu-archive cold store |
+| `student-db`       | Query the PhD student database (denormalises from nb)     |
+| `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers          |
 
 ## Usage
 

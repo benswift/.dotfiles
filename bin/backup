@@ -39,9 +39,10 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS] [SECTION...]
 
-Sync ~/Documents, ~/Zotero and ~/Maildir/anu-archive to remote storage using
-rclone. The hourly push-to-weddle launchd job runs this. The rest of weddle's
-Maildir comes from the servers (mail/mbsyncrc-weddle), not from here.
+Sync ~/Documents, ~/Zotero and ~/Maildir/anu-archive (topped up by mail-retain
+first) to remote storage using rclone. The hourly push-to-weddle launchd job
+runs this. The rest of weddle's Maildir comes from the servers
+(mail/mbsyncrc-weddle), not from here.
 
 Sections: documents, zotero, mail. With none named, all three are synced.
 Naming one is a deliberate act, so it runs even on a metered network:
@@ -157,11 +158,13 @@ if [[ "$DRY_RUN" == "true" ]]; then
   echo "DRY RUN MODE - no changes will be made"
 fi
 
-# Only anu-archive: it is local-only (mail ANU's retention expunged from the
-# server), so the servers can't supply it. Everything else in weddle's Maildir
-# is mbsync's, and an rclone sync of the whole tree would wipe its state.
+# Only anu-archive: it is the local-only cold store of Exchange mail that ANU's
+# two-year retention expunges from the server, so the servers can't supply it.
+# Everything else in weddle's Maildir is mbsync's, and an rclone sync of the
+# whole tree would wipe its state. mail-retain (mail/utils) tops it up first.
 if wants mail; then
   echo "=== Maildir/anu-archive ==="
+  if [[ "$DRY_RUN" == "true" ]]; then mail-retain --dry-run; else mail-retain; fi
   echo "Syncing $HOME/Maildir/anu-archive to $REMOTE:Maildir/anu-archive"
   echo
   # --max-delete: the archive only grows (a flag change renames one file, a
