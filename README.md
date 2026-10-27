@@ -76,19 +76,20 @@ loaded as a Claude Code plugin. The setup:
   `claude/settings.json` via `enabledPlugins: {"ben@ben": true}` --- portable
   across machines, no hardcoded paths.
 - **Claude Code clones it** to `~/.claude/plugins/marketplaces/ben/` on first
-  use. That directory is the single source of truth --- edit skills there,
-  commit and push from there.
+  use. That clone is read-only: Claude Code re-clones it on every update. Edit,
+  commit and push in the working checkout at `~/projects/claude-plugin-personal`
+  instead.
 - **Codex reads the same personal skills** via per-skill symlinks inside
   `~/.agents/skills`, Codex's supported user-level skill directory. Existing
   independently installed skills in that directory are left alone.
 - **Skills appear to Claude** as `ben:<skill-name>` (e.g. `ben:pkb`) and to
   Codex by their unnamespaced skill name.
 
-To propagate changes across machines: push from the marketplace clone, then run
-`dotfiles update` elsewhere. That refreshes Claude plugins and re-syncs Codex
-skill links. Requires SSH auth to GitHub (the repo is private). The sync skips
-plugins entirely if `claude` isn't installed yet, so on a fresh host install
-Claude Code before running `dotfiles update`.
+To propagate changes across machines: push from the working checkout, then run
+`dotfiles update` on each machine (this one included). That refreshes Claude
+plugins and re-syncs Codex skill links. Requires SSH auth to GitHub (the repo is
+private). The sync skips plugins entirely if `claude` isn't installed yet, so on
+a fresh host install Claude Code before running `dotfiles update`.
 
 ### Elixir projects tip
 

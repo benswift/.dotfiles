@@ -3,13 +3,13 @@ id: TASK-035
 title: Restructure benswift-writer around per-context before/after pairs
 status: To Do
 assignee: []
-created_date: '2026-08-29 01:14'
-updated_date: '2026-09-20 22:10'
+created_date: 2026-08-29 01:14
+updated_date: '2026-10-27T06:18:00Z'
 labels: []
 dependencies: []
 references:
-  - ~/.claude/plugins/marketplaces/ben/skills/benswift-writer/SKILL.md
-  - ~/.claude/plugins/marketplaces/ben/drafts/benswift-writer/
+  - ~/projects/claude-plugin-personal/skills/benswift-writer/SKILL.md
+  - ~/projects/claude-plugin-personal/drafts/benswift-writer/
   - ~/projects/benswift-me/src/content/blog/
   - ~/projects/research-papers/
 priority: medium

@@ -173,13 +173,12 @@ and `~/.codex/AGENTS.md`), @claude/settings.json, @codex/hooks.json,
 
 ### Personal skills
 
-Skills live **only** in the private `benswift/claude-plugin-personal` repo,
-cloned by Claude Code to `~/.claude/plugins/marketplaces/ben/`. That clone is
-the single source of truth: edit, commit and push from there, and **push
-immediately** --- `claude plugin marketplace update` (run by every
-`dotfiles update`) deletes and re-clones from GitHub, discarding local-only
-commits. If that happens, the last-installed tree survives under
-`~/.claude/plugins/cache/ben/ben/<sha>/`. Skills appear as `ben:<name>`.
+Skills live **only** in the private `benswift/claude-plugin-personal` repo.
+Edit, commit and push in the working checkout at
+`~/projects/claude-plugin-personal` (pull first), then run `dotfiles update` so
+sessions load the change. **Never edit `~/.claude/plugins/marketplaces/ben/`**:
+it is Claude Code's read-only copy, and every `dotfiles update` deletes and
+re-clones it. Skills appear as `ben:<name>`.
 
 @bin/sync-agent-config registers marketplaces, installs enabled plugins, and
 symlinks each skill into `~/.agents/skills` so Codex and Matilda see them too.
