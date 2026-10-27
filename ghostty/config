@@ -6,3 +6,7 @@ minimum-contrast = 2
 custom-shader = shaders/cursor_warp.glsl
 macos-option-as-alt = true
 shell-integration-features = ssh-terminfo,ssh-env
+# `true` rather than 1.4's `primary`: the Linux snap is still 1.3, which
+# rejects `primary`. Under 1.4, `true` means primary on Linux but the system
+# clipboard on macOS.
+copy-on-select = true
