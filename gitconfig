@@ -90,3 +90,6 @@
 [credential "https://gist.github.com"]
 	helper = 
 	helper = !/usr/bin/gh auth git-credential
+[credential "https://git.overleaf.com"]
+	helper = 
+	helper = "!f() { test \"$1\" = get && echo username=git && echo \"password=$OVERLEAF_GIT_TOKEN\"; }; f"
