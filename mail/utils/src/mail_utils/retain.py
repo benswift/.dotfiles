@@ -1,7 +1,8 @@
 """Copy Exchange mail into a local cold store before ANU's retention expunges it.
 
-ANU deletes mail from every Exchange mailbox two years after it arrives, and
-mbsync mirrors each deletion into the local maildir, on daysy and weddle alike.
+ANU moves mail out of every Exchange mailbox two years after it arrives, into
+the mailbox's Online Archive, which IMAP can't see. To mbsync that is a
+deletion, mirrored into the local maildir on daysy and weddle alike.
 Anything worth keeping has to be copied out of the mbsync-managed folders
 first, into a tree no mbsync channel touches: the cold store,
 ``<cold>/<account>/<folder>``.

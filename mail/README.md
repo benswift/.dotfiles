@@ -77,20 +77,26 @@ reauth-anu-oauth.sh
 
 ## Retention and the cold store
 
-ANU's retention policy deletes mail from every Exchange mailbox two years after
-it arrives, and mbsync mirrors those deletions into `~/Maildir` on every host.
-`~/Maildir/anu-archive/<account>/<folder>` is the local-only cold store that
-keeps it: `mail-retain` (in `utils/`) copies INBOX, Archive and Sent Items mail
-from all four Exchange accounts in once it is about 21 months old, and
-`bin/backup` runs it on daysy before each hourly push of the store to weddle. No
-mbsync channel touches the store, so nothing ever deletes from it. mu indexes it
-with everything else; during the three-month overlap a message exists in both
-places, which `mu find --skip-dups` hides.
+ANU's retention policy moves mail out of every Exchange mailbox two years after
+it arrives, into that mailbox's Online Archive. IMAP can't see the Online
+Archive, so to mbsync each move is a deletion, mirrored into `~/Maildir` on
+every host. `~/Maildir/anu-archive/<account>/<folder>` is the local-only cold
+store that keeps it: `mail-retain` (in `utils/`) copies INBOX, Archive and Sent
+Items mail from all four Exchange accounts in once it is about 21 months old,
+and `bin/backup` runs it on daysy before each hourly push of the store to
+weddle. No mbsync channel touches the store, so nothing ever deletes from it. mu
+indexes it with everything else; during the three-month overlap a message exists
+in both places, which `mu find --skip-dups` hides.
 
-To recover mail the server has already expunged, restore a backup that keeps the
-`<account>/<folder>` layout (a restic snapshot of weddle's `/data/Maildir-imap`,
-say) and run `mail-retain --source <restored-root>`. It copies only what the
-store lacks.
+To recover mail that has already aged out, move it in OWA from the Online
+Archive back into the same folder of the primary mailbox. mailsync pulls it and
+`mail-retain` copies it in; the policy moves it back out at its next run, which
+mbsync sees as an ordinary delete. A backup that keeps the `<account>/<folder>`
+layout (a restic snapshot of weddle's `/data/Maildir-imap`, say) works too, via
+`mail-retain --source <restored-root>`. Either way it copies only what the store
+lacks (keyed by Message-ID), so duplicates on the server don't reach the store.
+Never copy recovered mail into an mbsync-managed folder by hand: unpaired
+messages there upload as new (see below).
 
 ## Recovering a folder
 

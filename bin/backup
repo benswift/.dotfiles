@@ -159,7 +159,8 @@ if [[ "$DRY_RUN" == "true" ]]; then
 fi
 
 # Only anu-archive: it is the local-only cold store of Exchange mail that ANU's
-# two-year retention expunges from the server, so the servers can't supply it.
+# two-year retention moves into the Online Archive, out of IMAP's reach, so the
+# servers can't supply it.
 # Everything else in weddle's Maildir is mbsync's, and an rclone sync of the
 # whole tree would wipe its state. mail-retain (mail/utils) tops it up first.
 if wants mail; then
