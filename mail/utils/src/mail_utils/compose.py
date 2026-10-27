@@ -10,8 +10,10 @@ import subprocess
 import sys
 import tempfile
 import time
+from email import policy
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate, getaddresses, make_msgid, parseaddr
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import IO, Any
 
@@ -55,6 +57,142 @@ def parse_reply_info(message_path: Path) -> dict:
         "cc": _unfold(msg.get("Cc")),
         "reply_to_header": _unfold(msg.get("Reply-To")),
         "subject": subject,
+    }
+
+
+_HTML_BLOCKS = frozenset({"p", "div", "table", "tr", "ul", "ol", "blockquote"}) | {
+    f"h{n}" for n in range(1, 7)
+}
+_HTML_HIDDEN = frozenset(["head", "style", "script", "title"])
+
+
+class _HtmlText(HTMLParser):
+    """Collects the readable text of an HTML body, one block per paragraph."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.chunks: list[str] = []
+        self.hidden = 0
+        self.href: str | None = None
+        self.link_start = 0
+        # Outlook wraps every <li>'s text in a <p>, so the bullet waits for
+        # the item's first real text rather than going out on its own line.
+        self.bullet = False
+        self.in_item = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in _HTML_HIDDEN:
+            self.hidden += 1
+        elif tag == "br":
+            self.chunks.append("\n")
+        elif tag == "li":
+            self._break(1)
+            self.bullet = True
+            self.in_item += 1
+        elif tag in _HTML_BLOCKS:
+            self._break(1 if self.in_item else 2)
+        elif tag == "a":
+            self.href = dict(attrs).get("href")
+            self.link_start = len(self.chunks)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in _HTML_HIDDEN:
+            self.hidden = max(0, self.hidden - 1)
+        elif tag == "li":
+            self.in_item = max(0, self.in_item - 1)
+        elif tag in _HTML_BLOCKS:
+            self._break(1 if self.in_item else 2)
+        elif tag == "a" and self.href:
+            # Keep a link's target where its text doesn't already say it, or a
+            # forwarded "access the folder here" points nowhere.
+            text = "".join(self.chunks[self.link_start :]).strip()
+            if self.href.startswith("http") and self.href != text:
+                self.chunks.append(f" <{self.href}>")
+            self.href = None
+
+    def _break(self, newlines: int) -> None:
+        """End the current line with at least `newlines` newlines, so nested
+        blocks (<li><p>, <div><p>) don't stack up blank lines."""
+        tail = re.search(r"[\n ]*$", "".join(self.chunks[-8:]))
+        have = tail.group().count("\n") if tail else 0
+        self.chunks.append("\n" * max(0, newlines - have))
+
+    def handle_data(self, data: str) -> None:
+        if self.hidden:
+            return
+        # HTML whitespace is insignificant: a source newline is a space.
+        text = re.sub(r"\s+", " ", data.replace("\xa0", " "))
+        if self.bullet and text.strip():
+            text = "- " + text.lstrip()
+            self.bullet = False
+        self.chunks.append(text)
+
+
+def html_to_text(html: str) -> str:
+    """Plain text of an HTML body, for quoting a message that has no
+    text/plain part (Outlook often sends none)."""
+    parser = _HtmlText()
+    parser.feed(html)
+    parser.close()
+    lines = [line.strip() for line in "".join(parser.chunks).splitlines()]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
+
+
+def parse_forward_info(message_path: Path) -> dict:
+    """Extract what forwarding a message carries over.
+
+    Returns a dict with keys: subject ("Fwd: ..."), text (a forwarded-message
+    header block followed by the original body as plain text) and attachments
+    (a list of (data, maintype, subtype, filename) tuples).
+
+    Inline parts referenced by Content-ID --- signature banners and logos in
+    an HTML body --- are not attachments in any sense the reader would
+    recognise, and are dropped along with the HTML that showed them.
+    """
+    with open(message_path, "rb") as f:
+        msg = email.message_from_binary_file(f, policy=policy.default)
+    assert isinstance(msg, EmailMessage)
+
+    subject = _unfold(str(msg.get("Subject", ""))) or ""
+    if not re.match(r"(fwd?|fw):", subject, re.IGNORECASE):
+        subject = f"Fwd: {subject}"
+
+    part = msg.get_body(preferencelist=("plain", "html"))
+    text = ""
+    if isinstance(part, EmailMessage):
+        content = part.get_content()
+        text = (
+            html_to_text(content) if part.get_content_subtype() == "html" else content
+        )
+
+    header = ["---------- Forwarded message ----------"]
+    for name in ("From", "Date", "Subject", "To", "Cc"):
+        value = _unfold(str(msg[name])) if msg[name] else None
+        if value:
+            header.append(f"{name}: {value}")
+
+    attachments = []
+    for leaf in msg.walk():
+        if leaf.is_multipart() or leaf is part or leaf["Content-ID"]:
+            continue
+        filename = leaf.get_filename()
+        if not filename:
+            continue
+        payload = leaf.get_payload(decode=True)
+        if isinstance(payload, bytes):
+            attachments.append(
+                (
+                    payload,
+                    leaf.get_content_maintype(),
+                    leaf.get_content_subtype(),
+                    filename,
+                )
+            )
+
+    return {
+        "subject": subject,
+        "text": "\n".join(header) + "\n\n" + text.strip() + "\n",
+        "attachments": attachments,
     }
 
 
@@ -168,8 +306,15 @@ def build_email(
     attachments: list[Path] | None = None,
     reply_to: Path | None = None,
     signature: str | None = None,
+    forward: Path | None = None,
 ) -> EmailMessage:
-    """Build an email message with proper headers."""
+    """Build an email message with proper headers.
+
+    With `forward`, the original goes inline below the body and its
+    attachments are carried over. The signature still comes last, as in
+    neomutt's own inline forward: placed above the forwarded text, its "-- "
+    delimiter would have clients fold everything after it away.
+    """
     msg = EmailMessage()
     msg["From"] = from_addr
     msg["To"] = to
@@ -185,7 +330,16 @@ def build_email(
     if cc:
         msg["Cc"] = cc
 
+    forwarded = parse_forward_info(forward) if forward else None
+    if forwarded:
+        body = f"{body.rstrip()}\n\n{forwarded['text']}"
+
     msg.set_content(append_signature(body, signature))
+
+    for data, maintype, subtype, filename in (
+        forwarded["attachments"] if forwarded else ()
+    ):
+        msg.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename)
 
     # No existence check: a path that isn't there raises FileNotFoundError from
     # read_bytes() and the send dies. Skipping it silently sent the body alone,
@@ -299,6 +453,7 @@ def open_neomutt_compose(
     attachments: list[Path] | None = None,
     reply_to: Path | None = None,
     signature: str | None = None,
+    forward: Path | None = None,
 ) -> None:
     """Open neomutt in compose mode with a fully-built draft.
 
@@ -317,7 +472,15 @@ def open_neomutt_compose(
     """
     config = get_account_config(account)
     msg = build_email(
-        config.from_addr, to, subject, body, cc, attachments, reply_to, signature
+        config.from_addr,
+        to,
+        subject,
+        body,
+        cc,
+        attachments,
+        reply_to,
+        signature,
+        forward,
     )
 
     with tempfile.NamedTemporaryFile(suffix=".eml", delete=False) as draft_file:

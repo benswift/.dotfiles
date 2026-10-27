@@ -15,6 +15,7 @@ from mail_utils.compose import (
     choose_reply_target,
     join_addresses,
     open_neomutt_compose,
+    parse_forward_info,
     parse_reply_info,
     read_signature,
     reply_all_cc,
@@ -83,6 +84,13 @@ def main(
             help="With --reply-to, also Cc everyone on the original To and Cc",
         ),
     ] = False,
+    forward: Annotated[
+        Path | None,
+        typer.Option(
+            "--forward",
+            help="Maildir message file to forward inline, with its attachments",
+        ),
+    ] = None,
     data: Annotated[
         Path | None,
         typer.Option(help="JSON array file for batch mode (use '-' for stdin)"),
@@ -114,6 +122,11 @@ def main(
         msg=$(mu find --fields=l "from:chris subject:Meeting" | head -1)
         mail-compose -f anu --reply-to "$msg" -b "Sounds good" --send
 
+        # Forward a message inline (Subject defaults to "Fwd: ..."; the body
+        # goes above the forwarded text, and batch mode works too)
+        mail-compose -f anu --forward "$msg" --to alice@example.com \\
+            -b "FYI" --send
+
         # Batch with template (filter with jq before piping)
         student-db students --status confirmed | \\
             mail-compose -f phdconvenor --data - --to '{{email}}' \\
@@ -143,6 +156,17 @@ def main(
     if reply_all and not reply_to:
         console.print("[red]--reply-all needs --reply-to[/red]")
         raise typer.Exit(1)
+
+    if forward and reply_to:
+        console.print("[red]--forward and --reply-to are exclusive[/red]")
+        raise typer.Exit(1)
+
+    if forward:
+        if not forward.exists():
+            console.print(f"[red]Message to forward not found: {forward}[/red]")
+            raise typer.Exit(1)
+        if not subject:
+            subject = parse_forward_info(forward)["subject"]
 
     reply_info = None
     if reply_to:
@@ -223,6 +247,7 @@ def main(
                 email_content,
                 email_cc,
                 signature=sig,
+                forward=forward,
             )
 
             if dry_run:
@@ -258,6 +283,7 @@ def main(
                 attach,
                 reply_to,
                 sig,
+                forward,
             )
 
             success, message = send_email(msg, account, dry_run)
@@ -279,6 +305,7 @@ def main(
                 attach,
                 reply_to,
                 sig,
+                forward,
             )
 
 

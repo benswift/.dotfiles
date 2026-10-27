@@ -1,6 +1,7 @@
 """Tests for email composition utilities."""
 
 import json
+from email.message import EmailMessage
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 
@@ -12,8 +13,10 @@ from mail_utils.compose import (
     append_to_sent,
     build_email,
     choose_reply_target,
+    html_to_text,
     join_addresses,
     open_neomutt_compose,
+    parse_forward_info,
     parse_reply_info,
     read_signature,
     reply_all_cc,
@@ -1142,3 +1145,163 @@ class TestSignature:
         assert result.exit_code == 0
         assert "Senior Lecturer" not in result.stdout
         reader.assert_not_called()
+
+
+OUTLOOK_HTML = """<html><head><style>p.MsoNormal {margin:0}</style></head>
+<body><p class=MsoNormal>Hi Showcase Exhibitors,</p>
+<p class=MsoNormal>&nbsp;</p>
+<p class=MsoNormal><b>EVENT DETAILS</b></p>
+<ul><li><p class=MsoNormal>Thursday,
+29 October</p></li>
+<li><p class=MsoNormal>ANU Sports Hall</p></li></ul>
+<p class=MsoNormal>The folder is <a href="https://example.com/socy">here</a>.<br>
+Kind regards,</p></body></html>"""
+
+
+def _write_html_forward(path: Path, *, with_attachments: bool = False) -> Path:
+    """An Outlook-shaped message: HTML only, plus (optionally) an inline
+    signature banner and a real attachment."""
+    msg = EmailMessage()
+    msg["From"] = "STEM - Careers <careers@example.com>"
+    msg["To"] = "STEM - Careers <careers@example.com>"
+    msg["Subject"] = "EXHIBITOR NOTICE"
+    msg["Date"] = "Tue, 27 Oct 2026 16:04:57 +1100"
+    msg.set_content(OUTLOOK_HTML, subtype="html")
+    if with_attachments:
+        msg.add_related(b"PNG", maintype="image", subtype="png", cid="<banner>")
+        msg.add_attachment(
+            b"%PDF", maintype="application", subtype="pdf", filename="floorplan.pdf"
+        )
+    path.write_bytes(msg.as_bytes())
+    return path
+
+
+class TestHtmlToText:
+    def test_outlook_list_items_keep_their_bullets(self):
+        text = html_to_text(OUTLOOK_HTML)
+        assert "- Thursday, 29 October\n- ANU Sports Hall" in text
+
+    def test_drops_style_and_collapses_blank_paragraphs(self):
+        text = html_to_text(OUTLOOK_HTML)
+        assert "MsoNormal" not in text
+        assert text.startswith("Hi Showcase Exhibitors,\n\nEVENT DETAILS")
+
+    def test_keeps_link_targets_and_line_breaks(self):
+        text = html_to_text(OUTLOOK_HTML)
+        assert "here <https://example.com/socy>.\nKind regards," in text
+
+    def test_bare_url_link_is_not_repeated(self):
+        html = '<p><a href="https://example.com">https://example.com</a></p>'
+        assert html_to_text(html) == "https://example.com"
+
+
+class TestParseForwardInfo:
+    def test_html_only_message_becomes_quoted_text(self, tmp_path: Path):
+        info = parse_forward_info(_write_html_forward(tmp_path / "fwd.eml"))
+        assert info["subject"] == "Fwd: EXHIBITOR NOTICE"
+        assert info["text"].startswith("---------- Forwarded message ----------\n")
+        assert "From: STEM - Careers <careers@example.com>" in info["text"]
+        assert "- ANU Sports Hall" in info["text"]
+
+    def test_does_not_stack_fwd_prefixes(self, tmp_path: Path):
+        eml = _write_eml(tmp_path / "fwd.eml", From="a@example.com", Subject="FW: x")
+        assert parse_forward_info(eml)["subject"] == "FW: x"
+
+    def test_plain_text_body_is_used_as_is(self, tmp_path: Path):
+        eml = _write_eml(tmp_path / "fwd.eml", From="a@example.com", Subject="x")
+        assert parse_forward_info(eml)["text"].endswith("\n\nOriginal body.\n")
+
+    def test_carries_real_attachments_but_not_inline_images(self, tmp_path: Path):
+        eml = _write_html_forward(tmp_path / "fwd.eml", with_attachments=True)
+        info = parse_forward_info(eml)
+        assert info["attachments"] == [(b"%PDF", "application", "pdf", "floorplan.pdf")]
+
+
+class TestBuildEmailForward:
+    def test_body_then_forward_then_signature(self, tmp_path: Path):
+        msg = build_email(
+            from_addr="me@example.com",
+            to="you@example.com",
+            subject="Fwd: EXHIBITOR NOTICE",
+            body="FYI",
+            signature="Ben",
+            forward=_write_html_forward(tmp_path / "fwd.eml"),
+        )
+        text = msg.get_body(("plain",)).get_content()
+        assert text.index("FYI") < text.index("Forwarded message")
+        # A signature above the forward would fold it away in most clients.
+        assert text.rstrip().endswith("-- \nBen")
+
+    def test_attachments_come_along(self, tmp_path: Path):
+        msg = build_email(
+            from_addr="me@example.com",
+            to="you@example.com",
+            subject="s",
+            body="FYI",
+            forward=_write_html_forward(tmp_path / "fwd.eml", with_attachments=True),
+        )
+        assert [p.get_filename() for p in msg.iter_attachments()] == ["floorplan.pdf"]
+
+
+class TestComposeCLIForward:
+    runner = CliRunner()
+
+    def test_subject_defaults_to_fwd(self, tmp_path: Path):
+        result = self.runner.invoke(
+            app,
+            [
+                "-f",
+                "personal",
+                "--forward",
+                str(_write_html_forward(tmp_path / "fwd.eml")),
+                "--to",
+                "you@example.com",
+                "-b",
+                "FYI",
+                "--dry-run",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "Subject: Fwd: EXHIBITOR NOTICE" in result.stdout
+
+    def test_batch_forwards_to_each_record(self, tmp_path: Path):
+        data = tmp_path / "data.json"
+        data.write_text(json.dumps([{"name": "Ann"}, {"name": "Bo"}]))
+        result = self.runner.invoke(
+            app,
+            [
+                "-f",
+                "personal",
+                "--data",
+                str(data),
+                "--forward",
+                str(_write_html_forward(tmp_path / "fwd.eml")),
+                "--to",
+                "{{name}}@example.com",
+                "-b",
+                "Hey {{name}}",
+                "--dry-run",
+            ],
+        )
+        assert result.exit_code == 0
+        assert result.stdout.count("Subject: Fwd: EXHIBITOR NOTICE") == 2
+        assert result.stdout.count("Forwarded message") == 2
+
+    def test_refuses_forward_with_reply_to(self, tmp_path: Path):
+        eml = _write_html_forward(tmp_path / "fwd.eml")
+        result = self.runner.invoke(
+            app,
+            ["-f", "personal", "--forward", str(eml), "--reply-to", str(eml),
+             "--to", "you@example.com", "-b", "x", "--dry-run"],
+        )  # fmt: skip
+        assert result.exit_code == 1
+        assert "exclusive" in result.stdout
+
+    def test_missing_forward_file_fails(self, tmp_path: Path):
+        result = self.runner.invoke(
+            app,
+            ["-f", "personal", "--forward", str(tmp_path / "nope.eml"),
+             "--to", "you@example.com", "-b", "x", "--dry-run"],
+        )  # fmt: skip
+        assert result.exit_code == 1
+        assert "not found" in result.stdout
