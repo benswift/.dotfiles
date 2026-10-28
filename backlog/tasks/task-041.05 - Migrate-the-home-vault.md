@@ -4,7 +4,7 @@ title: Migrate the home vault
 status: To Do
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
-updated_date: '2026-10-28T22:46:00Z'
+updated_date: '2026-10-28T23:01:00Z'
 labels:
   - pkb
   - wiz
@@ -31,4 +31,5 @@ A one-off uv script outside both repos, with a dry run that reports every change
 - [ ] #4 Done todos are tasks with status: done, named by their nb creation date
 - [ ] #5 Home's CLAUDE.md describes the wiz CLI and the new record types, and tells no agent to append to a day file
 - [ ] #6 Home's health check and retrospective run as command workflows (the retrospective via agent-run --expect-changes with the prompt as its body), and pkb-agent runs nothing
+- [ ] #7 Home's events/ holds event records written by calendar-archive as a command workflow (seeded once from data/calendars/*.jsonl with --seed), the JSONL files and the calendar-archive timer are gone, and calendar-archive has no JSONL mode left
 <!-- AC:END -->

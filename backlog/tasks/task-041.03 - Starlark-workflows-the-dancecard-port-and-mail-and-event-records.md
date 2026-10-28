@@ -4,6 +4,7 @@ title: Starlark workflows, the dancecard port, and mail and event records
 status: To Do
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
+updated_date: '2026-10-28T23:01:00Z'
 labels:
   - pkb
   - wiz
@@ -27,9 +28,15 @@ Step 3 of TASK-041's order of work (see 'What leaves wiz's Go code'). Nothing in
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Starlark workflows run on macOS arm64, Linux amd64 and Windows amd64 with nothing installed and have no exec, filesystem or network access and no way to invoke a command workflow; anyone may add one, while command workflows, _types/ and mdbase.yaml are admin-only and the guard enforces the split
-- [ ] #2 The lx dancecard is a Starlark workflow whose output matches the Go version on the same vault and date, covered by golden-output tests in the engine's Go suite; dancecard.go and calendar.go are deleted
+- [x] #1 Starlark workflows run on macOS arm64, Linux amd64 and Windows amd64 with nothing installed and have no exec, filesystem or network access and no way to invoke a command workflow; anyone may add one, while command workflows, _types/ and mdbase.yaml are admin-only and the guard enforces the split
+- [x] #2 The lx dancecard is a Starlark workflow whose output matches the Go version on the same vault and date, covered by golden-output tests in the engine's Go suite; dancecard.go and calendar.go are deleted
 - [ ] #3 Both vaults carry an event type with the same fields, named to match delivery where they overlap, filled by calendar-archive as a command workflow in each (home on weddle, lx on watson via watson's mu index of the lxconvenor Maildir); attendees link to people records where an email matches; admin/tools/calendar-export, _generated/calendar.md, data/calendars/*.jsonl and the calendar-archive timer are gone; a re-run against an unchanged calendar touches no file
 - [ ] #4 The lx dancecard's coming-up and mail sections, and home's calendar questions, are answered by wiz query over records
-- [ ] #5 The engine contains no LX-specific types, folders or logic; a vault's types, rules and workflows come only from its own files
+- [x] #5 The engine contains no LX-specific types, folders or logic; a vault's types, rules and workflows come only from its own files
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Engine side done (Starlark host, golden tests, dancecard.go and calendar.go deleted). lx: _types/mail.md and event.md, mail-export writes summary, dancecard and unrecorded-deliveries Starlark workflows, calendar command workflow; verified on watson against a scratch clone, the event lines matching calendar-export's line for line. Left for the switch (TASK-041.07): deleting admin/tools/calendar-export and _generated/calendar.md and watson-run's calendar step, since the v0.9 dancecard Cole and Rob run reads them. Left for the home migration (TASK-041.05): home's event type, its calendar workflow, the --seed import of data/calendars/*.jsonl and the calendar-archive timer's removal.
+<!-- SECTION:NOTES:END -->
