@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T10:20:00Z'
+updated_date: '2026-10-29T10:45:00Z'
 labels:
   - pkb
   - wiz
@@ -441,8 +441,9 @@ from this task. Decisions give the reasons; this gives only the rule.
 
 - Anyone changes records, Starlark workflows and skills. Admins change what runs
   (commands, session config, the pin) and what validates (types, vault config).
-- Every decision names the principles it rests on. A change that overrides a
-  decision edits it in the same commit.
+- Design is written as current state, with its reasons and the alternatives
+  rejected. Git holds the path to it. Nothing dated, superseded or narrated
+  stays in a vault.
 - These principles change only in the engine repo.
 
 Mechanism:
@@ -451,15 +452,21 @@ Mechanism:
   printed by `wiz help principles`, so every vault at a given pin sees the same
   text and no vault carries a copy
 - `wiz brief` carries one line: read `wiz help principles` before changing a
-  type, workflow, skill or decision; `start-here.md` says the same for people,
-  and its own "Principles" list (which would otherwise drift) becomes a short
-  plain-words summary pointing there
-- each vault's decision template gains a `principles:` field, and a decision
-  that fits none of them is either a detail or a sign that a principle is
-  missing. A change the principles forbid is proposed as a decision in the
-  vault that wants it; the amendment lands only in the engine repo
-- a principle earns its line by having said no to something real: if no
-  decision cites it, delete it
+  type, workflow, skill or design doc; `start-here.md` says the same for
+  people, and its own "Principles" list (which would otherwise drift) becomes
+  a short plain-words summary pointing there
+- a vault's design lives in `doc` records tagged `meta`, one per subsystem
+  (sharing, automation, who changes what, the ontology), revised in place:
+  the current rule, why, and what was rejected and why, since a rejected
+  alternative with its reason is what stops the next person re-litigating
+  it. No decision type, no numbering, no status: `git log` on the doc is the
+  path to the decision, so an agent can never read a stale one
+- proposals, for the vault or for the engine, are `task` records tagged
+  `meta` with the admin as `agent`, which any colleague can file and which
+  make the admin's inbox a query. The backlog CLI leaves the vault; the
+  engine repo keeps whatever Ben likes for engine work, which is his alone
+- a principle earns its line by having said no to something real; prune by
+  that test when revising them
 
 ## Home vault migration (do it properly)
 
@@ -536,15 +543,16 @@ unmatched records unless a type such as `note` claims them.
      "Principles" section reduced to a summary pointing at
      `wiz help principles`), and the `wiz`,
      `wiz-email`, `wiz-help` and `wiz-sync` skills, whose names don't change
-   - in its `admin/backlog`, edit or replace decisions 3, 6, 9 and 11 in the
-     same commits that override them (the vault's CLAUDE.md requires this),
-     extend decision-12 so open Starlark workflows and admin-only command
-     workflows sit on its two sides and types stay admin-only on their own
-     account now that they leave `admin/tools/`, and add a decision for the engine/vault
-     split and the two workflow kinds, saying that agents are not a kind
-   - add `principles:` to the decision template, and give every existing
-     decision the principles it rests on, rewriting any that fit none
-   - file the engine work as wiz backlog tasks
+   - fold its sixteen decision records into `meta` design docs in `docs/`
+     (dropping 3, 6, 9 and 11, which this task overrides; keeping 12's
+     boundary with Starlark workflows open, command workflows and types
+     admin-only; adding the engine/vault split, the two workflow kinds with
+     agents not among them, and mdbase as layout only), move its open
+     backlog tasks to `tasks/` tagged `meta`, delete `admin/backlog/` and
+     `backlog.config.yml`, and drop CLAUDE.md's "unless an admin is clearly
+     talking about developing wiz" carve-out, since a wiz proposal is now an
+     ordinary task
+   - file the engine work in the engine repo
    - nothing reaches Cole and Rob until the release passes a round trip on Rob's
      Windows laptop and Cole's Mac (the task-1 pattern)
 3. **`~/.nb/home`:** the migration above, and a rewritten `CLAUDE.md`
@@ -637,8 +645,8 @@ without trouble.
   dotfiles (`bin/wiz-build`, `wiz/pinned-rev`), never a vault pin, for the
   reason given under distribution. No mise entry.
 - **mdbase:** the layout only. Conformance, the fixtures and any upstream
-  contribution are a possible future, not a target, and the decision record
-  for the engine/vault split says so.
+  contribution are a possible future, not a target, and the engine/vault
+  design doc says so.
 - **CEL in Starlark:** only through `ctx.query(cel_string)`, evaluated in Go.
   That keeps one query language with one evaluation site.
 - **Starlark stays** (reviewed 2026-10-28 and challenged as a language for one
@@ -647,7 +655,7 @@ without trouble.
   sandbox is what makes that safe to open up. What went instead: the
   Starlark-to-command bridge (`ctx.run`), the `*_test.star` framework, and
   `on_change` triggers, none of which a first-wave workflow needs. Add any of
-  them with its own decision record when a workflow does.
+  them, with the reason in the workflows design doc, when a workflow does.
 - **Agents aren't an engine concept** (same review). The engine's job is the
   deterministic, testable, slow-to-change part; agent runners change with the
   provider of the month, prompts are prose colleagues should be able to edit,
@@ -702,10 +710,10 @@ though the same launchd concern applies to the new scheduler plist.
 - [ ] #9 Home is migrated: no *.todo.md, *.bookmark.md, YYYYMMDD.md or .index files remain, every tags field is a YAML list, and wiz validate home reports no problems
 - [ ] #10 Concurrent appends to the same daily from two machines sync without a conflict
 - [ ] #11 Cole and Rob each complete a get-latest, edit and share round trip on their own machines with the new release before it is pinned in the lx vault, and their slash commands keep their names
-- [ ] #12 The lx vault's decision records overridden by this change (3, 6, 9, 11) are edited or replaced in the commits that override them, decision-12 is extended for the two workflow kinds, and a new decision records the engine/vault split and the mdbase-layout-only choice
+- [ ] #12 The lx vault's sixteen decision records are folded into `meta` design docs stating current rules with their reasons and rejected alternatives, nothing in the vault describes a superseded design, `admin/backlog/` and the backlog CLI are gone from the vault, and open wiz proposals are `tasks/` records tagged `meta`
 - [ ] #13 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
 - [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, append to a daily and run a workflow by following them
 - [ ] #15 The engine's source and tests contain no agent, prompt, profile or model concept; home's scheduled agent tasks run as plain command workflows via agent-run, with every run stamped, logged, timed out and failed through the same bookkeeping as any other workflow
 - [ ] #16 Both vaults carry an `event` type with the same fields, named to match `delivery` where they overlap, filled by `calendar-archive` as a command workflow in each (home on weddle, lx on watson, reading the invites through watson's mu index of the lxconvenor Maildir); the lx dancecard's coming-up section and home's calendar questions are answered by `wiz query` over those records, attendees link to people records where an email matches, `admin/tools/calendar-export`, `_generated/calendar.md`, `data/calendars/*.jsonl` and the calendar-archive timer are gone, and a re-run against an unchanged calendar touches no file
-- [ ] #17 PRINCIPLES.md lives in the engine repo and `wiz help principles` prints it; `wiz brief` and both vaults' start-here point at it; every lx decision record names at least one principle it rests on, and every principle is named by at least one decision
+- [ ] #17 PRINCIPLES.md lives in the engine repo and `wiz help principles` prints it; `wiz brief` and both vaults' start-here point at it; and a colleague's Claude, asked why wiz works the way it does, answers from the principles and the meta docs without a stale answer being available
 <!-- AC:END -->
