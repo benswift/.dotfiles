@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T11:30:00Z'
+updated_date: '2026-10-29T11:50:00Z'
 labels:
   - pkb
   - wiz
@@ -106,16 +106,15 @@ future, with different types and workflows per vault, is the point.
 - A vault's name is declared in its `mdbase.yaml` (`name: lx`), never derived
   from its folder. The name is used in the registry, cross-vault links
   (`[[lx:people/cole-cooney]]`) and `--all` output.
-- Repos and folders carry a `wiz-` prefix, so Claude desktop (which shows the
-  folder name above the session list) reads `wiz-lx`:
-  - the GitLab project `u2548636/wiz` is renamed `u2548636/wiz-lx`, so a fresh
-    `git clone` makes a `wiz-lx` folder with no instructions needed. GitLab
-    redirects the old path, so existing clones keep working until their
-    remotes are updated (have `wiz check` fix them)
-  - home's repo and folder become `wiz-home`
-- Local paths leave `~/.nb` once nb is gone: every vault lives in one
-  top-level folder, `~/vaults/wiz-lx` and `~/vaults/wiz-home`. Cole and Rob
-  have agreed to the churn.
+- The lx vault's GitLab project stays `u2548636/wiz`, and Cole's, Rob's and
+  watson's clones keep their remote and folder. No rename: GitLab redirects
+  a renamed path only until it is reused, and nothing but `wiz-build` ever
+  needs the engine repo's name. The engine lives in a new project,
+  `u2548636/wiz-engine`. A fresh vault clone is told its folder name by
+  `/wiz-help` (`git clone … wiz-lx`).
+- Ben's local paths leave `~/.nb` once nb is gone: `~/vaults/wiz-lx` and
+  `~/vaults/wiz-home`, with home's repo renamed `wiz-home` (only Ben's
+  machines clone it).
 - Avoid wizard-themed jargon ("spells" and the like): every extra term costs
   non-technical colleagues.
 
@@ -560,10 +559,10 @@ unmatched records unless a type such as `note` claims them.
 
 ## Repos and what changes in each
 
-1. **New engine repo `wiz`:** first rename the GitLab project
-   `u2548636/wiz` to `u2548636/wiz-lx` to free the name. Then create
-   `u2548636/wiz` from `admin/tools/wiz` with its history preserved
-   (`git filter-repo --subdirectory-filter`).
+1. **New engine repo `u2548636/wiz-engine`:** created from `admin/tools/wiz`
+   with its history preserved (`git filter-repo --subdirectory-filter`).
+   Binaries still ship to the vault remote's `refs/tools/`, so nobody but
+   Ben's `wiz-build` holds the engine repo's URL.
 2. **`~/.nb/wiz`, the lx vault** (gitlab.anu.edu.au:u2548636/wiz):
    - convert `admin/tools/schemas/*.json` to `_types/` plus `mdbase.yaml`
    - add the dancecard and other Starlark workflows, and command workflows for
@@ -666,7 +665,31 @@ unmatched records unless a type such as `note` claims them.
 5. Home migration, run as a dry run, reviewed, then applied.
 6. The dotfiles cutover, the skill rewrite, and nb's retirement on every host.
 7. The collaborator release: pin the release in the lx vault only after the
-   Windows and Mac round trip, then tell Cole and Rob what changed.
+   Windows and Mac round trip, then tell Cole and Rob to start a fresh
+   session.
+
+How the lx switch stays small: lx's records don't change shape (tags are
+lists and links path-form already, and the folders stay), and everything
+added before the switch (`_types/`, `mdbase.yaml`, `events/`, workflow
+records, meta docs) is ignored by the v0.9 binary, which skips folders it
+has no schema for. So that groundwork lands on `main` while Cole and Rob keep
+working, and the switch is one push: the pin bump with the rewritten
+`CLAUDE.md`, skills, `start-here.md` and `watson-run`, after which the
+SessionStart hook installs the new engine on their next session. Nothing
+mid-way may change `CLAUDE.md` or a skill to describe the new CLI, since
+they'd follow it before they have it. Pause weddle's `wiz-validate` timer
+for the hour of the switch so `watson-run` doesn't fire mid-change.
+
+Before the home migration: pause `nb-sync` on weddle and daysy and
+`pkb-agent` on weddle, push every host's home clone, and run the dry run
+against a copy until it is clean. Mail and the other timers that touch no
+vault keep running.
+
+Execution: this is weeks of agent time across many sessions, so the first
+session creates the child tasks in this backlog, one per step, with the
+parent's acceptance criteria divided among them and backlog dependencies
+between them. Order by blast radius: engine (affects nobody), home (only
+Ben, and redoable from a copy), dotfiles cutover, then the lx switch.
 
 Rollback until step 6: nb still reads both vaults, because records stay plain
 Markdown. Keep the nb pin and units until home has been on the engine for a week
