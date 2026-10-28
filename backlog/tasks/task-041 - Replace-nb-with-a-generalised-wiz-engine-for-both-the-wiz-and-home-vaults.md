@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T10:45:00Z'
+updated_date: '2026-10-29T10:50:00Z'
 labels:
   - pkb
   - wiz
@@ -480,7 +480,13 @@ should commit in reviewable chunks, one per conversion. The target schema:
   - `*.todo.md` (about 1,020 files, with `# [ ]`/`# [x]` heading state) become
     `tasks/YYYY-MM-DD-<slug>.md`, using the same `task` type and field names as
     wiz
-  - fields: `status: open | blocked | done`, `due_date`, optional `agent`
+  - fields: `status: open | blocked | done`, `due_date`, optional `agent`,
+    and `depends_on`, a list of task links, in both vaults' `task` types
+    (schema.org has no term, so the name is invented). It carries what the
+    backlog CLI's dependencies did: a task with an open dependency is shown
+    as waiting by the dancecard and `wiz query` can ask for it, while
+    `status: blocked` stays for a task held up by something outside the
+    vault. The engine validates the links like any other
   - the `#blocked` tag becomes `status: blocked`
   - `bot` and `oncall` remain tags. In lx `requested_by` is a people link, and
     a shared field name must keep its shared type
