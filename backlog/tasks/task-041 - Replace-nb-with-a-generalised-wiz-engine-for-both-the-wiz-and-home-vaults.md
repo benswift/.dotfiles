@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T09:00:00Z'
+updated_date: '2026-10-29T09:30:00Z'
 labels:
   - pkb
   - wiz
@@ -83,7 +83,13 @@ future, with different types and workflows per vault, is the point.
   - which paths are records and which are assets (non-Markdown files that links
     may target and that are checked for existence)
   - identities and protected paths, generalising `admin/tools/identities` and
-    `requiredRole`
+    `requiredRole`. `_types/`, `mdbase.yaml` itself, the command-workflow
+    path and `.claude/settings.json` are admin-only in every vault, not by
+    config: decision-12 kept schemas admin-only only because they sat under
+    `admin/tools/`, and moving them out must not open them. The boundary is
+    what runs (commands, session config, the engine pin) and what validates
+    (types and vault config); everything else, including records, Starlark
+    workflows and skills, is anyone's.
   - the sync policy
   - `.gitignore`d paths are invisible to the engine
 - **Backward compatibility:** the engine stays compatible with older vault
@@ -451,7 +457,8 @@ unmatched records unless a type such as `note` claims them.
    - in its `admin/backlog`, edit or replace decisions 3, 6, 9 and 11 in the
      same commits that override them (the vault's CLAUDE.md requires this),
      extend decision-12 so open Starlark workflows and admin-only command
-     workflows sit on its two sides, and add a decision for the engine/vault
+     workflows sit on its two sides and types stay admin-only on their own
+     account now that they leave `admin/tools/`, and add a decision for the engine/vault
      split and the two workflow kinds, saying that agents are not a kind
    - file the engine work as wiz backlog tasks
    - nothing reaches Cole and Rob until the release passes a round trip on Rob's
@@ -604,7 +611,7 @@ though the same launchd concern applies to the new scheduler plist.
 - [ ] #2 The lx vault validates with the same results under the new engine as under wiz v0.9.0 before any record changes
 - [ ] #3 Every CLI command takes explicit vault names or --all, resolved via ~/.config/wiz/vaults.toml, with stable --json output; there is no current-notebook state
 - [ ] #4 No engine commit ever holds a file the write that made it didn't touch (plus link-repaired files on rename); nothing runs git add --all; whether a write commits at once is per-vault policy
-- [ ] #5 Starlark workflows run on macOS arm64, Linux amd64 and Windows amd64 with nothing installed and have no exec, filesystem or network access and no way to invoke a command workflow; anyone may add one, while command workflows are admin-only and the guard enforces the split
+- [ ] #5 Starlark workflows run on macOS arm64, Linux amd64 and Windows amd64 with nothing installed and have no exec, filesystem or network access and no way to invoke a command workflow; anyone may add one, while command workflows, `_types/` and `mdbase.yaml` are admin-only and the guard enforces the split
 - [ ] #6 A command workflow whose requires: is unmet, or whose host: is another machine, reports itself unavailable rather than failing
 - [ ] #7 One scheduler (wiz due --all, from one systemd timer on Linux and one launchd job on macOS) runs every due workflow for its host across all vaults, and a failed run on weddle files an oncall task through the unit's OnFailure wiring
 - [ ] #8 The lx dancecard is a Starlark workflow whose output matches the Go version on the same vault and date, covered by golden-output tests in the engine's Go suite; dancecard.go and calendar.go are deleted
