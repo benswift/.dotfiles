@@ -41,7 +41,7 @@ jobs:
           shellcheck bin/kiosk bin/check-secrets lib/kiosk/kiosk-browser lib/kiosk/kiosk-set-url lib/kiosk/kiosk-tailscale lib/kiosk/autostart lib/kiosk/wyse/provision.sh lib/kiosk/wyse/disk.sh lib/kiosk/wyse/late.sh
       - name: Test and type-check packages
         run: |
-          for project in mail/utils pkb; do
+          for project in mail/utils; do
             uv run --locked --project "$project" --group dev pytest "$project/tests" -q
             uv run --locked --project "$project" --group dev ty check "$project/src"
           done

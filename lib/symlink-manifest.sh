@@ -51,10 +51,6 @@ SYMLINK_MANIFEST=(
     "systemd/user/ingest-claude-logs.timer:~/.config/systemd/user/ingest-claude-logs.timer"
     "systemd/user/nb-sync.service:~/.config/systemd/user/nb-sync.service"
     "systemd/user/nb-sync.timer:~/.config/systemd/user/nb-sync.timer"
-    # pkb-agent: enable the timer on weddle ONLY (run stamps are
-    # machine-local, so a second machine would re-run every task)
-    "systemd/user/pkb-agent.service:~/.config/systemd/user/pkb-agent.service"
-    "systemd/user/pkb-agent.timer:~/.config/systemd/user/pkb-agent.timer"
     # restic-backup: enable the timers on weddle ONLY (it snapshots weddle's
     # aggregated data, see bin/restic-backup)
     "systemd/user/restic-backup.service:~/.config/systemd/user/restic-backup.service"

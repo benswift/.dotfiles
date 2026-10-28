@@ -30,9 +30,11 @@ extend-include = [
   "bin/hud",
   "bin/ingest-claude-logs",
   "bin/pangram",
+  "bin/pkb-health",
   "bin/s2",
   "bin/styled-image-gen",
   "bin/svg-validate",
+  "bin/todo",
   "bin/xtm-send",
 ]
 
