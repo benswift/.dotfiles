@@ -1,24 +1,37 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["httpx", "icalendar>=6", "recurring-ical-events>=3"]
+# dependencies = ["httpx", "icalendar>=6", "pyyaml", "recurring-ical-events>=3"]
 # ///
-"""Archive the ANU Exchange calendars' published ICS feeds into the notebook.
+"""Archive the ANU Exchange calendars' published ICS feeds into a vault.
 
+    calendar-archive --calendar NAME [--calendar NAME...] [--link-vault NAME...]
     calendar-archive [--out DIR]
 
-Runs on weddle only (systemd/user/calendar-archive.timer), so the notebook has
-one writer and nb-sync carries the result to every other host. Writes one
-JSONL file per calendar, DIR/<calendar>.jsonl (default
-~/.nb/home/data/calendars), one event occurrence per line with recurrences
-expanded: `calendar`, `uid`, `title`, `location`, `start`, `end`, `all_day`,
-`busy`, `description`, `organizer`, `attendees`, `source`. Timed events are in
-Canberra time; an all-day event's `end` is its last day, not the day after.
+With --calendar, it writes one `event` record per occurrence, recurrences
+expanded, into the vault it is run from (a wiz command workflow runs it from
+the vault root): events/<calendar>/<YYYY>/<YYYY-MM-DD>-<title>-<hash>.md, the
+hash taken from the occurrence's UID and start so it names the same
+occurrence on every run. The fields follow the vault's `event` type:
+`title`, `start_date`, `end_date`, `all_day`, `location`, `organizer`,
+`attendee`, `description`, `busy`, `calendar`, `uid` and `source`. Timed
+events are in Canberra time; an all-day event's `end_date` is its last day,
+not the day after. An organiser or attendee is a link to the person record
+whose `email` matches, in this vault or a --link-vault (`wiz query` finds
+them), else their name and address. It writes only files whose text
+changed, removes those of occurrences the feed has dropped, then runs
+`wiz validate`. --seed DIR takes the stored history from DIR/<calendar>.jsonl
+when the vault has none yet, once.
+
+Without --calendar it writes the old JSONL archive of Ben's three calendars,
+DIR/<calendar>.jsonl (default ~/.nb/home/data/calendars), for the notebook
+until it becomes a vault.
+
 `source` is "feed" for everything this writes; history from before the feeds
 began was backfilled once from other sources, which its `source` names.
 
 Each feed URL is a bearer secret, read from the env var named in CALENDARS
-(weddle's untracked mise env). ANU lets a calendar be published with titles
+(the host's untracked mise env). ANU lets a calendar be published with titles
 and locations at most, and a feed only reaches back one year. That makes the
 archive the only record of anything older: an occurrence that started before
 FROZEN_DAYS ago is never removed, while the feed decides everything newer (so a
@@ -38,8 +51,10 @@ from __future__ import annotations
 import argparse
 import email
 import email.policy
+import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -50,6 +65,7 @@ from zoneinfo import ZoneInfo
 import httpx
 import icalendar
 import recurring_ical_events
+import yaml
 
 LOCAL = ZoneInfo("Australia/Sydney")
 
@@ -58,7 +74,27 @@ CALENDARS = {
     "anu": "ANU_BEN_SWIFT_ICS_URL",
     "phdconvenor": "PHDCONVENOR_ICS_URL",
     "adirh": "ADIRH_ICS_URL",
+    "lxconvenor": "LXCONVENOR_ICS_URL",
 }
+
+# What the JSONL archive covers, until the notebook it lives in is a vault.
+JSONL_CALENDARS = ("anu", "phdconvenor", "adirh")
+
+# An event record's fields, in the order written.
+EVENT_FIELDS = (
+    "title",
+    "start_date",
+    "end_date",
+    "all_day",
+    "location",
+    "organizer",
+    "attendee",
+    "description",
+    "busy",
+    "calendar",
+    "uid",
+    "source",
+)
 
 # Exchange publishes a year of history. A month's margin inside that, so an
 # occurrence the feed still carries is never frozen before the feed has had
@@ -248,13 +284,175 @@ def archive(
     )
 
 
+Record = dict[str, object]
+
+
+def people(link_vaults: list[str]) -> dict[str, str]:
+    """Each person's email -> a link to their record, this vault's first."""
+    links: dict[str, str] = {}
+    for vault in [*reversed(link_vaults), ""]:
+        found = subprocess.run(
+            [
+                "wiz",
+                "query",
+                *([vault] if vault else []),
+                "-json",
+                'type == "person" && email != null',
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        prefix = f"{vault}:" if vault else ""
+        for r in json.loads(found.stdout):
+            name = str(r["path"]).removesuffix(".md")
+            links[str(r["fields"]["email"]).lower()] = f"[[{prefix}{name}]]"
+    return links
+
+
+def who(p: dict[str, str | None] | None, links: dict[str, str]) -> str | None:
+    if not p:
+        return None
+    email = str(p["email"])
+    if email in links:
+        return links[email]
+    return f"{p['name']} <{email}>" if p.get("name") else email
+
+
+def as_record(occ: dict[str, object], links: dict[str, str]) -> Record:
+    """A feed occurrence as an event record's fields."""
+    organizer = occ.get("organizer")
+    attendees = occ.get("attendees") or []
+    assert isinstance(attendees, list)
+    record: Record = {
+        "title": occ["title"] or "(no title)",
+        "start_date": occ["start"],
+        "end_date": occ["end"],
+        "all_day": occ["all_day"],
+        "location": occ["location"],
+        "organizer": who(organizer if isinstance(organizer, dict) else None, links),
+        "attendee": [who(a, links) for a in attendees],
+        "description": occ["description"],
+        "busy": occ["busy"],
+        "calendar": occ["calendar"],
+        "uid": occ["uid"],
+        "source": occ["source"],
+    }
+    return {k: v for k, v in record.items() if v not in (None, [], "")}
+
+
+def record_key(r: Record) -> tuple[str, str]:
+    return str(r["start_date"]), str(r["uid"])
+
+
+def record_path(r: Record) -> Path:
+    start = str(r["start_date"])
+    slug = (
+        re.sub(r"[^a-z0-9]+", "-", str(r["title"]).lower()).strip("-")[:40].strip("-")
+    )
+    digest = hashlib.sha1(f"{r['uid']}|{start}".encode()).hexdigest()[:6]
+    return Path(
+        "events",
+        str(r["calendar"]),
+        start[:4],
+        f"{start[:10]}-{slug or 'event'}-{digest}.md",
+    )
+
+
+def document(r: Record) -> str:
+    fields = {k: r[k] for k in EVENT_FIELDS if k in r}
+    return (
+        "---\n"
+        + yaml.safe_dump(
+            fields, sort_keys=False, allow_unicode=True, width=float("inf")
+        )
+        + "---\n"
+    )
+
+
+def stored_records(folder: Path) -> dict[Path, Record]:
+    stored = {}
+    for path in folder.rglob("*.md"):
+        text = path.read_text()
+        head = text.removeprefix("---\n").split("\n---\n", 1)[0]
+        stored[path] = yaml.safe_load(head) or {}
+    return stored
+
+
+def from_jsonl(path: Path, links: dict[str, str]) -> list[Record]:
+    """A JSONL archive's occurrences as records, to seed a vault's history."""
+    lines = path.read_text().split("\n") if path.exists() else []
+    return [as_record(json.loads(line), links) for line in lines if line]
+
+
+def archive_records(
+    name: str,
+    calendar: icalendar.Calendar,
+    known: Invites,
+    links: dict[str, str],
+    vault: Path,
+    today: date,
+    seed: Path | None,
+) -> str:
+    """Write the calendar's occurrences as event records, keeping history
+    the feed no longer reaches, and remove those the feed has dropped."""
+    folder = vault / "events" / name
+    on_disk = stored_records(folder)
+    stored = list(on_disk.values())
+    if not stored and seed is not None:
+        stored = from_jsonl(seed / f"{name}.jsonl", links)
+    feed = [as_record(o, links) for o in from_feed(name, calendar, known, today)]
+
+    cutoff = (today - timedelta(days=FROZEN_DAYS)).isoformat()
+    previous = {record_key(r): r for r in stored}
+    merged = {k: r for k, r in previous.items() if str(r["start_date"]) < cutoff}
+    for r in feed:
+        old = previous.get(record_key(r))
+        # Invite detail already stored survives a run that found none.
+        if old and old.get("organizer") and not r.get("organizer"):
+            r = {
+                **r,
+                **{
+                    f: old[f]
+                    for f in ("description", "organizer", "attendee")
+                    if f in old
+                },
+            }
+        merged[record_key(r)] = r
+
+    wanted = {vault / record_path(r): document(r) for r in merged.values()}
+    for path, text in wanted.items():
+        if not path.exists() or path.read_text() != text:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text)
+    for path in on_disk:
+        if path not in wanted:
+            path.unlink()
+    for d in sorted(folder.rglob("*"), reverse=True):
+        if d.is_dir() and not any(d.iterdir()):
+            d.rmdir()
+    before, after = set(previous), set(merged)
+    detailed = sum(1 for r in merged.values() if r.get("organizer"))
+    return (
+        f"{name}: {len(merged)} occurrences, {detailed} with invite detail "
+        f"(+{len(after - before)} -{len(before - after)})"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--calendar", action="append", choices=sorted(CALENDARS), default=[]
+    )
+    parser.add_argument("--link-vault", action="append", default=[])
+    parser.add_argument("--seed", type=Path)
     parser.add_argument(
         "--out", type=Path, default=Path.home() / ".nb/home/data/calendars"
     )
     args = parser.parse_args()
-    args.out.mkdir(parents=True, exist_ok=True)
+    names = args.calendar or list(JSONL_CALENDARS)
+    if not args.calendar:
+        args.out.mkdir(parents=True, exist_ok=True)
     today = datetime.now(LOCAL).date()
 
     failed = 0
@@ -266,7 +464,8 @@ def main() -> int:
 
     # Fetch every feed first, so one pass over the mail serves them all.
     feeds: dict[str, icalendar.Calendar] = {}
-    for name, var in CALENDARS.items():
+    for name in names:
+        var = CALENDARS[name]
         url = os.environ.get(var)
         try:
             if not url:
@@ -287,8 +486,29 @@ def main() -> int:
         fail(str(error))
         known = {}
 
+    if not args.calendar:
+        for name, calendar in feeds.items():
+            print(archive(name, calendar, known, args.out, today))
+        return 1 if failed else 0
+
+    vault = Path.cwd()
+    try:
+        links = people(args.link_vault)
+    except (OSError, subprocess.CalledProcessError) as error:
+        fail(f"couldn't look up people with wiz, so nobody is linked: {error}")
+        links = {}
     for name, calendar in feeds.items():
-        print(archive(name, calendar, known, args.out, today))
+        print(archive_records(name, calendar, known, links, vault, today, args.seed))
+    checked = subprocess.run(
+        ["wiz", "validate", "-json"], capture_output=True, text=True, check=False
+    )
+    if checked.returncode not in (0, 1):
+        fail(f"wiz validate failed: {checked.stderr.strip()}")
+    else:
+        for result in json.loads(checked.stdout or "[]"):
+            for problem in result["problems"] or []:
+                if str(problem["Path"]).startswith("events/"):
+                    fail(f"{problem['Path']}: {problem['Message']}")
     return 1 if failed else 0
 
 

@@ -95,17 +95,17 @@ def invite(
 def run(
     server: str, out: Path, mail: list[Path] | None = None, mu: bool = True
 ) -> subprocess.CompletedProcess[str]:
-    """Run the script with a fake mu that finds `mail`, or with no mu at all."""
+    """Run the script with a fake mu that finds `mail`, or with mail it can't
+    read. (Faking a missing mu isn't portable: a real one in /usr/bin wins.)"""
     bin_dir = out / "bin"
     bin_dir.mkdir(exist_ok=True)
     listing = out / "mu-finds"
     listing.write_text("".join(f"{m}\n" for m in mail or []))
+    if not mu:
+        listing.write_text(f"{out / 'no-such-message.eml'}\n")
     fake = bin_dir / "mu"
-    if mu:
-        fake.write_text(f'#!/bin/sh\ncat "{listing}"\n[ -s "{listing}" ] || exit 4\n')
-        fake.chmod(0o755)
-    else:
-        fake.unlink(missing_ok=True)
+    fake.write_text(f'#!/bin/sh\ncat "{listing}"\n[ -s "{listing}" ] || exit 4\n')
+    fake.chmod(0o755)
     env = {
         **os.environ,
         "PATH": f"{bin_dir}:/usr/bin:/bin",
@@ -256,6 +256,134 @@ def test_text_with_unicode_line_separators_round_trips(
     result = run(server, tmp_path)
     assert result.returncode == 0, result.stderr
     assert titles(tmp_path) == ["Line\u2028separated"]
+
+
+def run_records(
+    server: str, vault: Path, *args: str, mail: list[Path] | None = None
+) -> subprocess.CompletedProcess[str]:
+    """Run the record mode from vault, with fake mu and wiz: Ada is a person
+    in the vault, and Ben one in the lx vault."""
+    bin_dir = vault.parent / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    listing = vault.parent / "mu-finds"
+    listing.write_text("".join(f"{m}\n" for m in mail or []))
+    (bin_dir / "mu").write_text(
+        f'#!/bin/sh\ncat "{listing}"\n[ -s "{listing}" ] || exit 4\n'
+    )
+    here = [{"path": "people/ada-lovelace.md", "fields": {"email": "ada@example.org"}}]
+    lx = [{"path": "people/ben-swift.md", "fields": {"email": "ben@example.org"}}]
+    (bin_dir / "wiz").write_text(
+        "#!/bin/sh\n"
+        'case "$1 $2" in\n'
+        f"  'query lx') echo '{json.dumps(lx)}' ;;\n"
+        f"  query*) echo '{json.dumps(here)}' ;;\n"
+        '  validate*) echo \'[{"vault": "x", "problems": []}]\' ;;\n'
+        "esac\n"
+    )
+    for fake in ("mu", "wiz"):
+        (bin_dir / fake).chmod(0o755)
+    env = {
+        **os.environ,
+        "PATH": f"{bin_dir}:/usr/bin:/bin",
+        "ANU_BEN_SWIFT_ICS_URL": f"{server}/anu",
+    }
+    uv = shutil.which("uv")
+    assert uv
+    return subprocess.run(
+        [uv, "run", "--quiet", "--script", str(SCRIPT), *args],
+        cwd=vault,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def event_records(vault: Path) -> dict[str, str]:
+    return {
+        str(p.relative_to(vault)): p.read_text()
+        for p in sorted((vault / "events").rglob("*.md"))
+    }
+
+
+def test_records_are_written_linked_and_left_alone_when_unchanged(
+    server: str, tmp_path: Path
+) -> None:
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    day = TODAY + timedelta(days=2)
+    FEEDS["anu"] = ics(
+        event("m", "Planning: next year", day),
+        event(
+            "w", "Weekly", TODAY - timedelta(days=7), "RRULE:FREQ=WEEKLY;COUNT=2\r\n"
+        ),
+    )
+    mail = [invite(tmp_path / "m.eml", "m", day, 0, "Agenda")]
+    result = run_records(server, vault, "--calendar", "anu", mail=mail)
+    assert result.returncode == 0, result.stderr
+    records = event_records(vault)
+    assert len(records) == 3
+    (meeting,) = [t for p, t in records.items() if "planning-next-year" in p]
+    path = next(p for p in records if "planning-next-year" in p)
+    assert path.startswith(f"events/anu/{day:%Y}/{day:%Y-%m-%d}-planning-next-year-")
+    assert meeting.startswith("---\ntitle: 'Planning: next year'\nstart_date: ")
+    assert "all_day: false\n" in meeting
+    assert "organizer: '[[people/ada-lovelace]]'\n" in meeting
+    assert "attendee:\n- Ben Swift <ben@example.org>\n" in meeting
+    assert (
+        "description: Agenda\n" in meeting
+        and "busy: busy\ncalendar: anu\nuid: m\nsource: feed\n" in meeting
+    )
+    assert "anu: 3 occurrences, 1 with invite detail (+3 -0)" in result.stdout
+
+    # An unchanged calendar touches no file.
+    stamps = {p: (vault / p).stat().st_mtime_ns for p in records}
+    assert run_records(server, vault, "--calendar", "anu", mail=mail).returncode == 0
+    assert {p: (vault / p).stat().st_mtime_ns for p in records} == stamps
+
+    # A person in a linked vault is linked across; a dropped event goes.
+    FEEDS["anu"] = ics(event("m", "Planning: next year", day))
+    result = run_records(
+        server, vault, "--calendar", "anu", "--link-vault", "lx", mail=mail
+    )
+    assert result.returncode == 0, result.stderr
+    (meeting,) = event_records(vault).values()
+    assert "attendee:\n- '[[lx:people/ben-swift]]'\n" in meeting
+
+
+def test_records_seed_their_history_from_the_jsonl_archive(
+    server: str, tmp_path: Path
+) -> None:
+    old = TODAY - timedelta(days=500)
+    seed = tmp_path / "jsonl"
+    seed.mkdir()
+    (seed / "anu.jsonl").write_text(
+        json.dumps(
+            {
+                "calendar": "anu",
+                "uid": "old",
+                "title": "Long ago",
+                "location": None,
+                "start": f"{old}T10:00:00+11:00",
+                "end": f"{old}T11:00:00+11:00",
+                "all_day": False,
+                "busy": "busy",
+                "source": "Outlook export",
+                "description": None,
+                "organizer": None,
+                "attendees": [],
+            }
+        )
+        + "\n"
+    )
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    FEEDS["anu"] = ics(event("now", "Now", TODAY))
+    result = run_records(server, vault, "--calendar", "anu", "--seed", str(seed))
+    assert result.returncode == 0, result.stderr
+    texts = list(event_records(vault).values())
+    assert len(texts) == 2
+    assert any("title: Long ago" in t and "source: Outlook export" in t for t in texts)
 
 
 if __name__ == "__main__":
