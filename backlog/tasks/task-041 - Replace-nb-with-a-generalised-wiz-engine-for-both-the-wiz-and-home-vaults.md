@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T11:20:00Z'
+updated_date: '2026-10-29T11:30:00Z'
 labels:
   - pkb
   - wiz
@@ -522,8 +522,8 @@ should commit in reviewable chunks, one per conversion. The target schema:
   to split old ones by subject). From then on there is no day file: a
   session summary is a note `about` its project, a thought is a note with a
   title, a journal entry is a note tagged `journal`, and machine output
-  (health checks, run reports) goes to logs or the briefing, never to a
-  record. "What happened on a day" is a query over dated records (notes,
+  (health checks, run reports) goes to the engine's logs only, never to a
+  record or the briefing. "What happened on a day" is a query over dated records (notes,
   events, tasks closed) plus `git log`. That removes the `merge=union`
   attribute, the sync-before-write rule and the `append` operation from the
   first wave; `wiz add` with the body on stdin is the capture operation.
