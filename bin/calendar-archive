@@ -1,0 +1,155 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["httpx", "icalendar>=6", "recurring-ical-events>=3"]
+# ///
+"""Archive the ANU Exchange calendars' published ICS feeds into the notebook.
+
+    calendar-archive [--out DIR]
+
+Runs on weddle only (systemd/user/calendar-archive.timer), so the notebook has
+one writer and nb-sync carries the result to every other host. Writes one
+JSONL file per calendar, DIR/<calendar>.jsonl (default
+~/.nb/home/data/calendars), one event occurrence per line with recurrences
+expanded: `calendar`, `uid`, `title`, `location`, `start`, `end`, `all_day`,
+`busy`. Timed events are in Canberra time; an all-day event's `end` is its
+last day, not the day after.
+
+Each feed URL is a bearer secret, read from the env var named in CALENDARS
+(weddle's untracked mise env). ANU lets a calendar be published with titles
+and locations at most, so there are no descriptions or attendees, and a feed
+only reaches back one year. That makes the archive the only record of
+anything older: an occurrence that started before FROZEN_DAYS ago is never
+removed, while the feed decides everything newer (so a cancelled or moved
+event drops out). An empty or failed feed is an error, never a deletion.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+import httpx
+import icalendar
+import recurring_ical_events
+
+LOCAL = ZoneInfo("Australia/Sydney")
+
+# calendar name (the mail account's) -> env var holding its ICS feed URL
+CALENDARS = {
+    "anu": "ANU_BEN_SWIFT_ICS_URL",
+    "phdconvenor": "PHDCONVENOR_ICS_URL",
+    "adirh": "ADIRH_ICS_URL",
+}
+
+# Exchange publishes a year of history. A month's margin inside that, so an
+# occurrence the feed still carries is never frozen before the feed has had
+# its say about whether it was cancelled.
+FROZEN_DAYS = 330
+
+BUSY = {
+    "FREE": "free",
+    "TENTATIVE": "tentative",
+    "BUSY": "busy",
+    "OOF": "out of office",
+    "WORKINGELSEWHERE": "working elsewhere",
+}
+
+
+def occurrence(name: str, event: icalendar.Event) -> dict[str, object]:
+    start, end = event.start, event.end
+    all_day = not isinstance(start, datetime)
+    if all_day:
+        end = max(start, end - timedelta(days=1))
+    else:
+        start, end = start.astimezone(LOCAL), end.astimezone(LOCAL)
+    return {
+        "calendar": name,
+        "uid": str(event.get("UID", "")),
+        "title": str(event.get("SUMMARY", "")).strip(),
+        "location": str(event.get("LOCATION", "")).strip() or None,
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "all_day": all_day,
+        "busy": BUSY.get(str(event.get("X-MICROSOFT-CDO-BUSYSTATUS", ""))),
+    }
+
+
+def key(record: dict[str, object]) -> tuple[str, str]:
+    return str(record["start"]), str(record["uid"])
+
+
+def from_feed(name: str, ics: bytes, today: date) -> list[dict[str, object]]:
+    calendar = icalendar.Calendar.from_ical(ics)
+    if not calendar.events:
+        raise ValueError(f"{name}: the feed has no events")
+    until = date(today.year + 2, 1, 1)
+    events = recurring_ical_events.of(calendar).between(date(1900, 1, 1), until)
+    return [occurrence(name, e) for e in events]
+
+
+def merge(
+    stored: list[dict[str, object]], feed: list[dict[str, object]], today: date
+) -> list[dict[str, object]]:
+    """The feed's occurrences, plus every stored one too old for the feed to
+    be trusted about (the feed wins where both have it)."""
+    cutoff = (today - timedelta(days=FROZEN_DAYS)).isoformat()
+    merged = {key(r): r for r in stored if str(r["start"]) < cutoff}
+    merged.update((key(r), r) for r in feed)
+    return [merged[k] for k in sorted(merged)]
+
+
+def archive(name: str, url: str, out: Path, today: date) -> str:
+    response = httpx.get(url, timeout=60, follow_redirects=True)
+    response.raise_for_status()
+    feed = from_feed(name, response.content, today)
+
+    path = out / f"{name}.jsonl"
+    old = path.read_text() if path.exists() else ""
+    stored = [json.loads(line) for line in old.splitlines() if line]
+    records = merge(stored, feed, today)
+    text = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in records)
+    if text != old:
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(text)
+        tmp.replace(path)
+    before, after = set(map(key, stored)), set(map(key, records))
+    return (
+        f"{name}: {len(records)} occurrences "
+        f"(+{len(after - before)} -{len(before - after)})"
+    )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--out", type=Path, default=Path.home() / ".nb/home/data/calendars"
+    )
+    args = parser.parse_args()
+    args.out.mkdir(parents=True, exist_ok=True)
+    today = datetime.now(LOCAL).date()
+
+    failed = 0
+    for name, var in CALENDARS.items():
+        url = os.environ.get(var)
+        try:
+            if not url:
+                raise ValueError(f"{name}: ${var} is not set")
+            print(archive(name, url, args.out, today))
+        # One calendar failing must not stop the others; the exit code
+        # still reports it, which is what reaches unit-oncall.
+        except (OSError, ValueError, httpx.HTTPError) as error:
+            # httpx puts the URL in its message, and the URL is the secret.
+            message = str(error).replace(url, f"${var}") if url else str(error)
+            print(f"calendar-archive: {message}", file=sys.stderr)
+            failed += 1
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

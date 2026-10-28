@@ -66,6 +66,9 @@ SYMLINK_MANIFEST=(
     # mail-pull: enable the timer on weddle ONLY (mail/mbsyncrc-weddle)
     "systemd/user/mail-pull.service:~/.config/systemd/user/mail-pull.service"
     "systemd/user/mail-pull.timer:~/.config/systemd/user/mail-pull.timer"
+    # calendar-archive: enable the timer on weddle ONLY (one notebook writer)
+    "systemd/user/calendar-archive.service:~/.config/systemd/user/calendar-archive.service"
+    "systemd/user/calendar-archive.timer:~/.config/systemd/user/calendar-archive.timer"
     # gitlab-mirror: enable the timer on weddle ONLY (it feeds restic-backup)
     "systemd/user/gitlab-mirror.service:~/.config/systemd/user/gitlab-mirror.service"
     "systemd/user/gitlab-mirror.timer:~/.config/systemd/user/gitlab-mirror.timer"
