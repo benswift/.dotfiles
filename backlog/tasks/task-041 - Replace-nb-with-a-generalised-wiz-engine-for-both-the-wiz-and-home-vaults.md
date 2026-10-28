@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T11:50:00Z'
+updated_date: '2026-10-29T12:00:00Z'
 labels:
   - pkb
   - wiz
@@ -106,12 +106,15 @@ future, with different types and workflows per vault, is the point.
 - A vault's name is declared in its `mdbase.yaml` (`name: lx`), never derived
   from its folder. The name is used in the registry, cross-vault links
   (`[[lx:people/cole-cooney]]`) and `--all` output.
-- The lx vault's GitLab project stays `u2548636/wiz`, and Cole's, Rob's and
-  watson's clones keep their remote and folder. No rename: GitLab redirects
-  a renamed path only until it is reused, and nothing but `wiz-build` ever
-  needs the engine repo's name. The engine lives in a new project,
-  `u2548636/wiz-engine`. A fresh vault clone is told its folder name by
-  `/wiz-help` (`git clone … wiz-lx`).
+- Repos carry a `wiz-` prefix so vaults sort together on the server:
+  `u2548636/wiz-lx` (the lx vault, renamed from `u2548636/wiz`),
+  `u2548636/wiz-engine`, and `wiz-<name>` for any later vault. The old path
+  `u2548636/wiz` is never reused: GitLab redirects a renamed path only
+  until something takes it, and while it is free Cole's, Rob's and watson's
+  clones keep working unchanged. `wiz check` rewrites a remote when git
+  reports the move, so nobody is told to change anything. A fresh clone
+  makes a `wiz-lx` folder by itself. A GitLab group is a possible later
+  home, reached by the same kind of redirecting move.
 - Ben's local paths leave `~/.nb` once nb is gone: `~/vaults/wiz-lx` and
   `~/vaults/wiz-home`, with home's repo renamed `wiz-home` (only Ben's
   machines clone it).
@@ -559,11 +562,13 @@ unmatched records unless a type such as `note` claims them.
 
 ## Repos and what changes in each
 
-1. **New engine repo `u2548636/wiz-engine`:** created from `admin/tools/wiz`
-   with its history preserved (`git filter-repo --subdirectory-filter`).
-   Binaries still ship to the vault remote's `refs/tools/`, so nobody but
-   Ben's `wiz-build` holds the engine repo's URL.
-2. **`~/.nb/wiz`, the lx vault** (gitlab.anu.edu.au:u2548636/wiz):
+1. **Repos:** rename the GitLab project `u2548636/wiz` to `wiz-lx` (never
+   reuse the old path), and create `u2548636/wiz-engine` from
+   `admin/tools/wiz` with its history preserved
+   (`git filter-repo --subdirectory-filter`). Binaries still ship to the
+   vault remote's `refs/tools/`, so nobody but Ben's `wiz-build` holds the
+   engine repo's URL.
+2. **`~/.nb/wiz`, the lx vault** (gitlab.anu.edu.au:u2548636/wiz-lx):
    - convert `admin/tools/schemas/*.json` to `_types/` plus `mdbase.yaml`
    - add the dancecard and other Starlark workflows, and command workflows for
      watson's jobs, including the skills review, and for the lxconvenor
