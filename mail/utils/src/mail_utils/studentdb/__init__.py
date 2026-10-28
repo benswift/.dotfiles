@@ -21,7 +21,8 @@ __all__ = [
     "StudentDatabase",
 ]
 
-NB_NOTE_ID = "data/student-db.json"
+# The database, in Ben's home wiz vault.
+VAULT_FILE = "home:data/student-db.json"
 
 
 class StudentDB:
@@ -47,9 +48,9 @@ class StudentDB:
         return cls(db)
 
     @classmethod
-    def from_nb(cls, note_id: str = NB_NOTE_ID) -> "StudentDB":
+    def from_vault(cls, ref: str = VAULT_FILE) -> "StudentDB":
         result = subprocess.run(
-            ["nb", "show", note_id, "--path"],
+            ["wiz", "path", ref],
             capture_output=True,
             text=True,
             check=True,

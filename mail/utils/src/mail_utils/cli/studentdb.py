@@ -53,7 +53,7 @@ def load_db(file: Path | None) -> StudentDB:
     try:
         if file:
             return StudentDB.from_file(file)
-        return StudentDB.from_nb()
+        return StudentDB.from_vault()
     except ValueError as e:
         console.print(f"[red]Error loading database: {e}[/red]")
         raise typer.Exit(1)
@@ -99,7 +99,9 @@ def students(
     file: Annotated[
         Path | None,
         typer.Option(
-            "--file", "-f", help="Path to database file (default: load from nb)"
+            "--file",
+            "-f",
+            help="Path to database file (default: the home vault's data/student-db.json)",
         ),
     ] = None,
 ) -> None:
@@ -128,7 +130,9 @@ def people(
     file: Annotated[
         Path | None,
         typer.Option(
-            "--file", "-f", help="Path to database file (default: load from nb)"
+            "--file",
+            "-f",
+            help="Path to database file (default: the home vault's data/student-db.json)",
         ),
     ] = None,
 ) -> None:
