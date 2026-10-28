@@ -4,6 +4,7 @@ title: Replace nb with a generalised wiz engine for both the wiz and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
+updated_date: '2026-10-28T10:07:00Z'
 labels:
   - pkb
   - wiz
@@ -82,6 +83,43 @@ and support making wiz general purpose, which is part of wiz's own mission
   - `.gitignore`d paths are invisible to the engine
 - **Backward compatibility:** the engine stays compatible with older vault
   format versions, so Ben can run the newest engine against every vault.
+
+### Naming
+
+- "wiz" names the tool only: the binary, the engine repo (`wiz`) and the generic
+  slash commands. "Vault" is the generic noun for a data repo. It's already
+  Obsidian's word and wiz's own.
+- Vaults are named for their contents, never "the wiz vault":
+  - `home` is Ben's
+  - the shared LX repo is renamed `lx`: GitLab project, registry name and
+    cross-vault link prefix (`[[lx:people/cole-cooney]]`). GitLab redirects the
+    old path, so existing clones keep working until their remotes are updated
+- Local paths leave `~/.nb` once nb is gone (for example `~/vaults/home` and
+  `~/vaults/lx`). Cole and Rob have agreed to the churn.
+- Avoid wizard-themed jargon ("spells" and the like): every extra term costs
+  non-technical colleagues.
+
+### Slash commands
+
+- Generic commands are named for the tool and mean the same thing in every
+  vault:
+  - `/wiz` runs the vault's workflow named `dancecard`, whose content each vault
+    defines
+  - `/wiz-sync` shares and gets the latest
+  - `/wiz-help` explains wiz and checks the setup
+- On Ben's machines, `wiz run dancecard --all` merges every vault's dancecard.
+- Vault-specific commands carry the vault's name: `/wiz-email` becomes
+  `/lx-email`, and anything home-only is `/home-…`. Nothing called `/wiz-…` is
+  ever vault-specific.
+- The generic skills ship with the engine. `wiz skills` writes them into a
+  vault's `.claude/skills/`, and `wiz-update` refreshes them when the pin moves.
+  The guard protects them like `admin/tools/`, and vaults don't edit them.
+  - A Claude Code plugin declared in the vault's `.claude/settings.json` would
+    be cleaner. Adopt it only if it's verified to install and load from Claude
+    desktop's Code tab on Cole's and Rob's machines.
+- Shrink `ben:pkb` (a personal skill, so it appears in every session including
+  LX ones) to what's genuinely Ben's (email, role hubs), so it doesn't compete
+  with `/wiz`.
 
 ### No "current notebook"
 
@@ -252,10 +290,10 @@ unmatched records unless a type such as `note` claims them.
 
 ## Repos and what changes in each
 
-1. **New engine repo:** created from `~/.nb/wiz/admin/tools/wiz` with history
-   preserved (`git filter-repo --subdirectory-filter`), hosted on
-   gitlab.anu.edu.au beside `u2548636/wiz`. Picking the name is an open
-   question.
+1. **New engine repo `wiz`:** first rename the GitLab project
+   `u2548636/wiz` to `u2548636/lx` to free the name. Then create
+   `u2548636/wiz` from `admin/tools/wiz` with its history preserved
+   (`git filter-repo --subdirectory-filter`).
 2. **`~/.nb/wiz`** (gitlab.anu.edu.au:u2548636/wiz):
    - convert `admin/tools/schemas/*.json` to `_types/` plus `mdbase.yaml`
    - add the dancecard and other Starlark workflows, and command workflows for
@@ -337,7 +375,6 @@ without trouble.
 
 ## Open questions to settle at the start
 
-- the engine repo's name, and whether the binary stays `wiz`
 - whether watson builds the engine from `main` or the pin
 - how the engine is installed on Ben's machines
 - which mdbase conformance profile to target
