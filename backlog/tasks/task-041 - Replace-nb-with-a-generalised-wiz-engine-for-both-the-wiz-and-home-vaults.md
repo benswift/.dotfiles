@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the wiz and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-28T10:07:00Z'
+updated_date: '2026-10-28T10:13:00Z'
 labels:
   - pkb
   - wiz
@@ -91,11 +91,21 @@ and support making wiz general purpose, which is part of wiz's own mission
   Obsidian's word and wiz's own.
 - Vaults are named for their contents, never "the wiz vault":
   - `home` is Ben's
-  - the shared LX repo is renamed `lx`: GitLab project, registry name and
-    cross-vault link prefix (`[[lx:people/cole-cooney]]`). GitLab redirects the
-    old path, so existing clones keep working until their remotes are updated
-- Local paths leave `~/.nb` once nb is gone (for example `~/vaults/home` and
-  `~/vaults/lx`). Cole and Rob have agreed to the churn.
+  - the shared LX vault is named `lx`
+- A vault's name is declared in its `mdbase.yaml` (`name: lx`), never derived
+  from its folder. The name is used in the registry, cross-vault links
+  (`[[lx:people/cole-cooney]]`), vault-specific slash commands (`/lx-email`)
+  and `--all` output.
+- Repos and folders carry a `wiz-` prefix, so Claude desktop (which shows the
+  folder name above the session list) reads `wiz-lx`:
+  - the GitLab project `u2548636/wiz` is renamed `u2548636/wiz-lx`, so a fresh
+    `git clone` makes a `wiz-lx` folder with no instructions needed. GitLab
+    redirects the old path, so existing clones keep working until their
+    remotes are updated (have `wiz check` fix them)
+  - home's repo and folder become `wiz-home`
+- Local paths leave `~/.nb` once nb is gone: `~/wiz-lx` and `~/wiz-home`, with
+  no parent folder, since the prefix already groups them. Cole and Rob have
+  agreed to the churn.
 - Avoid wizard-themed jargon ("spells" and the like): every extra term costs
   non-technical colleagues.
 
@@ -120,6 +130,19 @@ and support making wiz general purpose, which is part of wiz's own mission
 - Shrink `ben:pkb` (a personal skill, so it appears in every session including
   LX ones) to what's genuinely Ben's (email, role hubs), so it doesn't compete
   with `/wiz`.
+
+### CLAUDE.md per vault
+
+- Each vault has its own root `CLAUDE.md`. The generic wiz rules (use wiz
+  commands rather than ad hoc ones, run `validate` after editing, the commit
+  and sync model) ship with the engine as `.claude/wiz.md`, written by
+  `wiz skills` alongside the generic skills. Each vault's `CLAUDE.md` opens
+  with `@.claude/wiz.md`, then holds only that vault's rules: record
+  conventions, who changes what, and the Git policy.
+- A session in one vault doesn't load another vault's `CLAUDE.md`. Writes
+  through the CLI are still validated against the target vault's types, but
+  its prose conventions aren't, so home's `CLAUDE.md` says to read
+  `~/wiz-lx/CLAUDE.md` before writing to lx.
 
 ### No "current notebook"
 
@@ -236,7 +259,8 @@ a protected path (`admin/workflows/`) that only admins change.
 - `calendar-export` writes event records instead of `_generated/calendar.md`,
   and `calendar.go` is deleted.
 - `check.go` splits. Generic Git, SSH and engine checks stay in the engine; LX
-  setup diagnosis becomes a wiz-vault workflow or stays in `/wiz-help`.
+  setup diagnosis moves into the `/wiz-help` skill's text, because it needs
+  judgement, which decision-6 assigns to skills.
 - `wiz job` becomes "trigger a command workflow pinned to `host: watson`". The
   deliveries report becomes a command workflow (`requires: [typst]`,
   `host: watson`) fed by `wiz query --json`.
@@ -291,7 +315,7 @@ unmatched records unless a type such as `note` claims them.
 ## Repos and what changes in each
 
 1. **New engine repo `wiz`:** first rename the GitLab project
-   `u2548636/wiz` to `u2548636/lx` to free the name. Then create
+   `u2548636/wiz` to `u2548636/wiz-lx` to free the name. Then create
    `u2548636/wiz` from `admin/tools/wiz` with its history preserved
    (`git filter-repo --subdirectory-filter`).
 2. **`~/.nb/wiz`** (gitlab.anu.edu.au:u2548636/wiz):
@@ -326,11 +350,15 @@ unmatched records unless a type such as `note` claims them.
    - **scheduler units:** add a `wiz-due` systemd service and timer and a
      launchd plist, both with `OnFailure`/oncall wiring like the units they
      replace.
-   - **pkb package:** `pkb-health` stays as a command workflow's program; decide
-     whether `pkb/` shrinks to just that or the script moves to `bin/`.
+   - **pkb package:** delete it. `pkb-health` moves to `bin/pkb-health` as a
+     `uv run --script` (add it to `extend-include` in `ruff.toml`) and runs as a
+     command workflow. Drop the pkb steps from CI and the editable install from
+     `install.sh` and `dotfiles update`.
    - **`bin/unit-oncall`, and the failure path in `bin/launchd-run`:** switch to
-     `wiz add home task --tag oncall --requested-by automation …`, `wiz update`
-     to close, and `wiz sync home`.
+     `wiz add home task --tag oncall --requested-by automation --unit <unit> …`,
+     close it with an `update` found by
+     `wiz query home 'unit == "<unit>" && status == "open"'` (not by title), and
+     `wiz sync home`. The home `task` type gains a `unit` field.
    - **`mail/utils` student-db:** `studentdb/__init__.py` resolves
      `data/student-db.json` with `nb show --path`. Switch it to
      `wiz path home:data/student-db.json` or a direct path.
@@ -342,8 +370,9 @@ unmatched records unless a type such as `note` claims them.
    - **docs:** update `CLAUDE.md` (Utilities, the `nb` paragraph, the pkb
      bullets, the ts-cat note about `nb show`), `claude/CLAUDE.md` (Tools →
      Notes) and `pkb/README.md`.
-   - **`systemd/user/wiz-validate.service`:** keep it, or replace it with the
-     scheduler running watson's workflows.
+   - **`systemd/user/wiz-validate.service`:** replace it. watson's run becomes
+     workflows with `host: watson`, and weddle's timer just runs `wiz due lx` on
+     watson over ssh. weddle stays the alarm, with its oncall wiring intact.
    - **CI:** add the engine's test suite to `.github/workflows/security.yml` if
      it's vendored or called from here.
 6. **watson:** registry entry, engine build, and `watson-run` reduced to
@@ -373,13 +402,26 @@ Rollback until step 6: nb still reads both vaults, because records stay plain
 Markdown. Keep the nb pin and units until home has been on the engine for a week
 without trouble.
 
-## Open questions to settle at the start
+## Decisions made while planning
 
-- whether watson builds the engine from `main` or the pin
-- how the engine is installed on Ben's machines
-- which mdbase conformance profile to target
-- whether CEL is exposed to Starlark directly or only through `ctx.query`
-- how `on_change` triggers fire (a post-merge hook, or a check at sync time)
+- **Watson:** it runs the engine version pinned in the lx vault, not `main`, so
+  the shared vault's automation runs exactly what Cole and Rob run.
+- **Installing the engine on Ben's machines:** the same way as collaborators,
+  through the vault's pin and `wiz-install`. During development, a `wiz-build`
+  script (like `helix-build`) puts a source build in `~/.local/bin` ahead of
+  it. No mise entry.
+- **mdbase conformance:** target only types, matching, validation, links and
+  rename. Skip mdbase's CEL views and its event/runtime companion, since wiz's
+  workflows are its own. Track the spec's fixtures; don't contribute upstream
+  until v0.3 is final.
+- **CEL in Starlark:** only through `ctx.query(cel_string)`, evaluated in Go.
+  That keeps one query language with one evaluation site.
+- **`on_change` triggers:** checked at sync time, after pull and rebase, by
+  diffing the old and new HEAD against each workflow's glob. Never via Git
+  hooks, which can be missing or skipped. Defer the trigger if no first-wave
+  workflow needs it.
+- **Done todos:** migrate all of them as `status: done`, taking the creation
+  date for the filename from nb's timestamp id, so history stays queryable.
 
 TASK-038 (nb-sync hanging in a DarkWake) becomes obsolete once step 6 lands,
 though the same launchd concern applies to the new scheduler plist.
