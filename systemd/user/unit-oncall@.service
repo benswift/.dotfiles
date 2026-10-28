@@ -1,10 +1,11 @@
 [Unit]
-Description=File a pkb todo for failed unit %i
+Description=File a home-vault task for failed unit %i
 Documentation=file:///home/ben/.dotfiles/bin/unit-oncall
 
 [Service]
 Type=oneshot
-# nb lives in /usr/local/bin; the user manager's default PATH would not find it
+# wiz is in ~/.local/bin and jq a mise shim; the user manager's default PATH
+# finds neither
 Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/home/ben/.dotfiles/bin/unit-oncall fail %i
 TimeoutStartSec=5min
