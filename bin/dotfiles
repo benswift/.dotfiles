@@ -166,6 +166,16 @@ check_tools() {
     else
         check_fail "wiz: $(tail -1 <<<"$wiz_status")"
     fi
+    # The registry is how wiz's commands and the wiz-due scheduler find the
+    # vaults; one missing here silently drops out of both.
+    local vault dir
+    for vault in home lx; do
+        if dir=$(wiz path "$vault" 2>/dev/null) && [[ -f "$dir/mdbase.yaml" ]]; then
+            check_pass "wiz vault $vault registered ($dir)"
+        else
+            check_fail "wiz vault $vault not registered --- wiz vaults -add <its clone>"
+        fi
+    done
 
     for tool in "${optional_tools[@]}"; do
         if command_exists "$tool"; then
