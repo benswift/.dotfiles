@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T10:50:00Z'
+updated_date: '2026-10-29T11:20:00Z'
 labels:
   - pkb
   - wiz
@@ -193,8 +193,8 @@ release it needs stable `--json` output and these commands:
   adds the files whose links it repaired; a workflow's writes land as one
   commit carrying the workflow's name). The engine never runs `git add --all`.
 - Whether a write commits immediately is per-vault sync policy, not a
-  universal rule. In lx it does, as now. In home it doesn't: twenty daily
-  appends would be twenty commits, and the scheduled sync batches them anyway.
+  universal rule. In lx it does, as now. In home it doesn't: twenty quick
+  notes would be twenty commits, and the scheduled sync batches them anyway.
 - Edits made in an editor stay uncommitted until something names them
   (`wiz sync <files>`, as now).
 - Sync is per-vault policy:
@@ -316,6 +316,22 @@ Outside scripts are just CLI users and aren't a wiz concept: `unit-oncall`, the
   lets that one build serve every vault. No mise entry, and no binaries pushed
   to home's remote.
 
+### The ontology
+
+Shared base, the same type file in both vaults by convention: `person`,
+`org`, `project`, `task`, `note`, `doc`, `event`, `workflow`. lx only:
+`delivery`, `archive`, `mail`. home only: nothing. The generated types are
+`event` and `mail`, under one rule: the exporter owns the record and curated
+records link to it. `mail` is lx-only because Cole and Rob can't sync the
+Maildir to their machines; on Ben's machines Claude searches and sends mail
+through mu, so home imports no mail. A shared field keeps its shared type in
+every vault (`agent` and `requested_by` are people links, `about` is a list
+of links, `tags` a list of strings). `task` gains `about` in both vaults as
+the generic join, keeping lx's `delivery` for the dancecard. `note` has one
+definition everywhere (`title`, `tags`, `about`, `source`, optional `url`);
+home only relaxes the filename rule so unclaimed root files are notes.
+`docs/` holds `doc` records in both vaults.
+
 ### What leaves wiz's Go code
 
 - `dancecard.go` (475 lines) becomes a Starlark workflow in the lx vault, with
@@ -324,8 +340,8 @@ Outside scripts are just CLI users and aren't a wiz concept: `unit-oncall`, the
   deleting the Go.
 - Mail cleaning (reply prefixes, quote-start detection, the Outlook
   first-time-sender banner) moves into `mail-export` on watson. It then writes
-  mail _records_ with `thread`, `from`, `date` and a cleaned `summary`, so the
-  dancecard's mail section becomes a query.
+  `mail` records (`_types/mail.md`: `thread`, `from`, `date`, `message_id`
+  and a cleaned `summary`), so the dancecard's mail section becomes a query.
 - Calendars become `event` records, written by one exporter for both vaults,
   and `calendar.go` is deleted. dotfiles' `calendar-archive` already does
   the hard part for home (feed as the skeleton, invites from the mail via mu
@@ -486,7 +502,9 @@ should commit in reviewable chunks, one per conversion. The target schema:
     backlog CLI's dependencies did: a task with an open dependency is shown
     as waiting by the dancecard and `wiz query` can ask for it, while
     `status: blocked` stays for a task held up by something outside the
-    vault. The engine validates the links like any other
+    vault. The engine validates the links like any other. `agent` is a people
+    link here as in lx (`[[people/ben-swift]]`), and `about` links a task to
+    the project, person or event it concerns
   - the `#blocked` tag becomes `status: blocked`
   - `bot` and `oncall` remain tags. In lx `requested_by` is a people link, and
     a shared field name must keep its shared type
@@ -497,14 +515,23 @@ should commit in reviewable chunks, one per conversion. The target schema:
   `claude-retrospective.md` becomes `command: agent-run --model sonnet
   --expect-changes` with `requires: [agent-run]` and the prompt unchanged as
   its body. That frees `tasks/` for tasks.
-- **dailies:**
-  - `YYYYMMDD.md` with `# Daily YYYY-MM-DD` (176 files) become a `daily` type at
-    `dailies/YYYY-MM-DD.md` with a `date` field
-  - appending is an engine operation, `wiz append home daily "…"`
-  - `.gitattributes` marks `dailies/** merge=union`, so concurrent appends from
-    two machines merge cleanly
-- **bookmarks:** `*.bookmark.md` (23 files) become a `bookmark` type in
-  `bookmarks/` with `url`, `title`, `comment` and `tags`.
+- **dailies go.** There is no `daily` type. The 175 `YYYYMMDD.md` files are
+  mostly agent health logs and session summaries filed under a date, which is
+  a trail rather than a record. Each becomes a `note` at
+  `notes/YYYY-MM-DD-daily.md` tagged `journal`, body untouched (no attempt
+  to split old ones by subject). From then on there is no day file: a
+  session summary is a note `about` its project, a thought is a note with a
+  title, a journal entry is a note tagged `journal`, and machine output
+  (health checks, run reports) goes to logs or the briefing, never to a
+  record. "What happened on a day" is a query over dated records (notes,
+  events, tasks closed) plus `git log`. That removes the `merge=union`
+  attribute, the sync-before-write rule and the `append` operation from the
+  first wave; `wiz add` with the body on stdin is the capture operation.
+- **bookmarks:** `*.bookmark.md` (23 files, never used through nb) become
+  notes with a `url` field, tagged `bookmark`. No `bookmark` type.
+- **roles:** `roles/` (5 files) become `doc` records tagged `role` in
+  `docs/`. A role is an evergreen description revised in place, which is
+  what a doc is. No `role` type.
 - **events:** `data/calendars/<calendar>.jsonl` (anu, phdconvenor, adirh;
   7,475 occurrences) becomes `event` records under `events/`, one per
   occurrence, written by `calendar-archive` as the command workflow described
@@ -512,15 +539,16 @@ should commit in reviewable chunks, one per conversion. The target schema:
   archive" section of `CLAUDE.md` go; `wiz query` replaces `jq` and `rg`.
 - **links:** all links become path-form and validated. Numeric-id links (for
   example `[[projects/16]]`) and ambiguous bare names are resolved or reported.
-- **assets:** `docs/` typst sources, `data/`, `scripts/` and `images/` are
-  assets: link-checkable, not records.
+- **assets:** the Typst sources move from `docs/` to `typst/`, freeing
+  `docs/` for `doc` records as in lx; `typst/`, `data/`, `scripts/` and
+  `images/` are assets: link-checkable, not records.
 - **people:** home's `person` type keeps `role`, `uid` and `path` (wiz's doesn't
   have them). Field names shared with wiz (`title`, `tags`, `works_for`, …) stay
   identical. Each vault keeps its own type files; there's no type inheritance
   yet.
-- **the long tail:** a permissive `note` type matches anything unclaimed at the
-  root, so capture never requires classification. It guarantees only `title` and
-  list-shaped `tags`.
+- **the long tail:** `note`, with the same definition as lx's, matches
+  anything unclaimed at the root, so capture never requires classification.
+  Every field but `title` is optional, so nothing needs classifying to pass.
 - **removed:** `.index` files disappear.
 
 Run `wiz validate home` until it's clean. A first trial in this session (wiz
@@ -562,8 +590,8 @@ unmatched records unless a type such as `note` claims them.
    - nothing reaches Cole and Rob until the release passes a round trip on Rob's
      Windows laptop and Cole's Mac (the task-1 pattern)
 3. **`~/.nb/home`:** the migration above, and a rewritten `CLAUDE.md`
-   (structure, templates, tasks, dailies, sync and the CLI reference all
-   change).
+   (structure, templates, tasks, notes in place of dailies, sync and the CLI
+   reference all change).
 4. **`~/projects/claude-plugin-personal`:** rewrite the `ben:pkb` skill
    (`SKILL.md`, `email.md`) for the wiz CLI, then `dotfiles update`.
 5. **This dotfiles repo:**
@@ -602,7 +630,8 @@ unmatched records unless a type such as `note` claims them.
    - **`mail/utils` student-db:** `studentdb/__init__.py` resolves
      `data/student-db.json` with `nb show --path`. Switch it to
      `wiz path home:data/student-db.json` or a direct path.
-   - **`zshrc`:** rewrite `daily()` and the `todo` alias.
+   - **`zshrc`:** `daily()` becomes a `note` function that creates a titled
+     note, and the `todo` alias is rewritten.
    - **viewing plugins:** the `pdf` and `docx` plugins become command workflows
      in home (`requires: [pandoc, typst]`). `cpath`, `pager` and
      `lumis-highlight` become shell functions over `wiz path` and `ts-cat`.
@@ -632,8 +661,8 @@ unmatched records unless a type such as `note` claims them.
 3. Starlark: the host, API, golden tests and dancecard port, and the mail and
    calendar exports writing records. Nothing after this step depends on it:
    if it slips, steps 4 to 6 go ahead and the Go dancecard keeps serving lx.
-4. The engine gains the daily, task-append and bookmark operations needed by
-   home.
+4. The engine gains what home needs beyond lx: `add` with the body on stdin
+   and the `note` catch-all matching.
 5. Home migration, run as a dry run, reviewed, then applied.
 6. The dotfiles cutover, the skill rewrite, and nb's retirement on every host.
 7. The collaborator release: pin the release in the lx vault only after the
@@ -714,11 +743,11 @@ though the same launchd concern applies to the new scheduler plist.
 - [ ] #7 One scheduler (wiz due --all, from one systemd timer on Linux and one launchd job on macOS) runs every due workflow for its host across all vaults, and a failed run on weddle files an oncall task through the unit's OnFailure wiring
 - [ ] #8 The lx dancecard is a Starlark workflow whose output matches the Go version on the same vault and date, covered by golden-output tests in the engine's Go suite; dancecard.go and calendar.go are deleted
 - [ ] #9 Home is migrated: no *.todo.md, *.bookmark.md, YYYYMMDD.md or .index files remain, every tags field is a YAML list, and wiz validate home reports no problems
-- [ ] #10 Concurrent appends to the same daily from two machines sync without a conflict
+- [ ] #10 Home has no `daily`, `bookmark` or `role` type; its `docs/` holds doc records and `typst/` the sources; and no instruction in the vault, the skill or dotfiles tells an agent to append to a day file
 - [ ] #11 Cole and Rob each complete a get-latest, edit and share round trip on their own machines with the new release before it is pinned in the lx vault, and their slash commands keep their names
 - [ ] #12 The lx vault's sixteen decision records are folded into `meta` design docs stating current rules with their reasons and rejected alternatives, nothing in the vault describes a superseded design, `admin/backlog/` and the backlog CLI are gone from the vault, and open wiz proposals are `tasks/` records tagged `meta`
 - [ ] #13 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
-- [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, append to a daily and run a workflow by following them
+- [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, add a note about a project and run a workflow by following them
 - [ ] #15 The engine's source and tests contain no agent, prompt, profile or model concept; home's scheduled agent tasks run as plain command workflows via agent-run, with every run stamped, logged, timed out and failed through the same bookkeeping as any other workflow
 - [ ] #16 Both vaults carry an `event` type with the same fields, named to match `delivery` where they overlap, filled by `calendar-archive` as a command workflow in each (home on weddle, lx on watson, reading the invites through watson's mu index of the lxconvenor Maildir); the lx dancecard's coming-up section and home's calendar questions are answered by `wiz query` over those records, attendees link to people records where an email matches, `admin/tools/calendar-export`, `_generated/calendar.md`, `data/calendars/*.jsonl` and the calendar-archive timer are gone, and a re-run against an unchanged calendar touches no file
 - [ ] #17 PRINCIPLES.md lives in the engine repo and `wiz help principles` prints it; `wiz brief` and both vaults' start-here point at it; and a colleague's Claude, asked why wiz works the way it does, answers from the principles and the meta docs without a stale answer being available
