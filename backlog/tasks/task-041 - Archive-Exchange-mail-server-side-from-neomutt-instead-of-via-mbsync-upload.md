@@ -4,6 +4,7 @@ title: Archive Exchange mail server-side from neomutt instead of via mbsync uplo
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:47:00Z'
+updated_date: '2026-10-28T09:48:00Z'
 labels:
   - mail
   - enhancement
@@ -27,3 +28,9 @@ Needs: neomutt message -> server UID via the folder's .mbsyncstate (local ,U= is
 - [ ] #2 Offline or on failure, it falls back to the current local move rather than losing the message
 - [ ] #3 No message is ever deleted from the server by the new path
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Fastmail stays on the local move for now: it uploads fast, has no MaxSize problem, and threads by headers, so the gain is small. Make the server-move step per-account so Fastmail can opt in later (IMAP MOVE, or JMAP, which Fastmail API tokens allow for message moves).
+<!-- SECTION:NOTES:END -->
