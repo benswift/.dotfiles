@@ -156,6 +156,15 @@ install_helix() {
         warn "helix build failed --- run 'helix-build' once the machine is set up"
 }
 
+install_wiz() {
+    info "Building the wiz engine from source..."
+    eval "$(mise activate bash)"
+    # Built at the commit pinned in wiz/pinned-rev rather than installed from
+    # a vault's pin; bin/wiz-build's header says why.
+    "$DOTFILES_DIR/bin/wiz-build" ||
+        warn "wiz build failed --- run 'wiz-build' once the machine can reach gitlab.anu.edu.au"
+}
+
 setup_previewers() {
     info "Installing yazi plugins and tree-sitter parsers..."
     eval "$(mise activate bash)"
@@ -248,6 +257,7 @@ main() {
     setup_symlinks
     install_mise_tools
     install_helix
+    install_wiz
     setup_previewers
     install_python_tools
     install_claude

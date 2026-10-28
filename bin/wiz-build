@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+# wiz-build --- build and install the wiz engine from source, at the commit
+# pinned in wiz/pinned-rev.
+#
+# Collaborators install wiz from the build the lx vault pins (its
+# admin/tools/wiz-install, into ~/.wiz/bin). Ben's machines don't: each vault
+# would pin its own version into the one install, and the engine reads every
+# older vault format anyway, so one build at this pin serves every vault in
+# the registry. It goes into ~/.local/bin/wiz, ahead of nothing else.
+#
+# The engine repo is cloned to $WIZ_SRC and built with the Go its mise.toml
+# names. The version wiz reports carries the commit (`v1.0.0-3-g63b7857`),
+# which is how --check knows what is installed. An unchanged pin makes this a
+# no-op, so `dotfiles update` only pays for a build when the pin moves.
+#
+# Usage:
+#   wiz-build              build and install the pinned rev (no-op if current)
+#   wiz-build --update     move the pin to the engine's main, then build
+#   wiz-build --force      rebuild even when the pinned rev is installed
+#   wiz-build --check      report status only; non-zero if not on the pin
+#   wiz-build --no-test    skip the engine's test suite before installing
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+source "$DOTFILES_DIR/lib/log.sh"
+
+WIZ_SRC="${WIZ_SRC:-${XDG_DATA_HOME:-$HOME/.local/share}/wiz-src}"
+WIZ_PREFIX="${WIZ_PREFIX:-$HOME/.local}"
+REPO_URL="git@gitlab.anu.edu.au:u2548636/wiz-engine.git"
+PIN_FILE="$DOTFILES_DIR/wiz/pinned-rev"
+WIZ="$WIZ_PREFIX/bin/wiz"
+
+MODE=build
+RUN_TESTS=true
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --update) MODE=update ;;
+    --force) MODE=force ;;
+    --check) MODE=check ;;
+    --no-test) RUN_TESTS=false ;;
+    -h | --help)
+        sed -n '/^# Usage:/,/^#   wiz-build --no-test/p' "$0" | sed 's/^# \{0,1\}//'
+        exit 0
+        ;;
+    *)
+        error "unknown option: $1"
+        exit 1
+        ;;
+    esac
+    shift
+done
+
+pinned_rev() {
+    grep -m1 -oE '^[0-9a-f]{40}$' "$PIN_FILE" || {
+        error "$PIN_FILE holds no 40-character commit sha"
+        return 1
+    }
+}
+
+write_pin() {
+    cat >"$PIN_FILE" <<EOF
+# The wiz engine commit bin/wiz-build compiles. Bump it with
+# \`wiz-build --update\` and commit the result, so every machine runs the
+# same engine.
+$1
+EOF
+}
+
+# `wiz version` on a source build prints "v1.0.0-3-g63b7857a".
+installed_rev() {
+    [[ -x "$WIZ" ]] || return 1
+    "$WIZ" version 2>/dev/null | grep -oE 'g[0-9a-f]{7,}$' | cut -c2-
+}
+
+ensure_checkout() {
+    if [[ ! -d "$WIZ_SRC/.git" ]]; then
+        info "Cloning the wiz engine into $WIZ_SRC"
+        git clone -q "$REPO_URL" "$WIZ_SRC"
+    fi
+    mise trust -q "$WIZ_SRC/mise.toml" >/dev/null 2>&1 || true
+}
+
+update_pin() {
+    ensure_checkout
+    git -C "$WIZ_SRC" fetch -q --prune --tags origin
+    local rev
+    rev="$(git -C "$WIZ_SRC" rev-parse origin/main)"
+    if [[ "$rev" == "$(pinned_rev 2>/dev/null || true)" ]]; then
+        info "Pin is already at the engine's main ($rev)"
+        return
+    fi
+    write_pin "$rev"
+    info "Pin moved to $rev"
+    warn "commit wiz/pinned-rev so the other machines follow"
+}
+
+build() {
+    local rev="$1"
+    ensure_checkout
+    if ! git -C "$WIZ_SRC" cat-file -e "${rev}^{commit}" 2>/dev/null; then
+        git -C "$WIZ_SRC" fetch -q --prune --tags origin
+    fi
+    git -C "$WIZ_SRC" -c advice.detachedHead=false checkout -q "$rev"
+    local version
+    version="$(git -C "$WIZ_SRC" describe --tags --always --long --abbrev=10 "$rev")"
+    if [[ "$RUN_TESTS" == true ]]; then
+        info "Testing wiz $version"
+        (cd "$WIZ_SRC" && mise exec -- go test ./... >/dev/null) || {
+            error "the engine's tests fail at $rev; not installing it"
+            return 1
+        }
+    fi
+    info "Building wiz $version"
+    mkdir -p "$WIZ_PREFIX/bin"
+    (cd "$WIZ_SRC" && CGO_ENABLED=0 mise exec -- go build -trimpath \
+        -ldflags "-s -w -X main.version=$version" -o "$WIZ.new" .)
+    mv -f "$WIZ.new" "$WIZ"
+}
+
+check_shadowing() {
+    local found
+    found="$(command -v wiz 2>/dev/null || true)"
+    if [[ -n "$found" && "$found" != "$WIZ" ]]; then
+        warn "PATH resolves wiz to $found, not $WIZ"
+        return 1
+    fi
+}
+
+report() {
+    local want got
+    want="$(pinned_rev)"
+    got="$(installed_rev || true)"
+    if [[ -z "$got" ]]; then
+        error "no wiz build at $WIZ"
+        return 1
+    fi
+    if [[ "$want" != "$got"* ]]; then
+        error "$WIZ is $got, but the pin is ${want:0:10} --- run wiz-build"
+        return 1
+    fi
+    info "wiz $("$WIZ" version) installed at $WIZ"
+}
+
+case "$MODE" in
+check)
+    report && check_shadowing
+    ;;
+update)
+    update_pin
+    build "$(pinned_rev)"
+    report
+    check_shadowing || true
+    ;;
+force)
+    build "$(pinned_rev)"
+    report
+    check_shadowing || true
+    ;;
+build)
+    rev="$(pinned_rev)"
+    installed="$(installed_rev || true)"
+    if [[ -n "$installed" && "$rev" == "$installed"* ]]; then
+        info "wiz ${rev:0:10} is already installed --- nothing to do"
+        check_shadowing || true
+        exit 0
+    fi
+    build "$rev"
+    report
+    check_shadowing || true
+    ;;
+esac

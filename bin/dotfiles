@@ -159,6 +159,14 @@ check_tools() {
         check_fail "helix: $(tail -1 <<<"$helix_status")"
     fi
 
+    # Likewise the wiz engine, built by bin/wiz-build at wiz/pinned-rev.
+    local wiz_status
+    if wiz_status=$("$DOTFILES_DIR/bin/wiz-build" --check 2>&1); then
+        check_pass "wiz (source build at the pinned rev)"
+    else
+        check_fail "wiz: $(tail -1 <<<"$wiz_status")"
+    fi
+
     for tool in "${optional_tools[@]}"; do
         if command_exists "$tool"; then
             check_pass "$tool"
@@ -498,6 +506,8 @@ update() {
     # pay for a compile.
     "$DOTFILES_DIR/bin/helix-build" ||
         echo "helix build failed --- hx is still the previously built binary"
+    "$DOTFILES_DIR/bin/wiz-build" ||
+        echo "wiz build failed --- wiz is still the previously built binary"
     "$DOTFILES_DIR/bin/sync-agent-config" --update-claude
     "$DOTFILES_DIR/bin/lumis-parsers" --update || echo "parser sync failed --- yazi previews fall back to bat"
     # Editable, so code changes are already live --- this re-resolves after a
