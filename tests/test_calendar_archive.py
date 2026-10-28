@@ -142,6 +142,7 @@ def test_recurrences_are_expanded_one_line_each(server: str, tmp_path: Path) -> 
     first = json.loads((tmp_path / "anu.jsonl").read_text().splitlines()[0])
     assert first["start"].endswith(("+10:00", "+11:00"))
     assert first["busy"] == "busy" and first["all_day"] is False
+    assert first["source"] == "feed"
 
 
 def test_old_history_is_kept_and_recent_cancellations_dropped(

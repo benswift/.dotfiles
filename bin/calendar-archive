@@ -12,8 +12,10 @@ one writer and nb-sync carries the result to every other host. Writes one
 JSONL file per calendar, DIR/<calendar>.jsonl (default
 ~/.nb/home/data/calendars), one event occurrence per line with recurrences
 expanded: `calendar`, `uid`, `title`, `location`, `start`, `end`, `all_day`,
-`busy`, `description`, `organizer`, `attendees`. Timed events are in Canberra
-time; an all-day event's `end` is its last day, not the day after.
+`busy`, `description`, `organizer`, `attendees`, `source`. Timed events are in
+Canberra time; an all-day event's `end` is its last day, not the day after.
+`source` is "feed" for everything this writes; history from before the feeds
+began was backfilled once from other sources, which its `source` names.
 
 Each feed URL is a bearer secret, read from the env var named in CALENDARS
 (weddle's untracked mise env). ANU lets a calendar be published with titles
@@ -180,6 +182,7 @@ def occurrence(name: str, event: icalendar.Event, known: Invites) -> dict[str, o
         "end": end.isoformat(),
         "all_day": all_day,
         "busy": BUSY.get(str(event.get("X-MICROSOFT-CDO-BUSYSTATUS", ""))),
+        "source": "feed",
         **(detail or {"description": None, "organizer": None, "attendees": []}),
     }
 
