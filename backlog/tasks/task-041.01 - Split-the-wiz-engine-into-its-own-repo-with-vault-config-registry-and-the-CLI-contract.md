@@ -3,9 +3,10 @@ id: TASK-041.01
 title: >-
   Split the wiz engine into its own repo with vault config, registry and the CLI
   contract
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
+updated_date: '2026-10-28T22:37:00Z'
 labels:
   - pkb
   - wiz
@@ -34,11 +35,17 @@ nb keeps serving home. Don't rename the GitLab project here; that's step 7.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The engine lives in its own repo with its history, and holds no LX-specific types, folders or logic beyond dancecard.go and calendar.go, which TASK-041 step 3 removes
-- [ ] #2 The lx vault validates with the same results under the new engine as under the pinned v0.9 release, before any record changes
-- [ ] #3 Every CLI command takes explicit vault names or --all, resolved via ~/.config/wiz/vaults.toml, with stable --json output; there is no current-notebook state
-- [ ] #4 No engine commit ever holds a file the write that made it didn't touch (plus link-repaired files on rename); nothing runs git add --all; whether a write commits at once is per-vault policy
-- [ ] #5 PRINCIPLES.md lives in the engine repo and wiz help principles prints it; wiz brief points at it
-- [ ] #6 bin/wiz-build builds the pinned rev into ~/.local/bin, and dotfiles doctor reports whether the installed engine matches the pin
-- [ ] #7 Cole and Rob see no change: their pin, CLAUDE.md and skills are untouched
+- [x] #1 The engine lives in its own repo with its history, and holds no LX-specific types, folders or logic beyond dancecard.go and calendar.go, which TASK-041 step 3 removes
+- [x] #2 The lx vault validates with the same results under the new engine as under the pinned v0.9 release, before any record changes
+- [x] #3 Every CLI command takes explicit vault names or --all, resolved via ~/.config/wiz/vaults.toml, with stable --json output; there is no current-notebook state
+- [x] #4 No engine commit ever holds a file the write that made it didn't touch (plus link-repaired files on rename); nothing runs git add --all; whether a write commits at once is per-vault policy
+- [x] #5 PRINCIPLES.md lives in the engine repo and wiz help principles prints it; wiz brief points at it
+- [x] #6 bin/wiz-build builds the pinned rev into ~/.local/bin, and dotfiles doctor reports whether the installed engine matches the pin
+- [x] #7 Cole and Rob see no change: their pin, CLAUDE.md and skills are untouched
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Engine at u2548636/wiz-engine (history kept), local clone ~/projects/wiz-engine. Vault config and types load from mdbase.yaml and _types/; registry at ~/.config/wiz/vaults.toml; query (CEL), show, path, add, update, append, rename, vaults, validate/-all, all with -json. lx validates identically to v0.9.1, including a copy seeded with 19 faults. jobs.go (watson Typst jobs) is still LX-shaped until step 2 generalises it into workflows. lx groundwork (_types/, mdbase.yaml) is on lx main. bin/wiz-build and wiz/pinned-rev installed on weddle.
+<!-- SECTION:FINAL_SUMMARY:END -->
