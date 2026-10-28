@@ -6,9 +6,8 @@
 """Archive the ANU Exchange calendars' published ICS feeds into a vault.
 
     calendar-archive --calendar NAME [--calendar NAME...] [--link-vault NAME...]
-    calendar-archive [--out DIR]
 
-With --calendar, it writes one `event` record per occurrence, recurrences
+It writes one `event` record per occurrence, recurrences
 expanded, into the vault it is run from (a wiz command workflow runs it from
 the vault root): events/<calendar>/<YYYY>/<YYYY-MM-DD>-<title>-<hash>.md, the
 hash taken from the occurrence's UID and start so it names the same
@@ -20,12 +19,8 @@ not the day after. An organiser or attendee is a link to the person record
 whose `email` matches, in this vault or a --link-vault (`wiz query` finds
 them), else their name and address. It writes only files whose text
 changed, removes those of occurrences the feed has dropped, then runs
-`wiz validate`. --seed DIR takes the stored history from DIR/<calendar>.jsonl
-when the vault has none yet, once.
-
-Without --calendar it writes the old JSONL archive of Ben's three calendars,
-DIR/<calendar>.jsonl (default ~/.nb/home/data/calendars), for the notebook
-until it becomes a vault.
+`wiz validate`. --seed DIR takes the stored history from DIR/<calendar>.jsonl,
+the archive's old format, when the vault has none yet.
 
 `source` is "feed" for everything this writes; history from before the feeds
 began was backfilled once from other sources, which its `source` names.
@@ -76,9 +71,6 @@ CALENDARS = {
     "adirh": "ADIRH_ICS_URL",
     "lxconvenor": "LXCONVENOR_ICS_URL",
 }
-
-# What the JSONL archive covers, until the notebook it lives in is a vault.
-JSONL_CALENDARS = ("anu", "phdconvenor", "adirh")
 
 # An event record's fields, in the order written.
 EVENT_FIELDS = (
@@ -223,10 +215,6 @@ def occurrence(name: str, event: icalendar.Event, known: Invites) -> dict[str, o
     }
 
 
-def key(record: dict[str, object]) -> tuple[str, str]:
-    return str(record["start"]), str(record["uid"])
-
-
 def fetch(name: str, url: str) -> icalendar.Calendar:
     response = httpx.get(url, timeout=60, follow_redirects=True)
     response.raise_for_status()
@@ -242,46 +230,6 @@ def from_feed(
     until = date(today.year + 2, 1, 1)
     events = recurring_ical_events.of(calendar).between(date(1900, 1, 1), until)
     return [occurrence(name, e, known) for e in events]
-
-
-def merge(
-    stored: list[dict[str, object]], feed: list[dict[str, object]], today: date
-) -> list[dict[str, object]]:
-    """The feed's occurrences, plus every stored one too old for the feed to
-    be trusted about (the feed wins where both have it). Invite detail
-    already stored survives a run that found none, since the invite may since
-    have been deleted, or the mail been unreadable this time."""
-    cutoff = (today - timedelta(days=FROZEN_DAYS)).isoformat()
-    previous = {key(r): r for r in stored}
-    merged = {k: r for k, r in previous.items() if str(r["start"]) < cutoff}
-    for r in feed:
-        old = previous.get(key(r))
-        if old and old.get("organizer") and not r["organizer"]:
-            r = {**r, **{f: old[f] for f in ("description", "organizer", "attendees")}}
-        merged[key(r)] = r
-    return [merged[k] for k in sorted(merged)]
-
-
-def archive(
-    name: str, calendar: icalendar.Calendar, known: Invites, out: Path, today: date
-) -> str:
-    feed = from_feed(name, calendar, known, today)
-
-    path = out / f"{name}.jsonl"
-    old = path.read_text() if path.exists() else ""
-    stored = [json.loads(line) for line in old.split("\n") if line]
-    records = merge(stored, feed, today)
-    text = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in records)
-    if text != old:
-        tmp = path.with_suffix(".tmp")
-        tmp.write_text(text)
-        tmp.replace(path)
-    before, after = set(map(key, stored)), set(map(key, records))
-    detailed = sum(1 for r in records if r.get("organizer"))
-    return (
-        f"{name}: {len(records)} occurrences, {detailed} with invite detail "
-        f"(+{len(after - before)} -{len(before - after)})"
-    )
 
 
 Record = dict[str, object]
@@ -385,7 +333,7 @@ def from_jsonl(path: Path, links: dict[str, str]) -> list[Record]:
     return [as_record(json.loads(line), links) for line in lines if line]
 
 
-def archive_records(
+def archive(
     name: str,
     calendar: icalendar.Calendar,
     known: Invites,
@@ -442,17 +390,11 @@ def archive_records(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
-        "--calendar", action="append", choices=sorted(CALENDARS), default=[]
+        "--calendar", action="append", choices=sorted(CALENDARS), required=True
     )
     parser.add_argument("--link-vault", action="append", default=[])
     parser.add_argument("--seed", type=Path)
-    parser.add_argument(
-        "--out", type=Path, default=Path.home() / ".nb/home/data/calendars"
-    )
     args = parser.parse_args()
-    names = args.calendar or list(JSONL_CALENDARS)
-    if not args.calendar:
-        args.out.mkdir(parents=True, exist_ok=True)
     today = datetime.now(LOCAL).date()
 
     failed = 0
@@ -464,7 +406,7 @@ def main() -> int:
 
     # Fetch every feed first, so one pass over the mail serves them all.
     feeds: dict[str, icalendar.Calendar] = {}
-    for name in names:
+    for name in args.calendar:
         var = CALENDARS[name]
         url = os.environ.get(var)
         try:
@@ -486,11 +428,6 @@ def main() -> int:
         fail(str(error))
         known = {}
 
-    if not args.calendar:
-        for name, calendar in feeds.items():
-            print(archive(name, calendar, known, args.out, today))
-        return 1 if failed else 0
-
     vault = Path.cwd()
     try:
         links = people(args.link_vault)
@@ -498,7 +435,7 @@ def main() -> int:
         fail(f"couldn't look up people with wiz, so nobody is linked: {error}")
         links = {}
     for name, calendar in feeds.items():
-        print(archive_records(name, calendar, known, links, vault, today, args.seed))
+        print(archive(name, calendar, known, links, vault, today, args.seed))
     checked = subprocess.run(
         ["wiz", "validate", "-json"], capture_output=True, text=True, check=False
     )

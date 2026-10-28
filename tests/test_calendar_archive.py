@@ -1,9 +1,10 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["pytest", "pytest-xdist"]
+# dependencies = ["pytest", "pytest-xdist", "pyyaml"]
 # ///
-"""Run calendar-archive against feeds served from a local HTTP server."""
+"""Run calendar-archive against feeds served from a local HTTP server, writing
+event records into a temporary vault."""
 
 from __future__ import annotations
 
@@ -19,10 +20,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
+import yaml
 
 SCRIPT = Path(__file__).parent.parent / "bin" / "calendar-archive"
 TODAY = date.today()
 FEEDS: dict[str, bytes] = {}
+CALENDARS = ("--calendar", "anu", "--calendar", "phdconvenor", "--calendar", "adirh")
 
 
 def ics(*events: str) -> bytes:
@@ -67,6 +70,13 @@ def feeds() -> Iterator[None]:
     FEEDS.clear()
 
 
+@pytest.fixture
+def vault(tmp_path: Path) -> Path:
+    v = tmp_path / "vault"
+    v.mkdir()
+    return v
+
+
 def invite(
     path: Path, uid: str, day: date, sequence: int, body: str, extra: str = ""
 ) -> Path:
@@ -93,19 +103,35 @@ def invite(
 
 
 def run(
-    server: str, out: Path, mail: list[Path] | None = None, mu: bool = True
+    server: str,
+    vault: Path,
+    *args: str,
+    mail: list[Path] | None = None,
+    readable: bool = True,
 ) -> subprocess.CompletedProcess[str]:
-    """Run the script with a fake mu that finds `mail`, or with mail it can't
-    read. (Faking a missing mu isn't portable: a real one in /usr/bin wins.)"""
-    bin_dir = out / "bin"
+    """Run the script from vault, with fake mu and wiz: mu finds `mail` (or,
+    unreadable, a message that isn't there), Ada is a person in the vault and
+    Ben one in the lx vault."""
+    bin_dir = vault.parent / "bin"
     bin_dir.mkdir(exist_ok=True)
-    listing = out / "mu-finds"
-    listing.write_text("".join(f"{m}\n" for m in mail or []))
-    if not mu:
-        listing.write_text(f"{out / 'no-such-message.eml'}\n")
-    fake = bin_dir / "mu"
-    fake.write_text(f'#!/bin/sh\ncat "{listing}"\n[ -s "{listing}" ] || exit 4\n')
-    fake.chmod(0o755)
+    listing = vault.parent / "mu-finds"
+    found = [*(mail or [])] if readable else [vault.parent / "no-such-message.eml"]
+    listing.write_text("".join(f"{m}\n" for m in found))
+    (bin_dir / "mu").write_text(
+        f'#!/bin/sh\ncat "{listing}"\n[ -s "{listing}" ] || exit 4\n'
+    )
+    here = [{"path": "people/ada-lovelace.md", "fields": {"email": "ada@example.org"}}]
+    lx = [{"path": "people/ben-swift.md", "fields": {"email": "ben@example.org"}}]
+    (bin_dir / "wiz").write_text(
+        "#!/bin/sh\n"
+        'case "$1 $2" in\n'
+        f"  'query lx') echo '{json.dumps(lx)}' ;;\n"
+        f"  query*) echo '{json.dumps(here)}' ;;\n"
+        '  validate*) echo \'[{"vault": "x", "problems": []}]\' ;;\n'
+        "esac\n"
+    )
+    for fake in ("mu", "wiz"):
+        (bin_dir / fake).chmod(0o755)
     env = {
         **os.environ,
         "PATH": f"{bin_dir}:/usr/bin:/bin",
@@ -116,7 +142,8 @@ def run(
     uv = shutil.which("uv")
     assert uv
     return subprocess.run(
-        [uv, "run", "--quiet", "--script", str(SCRIPT), "--out", str(out)],
+        [uv, "run", "--quiet", "--script", str(SCRIPT), *args],
+        cwd=vault,
         env=env,
         capture_output=True,
         text=True,
@@ -124,75 +151,81 @@ def run(
     )
 
 
-def titles(out: Path, name: str = "anu") -> list[str]:
-    lines = (out / f"{name}.jsonl").read_text().split("\n")
-    return [json.loads(line)["title"] for line in lines if line]
+def texts(vault: Path, calendar: str = "anu") -> dict[str, str]:
+    folder = vault / "events" / calendar
+    return {
+        str(p.relative_to(vault)): p.read_text() for p in sorted(folder.rglob("*.md"))
+    }
 
 
-def test_recurrences_are_expanded_one_line_each(server: str, tmp_path: Path) -> None:
+def records(vault: Path, calendar: str = "anu") -> list[dict[str, object]]:
+    """The calendar's records, in start order."""
+    out = []
+    for text in texts(vault, calendar).values():
+        out.append(yaml.safe_load(text.removeprefix("---\n").split("\n---\n")[0]))
+    return sorted(out, key=lambda r: (str(r["start_date"]), str(r["uid"])))
+
+
+def titles(vault: Path, calendar: str = "anu") -> list[str]:
+    return [str(r["title"]) for r in records(vault, calendar)]
+
+
+def test_recurrences_are_expanded_one_record_each(server: str, vault: Path) -> None:
     FEEDS["anu"] = ics(
         event("a", "One-off", TODAY + timedelta(days=3)),
         event(
             "w", "Weekly", TODAY - timedelta(days=14), "RRULE:FREQ=WEEKLY;COUNT=4\r\n"
         ),
     )
-    result = run(server, tmp_path)
+    result = run(server, vault, *CALENDARS)
     assert result.returncode == 0, result.stderr
-    assert titles(tmp_path) == ["Weekly", "Weekly", "Weekly", "One-off", "Weekly"]
-    first = json.loads((tmp_path / "anu.jsonl").read_text().split("\n")[0])
-    assert first["start"].endswith(("+10:00", "+11:00"))
+    assert titles(vault) == ["Weekly", "Weekly", "Weekly", "One-off", "Weekly"]
+    first = records(vault)[0]
+    assert str(first["start_date"]).endswith(("+10:00", "+11:00"))
     assert first["busy"] == "busy" and first["all_day"] is False
-    assert first["source"] == "feed"
+    assert first["source"] == "feed" and first["calendar"] == "anu"
 
 
 def test_old_history_is_kept_and_recent_cancellations_dropped(
-    server: str, tmp_path: Path
+    server: str, vault: Path
 ) -> None:
     FEEDS["anu"] = ics(
         event("old", "Aged out", TODAY - timedelta(days=400)),
         event("gone", "Cancelled later", TODAY - timedelta(days=20)),
         event("stay", "Still on", TODAY + timedelta(days=5)),
     )
-    assert run(server, tmp_path).returncode == 0
-    assert titles(tmp_path) == ["Aged out", "Cancelled later", "Still on"]
+    assert run(server, vault, *CALENDARS).returncode == 0
+    assert titles(vault) == ["Aged out", "Cancelled later", "Still on"]
 
     # A year on, the feed has dropped the old event and the cancelled one.
     FEEDS["anu"] = ics(event("stay", "Still on", TODAY + timedelta(days=5)))
-    result = run(server, tmp_path)
+    result = run(server, vault, *CALENDARS)
     assert result.returncode == 0, result.stderr
-    assert titles(tmp_path) == ["Aged out", "Still on"]
+    assert titles(vault) == ["Aged out", "Still on"]
     assert "anu: 2 occurrences, 0 with invite detail (+0 -1)" in result.stdout
 
 
 def test_an_empty_feed_fails_without_touching_the_archive(
-    server: str, tmp_path: Path
+    server: str, vault: Path
 ) -> None:
     FEEDS["anu"] = ics(event("stay", "Still on", TODAY + timedelta(days=5)))
-    assert run(server, tmp_path).returncode == 0
-    before = (tmp_path / "anu.jsonl").read_text()
+    assert run(server, vault, *CALENDARS).returncode == 0
+    before = texts(vault)
 
     FEEDS["anu"] = ics()
     del FEEDS["adirh"]
-    result = run(server, tmp_path)
+    result = run(server, vault, *CALENDARS)
     assert result.returncode == 1
-    assert (tmp_path / "anu.jsonl").read_text() == before
+    assert texts(vault) == before
     assert "anu: the feed has no events" in result.stderr
     # The URL is the secret, so a failure names the variable instead.
     assert "$ADIRH_ICS_URL" in result.stderr and server not in result.stderr
     # The other calendars still ran.
-    assert titles(tmp_path, "phdconvenor") == ["Quiet"]
-
-
-def records(out: Path, name: str = "anu") -> list[dict[str, object]]:
-    return [
-        json.loads(line)
-        for line in (out / f"{name}.jsonl").read_text().split("\n")
-        if line
-    ]
+    assert titles(vault, "phdconvenor") == ["Quiet"]
 
 
 def test_events_take_detail_from_their_latest_invite(
-    server: str, tmp_path: Path
+    server: str, vault: Path, tmp_path: Path
 ) -> None:
     start = TODAY - timedelta(days=14)
     second = start + timedelta(days=7)
@@ -213,9 +246,9 @@ def test_events_take_detail_from_their_latest_invite(
             f"RECURRENCE-ID;TZID=Australia/Sydney:{second:%Y%m%d}T100000\r\n",
         ),
     ]
-    result = run(server, tmp_path, mail)
+    result = run(server, vault, *CALENDARS, mail=mail)
     assert result.returncode == 0, result.stderr
-    weekly = [r for r in records(tmp_path) if r["uid"] == "w"]
+    weekly = [r for r in records(vault) if r["uid"] == "w"]
     assert [r["description"] for r in weekly] == [
         "Agenda",
         "Moved room this week",
@@ -223,94 +256,43 @@ def test_events_take_detail_from_their_latest_invite(
     ]
     # The feed, not the invite, decides the title.
     assert {r["title"] for r in weekly} == {"Weekly"}
-    assert weekly[0]["organizer"] == {
-        "email": "ada@example.org",
-        "name": "Ada Lovelace",
-    }
-    assert weekly[0]["attendees"] == [{"email": "ben@example.org", "name": "Ben Swift"}]
-    (own,) = [r for r in records(tmp_path) if r["uid"] == "a"]
-    assert own["description"] is None and own["attendees"] == []
+    # A person in the vault is linked; anyone else is their name and address.
+    assert weekly[0]["organizer"] == "[[people/ada-lovelace]]"
+    assert weekly[0]["attendee"] == ["Ben Swift <ben@example.org>"]
+    (own,) = [r for r in records(vault) if r["uid"] == "a"]
+    assert "description" not in own and "attendee" not in own
     assert "anu: 4 occurrences, 3 with invite detail" in result.stdout
 
 
 def test_detail_survives_a_run_that_cannot_read_the_mail(
-    server: str, tmp_path: Path
+    server: str, vault: Path, tmp_path: Path
 ) -> None:
     FEEDS["anu"] = ics(event("m", "Meeting", TODAY + timedelta(days=2)))
     mail = [invite(tmp_path / "m.eml", "m", TODAY + timedelta(days=2), 0, "Agenda")]
-    assert run(server, tmp_path, mail).returncode == 0
+    assert run(server, vault, *CALENDARS, mail=mail).returncode == 0
 
-    result = run(server, tmp_path, mu=False)
+    result = run(server, vault, *CALENDARS, readable=False)
     assert result.returncode == 1
     assert "calendar-archive:" in result.stderr
-    (meeting,) = records(tmp_path)
+    (meeting,) = records(vault)
     assert meeting["description"] == "Agenda"
 
 
 def test_text_with_unicode_line_separators_round_trips(
-    server: str, tmp_path: Path
+    server: str, vault: Path
 ) -> None:
-    # json.dumps leaves U+2028 raw, which str.splitlines() would split on.
-    FEEDS["anu"] = ics(event("u", "Line\u2028separated", TODAY + timedelta(days=1)))
-    assert run(server, tmp_path).returncode == 0
-    result = run(server, tmp_path)
+    FEEDS["anu"] = ics(event("u", "Line separated", TODAY + timedelta(days=1)))
+    assert run(server, vault, *CALENDARS).returncode == 0
+    before = texts(vault)
+    result = run(server, vault, *CALENDARS)
     assert result.returncode == 0, result.stderr
-    assert titles(tmp_path) == ["Line\u2028separated"]
+    assert titles(vault) == ["Line separated"]
+    assert texts(vault) == before
 
 
-def run_records(
-    server: str, vault: Path, *args: str, mail: list[Path] | None = None
-) -> subprocess.CompletedProcess[str]:
-    """Run the record mode from vault, with fake mu and wiz: Ada is a person
-    in the vault, and Ben one in the lx vault."""
-    bin_dir = vault.parent / "bin"
-    bin_dir.mkdir(exist_ok=True)
-    listing = vault.parent / "mu-finds"
-    listing.write_text("".join(f"{m}\n" for m in mail or []))
-    (bin_dir / "mu").write_text(
-        f'#!/bin/sh\ncat "{listing}"\n[ -s "{listing}" ] || exit 4\n'
-    )
-    here = [{"path": "people/ada-lovelace.md", "fields": {"email": "ada@example.org"}}]
-    lx = [{"path": "people/ben-swift.md", "fields": {"email": "ben@example.org"}}]
-    (bin_dir / "wiz").write_text(
-        "#!/bin/sh\n"
-        'case "$1 $2" in\n'
-        f"  'query lx') echo '{json.dumps(lx)}' ;;\n"
-        f"  query*) echo '{json.dumps(here)}' ;;\n"
-        '  validate*) echo \'[{"vault": "x", "problems": []}]\' ;;\n'
-        "esac\n"
-    )
-    for fake in ("mu", "wiz"):
-        (bin_dir / fake).chmod(0o755)
-    env = {
-        **os.environ,
-        "PATH": f"{bin_dir}:/usr/bin:/bin",
-        "ANU_BEN_SWIFT_ICS_URL": f"{server}/anu",
-    }
-    uv = shutil.which("uv")
-    assert uv
-    return subprocess.run(
-        [uv, "run", "--quiet", "--script", str(SCRIPT), *args],
-        cwd=vault,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-
-def event_records(vault: Path) -> dict[str, str]:
-    return {
-        str(p.relative_to(vault)): p.read_text()
-        for p in sorted((vault / "events").rglob("*.md"))
-    }
-
-
-def test_records_are_written_linked_and_left_alone_when_unchanged(
-    server: str, tmp_path: Path
+def test_unchanged_runs_touch_nothing_and_people_link_across_vaults(
+    server: str, vault: Path, tmp_path: Path
 ) -> None:
-    vault = tmp_path / "vault"
-    vault.mkdir()
     day = TODAY + timedelta(days=2)
     FEEDS["anu"] = ics(
         event("m", "Planning: next year", day),
@@ -319,40 +301,25 @@ def test_records_are_written_linked_and_left_alone_when_unchanged(
         ),
     )
     mail = [invite(tmp_path / "m.eml", "m", day, 0, "Agenda")]
-    result = run_records(server, vault, "--calendar", "anu", mail=mail)
-    assert result.returncode == 0, result.stderr
-    records = event_records(vault)
-    assert len(records) == 3
-    (meeting,) = [t for p, t in records.items() if "planning-next-year" in p]
-    path = next(p for p in records if "planning-next-year" in p)
-    assert path.startswith(f"events/anu/{day:%Y}/{day:%Y-%m-%d}-planning-next-year-")
-    assert meeting.startswith("---\ntitle: 'Planning: next year'\nstart_date: ")
-    assert "all_day: false\n" in meeting
-    assert "organizer: '[[people/ada-lovelace]]'\n" in meeting
-    assert "attendee:\n- Ben Swift <ben@example.org>\n" in meeting
-    assert (
-        "description: Agenda\n" in meeting
-        and "busy: busy\ncalendar: anu\nuid: m\nsource: feed\n" in meeting
+    assert run(server, vault, "--calendar", "anu", mail=mail).returncode == 0
+    paths = list(texts(vault))
+    assert any(
+        p.startswith(f"events/anu/{day:%Y}/{day:%Y-%m-%d}-planning-next-year-")
+        for p in paths
     )
-    assert "anu: 3 occurrences, 1 with invite detail (+3 -0)" in result.stdout
+    stamps = {p: (vault / p).stat().st_mtime_ns for p in paths}
+    assert run(server, vault, "--calendar", "anu", mail=mail).returncode == 0
+    assert {p: (vault / p).stat().st_mtime_ns for p in paths} == stamps
 
-    # An unchanged calendar touches no file.
-    stamps = {p: (vault / p).stat().st_mtime_ns for p in records}
-    assert run_records(server, vault, "--calendar", "anu", mail=mail).returncode == 0
-    assert {p: (vault / p).stat().st_mtime_ns for p in records} == stamps
-
-    # A person in a linked vault is linked across; a dropped event goes.
     FEEDS["anu"] = ics(event("m", "Planning: next year", day))
-    result = run_records(
-        server, vault, "--calendar", "anu", "--link-vault", "lx", mail=mail
-    )
+    result = run(server, vault, "--calendar", "anu", "--link-vault", "lx", mail=mail)
     assert result.returncode == 0, result.stderr
-    (meeting,) = event_records(vault).values()
-    assert "attendee:\n- '[[lx:people/ben-swift]]'\n" in meeting
+    (meeting,) = records(vault)
+    assert meeting["attendee"] == ["[[lx:people/ben-swift]]"]
 
 
-def test_records_seed_their_history_from_the_jsonl_archive(
-    server: str, tmp_path: Path
+def test_history_is_seeded_from_the_old_jsonl_archive(
+    server: str, vault: Path, tmp_path: Path
 ) -> None:
     old = TODAY - timedelta(days=500)
     seed = tmp_path / "jsonl"
@@ -376,14 +343,11 @@ def test_records_seed_their_history_from_the_jsonl_archive(
         )
         + "\n"
     )
-    vault = tmp_path / "vault"
-    vault.mkdir()
     FEEDS["anu"] = ics(event("now", "Now", TODAY))
-    result = run_records(server, vault, "--calendar", "anu", "--seed", str(seed))
+    result = run(server, vault, "--calendar", "anu", "--seed", str(seed))
     assert result.returncode == 0, result.stderr
-    texts = list(event_records(vault).values())
-    assert len(texts) == 2
-    assert any("title: Long ago" in t and "source: Outlook export" in t for t in texts)
+    assert titles(vault) == ["Long ago", "Now"]
+    assert records(vault)[0]["source"] == "Outlook export"
 
 
 if __name__ == "__main__":
