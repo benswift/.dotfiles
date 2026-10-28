@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-28T10:31:00Z'
+updated_date: '2026-10-28T11:29:00Z'
 labels:
   - pkb
   - wiz
@@ -207,11 +207,14 @@ title: Morning job health check
 trigger: { schedule: "0 7 * * *" } # or { manual: true }
 host: weddle # optional; omit = any machine meeting `requires`
 requires: [uv] # command workflows only; checked on PATH
+timeout: 1h # command workflows only; default 1h
 command: pkb-health data/health.toml # or run: x.star
 ---
 ```
 
 A workflow is named by its file, so a manual trigger needs no name of its own.
+The workflow type is defined by the engine, since the engine reads it, and is
+closed: those fields and no others.
 
 1. **Starlark workflows** (`run: *.star`, go.starlark.net) run anywhere,
    including managed and Windows laptops, with nothing to install, and they're
@@ -236,10 +239,22 @@ A workflow is named by its file, so a manual trigger needs no name of its own.
 2. **Command workflows** (`command:`) run an external program, with `requires:`
    and optional `host:`. Where `requires` isn't met the workflow reports "needs
    typst, not available here" and is shown as unavailable, never failing
-   confusingly. Prompt workflows are command workflows whose command is
-   `agent-run` (prompt in the body, an optional `profile:` and `model:`), the
-   same semantics as pkb-agent prompt tasks today. A prompt task fails unless it
-   changed the vault.
+   confusingly. The contract with the program is small and the same for every
+   command: it runs from the vault root, gets the record's body on stdin and
+   `WIZ_VAULT`, `WIZ_VAULT_ROOT` and `WIZ_WORKFLOW` in its environment, and
+   its exit code is the result.
+
+   Scheduled agent tasks are not an engine concept. One is an ordinary command
+   workflow whose command is `agent-run --model sonnet --expect-changes`, with
+   `requires: [agent-run]` so it shows as unavailable on a machine without it,
+   and whose body is the prompt, which `agent-run` reads from stdin. The
+   engine never learns the words "prompt", "profile" or "model", its tests
+   never mock an agent, and a change to how agents run is a dotfiles change,
+   never an engine release. The pkb-agent rule that a run fails unless it
+   changed the vault moves to `agent-run` as `--expect-changes` (non-zero
+   when `git status --porcelain` in its cwd is empty afterwards), where it's
+   runner-agnostic and vault-agnostic. The engine checks what an agent did the
+   way it checks a human: the changed files are validated and guarded.
 
 The two kinds map onto decision-12's two roles. Starlark workflows are open:
 anyone may add or edit one, because it can't run code. Command workflows are
@@ -250,8 +265,20 @@ Built-ins, not workflow kinds:
 
 - **Scheduler:** `wiz due --all`, fired by one systemd timer on Linux and one
   launchd job on macOS, runs what is due for _this_ host across all registered
-  vaults. Run stamps are kept locally on each machine. `host:` replaces the
-  "enable this timer on weddle ONLY" comments.
+  vaults. `host:` replaces the "enable this timer on weddle ONLY" comments.
+  The bookkeeping is generic and is the part of pkb-agent worth keeping:
+  - run stamps are machine-local, and a run is stamped whether it failed or
+    not, so a failing workflow waits for its next scheduled slot rather than
+    retrying every poll
+  - every run's output is captured to
+    `~/.local/state/wiz/logs/<vault>/<workflow>/<timestamp>.log`, and the
+    tail of it rides along in the failure
+  - `timeout:` is enforced by the engine
+  - before a batch, each vault is synced under its own policy, and a vault
+    that won't sync has nothing run against it; after the batch it's synced
+    again
+  - `wiz due` exits non-zero naming each workflow that failed, which is what
+    the unit's `OnFailure` turns into an oncall task
 - **Requests:** `wiz job <workflow>` from a machine that isn't the workflow's
   host writes a request record and syncs it, and the host's next `wiz due`
   runs it and closes the request. This is today's `wiz job` (199 lines) kept,
@@ -320,8 +347,12 @@ should commit in reviewable chunks, one per conversion. The target schema:
   - `bot` and `oncall` remain tags. In lx `requested_by` is a people link, and
     a shared field name must keep its shared type
 - **workflows:** home's current `tasks/` (pkb-agent definitions: `health.md`,
-  `claude-retrospective.md`) become workflow records in `admin/workflows/`. That
-  frees `tasks/` for tasks.
+  `claude-retrospective.md`) become workflow records under the admin-only
+  command-workflow path. `health.md` keeps `command: pkb-health
+  data/health.toml` and its log reference moves to the engine's log path;
+  `claude-retrospective.md` becomes `command: agent-run --model sonnet
+  --expect-changes` with `requires: [agent-run]` and the prompt unchanged as
+  its body. That frees `tasks/` for tasks.
 - **dailies:**
   - `YYYYMMDD.md` with `# Daily YYYY-MM-DD` (176 files) become a `daily` type at
     `dailies/YYYY-MM-DD.md` with a `date` field
@@ -368,7 +399,7 @@ unmatched records unless a type such as `note` claims them.
      same commits that override them (the vault's CLAUDE.md requires this),
      extend decision-12 so open Starlark workflows and admin-only command
      workflows sit on its two sides, and add a decision for the engine/vault
-     split and the two workflow kinds
+     split and the two workflow kinds, saying that agents are not a kind
    - file the engine work as wiz backlog tasks
    - nothing reaches Cole and Rob until the release passes a round trip on Rob's
      Windows laptop and Cole's Mac (the task-1 pattern)
@@ -389,7 +420,12 @@ unmatched records unless a type such as `note` claims them.
      - `pkb-todo` and `pkb-agent`
    - **scheduler units:** add a `wiz-due` systemd service and timer and a
      launchd plist, both with `OnFailure`/oncall wiring like the units they
-     replace.
+     replace, and both running under the mise environment (as pkb-agent's do
+     now) so an `agent-run` command finds its keys.
+   - **`bin/agent-run`:** read the prompt from stdin when no positional prompt
+     is given, and add `--expect-changes`, which exits non-zero when
+     `git status --porcelain` in the working directory is empty after the run.
+     Both are runner-agnostic.
    - **pkb package:** delete it. `pkb-health` moves to `bin/pkb-health` as a
      `uv run --script` (add it to `extend-include` in `ruff.toml`) and runs as a
      command workflow. Drop the pkb steps from CI and the editable install from
@@ -462,6 +498,17 @@ without trouble.
   Starlark-to-command bridge (`ctx.run`), the `*_test.star` framework, and
   `on_change` triggers, none of which a first-wave workflow needs. Add any of
   them with its own decision record when a workflow does.
+- **Agents aren't an engine concept** (same review). The engine's job is the
+  deterministic, testable, slow-to-change part; agent runners change with the
+  provider of the month, prompts are prose colleagues should be able to edit,
+  and the whole category is optional per vault. So a scheduled agent task is a
+  plain command workflow, the `profile:`/`model:` fields and the
+  changed-nothing rule left the engine for `agent-run`, and the engine checks
+  an agent's work the way it checks a person's: by validating and guarding
+  what changed. What stays engine-side for every workflow is the bookkeeping
+  (stamps, logs, timeout, sync around a batch, exit code), because it's
+  generic. The one thing given up is engine-rendered context in prompts,
+  which the agent gets by calling `wiz query` itself.
 - **Skills stay vault-owned** (same review). Engine-shipped generic skills, a
   `wiz skills` command and the vault-name prefix on commands (`/lx-email`)
   were dropped: the `/wiz` skill's content is LX judgement, decision-12 had
@@ -491,4 +538,5 @@ though the same launchd concern applies to the new scheduler plist.
 - [ ] #12 The lx vault's decision records overridden by this change (3, 6, 9, 11) are edited or replaced in the commits that override them, decision-12 is extended for the two workflow kinds, and a new decision records the engine/vault split and the mdbase-layout-only choice
 - [ ] #13 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
 - [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, append to a daily and run a workflow by following them
+- [ ] #15 The engine's source and tests contain no agent, prompt, profile or model concept; home's scheduled agent tasks run as plain command workflows via agent-run, with every run stamped, logged, timed out and failed through the same bookkeeping as any other workflow
 <!-- AC:END -->
