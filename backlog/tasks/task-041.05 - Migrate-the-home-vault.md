@@ -4,7 +4,7 @@ title: Migrate the home vault
 status: To Do
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
-updated_date: '2026-10-28T23:01:00Z'
+updated_date: '2026-10-28T23:22:00Z'
 labels:
   - pkb
   - wiz
@@ -26,10 +26,16 @@ A one-off uv script outside both repos, with a dry run that reports every change
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Ben has reviewed the dry-run report against a copy before the migration is applied
-- [ ] #2 No *.todo.md, *.bookmark.md, YYYYMMDD.md or .index files remain, every tags field is a YAML list, and wiz validate home reports no problems
-- [ ] #3 Home has no daily, bookmark or role type; its docs/ holds doc records and typst/ the Typst sources
-- [ ] #4 Done todos are tasks with status: done, named by their nb creation date
-- [ ] #5 Home's CLAUDE.md describes the wiz CLI and the new record types, and tells no agent to append to a day file
-- [ ] #6 Home's health check and retrospective run as command workflows (the retrospective via agent-run --expect-changes with the prompt as its body), and pkb-agent runs nothing
+- [x] #2 No *.todo.md, *.bookmark.md, YYYYMMDD.md or .index files remain, every tags field is a YAML list, and wiz validate home reports no problems
+- [x] #3 Home has no daily, bookmark or role type; its docs/ holds doc records and typst/ the Typst sources
+- [x] #4 Done todos are tasks with status: done, named by their nb creation date
+- [x] #5 Home's CLAUDE.md describes the wiz CLI and the new record types, and tells no agent to append to a day file
+- [x] #6 Home's health check and retrospective run as command workflows (the retrospective via agent-run --expect-changes with the prompt as its body), and pkb-agent runs nothing
 - [ ] #7 Home's events/ holds event records written by calendar-archive as a command workflow (seeded once from data/calendars/*.jsonl with --seed), the JSONL files and the calendar-archive timer are gone, and calendar-archive has no JSONL mode left
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Applied 2026-10-29 on weddle with ~/projects/wiz-home-migration/migrate.py (report.md beside it lists every move, rewrite and the 58 links left as plain text because they named nothing), then bodytags.py (nb's body #tags), blockstyle.py (the first run's flow-style frontmatter) and suffixed_todos.py (todos nb named <id>-<n>.todo.md). Also resolved the conflict markers nb had committed into the 27 July and 14 August dailies. AC #1: Claude reviewed the dry run against a copy, on Ben's instruction to proceed without stopping; Ben hasn't. The timer race at cutover ran the retrospective early (its November slot is stamped as done) and filed three proposals.
+<!-- SECTION:NOTES:END -->
