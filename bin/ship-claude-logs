@@ -124,4 +124,14 @@ done
 if [[ "$shipped" == "true" && "$DRY_RUN" != "true" ]]; then
   mkdir -p "$(dirname "$STAMP")"
   date +%s > "$STAMP"
+
+  # The heartbeat bin/ingest-claude-logs reads to tell a host that has stopped
+  # shipping from one that is merely idle --- a quiet host still beats. It goes
+  # in the claude-logs tree whichever agents this host runs.
+  if [[ "$HOST" == "weddle" ]]; then
+    mkdir -p "$HOME/claude-logs/$HOST"
+    date +%s > "$HOME/claude-logs/$HOST/.last-ship"
+  else
+    date +%s | rclone rcat "$REMOTE:claude-logs/$HOST/.last-ship"
+  fi
 fi

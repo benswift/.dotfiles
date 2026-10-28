@@ -20,6 +20,11 @@ the point of the check, not a side effect: the failure this pipeline actually
 suffers is not a unit that fails, it is a unit that succeeds and ships
 nothing --- daysy went five weeks unnoticed that way. Paired with
 `OnFailure=unit-oncall@%n.service`, a silent stall becomes a pkb todo.
+
+A host's age is its `.last-ship` heartbeat (bin/ship-claude-logs writes one
+per successful run) where it has one, and its newest session otherwise. The
+heartbeat is what lets an idle host stay quiet while a stalled one still
+pages.
 """
 
 from __future__ import annotations
@@ -271,8 +276,18 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
 
 
+def heartbeat(host: str) -> datetime | None:
+    """When `host` last shipped successfully, if it has ever said so."""
+    try:
+        stamp = (ROOTS["claude"][0] / host / ".last-ship").read_text().strip()
+        return datetime.fromtimestamp(int(stamp), UTC)
+    except (OSError, ValueError):
+        return None
+
+
 def stale_hosts(conn: sqlite3.Connection) -> list[tuple[str, str]]:
-    """Hosts whose most recent session predates the staleness window."""
+    """Hosts whose last ship (or, lacking a heartbeat, newest session)
+    predates the staleness window."""
     cutoff = datetime.now(UTC) - timedelta(days=STALE_DAYS)
     stale: list[tuple[str, str]] = []
     rows = conn.execute(
@@ -280,6 +295,11 @@ def stale_hosts(conn: sqlite3.Connection) -> list[tuple[str, str]]:
         " WHERE started_at IS NOT NULL GROUP BY host"
     ).fetchall()
     for host, newest in rows:
+        beat = heartbeat(host)
+        if beat is not None:
+            if beat < cutoff:
+                stale.append((host, f"last ship {beat.isoformat()}"))
+            continue
         try:
             seen = datetime.fromisoformat(newest)
         except (TypeError, ValueError):
@@ -287,7 +307,7 @@ def stale_hosts(conn: sqlite3.Connection) -> list[tuple[str, str]]:
         if seen.tzinfo is None:
             seen = seen.replace(tzinfo=UTC)
         if seen < cutoff:
-            stale.append((host, newest))
+            stale.append((host, f"newest session {newest}"))
     return stale
 
 
@@ -360,9 +380,9 @@ def main() -> None:
 
         stale = stale_hosts(conn)
         if stale:
-            detail = ", ".join(f"{host} (newest {newest})" for host, newest in stale)
+            detail = ", ".join(f"{host} ({seen})" for host, seen in stale)
             raise SystemExit(
-                f"No sessions in the last {STALE_DAYS} days from: {detail}."
+                f"Nothing shipped in the last {STALE_DAYS} days from: {detail}."
                 " That host has probably stopped shipping --- check its"
                 " ship-claude-logs timer/launchd agent."
             )
