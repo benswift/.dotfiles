@@ -4,6 +4,7 @@ title: Migrate the home vault
 status: To Do
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
+updated_date: '2026-10-28T22:46:00Z'
 labels:
   - pkb
   - wiz
@@ -29,4 +30,5 @@ A one-off uv script outside both repos, with a dry run that reports every change
 - [ ] #3 Home has no daily, bookmark or role type; its docs/ holds doc records and typst/ the Typst sources
 - [ ] #4 Done todos are tasks with status: done, named by their nb creation date
 - [ ] #5 Home's CLAUDE.md describes the wiz CLI and the new record types, and tells no agent to append to a day file
+- [ ] #6 Home's health check and retrospective run as command workflows (the retrospective via agent-run --expect-changes with the prompt as its body), and pkb-agent runs nothing
 <!-- AC:END -->

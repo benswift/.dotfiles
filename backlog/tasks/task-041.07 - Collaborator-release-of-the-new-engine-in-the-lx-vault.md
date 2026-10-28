@@ -4,6 +4,7 @@ title: Collaborator release of the new engine in the lx vault
 status: To Do
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
+updated_date: '2026-10-28T22:46:00Z'
 labels:
   - pkb
   - wiz
@@ -32,4 +33,5 @@ Step 7 of TASK-041's order of work. Groundwork (_types/, mdbase.yaml, events/, w
 - [ ] #3 The lx CLAUDE.md describes the wiz CLI and the new record types, and a session following it can add a task, add a note about a project and run a workflow
 - [ ] #4 start-here.md points at wiz help principles, and a colleague's Claude, asked why wiz works the way it does, answers from the principles and the meta docs
 - [ ] #5 The GitLab project is u2548636/wiz-lx, the old path is unused, and Cole's, Rob's and watson's clones still work
+- [ ] #6 watson runs wiz due lx at the lx pin in place of watson-run's own steps, and weddle's wiz-validate unit is replaced with its oncall wiring carried over
 <!-- AC:END -->
