@@ -10,6 +10,8 @@ from __future__ import annotations
 import argparse
 import importlib.machinery
 import importlib.util
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -238,3 +240,95 @@ def test_main_falls_back_to_default_profile(
     monkeypatch.setattr(mod.subprocess, "run", fake_run)
     assert mod.main(["--config", str(config), "hello"]) == 0
     assert seen[0][:2] == ["codex", "exec"]
+
+
+def _registry(tmp_path: Path) -> Path:
+    config = tmp_path / "profiles.toml"
+    config.write_text('version = 1\n[profiles.fake]\nrunner = "claude"\n')
+    return config
+
+
+def _fake_agent(tmp_path: Path, script: str) -> dict[str, str]:
+    agent = tmp_path / "fake-claude"
+    agent.write_text(f"#!/bin/sh\n{script}\n")
+    agent.chmod(0o755)
+    return {"CLAUDE_BIN": str(agent)}
+
+
+def _repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    for args in (["init", "-q"], ["commit", "-q", "--allow-empty", "-m", "init"]):
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo),
+                "-c",
+                "user.name=t",
+                "-c",
+                "user.email=t@x",
+                *args,
+            ],
+            check=True,
+        )
+    return repo
+
+
+def test_prompt_from_stdin_and_expect_changes(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    config = _registry(tmp_path)
+    env = {
+        **os.environ,
+        **_fake_agent(
+            tmp_path, 'for a; do last=$a; done; printf "%s" "$last" > got.txt'
+        ),
+    }
+
+    def run(*extra: str, stdin: str = "") -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [
+                str(SCRIPT),
+                "--config",
+                str(config),
+                "--profile",
+                "fake",
+                "--cwd",
+                str(repo),
+                *extra,
+            ],
+            input=stdin,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+        )
+
+    result = run("--expect-changes", stdin="Summarise the week.\n")
+    assert result.returncode == 0, result.stderr
+    assert (repo / "got.txt").read_text() == "Summarise the week.\n"
+
+    # The same run again writes the same file: nothing changed, so it fails.
+    subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repo),
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@x",
+            "commit",
+            "-qm",
+            "x",
+        ],
+        check=True,
+    )
+    result = run("--expect-changes", stdin="Summarise the week.\n")
+    assert result.returncode == 1
+    assert "changed nothing" in result.stderr
+
+    # Without the flag the same no-op run succeeds, and an empty prompt fails.
+    assert run(stdin="Summarise the week.\n").returncode == 0
+    assert "no prompt supplied" in run(stdin="  \n").stderr

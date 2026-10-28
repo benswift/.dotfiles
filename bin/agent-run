@@ -183,6 +183,24 @@ def check_runner_options(runner: str, args: argparse.Namespace) -> None:
                 )
 
 
+def fingerprint(cwd: Path) -> str:
+    """HEAD and the working tree's status: changes if anything was written,
+    committed or not."""
+    head = subprocess.run(
+        ["git", "-C", str(cwd), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    status = subprocess.run(
+        ["git", "-C", str(cwd), "status", "--porcelain", "--untracked-files=all"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return head.stdout + status.stdout
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run Claude Code or Codex through a named provider profile."
@@ -204,6 +222,13 @@ def build_parser() -> argparse.ArgumentParser:
     # Runner-agnostic: lets an unattended consumer say "never stop to ask"
     # without knowing which runner its profile selects.
     parser.add_argument("--bypass-permissions", action="store_true")
+    # Fail a run that left the working tree exactly as it found it: the two
+    # silent failures seen in scheduled runs (a provider's quota message in
+    # place of any work, and a turn ended early) both exit 0 having done
+    # nothing, whatever the runner.
+    parser.add_argument("--expect-changes", action="store_true")
+    # With no prompt argument, the prompt is read from standard input, as a
+    # wiz command workflow gives it its body.
     parser.add_argument("prompt", nargs="?")
     return parser
 
@@ -243,7 +268,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             label = version[0] if version else f"{binary} (version unavailable)"
             print(f"{args.profile}: {label}{f' (model {model})' if model else ''}")
             return result.returncode
-        if args.prompt is None:
+        child_stdin = None
+        if args.prompt is None and not sys.stdin.isatty():
+            args.prompt = sys.stdin.read()
+            child_stdin = subprocess.DEVNULL
+        if not (args.prompt or "").strip():
             raise ValueError("no prompt supplied")
 
         cwd = args.cwd.expanduser().resolve()
@@ -262,7 +291,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             environ=child_env,
             bypass_permissions=args.bypass_permissions,
         )
-        return subprocess.run(command, cwd=cwd, env=child_env, check=False).returncode
+        before = fingerprint(cwd) if args.expect_changes else ""
+        returncode = subprocess.run(
+            command, cwd=cwd, env=child_env, stdin=child_stdin, check=False
+        ).returncode
+        if returncode == 0 and args.expect_changes and fingerprint(cwd) == before:
+            print(
+                f"agent-run: the run changed nothing in {cwd}, so it didn't do its job",
+                file=sys.stderr,
+            )
+            return 1
+        return returncode
     except (OSError, ValueError, tomllib.TOMLDecodeError) as error:
         print(f"agent-run: {error}", file=sys.stderr)
         return 2
