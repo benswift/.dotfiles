@@ -1,0 +1,13 @@
+[Unit]
+Description=Check for due wiz workflows every 15 minutes
+# No Requires=<service>: in [Unit] that starts the service whenever the timer
+# starts. Unit= in [Timer] is what binds the two.
+
+[Timer]
+OnCalendar=*:0/15
+RandomizedDelaySec=1min
+Persistent=true
+Unit=wiz-due.service
+
+[Install]
+WantedBy=timers.target

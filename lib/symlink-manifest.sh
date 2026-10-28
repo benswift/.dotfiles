@@ -78,6 +78,10 @@ SYMLINK_MANIFEST=(
     # wiz-validate: enable the timer on weddle ONLY (it starts the job on watson)
     "systemd/user/wiz-validate.service:~/.config/systemd/user/wiz-validate.service"
     "systemd/user/wiz-validate.timer:~/.config/systemd/user/wiz-validate.timer"
+    # wiz-due: the scheduler for every registered vault's workflows; a
+    # workflow's host: decides where it runs, so enable it on every Linux host
+    "systemd/user/wiz-due.service:~/.config/systemd/user/wiz-due.service"
+    "systemd/user/wiz-due.timer:~/.config/systemd/user/wiz-due.timer"
     # unit-oncall: template units, instanced by any timer that wants a failure
     # to reach the notebook. Never enabled themselves --- a job opts in with
     # OnFailure=unit-oncall@%n.service / OnSuccess=unit-oncall-clear@%n.service

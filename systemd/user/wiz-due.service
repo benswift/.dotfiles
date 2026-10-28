@@ -1,0 +1,16 @@
+[Unit]
+Description=Run the wiz workflows due on this machine, across every registered vault
+Documentation=file:///home/ben/projects/wiz-engine/VAULT.md
+# wiz due exits non-zero naming each workflow that failed, and a vault that
+# won't sync fails too; this turns either into an oncall task.
+OnFailure=unit-oncall@%n.service
+OnSuccess=unit-oncall-clear@%n.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
+Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+# Under mise exec so the [env] block (agent keys and the like) reaches the
+# command workflows, which run with this process's environment.
+ExecStart=/home/ben/.local/bin/mise exec --cd /home/ben -- /home/ben/.local/bin/wiz due -all
+TimeoutStartSec=2h

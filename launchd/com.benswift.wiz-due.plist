@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The macOS twin of systemd/user/wiz-due.timer: every 15 minutes, run the wiz
+  workflows due on this machine across every registered vault, under
+  bin/launchd-run (PATH, timeout, failure paging --- see its header). Under
+  mise exec so the [env] block reaches the command workflows.
+
+  A run launchd defers across sleep fires at the next wake, which may be a
+  DarkWake that ends seconds later with the run still going and launchd's
+  one-instance slot held for hours; bin/in-darkwake skips those, and
+  bin/wait-for-network skips a wake before wifi is up. Both exit 0: the next
+  slot retries. wiz due's own stamps mean nothing runs twice.
+
+  Install:
+    cp ~/.dotfiles/launchd/com.benswift.wiz-due.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.benswift.wiz-due.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.benswift.wiz-due</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/ben/.dotfiles/bin/launchd-run</string>
+        <string>wiz-due</string>
+        <string>-t</string>
+        <string>7200</string>
+        <string>--</string>
+        <string>/bin/sh</string>
+        <string>-c</string>
+        <string>in-darkwake &amp;&amp; exit 0; wait-for-network || exit 0; mise exec --cd "$HOME" -- wiz due -all</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>900</integer>
+    <key>StandardOutPath</key>
+    <string>/Users/ben/Library/Logs/wiz-due.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/ben/Library/Logs/wiz-due.log</string>
+</dict>
+</plist>
