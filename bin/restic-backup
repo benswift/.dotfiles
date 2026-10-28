@@ -66,6 +66,15 @@ FORGET_POLICY=(
 # waits it out rather than failing.
 LOCK_WAIT=2h
 
+# A restic killed without cleanup (an ssh session dropped mid-command) leaves
+# its lock behind, and every exclusive operation then waits out LOCK_WAIT and
+# fails. `unlock` removes only stale locks --- a dead PID on this host, or one
+# unrefreshed for 30 minutes, where a live restic refreshes every 5 --- so it
+# is safe to run before every operation.
+clear_stale_locks() {
+    restic unlock
+}
+
 # Fraction of pack data `check` downloads and verifies each run. B2 egress is
 # free up to 3x stored data a month, so this is well inside it.
 CHECK_SUBSET=5%
@@ -170,9 +179,12 @@ check() {
 }
 
 case "${1:-backup}" in
-backup) backup ;;
-prune) prune ;;
-check) check ;;
+backup | prune | check)
+    # Two statements, not an && list: set -e is suspended inside a function
+    # run as part of an && list, so a failing step would no longer fail it.
+    clear_stale_locks
+    "${1:-backup}"
+    ;;
 status)
     rc=0
     check_fresh || rc=1
