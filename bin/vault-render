@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# vault-render --- render a vault file to PDF or DOCX and open it: the home
+# vault's pdf and docx command workflows, which wiz runs from the vault root
+# with the file in WIZ_ARG_PATH:
+#
+#   wiz run home pdf path=docs/llms-unplugged-prospectus.md
+#   wiz run home docx path=notes/2026-10-29-board-paper.md
+#
+# Markdown goes through pandoc, with the ANU template (anu.typst in pandoc's
+# templates folder) when there is one; that template reads a doc's subtitle,
+# author, date, socy_logo, dark, lockup and qr-url. A .typ file is compiled
+# directly. The intermediate Typst file sits at the vault root while it
+# compiles, so image paths resolve from there, as they always have. The output
+# goes to the temp folder and is opened where there's a desktop to open it on.
+set -euo pipefail
+
+format="${1:?usage: vault-render pdf|docx [file]}"
+file="${2:-${WIZ_ARG_PATH:-}}"
+[[ -n "$file" ]] || { echo "vault-render: say which file, as path=<file>" >&2; exit 2; }
+[[ -f "$file" ]] || { echo "vault-render: no $file in $(pwd)" >&2; exit 2; }
+
+base="$(basename "${file%.*}")"
+out="${TMPDIR:-/tmp}/$base.$format"
+
+case "$format:$file" in
+pdf:*.md)
+	tmp=".$base.tmp.typ"
+	trap 'rm -f "$tmp"' EXIT
+	pandoc "$file" --from markdown --to typst --template anu --output "$tmp" 2>/dev/null ||
+		pandoc "$file" --from markdown --to typst --output "$tmp"
+	typst compile --root . "$tmp" "$out"
+	;;
+pdf:*.typ)
+	typst compile --root . "$file" "$out"
+	;;
+docx:*.md)
+	pandoc "$file" --from markdown --to docx --output "$out"
+	;;
+*)
+	echo "vault-render: can't make $format from $file (Markdown makes either; Typst makes PDF)" >&2
+	exit 2
+	;;
+esac
+
+echo "$out"
+if [[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]] && command -v xdg-open >/dev/null; then
+	xdg-open "$out" >/dev/null 2>&1 &
+elif [[ "$(uname -s)" == Darwin ]]; then
+	open "$out"
+fi
