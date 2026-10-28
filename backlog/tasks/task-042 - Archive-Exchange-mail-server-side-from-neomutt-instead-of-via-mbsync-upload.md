@@ -1,5 +1,5 @@
 ---
-id: TASK-041
+id: TASK-042
 title: Archive Exchange mail server-side from neomutt instead of via mbsync upload
 status: To Do
 assignee: []
