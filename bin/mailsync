@@ -100,32 +100,58 @@ fi
 # gone away without a RST sits in the retransmit/persist loop indefinitely, and
 # no read timeout ever comes due. So cap the wall clock from outside instead.
 # A normal run is ~20s, so ten minutes is generous even for a big backlog.
+# The cap applies to each channel's mbsync separately.
 MBSYNC_TIMEOUT="${MBSYNC_TIMEOUT:-600}"
 
 # GNU coreutils timeout: /usr/bin on Linux, brew's coreutils on macOS. If it
 # is missing, sync unguarded rather than not at all --- the outer cap in
 # launchd-run still bounds the unattended path.
 timeout_bin="$(command -v timeout || command -v gtimeout || true)"
-sync_cmd=(mbsync -a)
+guard=()
 if [ -n "$timeout_bin" ]; then
-    sync_cmd=("$timeout_bin" --kill-after=30 "$MBSYNC_TIMEOUT" "${sync_cmd[@]}")
+    guard=("$timeout_bin" --kill-after=30 "$MBSYNC_TIMEOUT")
 else
     print_warning "coreutils timeout not found; running mbsync unguarded"
 fi
 
-# Sync all accounts
-print_status "Syncing all mail accounts..."
-if "${sync_cmd[@]}"; then
-    print_status "All accounts synced successfully"
-else
-    sync_status=$?
-    # 124: timeout fired. 137: it had to escalate to SIGKILL 30s later.
-    if [ "$sync_status" -eq 124 ] || [ "$sync_status" -eq 137 ]; then
-        print_error "mbsync exceeded ${MBSYNC_TIMEOUT}s and was killed (dead socket?)"
-    else
-        print_warning "Mail sync had issues"
+# One mbsync per channel, all at once, so a run takes as long as the slowest
+# account rather than the sum of them (the Exchange channels run at
+# PipelineDepth 1, so each is mostly waiting on round trips). The channels
+# share no maildir or sync state, so they can't trip over each other the way
+# two runs of the same channel do; the lock above still keeps whole runs
+# apart. The Exchange channels all fetch one OAuth token, and
+# bin/mail-secret serialises its refresh.
+channels=()
+while read -r ch; do channels+=("$ch"); done < <(awk '$1 == "Channel" {print $2}' "$HOME/.mbsyncrc")
+outdir="$(mktemp -d)"
+trap 'rm -f "$LOCKFILE"; rm -rf "$outdir"' EXIT
+
+print_status "Syncing ${#channels[@]} mail accounts in parallel..."
+pids=()
+for ch in "${channels[@]}"; do
+    ${guard[@]+"${guard[@]}"} mbsync "$ch" >"$outdir/$ch" 2>&1 &
+    pids+=("$!")
+done
+
+# Report in config order, each line tagged with its channel, so the log
+# reads the same whichever channel finished first.
+for i in "${!channels[@]}"; do
+    ch="${channels[$i]}"
+    status=0
+    wait "${pids[$i]}" || status=$?
+    sed "s/^/[$ch] /" "$outdir/$ch"
+    if [ "$status" -ne 0 ]; then
+        # 124: timeout fired. 137: it had to escalate to SIGKILL 30s later.
+        if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+            print_error "$ch: mbsync exceeded ${MBSYNC_TIMEOUT}s and was killed (dead socket?)"
+        else
+            print_warning "$ch: sync had issues (exit $status)"
+        fi
+        sync_errors=$((sync_errors + 1))
     fi
-    sync_errors=$((sync_errors + 1))
+done
+if [ "$sync_errors" -eq 0 ]; then
+    print_status "All accounts synced successfully"
 fi
 
 # Update mu index. The progress spinner is for a terminal; from launchd it
