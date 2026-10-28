@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# unit-oncall: turn a failed systemd user unit into a pkb todo.
+# unit-oncall: turn a failed systemd user unit into a task in the home vault.
 #
 # Scheduled jobs fail silently by default: the journal records it, but nothing
 # reaches Ben unless he goes looking. This is the backchannel --- a failure
-# files an open todo in the notebook (with the tail of the unit's journal) and
-# syncs, so it shows up wherever the notebook does.
+# files an open task in the home vault (with the tail of the unit's journal),
+# tagged bot and oncall with the unit in its `unit` field, and shares it, so it
+# shows up wherever the vault does.
 #
 # Wired via a drop-in on the job's unit, so no job script knows about it:
 #
@@ -12,32 +13,32 @@
 #   OnFailure=unit-oncall@%n.service
 #   OnSuccess=unit-oncall-clear@%n.service
 #
-# Usage: unit-oncall fail  <unit>   # file a todo (deduped, see below)
-#        unit-oncall clear <unit>   # the unit succeeded; re-arm and close its todos
+# Usage: unit-oncall fail  <unit>   # file a task (deduped, see below)
+#        unit-oncall clear <unit>   # the unit succeeded; re-arm and close its tasks
 #
-# DEDUP: a unit that fails every 15 minutes must not file 96 todos a day. The
+# DEDUP: a unit that fails every 15 minutes must not file 96 tasks a day. The
 # first failure files one and drops a marker; later failures append to the
-# marker instead. A success clears it and ticks off the todo(s), so the bot
+# marker instead. A success clears it and closes the task(s), so the bot
 # section only ever lists units still failing. A marker older than REARM_HOURS
-# files a fresh todo anyway, so a failure that persists past a ticked-off todo
-# does not go quiet.
+# files a fresh task anyway, so a failure that persists past a closed task does
+# not go quiet.
 #
-# A todo also sends a Pushover page, so a failure reaches a phone rather than
-# waiting for the notebook to be opened. The page sits inside the dedup above,
-# so it inherits it: one page per todo, not one per failure.
+# A task also sends a Pushover page, so a failure reaches a phone rather than
+# waiting for the vault to be opened. The page sits inside the dedup above, so
+# it inherits it: one page per task, not one per failure.
 #
 # BURST: that marker only debounces a single unit, and whole families fail
 # together --- one crit sweep per group, six at a time. So the pages are capped
 # across units as well: PUSH_CAP per PUSH_WINDOW_MIN, then one page saying how
 # many more are failing, then silence for the rest of the window. Every failure
-# still files its own todo; only the paging is capped, so nothing is lost --- the
-# notebook stays the record and the page is only the nudge towards it.
+# still files its own task; only the paging is capped, so nothing is lost --- the
+# vault stays the record and the page is only the nudge towards it.
 
 set -euo pipefail
 
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/unit-oncall"
 LOG="$STATE/unit-oncall.log"
-LOCK="$STATE/nb.lock"
+LOCK="$STATE/wiz.lock"
 WINDOW="$STATE/push-window"
 JOURNAL_LINES="${JOURNAL_LINES:-40}"
 REARM_HOURS="${REARM_HOURS:-24}"
@@ -73,7 +74,7 @@ push_seq() {
 
 # Best effort by construction: a Pushover outage must not turn a job's failure
 # into a failed OnFailure= handler, so every path here logs and returns 0. The
-# todo is already on disk by the time this runs.
+# task is already on disk by the time this runs.
 #
 # `mise exec` supplies PUSHOVER_TOKEN/PUSHOVER_USER_KEY from the untracked
 # [env] block in ~/.config/mise/config.local.toml --- the unit gives this script
@@ -85,7 +86,7 @@ page() {
 		| mise exec -- notify-pushover --title "$title" >/dev/null 2>>"$LOG"; then
 		return 0
 	fi
-	say "pushover failed for '$title' --- the todo is still filed"
+	say "pushover failed for '$title' --- the task is still filed"
 	return 0
 }
 
@@ -106,31 +107,27 @@ clear)
 		say "$unit: recovered; marker cleared"
 	fi
 
-	# Close every open todo this script filed for the unit (a re-armed failure
-	# leaves more than one). Matched on the title written by `fail` below plus
-	# the oncall tag, so a todo Ben wrote himself is never touched. This runs on
-	# every success, so it must stay cheap: a fixed-string grep over the
-	# notebook's top level, and nb (which commits) only when something matches.
-	notebook="${NB_DIR:-$HOME/.nb}/home"
-	open=()
-	while IFS= read -r file; do
-		grep -qF '#oncall' "$file" && open+=("$(basename "$file")")
-	done < <(grep -lF -- "# [ ] $unit failed on weddle (" "$notebook"/*.todo.md 2>/dev/null || true)
+	# Close every open task this script filed for the unit (a re-armed failure
+	# leaves more than one), found by its unit field, so a task Ben wrote
+	# himself is never touched. This runs on every success, so it writes and
+	# shares only when something matches.
+	mapfile -t open < <(wiz query home -json "type == \"task\" && unit == \"$unit\" && status == \"open\"" 2>>"$LOG" \
+		| jq -r '.[].path' 2>>"$LOG" || true)
 	((${#open[@]})) || exit 0
 
 	exec 9>"$LOCK"
 	flock 9
-	for todo in "${open[@]}"; do
-		if nb todo "do" "$todo" >/dev/null 2>>"$LOG"; then
-			say "$unit: recovered; closed todo $todo"
+	for task in "${open[@]}"; do
+		if wiz update "home:$task" -set status=done >/dev/null 2>>"$LOG"; then
+			say "$unit: recovered; closed $task"
 		else
-			say "$unit: recovered, but FAILED to close todo $todo"
+			say "$unit: recovered, but FAILED to close $task"
 		fi
 	done
-	if nb home:sync >/dev/null 2>>"$LOG"; then
-		say "$unit: synced"
+	if wiz sync home -m "oncall: $unit recovered" "${open[@]/#/$(wiz path home)/}" >/dev/null 2>>"$LOG"; then
+		say "$unit: shared"
 	else
-		say "$unit: nb sync failed --- closed todos are local until the next sync"
+		say "$unit: sync failed --- closed tasks are local until the next sync"
 	fi
 	exit 0
 	;;
@@ -239,21 +236,23 @@ $tail_out
 EOF
 )"
 
-# nb writes to a git working tree, and pkb-agent and the daily sync touch the
-# same one. Serialise so a concurrent handler cannot land mid-commit.
+# Writes to the vault's working tree, which wiz due and its syncs touch too.
+# Serialise so a concurrent handler cannot land mid-commit.
 exec 9>"$LOCK"
 flock 9
 
-if nb todo add "$title" --description "$description" --tags bot,oncall >/dev/null 2>>"$LOG"; then
+if task="$(printf '%s\n' "$description" | wiz add home task -json -title "$title" \
+	-set status=open -set "tags=[bot,oncall]" -set "unit=$unit" 2>>"$LOG" | jq -r '.paths[0]')" \
+	&& [[ -n "$task" && "$task" != null ]]; then
 	printf 'first failure %s\n' "$(date -Is)" >"$marker"
-	say "$unit: filed a todo"
+	say "$unit: filed $task"
 else
-	say "$unit: FAILED to file a todo --- the journal is the only record"
+	say "$unit: FAILED to file a task --- the journal is the only record"
 	exit 1
 fi
 
-# Page before `nb sync`, which reaches the network and can be slow: the phone
-# should buzz as soon as the todo is on disk, not after a remote round trip.
+# Page before syncing, which reaches the network and can be slow: the phone
+# should buzz as soon as the task is on disk, not after a remote round trip.
 #
 # Lead with what the job itself printed --- for the course heartbeat that is the
 # STALE line naming the dead timer --- since systemd's own "Failed with result"
@@ -272,16 +271,16 @@ if ((page_n <= PUSH_CAP)); then
 	say "$unit: paged ($page_n/$PUSH_CAP this ${PUSH_WINDOW_MIN}m window)"
 elif ((page_n == PUSH_CAP + 1)); then
 	page "oncall: burst on weddle" \
-		"More than $PUSH_CAP units failing within ${PUSH_WINDOW_MIN}m; pages suppressed for the rest of the window. Todos are still being filed --- see the bot section of \`todo\`"
+		"More than $PUSH_CAP units failing within ${PUSH_WINDOW_MIN}m; pages suppressed for the rest of the window. Tasks are still being filed --- see the bot section of \`todo\`"
 	say "$unit: paged the burst summary; further pages suppressed this window"
 else
 	say "$unit: page suppressed (burst, page $page_n this ${PUSH_WINDOW_MIN}m window)"
 fi
 
-# Best effort: the todo is already on disk, and the next hourly `nb home:sync`
-# will carry it if this one cannot (offline, remote unreachable).
-if nb home:sync >/dev/null 2>>"$LOG"; then
-	say "$unit: synced"
+# Best effort: the task is already on disk, and wiz due's next sync of the
+# vault will carry it if this one cannot (offline, remote unreachable).
+if wiz sync home -m "oncall: $unit failed" "$(wiz path home)/$task" >/dev/null 2>>"$LOG"; then
+	say "$unit: shared"
 else
-	say "$unit: nb sync failed --- todo is local until the next sync"
+	say "$unit: sync failed --- the task is local until the next sync"
 fi

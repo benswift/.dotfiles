@@ -17,7 +17,8 @@
 #           the reconnects.
 # Failures  launchd has no OnFailure equivalent, so it lives here: -n
 #           consecutive non-zero exits (default 3, so a transient blip stays
-#           quiet) file a pkb todo and send a Pushover page, once per breakage.
+#           quiet) file a home-vault task and send a Pushover page, once per
+#           breakage.
 #           Repeats while still broken stay quiet, a success re-arms, and a
 #           breakage older than REARM_HOURS pages again so a persistent one
 #           cannot go silent. Offline or metered is not a failure --- the job
@@ -25,7 +26,7 @@
 #           --- and nor is a failed run the machine slept through.
 #
 # The job's output goes wherever the plist points stdout, by convention
-# ~/Library/Logs/<job>.log, and the tail of that log rides along in the todo
+# ~/Library/Logs/<job>.log, and the tail of that log rides along in the task
 # and the page. This wrapper's own actions are logged to
 # ~/.local/state/launchd-run/launchd-run.log.
 
@@ -94,6 +95,14 @@ if ((status == 0)); then
 		rm -f "$marker"
 		echo "launchd-run: $job recovered"
 		say "recovered; marker cleared"
+		# Close the tasks a failure filed, found by their unit field, so a
+		# task Ben wrote himself is never touched. Best effort, like filing.
+		while IFS= read -r task; do
+			[[ -n "$task" ]] || continue
+			if wiz update "home:$task" -set status=done >/dev/null 2>>"$LOG"; then
+				say "closed $task"
+			fi
+		done < <(wiz query home -json "type == \"task\" && unit == \"$job\" && status == \"open\"" 2>>"$LOG" | jq -r '.[].path' 2>>"$LOG")
 	fi
 	exit 0
 fi
@@ -126,7 +135,7 @@ if [[ -f "$marker" ]]; then
 	if ((age_h < REARM_HOURS)); then
 		printf 'repeat failure %s\n' "$(date -Iseconds)" >>"$marker"
 		echo "launchd-run: $job still failing; already paged"
-		say "repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new todo"
+		say "repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new task"
 		exit "$status"
 	fi
 	say "still failing ${age_h}h on; re-arming"
@@ -147,13 +156,14 @@ $tail_out
 EOT
 )"
 
-# The todo is the record; the page is the nudge towards it. Both best effort:
-# neither a notebook nor a Pushover outage must mask the log, which already
-# has the full story. stdin from /dev/null because nb hangs on a terminal.
-if nb todo add "$title" --description "$description" --tags bot,oncall </dev/null >/dev/null 2>>"$LOG"; then
-	say "filed a todo"
+# The task is the record; the page is the nudge towards it. Both best effort:
+# neither a vault nor a Pushover outage must mask the log, which already has
+# the full story. The vault's scheduled sync shares the task.
+if printf '%s\n' "$description" | wiz add home task -title "$title" \
+	-set status=open -set "tags=[bot,oncall]" -set "unit=$job" >/dev/null 2>>"$LOG"; then
+	say "filed a task"
 else
-	say "FAILED to file a todo --- the log is the only record"
+	say "FAILED to file a task --- the log is the only record"
 fi
 printf 'first failure %s %s\n' "$(date +%s)" "$(date -Iseconds)" >"$marker"
 
@@ -163,6 +173,6 @@ if printf 'exit=%s\n%s\n' "$status" "$(printf '%s\n' "$tail_out" | tail -3)" |
 	mise exec -- notify-pushover --title "oncall: $job on $host" >/dev/null 2>>"$LOG"; then
 	say "paged"
 else
-	say "pushover failed --- the todo is still filed"
+	say "pushover failed --- the task is still filed"
 fi
 exit "$status"
