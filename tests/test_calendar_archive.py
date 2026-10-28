@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import threading
 from collections.abc import Iterator
 from datetime import date, timedelta
+from email.message import EmailMessage
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -65,15 +67,56 @@ def feeds() -> Iterator[None]:
     FEEDS.clear()
 
 
-def run(server: str, out: Path) -> subprocess.CompletedProcess[str]:
+def invite(
+    path: Path, uid: str, day: date, sequence: int, body: str, extra: str = ""
+) -> Path:
+    """A meeting invite email, as Outlook sends one."""
+    d = day.strftime("%Y%m%d")
+    cal = (
+        "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nMETHOD:REQUEST\r\nBEGIN:VEVENT\r\n"
+        f"UID:{uid}\r\nSEQUENCE:{sequence}\r\nDTSTAMP:20260101T00000{sequence}Z\r\n"
+        f"DTSTART;TZID=Australia/Sydney:{d}T100000\r\n"
+        f"DTEND;TZID=Australia/Sydney:{d}T110000\r\nSUMMARY:Invite title\r\n"
+        f"DESCRIPTION:{body}\r\n"
+        "ORGANIZER;CN=Ada Lovelace:mailto:Ada@example.org\r\n"
+        "ATTENDEE;CN=Ben Swift;PARTSTAT=NEEDS-ACTION:mailto:ben@example.org\r\n"
+        f"{extra}END:VEVENT\r\nEND:VCALENDAR\r\n"
+    )
+    msg = EmailMessage()
+    msg["Subject"] = "Invite"
+    msg.set_content("You're invited")
+    msg.add_attachment(
+        cal.encode(), maintype="text", subtype="calendar", params={"method": "REQUEST"}
+    )
+    path.write_bytes(msg.as_bytes())
+    return path
+
+
+def run(
+    server: str, out: Path, mail: list[Path] | None = None, mu: bool = True
+) -> subprocess.CompletedProcess[str]:
+    """Run the script with a fake mu that finds `mail`, or with no mu at all."""
+    bin_dir = out / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    listing = out / "mu-finds"
+    listing.write_text("".join(f"{m}\n" for m in mail or []))
+    fake = bin_dir / "mu"
+    if mu:
+        fake.write_text(f'#!/bin/sh\ncat "{listing}"\n[ -s "{listing}" ] || exit 4\n')
+        fake.chmod(0o755)
+    else:
+        fake.unlink(missing_ok=True)
     env = {
         **os.environ,
+        "PATH": f"{bin_dir}:/usr/bin:/bin",
         "ANU_BEN_SWIFT_ICS_URL": f"{server}/anu",
         "PHDCONVENOR_ICS_URL": f"{server}/phdconvenor",
         "ADIRH_ICS_URL": f"{server}/adirh",
     }
+    uv = shutil.which("uv")
+    assert uv
     return subprocess.run(
-        ["uv", "run", "--quiet", "--script", str(SCRIPT), "--out", str(out)],
+        [uv, "run", "--quiet", "--script", str(SCRIPT), "--out", str(out)],
         env=env,
         capture_output=True,
         text=True,
@@ -117,7 +160,7 @@ def test_old_history_is_kept_and_recent_cancellations_dropped(
     result = run(server, tmp_path)
     assert result.returncode == 0, result.stderr
     assert titles(tmp_path) == ["Aged out", "Still on"]
-    assert "anu: 2 occurrences (+0 -1)" in result.stdout
+    assert "anu: 2 occurrences, 0 with invite detail (+0 -1)" in result.stdout
 
 
 def test_an_empty_feed_fails_without_touching_the_archive(
@@ -137,6 +180,68 @@ def test_an_empty_feed_fails_without_touching_the_archive(
     assert "$ADIRH_ICS_URL" in result.stderr and server not in result.stderr
     # The other calendars still ran.
     assert titles(tmp_path, "phdconvenor") == ["Quiet"]
+
+
+def records(out: Path, name: str = "anu") -> list[dict[str, object]]:
+    return [
+        json.loads(line) for line in (out / f"{name}.jsonl").read_text().splitlines()
+    ]
+
+
+def test_events_take_detail_from_their_latest_invite(
+    server: str, tmp_path: Path
+) -> None:
+    start = TODAY - timedelta(days=14)
+    second = start + timedelta(days=7)
+    FEEDS["anu"] = ics(
+        event("w", "Weekly", start, "RRULE:FREQ=WEEKLY;COUNT=3\r\n"),
+        event("a", "Made by Ben", TODAY + timedelta(days=3)),
+    )
+    rule = "_" * 40
+    mail = [
+        invite(tmp_path / "1.eml", "w", start, 0, "Old agenda"),
+        invite(tmp_path / "2.eml", "w", start, 1, f"Agenda\\n{rule}\\nJoin on Teams"),
+        invite(
+            tmp_path / "3.eml",
+            "w",
+            second,
+            2,
+            "Moved room this week",
+            f"RECURRENCE-ID;TZID=Australia/Sydney:{second:%Y%m%d}T100000\r\n",
+        ),
+    ]
+    result = run(server, tmp_path, mail)
+    assert result.returncode == 0, result.stderr
+    weekly = [r for r in records(tmp_path) if r["uid"] == "w"]
+    assert [r["description"] for r in weekly] == [
+        "Agenda",
+        "Moved room this week",
+        "Agenda",
+    ]
+    # The feed, not the invite, decides the title.
+    assert {r["title"] for r in weekly} == {"Weekly"}
+    assert weekly[0]["organizer"] == {
+        "email": "ada@example.org",
+        "name": "Ada Lovelace",
+    }
+    assert weekly[0]["attendees"] == [{"email": "ben@example.org", "name": "Ben Swift"}]
+    (own,) = [r for r in records(tmp_path) if r["uid"] == "a"]
+    assert own["description"] is None and own["attendees"] == []
+    assert "anu: 4 occurrences, 3 with invite detail" in result.stdout
+
+
+def test_detail_survives_a_run_that_cannot_read_the_mail(
+    server: str, tmp_path: Path
+) -> None:
+    FEEDS["anu"] = ics(event("m", "Meeting", TODAY + timedelta(days=2)))
+    mail = [invite(tmp_path / "m.eml", "m", TODAY + timedelta(days=2), 0, "Agenda")]
+    assert run(server, tmp_path, mail).returncode == 0
+
+    result = run(server, tmp_path, mu=False)
+    assert result.returncode == 1
+    assert "calendar-archive:" in result.stderr
+    (meeting,) = records(tmp_path)
+    assert meeting["description"] == "Agenda"
 
 
 if __name__ == "__main__":

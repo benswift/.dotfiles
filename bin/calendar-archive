@@ -12,24 +12,35 @@ one writer and nb-sync carries the result to every other host. Writes one
 JSONL file per calendar, DIR/<calendar>.jsonl (default
 ~/.nb/home/data/calendars), one event occurrence per line with recurrences
 expanded: `calendar`, `uid`, `title`, `location`, `start`, `end`, `all_day`,
-`busy`. Timed events are in Canberra time; an all-day event's `end` is its
-last day, not the day after.
+`busy`, `description`, `organizer`, `attendees`. Timed events are in Canberra
+time; an all-day event's `end` is its last day, not the day after.
 
 Each feed URL is a bearer secret, read from the env var named in CALENDARS
 (weddle's untracked mise env). ANU lets a calendar be published with titles
-and locations at most, so there are no descriptions or attendees, and a feed
-only reaches back one year. That makes the archive the only record of
-anything older: an occurrence that started before FROZEN_DAYS ago is never
-removed, while the feed decides everything newer (so a cancelled or moved
-event drops out). An empty or failed feed is an error, never a deletion.
+and locations at most, and a feed only reaches back one year. That makes the
+archive the only record of anything older: an occurrence that started before
+FROZEN_DAYS ago is never removed, while the feed decides everything newer (so a
+cancelled or moved event drops out). An empty or failed feed is an error,
+never a deletion.
+
+The feed has no description, organiser or attendees, so those come from the
+meeting invite in the mail, found through mu and matched on the event's UID
+(an invite for one changed occurrence wins over the series'). The latest
+version of an invite wins. Attendee responses are left out, since an invite
+only ever carries "needs action". An event nobody sent an invite for (one Ben
+made himself, say) keeps those fields empty.
 """
 
 from __future__ import annotations
 
 import argparse
+import email
+import email.policy
 import json
 import os
+import subprocess
 import sys
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -61,22 +72,115 @@ BUSY = {
 }
 
 
-def occurrence(name: str, event: icalendar.Event) -> dict[str, object]:
+Invite = dict[str, object]
+Invites = dict[tuple[str, str | None], Invite]
+
+# Outlook ends a meeting's description with a rule (underscores in older
+# invites, a "-::~:~::~" line in newer ones) and then the Teams joining
+# boilerplate, which repeated once per occurrence of every recurring meeting
+# would be most of the file.
+TEAMS_RULES = ("_" * 20, "-::~:~::~")
+
+
+def iso(value: date | datetime) -> str:
+    if isinstance(value, datetime) and value.tzinfo is not None:
+        value = value.astimezone(LOCAL)
+    return value.isoformat()
+
+
+def person(prop: object) -> dict[str, str | None]:
+    params = getattr(prop, "params", {})
+    address = str(prop)
+    if address.lower().startswith("mailto:"):
+        address = address[7:]
+    return {"email": address.lower(), "name": params.get("CN")}
+
+
+def describe(event: icalendar.Event) -> Invite:
+    text = str(event.get("DESCRIPTION", ""))
+    for rule in TEAMS_RULES:
+        text = text.split(rule)[0]
+    text = text.strip()
+    attendees = event.get("ATTENDEE", [])
+    if not isinstance(attendees, list):
+        attendees = [attendees]
+    organizer = event.get("ORGANIZER")
+    return {
+        "description": text or None,
+        "organizer": person(organizer) if organizer else None,
+        "attendees": [person(a) for a in attendees],
+    }
+
+
+def mail_paths() -> list[str]:
+    """Every message with a calendar part. mu-index can hold the store's write
+    lock for a few seconds after each mail pull, so wait it out."""
+    for _ in range(10):
+        found = subprocess.run(
+            ["mu", "find", "--fields=l", "mime:text/calendar"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        # mu exits 4 for "no matches", which is an answer, not a failure.
+        if found.returncode in (0, 4):
+            return found.stdout.split("\n")
+        time.sleep(30)
+    raise OSError(f"mu find failed: {found.stderr.strip()}")
+
+
+def invites(uids: set[str]) -> Invites:
+    """The latest invite (by SEQUENCE, then DTSTAMP) for each of these UIDs,
+    keyed by (uid, recurrence id) with None for a whole series."""
+    found: dict[tuple[str, str | None], tuple[tuple[int, str], Invite]] = {}
+    for path in filter(None, mail_paths()):
+        with open(path, "rb") as fh:
+            msg = email.message_from_binary_file(fh, policy=email.policy.default)
+        for part in msg.walk():
+            if part.get_content_type() != "text/calendar":
+                continue
+            try:
+                cal = icalendar.Calendar.from_ical(part.get_payload(decode=True) or b"")
+            except ValueError:
+                continue
+            if str(cal.get("METHOD", "PUBLISH")).upper() not in {"REQUEST", "PUBLISH"}:
+                continue
+            for event in cal.walk("VEVENT"):
+                uid = str(event.get("UID", ""))
+                if uid not in uids:
+                    continue
+                rid = event.get("RECURRENCE-ID")
+                stamp = event.get("DTSTAMP")
+                rank = (
+                    int(event.get("SEQUENCE", 0) or 0),
+                    iso(stamp.dt) if stamp else "",
+                )
+                k = (uid, iso(rid.dt) if rid else None)
+                if k not in found or rank > found[k][0]:
+                    found[k] = (rank, describe(event))
+    return {k: v for k, (_, v) in found.items()}
+
+
+def occurrence(name: str, event: icalendar.Event, known: Invites) -> dict[str, object]:
     start, end = event.start, event.end
     all_day = not isinstance(start, datetime)
     if all_day:
         end = max(start, end - timedelta(days=1))
     else:
         start, end = start.astimezone(LOCAL), end.astimezone(LOCAL)
+    uid = str(event.get("UID", ""))
+    rid = event.get("RECURRENCE-ID")
+    detail = known.get((uid, iso(rid.dt) if rid else None)) or known.get((uid, None))
     return {
         "calendar": name,
-        "uid": str(event.get("UID", "")),
+        "uid": uid,
         "title": str(event.get("SUMMARY", "")).strip(),
         "location": str(event.get("LOCATION", "")).strip() or None,
         "start": start.isoformat(),
         "end": end.isoformat(),
         "all_day": all_day,
         "busy": BUSY.get(str(event.get("X-MICROSOFT-CDO-BUSYSTATUS", ""))),
+        **(detail or {"description": None, "organizer": None, "attendees": []}),
     }
 
 
@@ -84,30 +188,45 @@ def key(record: dict[str, object]) -> tuple[str, str]:
     return str(record["start"]), str(record["uid"])
 
 
-def from_feed(name: str, ics: bytes, today: date) -> list[dict[str, object]]:
-    calendar = icalendar.Calendar.from_ical(ics)
+def fetch(name: str, url: str) -> icalendar.Calendar:
+    response = httpx.get(url, timeout=60, follow_redirects=True)
+    response.raise_for_status()
+    calendar = icalendar.Calendar.from_ical(response.content)
     if not calendar.events:
         raise ValueError(f"{name}: the feed has no events")
+    return calendar
+
+
+def from_feed(
+    name: str, calendar: icalendar.Calendar, known: Invites, today: date
+) -> list[dict[str, object]]:
     until = date(today.year + 2, 1, 1)
     events = recurring_ical_events.of(calendar).between(date(1900, 1, 1), until)
-    return [occurrence(name, e) for e in events]
+    return [occurrence(name, e, known) for e in events]
 
 
 def merge(
     stored: list[dict[str, object]], feed: list[dict[str, object]], today: date
 ) -> list[dict[str, object]]:
     """The feed's occurrences, plus every stored one too old for the feed to
-    be trusted about (the feed wins where both have it)."""
+    be trusted about (the feed wins where both have it). Invite detail
+    already stored survives a run that found none, since the invite may since
+    have been deleted, or the mail been unreadable this time."""
     cutoff = (today - timedelta(days=FROZEN_DAYS)).isoformat()
-    merged = {key(r): r for r in stored if str(r["start"]) < cutoff}
-    merged.update((key(r), r) for r in feed)
+    previous = {key(r): r for r in stored}
+    merged = {k: r for k, r in previous.items() if str(r["start"]) < cutoff}
+    for r in feed:
+        old = previous.get(key(r))
+        if old and old.get("organizer") and not r["organizer"]:
+            r = {**r, **{f: old[f] for f in ("description", "organizer", "attendees")}}
+        merged[key(r)] = r
     return [merged[k] for k in sorted(merged)]
 
 
-def archive(name: str, url: str, out: Path, today: date) -> str:
-    response = httpx.get(url, timeout=60, follow_redirects=True)
-    response.raise_for_status()
-    feed = from_feed(name, response.content, today)
+def archive(
+    name: str, calendar: icalendar.Calendar, known: Invites, out: Path, today: date
+) -> str:
+    feed = from_feed(name, calendar, known, today)
 
     path = out / f"{name}.jsonl"
     old = path.read_text() if path.exists() else ""
@@ -119,8 +238,9 @@ def archive(name: str, url: str, out: Path, today: date) -> str:
         tmp.write_text(text)
         tmp.replace(path)
     before, after = set(map(key, stored)), set(map(key, records))
+    detailed = sum(1 for r in records if r.get("organizer"))
     return (
-        f"{name}: {len(records)} occurrences "
+        f"{name}: {len(records)} occurrences, {detailed} with invite detail "
         f"(+{len(after - before)} -{len(before - after)})"
     )
 
@@ -135,19 +255,37 @@ def main() -> int:
     today = datetime.now(LOCAL).date()
 
     failed = 0
+
+    def fail(message: str) -> None:
+        nonlocal failed
+        print(f"calendar-archive: {message}", file=sys.stderr)
+        failed += 1
+
+    # Fetch every feed first, so one pass over the mail serves them all.
+    feeds: dict[str, icalendar.Calendar] = {}
     for name, var in CALENDARS.items():
         url = os.environ.get(var)
         try:
             if not url:
                 raise ValueError(f"{name}: ${var} is not set")
-            print(archive(name, url, args.out, today))
+            feeds[name] = fetch(name, url)
         # One calendar failing must not stop the others; the exit code
         # still reports it, which is what reaches unit-oncall.
         except (OSError, ValueError, httpx.HTTPError) as error:
             # httpx puts the URL in its message, and the URL is the secret.
-            message = str(error).replace(url, f"${var}") if url else str(error)
-            print(f"calendar-archive: {message}", file=sys.stderr)
-            failed += 1
+            fail(str(error).replace(url, f"${var}") if url else str(error))
+
+    uids = {str(e.get("UID", "")) for cal in feeds.values() for e in cal.events}
+    try:
+        known = invites(uids)
+    # Without the mail the feeds are still worth archiving; their detail
+    # fields stay empty until the next run that can read it.
+    except OSError as error:
+        fail(str(error))
+        known = {}
+
+    for name, calendar in feeds.items():
+        print(archive(name, calendar, known, args.out, today))
     return 1 if failed else 0
 
 
