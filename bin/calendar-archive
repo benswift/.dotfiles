@@ -233,7 +233,7 @@ def archive(
 
     path = out / f"{name}.jsonl"
     old = path.read_text() if path.exists() else ""
-    stored = [json.loads(line) for line in old.splitlines() if line]
+    stored = [json.loads(line) for line in old.split("\n") if line]
     records = merge(stored, feed, today)
     text = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in records)
     if text != old:

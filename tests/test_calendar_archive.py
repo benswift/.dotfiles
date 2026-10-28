@@ -125,8 +125,8 @@ def run(
 
 
 def titles(out: Path, name: str = "anu") -> list[str]:
-    lines = (out / f"{name}.jsonl").read_text().splitlines()
-    return [json.loads(line)["title"] for line in lines]
+    lines = (out / f"{name}.jsonl").read_text().split("\n")
+    return [json.loads(line)["title"] for line in lines if line]
 
 
 def test_recurrences_are_expanded_one_line_each(server: str, tmp_path: Path) -> None:
@@ -139,7 +139,7 @@ def test_recurrences_are_expanded_one_line_each(server: str, tmp_path: Path) -> 
     result = run(server, tmp_path)
     assert result.returncode == 0, result.stderr
     assert titles(tmp_path) == ["Weekly", "Weekly", "Weekly", "One-off", "Weekly"]
-    first = json.loads((tmp_path / "anu.jsonl").read_text().splitlines()[0])
+    first = json.loads((tmp_path / "anu.jsonl").read_text().split("\n")[0])
     assert first["start"].endswith(("+10:00", "+11:00"))
     assert first["busy"] == "busy" and first["all_day"] is False
     assert first["source"] == "feed"
@@ -185,7 +185,9 @@ def test_an_empty_feed_fails_without_touching_the_archive(
 
 def records(out: Path, name: str = "anu") -> list[dict[str, object]]:
     return [
-        json.loads(line) for line in (out / f"{name}.jsonl").read_text().splitlines()
+        json.loads(line)
+        for line in (out / f"{name}.jsonl").read_text().split("\n")
+        if line
     ]
 
 
@@ -243,6 +245,17 @@ def test_detail_survives_a_run_that_cannot_read_the_mail(
     assert "calendar-archive:" in result.stderr
     (meeting,) = records(tmp_path)
     assert meeting["description"] == "Agenda"
+
+
+def test_text_with_unicode_line_separators_round_trips(
+    server: str, tmp_path: Path
+) -> None:
+    # json.dumps leaves U+2028 raw, which str.splitlines() would split on.
+    FEEDS["anu"] = ics(event("u", "Line\u2028separated", TODAY + timedelta(days=1)))
+    assert run(server, tmp_path).returncode == 0
+    result = run(server, tmp_path)
+    assert result.returncode == 0, result.stderr
+    assert titles(tmp_path) == ["Line\u2028separated"]
 
 
 if __name__ == "__main__":
