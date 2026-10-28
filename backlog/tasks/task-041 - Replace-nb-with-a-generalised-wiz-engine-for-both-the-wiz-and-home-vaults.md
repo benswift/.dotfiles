@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the wiz and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-28T10:13:00Z'
+updated_date: '2026-10-28T10:14:00Z'
 labels:
   - pkb
   - wiz
@@ -103,9 +103,9 @@ and support making wiz general purpose, which is part of wiz's own mission
     redirects the old path, so existing clones keep working until their
     remotes are updated (have `wiz check` fix them)
   - home's repo and folder become `wiz-home`
-- Local paths leave `~/.nb` once nb is gone: `~/wiz-lx` and `~/wiz-home`, with
-  no parent folder, since the prefix already groups them. Cole and Rob have
-  agreed to the churn.
+- Local paths leave `~/.nb` once nb is gone: every vault lives in one
+  top-level folder, `~/vaults/wiz-lx` and `~/vaults/wiz-home`. Cole and Rob
+  have agreed to the churn.
 - Avoid wizard-themed jargon ("spells" and the like): every extra term costs
   non-technical colleagues.
 
@@ -133,16 +133,20 @@ and support making wiz general purpose, which is part of wiz's own mission
 
 ### CLAUDE.md per vault
 
-- Each vault has its own root `CLAUDE.md`. The generic wiz rules (use wiz
-  commands rather than ad hoc ones, run `validate` after editing, the commit
-  and sync model) ship with the engine as `.claude/wiz.md`, written by
-  `wiz skills` alongside the generic skills. Each vault's `CLAUDE.md` opens
-  with `@.claude/wiz.md`, then holds only that vault's rules: record
-  conventions, who changes what, and the Git policy.
+- Each vault has its own root `CLAUDE.md`, holding only that vault's rules:
+  record conventions, who changes what, and the Git policy.
+- The generic wiz instructions live only in the engine. `wiz brief` prints
+  them at session start (the SessionStart hook runs it, as now), along with the
+  command table, the clone's state and the dancecard summary. Each vault's
+  `CLAUDE.md` says to run `wiz brief` when it isn't already in context (after
+  `/clear` or compaction, or where the hook didn't run). The binary always
+  carries the instructions matching its own version, so nothing in any vault
+  needs keeping in sync with it, and there is no generic text to copy into
+  vaults.
 - A session in one vault doesn't load another vault's `CLAUDE.md`. Writes
   through the CLI are still validated against the target vault's types, but
   its prose conventions aren't, so home's `CLAUDE.md` says to read
-  `~/wiz-lx/CLAUDE.md` before writing to lx.
+  `~/vaults/wiz-lx/CLAUDE.md` before writing to lx.
 
 ### No "current notebook"
 
