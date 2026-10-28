@@ -53,22 +53,17 @@ sysup() {
   dotfiles update
 }
 alias task="backlog task"
-alias todo="pkb-todo"  # list / do / block / add, or bare words for a new todo
-daily() {
-  local filename="$(date +%Y%m%d).md"
-  local path="$HOME/.nb/home/$filename"
-  if [[ ! -f "$path" ]]; then
-    nb add --filename "$filename" --content "# Daily $(date +%Y-%m-%d)"$'\n' >/dev/null
-  fi
-  if [[ $# -eq 0 ]]; then
-    nb edit "$filename"
-  else
-    # nb has no native `daily` subcommand; append through edit so the
-    # non-interactive form follows the same filename convention as the editor.
-    nb edit "$filename" --content "$*" >/dev/null
-  fi
+# todo (bin/todo): list / do / block, or bare words for a new task
+# A titled note in the home vault, opened in the editor; with text on stdin,
+# that's its body instead: `note Call with Ann < minutes.md`.
+note() {
+  [[ $# -gt 0 ]] || { echo "usage: note <title words>" >&2; return 2; }
+  local body="" added
+  [[ -t 0 ]] || body="$(cat)"
+  added="$(printf '%s' "$body" | wiz add home note -json -title "$*" | jq -r '.paths[0]')" || return
+  [[ -n "$body" ]] && echo "$added" || "${EDITOR:-hx}" "$(wiz path "home:$added")"
 }
-alias latest="nb --limit 10"
+alias latest='wiz query home "path.startsWith(\"notes/\")" | tail -10'
 # alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
 # git shortcuts

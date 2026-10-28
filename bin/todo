@@ -1,0 +1,217 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""todo: Ben's open tasks, and the few edits that need no editor.
+
+  todo                  list open tasks: todos, blocked, bot, then lx
+  todo do <n>...        mark done
+  todo undo <n>...      reopen
+  todo block <n>...     mark blocked; `unblock` reopens
+  todo <words...>       a new home task titled from the words, no quoting
+
+The numbers are the rows of the last listing, remembered in
+~/.local/state/todo/last.json, so `todo do 3` closes the third row shown. A
+task is "bot" when tagged bot (unit-oncall files job failures so); "blocked"
+is status blocked. Bot tasks with the same title (a job that keeps failing
+past unit-oncall's 24h re-arm) collapse to one row, and `do` on it closes
+them all. The lx section lists that vault's open tasks whose agent is Ben;
+closing one shares it with the team at once.
+
+Everything goes through the wiz CLI; home's writes are shared by its next
+scheduled sync.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+ME = "[[people/ben-swift]]"
+STATE = (
+    Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
+    / "todo"
+    / "last.json"
+)
+
+# Catppuccin Mocha, the theme every terminal thing in the dotfiles uses.
+# Truecolour when the terminal says so, else the nearest of the 16 ANSI
+# colours, which the same theme maps back onto the palette.
+MOCHA = {
+    "lavender": ((180, 190, 254), 35),
+    "yellow": ((249, 226, 175), 33),
+    "mauve": ((203, 166, 247), 35),
+    "teal": ((148, 226, 213), 36),
+    "overlay1": ((127, 132, 156), 90),
+}
+SECTION_STYLE = {"todos": "lavender", "blocked": "yellow", "bot": "mauve", "lx": "teal"}
+
+
+@dataclass(frozen=True)
+class Task:
+    vault: str
+    path: str
+    title: str
+    status: str
+    tags: frozenset[str]
+    due: str
+
+    @property
+    def ref(self) -> str:
+        return f"{self.vault}:{self.path}"
+
+    @property
+    def section(self) -> str:
+        if self.vault != "home":
+            return "lx"
+        if "bot" in self.tags:
+            return "bot"
+        return "blocked" if self.status == "blocked" else "todos"
+
+
+def wiz(*args: str, capture: bool = True) -> str:
+    result = subprocess.run(
+        ["wiz", *args], capture_output=capture, text=True, check=False
+    )
+    if result.returncode not in (0, 1):
+        sys.exit(f"todo: wiz {' '.join(args)} failed: {(result.stderr or '').strip()}")
+    return result.stdout if capture else ""
+
+
+def open_tasks() -> list[Task]:
+    query = (
+        f'type == "task" && status != "done" && (vault == "home" || agent == "{ME}")'
+    )
+    records = json.loads(wiz("query", "home", "lx", "-json", query))
+    tasks = [
+        Task(
+            vault=r["vault"],
+            path=r["path"],
+            title=r["title"],
+            status=r["fields"].get("status", "open"),
+            tags=frozenset(r["fields"].get("tags") or ()),
+            due=r["fields"].get("due_date", ""),
+        )
+        for r in records
+    ]
+    # Newest first: tasks are named by the date they were made.
+    return sorted(tasks, key=lambda t: t.path, reverse=True)
+
+
+def rows(tasks: list[Task]) -> list[tuple[str, list[Task]]]:
+    """(section, tasks) per row, in listing order, bot tasks with the same
+    title collapsed into one row."""
+    out: list[tuple[str, list[Task]]] = []
+    for section in ("todos", "blocked", "bot", "lx"):
+        seen: dict[str, list[Task]] = {}
+        for t in tasks:
+            if t.section != section:
+                continue
+            if section == "bot" and t.title in seen:
+                seen[t.title].append(t)
+                continue
+            group = [t]
+            seen[t.title] = group
+            out.append((section, group))
+    return out
+
+
+def use_color() -> bool:
+    return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
+
+
+def paint(name: str, text: str, bold: bool = False) -> str:
+    if not use_color():
+        return text
+    rgb, ansi = MOCHA[name]
+    truecolor = os.environ.get("COLORTERM") in ("truecolor", "24bit")
+    fg = "38;2;{};{};{}".format(*rgb) if truecolor else str(ansi)
+    return f"\033[{'1;' if bold else ''}{fg}m{text}\033[0m"
+
+
+def render(listing: list[tuple[str, list[Task]]]) -> str:
+    if not listing:
+        return "(no open tasks)\n"
+    out, section = [], None
+    for n, (sec, group) in enumerate(listing, start=1):
+        if sec != section:
+            section = sec
+            out += ["", paint(SECTION_STYLE[sec], sec, bold=True)]
+        t = group[0]
+        number = paint("overlay1", f"{n:>5}")
+        due = paint("overlay1", f"  due {t.due}") if t.due else ""
+        count = paint("overlay1", f"  ×{len(group)}") if len(group) > 1 else ""
+        out.append(f"  {number}  {t.title}{due}{count}")
+    return "\n".join([*out, ""]) + "\n"
+
+
+def remembered(numbers: list[str]) -> list[list[str]]:
+    """The task refs behind each number of the last listing."""
+    try:
+        last = json.loads(STATE.read_text())
+    except (OSError, json.JSONDecodeError):
+        sys.exit("todo: run todo first, to list the tasks these numbers name")
+    out = []
+    for n in numbers:
+        if not n.isdigit() or not 1 <= int(n) <= len(last):
+            sys.exit(f"todo: no row {n} in the last listing")
+        out.append(last[int(n) - 1])
+    return out
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    match args:
+        case []:
+            listing = rows(open_tasks())
+            STATE.parent.mkdir(parents=True, exist_ok=True)
+            STATE.write_text(
+                json.dumps([[t.ref for t in group] for _, group in listing])
+            )
+            print(render(listing), end="")
+            return 0
+        case ["do" | "undo" | "block" | "unblock" as verb, *numbers] if numbers:
+            # Resolve every number before touching anything, so a typo in the
+            # second does not leave the first half-applied.
+            groups = remembered(numbers)
+            status = {
+                "do": "done",
+                "undo": "open",
+                "block": "blocked",
+                "unblock": "open",
+            }[verb]
+            shared = set()
+            for group in groups:
+                for ref in group if verb == "do" else group[:1]:
+                    wiz("update", ref, "-set", f"status={status}", capture=False)
+                    vault = ref.split(":", 1)[0]
+                    if vault != "home":
+                        shared.add(vault)
+            for vault in shared:
+                wiz("sync", vault, capture=False)
+            return 0
+        case ["do" | "undo" | "block" | "unblock"]:
+            print(__doc__, file=sys.stderr)
+            return 2
+        case [*words]:
+            wiz(
+                "add",
+                "home",
+                "task",
+                "-title",
+                " ".join(words),
+                "-set",
+                "status=open",
+                capture=False,
+            )
+            return 0
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())
