@@ -3,8 +3,8 @@ id: TASK-038
 title: Stop nb-sync hanging when launchd fires it during a DarkWake
 status: To Do
 assignee: []
-created_date: '2026-09-21 22:23'
-updated_date: '2026-09-21 22:44'
+created_date: 2026-09-21 22:23
+updated_date: '2026-10-28T22:17:00Z'
 labels:
   - bug
   - launchd
@@ -44,4 +44,6 @@ Applied 22 Sep:
 - AC#4 (page on failure rate rather than N consecutive) removed. The consecutive rule is only blind to *intermittent* failures, and these two fixes are what made them intermittent; changing launchd-run's semantics for every job to chase a 2% rate is a clever fix that breaks quietly. Revisit only if the rate does not drop.
 
 Verified: shellcheck clean, plutil lint OK, job re-bootstrapped, kickstart run exited 0 with 'Syncing: home...Done!' and the failure counter cleared.
+
+Superseded 2026-10-29 by TASK-041, which retires nb-sync; the DarkWake concern carries over to the wiz-due plist.
 <!-- SECTION:NOTES:END -->

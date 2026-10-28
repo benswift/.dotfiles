@@ -34,10 +34,9 @@ supplies its own types and workflows as files. The shared LX vault (`~/.nb/wiz`,
 named `lx`) and Ben's private notebook (`~/.nb/home`, named `home`) both become
 vaults of this engine, and nb, pkb-agent and pkb-todo retire.
 
-This task is the design and the map of the whole cross-repo change. It is too
-large to be Done in one go: before work starts, split it into child tasks, one
-per step of the order of work below, each of which leaves every repo working on
-its own. Cole and Rob have been briefed and support making wiz general purpose,
+This task is the design and the map of the whole cross-repo change. The work
+is in its child tasks, one per step of the order of work below, each of which
+leaves every repo working on its own. Cole and Rob have been briefed and support making wiz general purpose,
 which is part of wiz's own mission ("work in other scenarios"); a multi-vault
 future, with different types and workflows per vault, is the point.
 
@@ -581,12 +580,14 @@ unmatched records unless a type such as `note` claims them.
      "Principles" section reduced to a summary pointing at
      `wiz help principles`), and the `wiz`,
      `wiz-email`, `wiz-help` and `wiz-sync` skills, whose names don't change
-   - fold its sixteen decision records into `meta` design docs in `docs/`
+   - fold its twelve decision records into `meta` design docs in `docs/`
      (dropping 3, 6, 9 and 11, which this task overrides; keeping 12's
      boundary with Starlark workflows open, command workflows and types
      admin-only; adding the engine/vault split, the two workflow kinds with
-     agents not among them, and mdbase as layout only), move its open
-     backlog tasks to `tasks/` tagged `meta`, delete `admin/backlog/` and
+     agents not among them, and mdbase as layout only), move any backlog
+     task still open (only task-26 when this was written, watson's
+     rsync copy of the mailbox) to `tasks/` tagged `meta`, delete
+     `admin/backlog/` and
      `backlog.config.yml`, and drop CLAUDE.md's "unless an admin is clearly
      talking about developing wiz" carve-out, since a wiz proposal is now an
      ordinary task
@@ -690,10 +691,9 @@ Before the home migration: pause `nb-sync` on weddle and daysy and
 against a copy until it is clean. Mail and the other timers that touch no
 vault keep running.
 
-Execution: this is weeks of agent time across many sessions, so the first
-session creates the child tasks in this backlog, one per step, with the
-parent's acceptance criteria divided among them and backlog dependencies
-between them. Order by blast radius: engine (affects nobody), home (only
+Execution: weeks of agent time across many sessions, tracked as child tasks
+TASK-041.01 to TASK-041.07, one per step above, which divide the acceptance
+criteria below and carry the dependencies between steps. Order by blast radius: engine (affects nobody), home (only
 Ben, and redoable from a copy), dotfiles cutover, then the lx switch.
 
 Rollback until step 6: nb still reads both vaults, because records stay plain
@@ -756,8 +756,9 @@ without trouble.
 - **Done todos:** migrate all of them as `status: done`, taking the creation
   date for the filename from nb's timestamp id, so history stays queryable.
 
-TASK-038 (nb-sync hanging in a DarkWake) becomes obsolete once step 6 lands,
-though the same launchd concern applies to the new scheduler plist.
+The `wiz-due` launchd plist must survive a DarkWake, which is what hung
+nb-sync (archived TASK-038): bound its network calls and don't hold launchd's
+slot across a sleep.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -773,7 +774,7 @@ though the same launchd concern applies to the new scheduler plist.
 - [ ] #9 Home is migrated: no *.todo.md, *.bookmark.md, YYYYMMDD.md or .index files remain, every tags field is a YAML list, and wiz validate home reports no problems
 - [ ] #10 Home has no `daily`, `bookmark` or `role` type; its `docs/` holds doc records and `typst/` the sources; and no instruction in the vault, the skill or dotfiles tells an agent to append to a day file
 - [ ] #11 Cole and Rob each complete a get-latest, edit and share round trip on their own machines with the new release before it is pinned in the lx vault, and their slash commands keep their names
-- [ ] #12 The lx vault's sixteen decision records are folded into `meta` design docs stating current rules with their reasons and rejected alternatives, nothing in the vault describes a superseded design, `admin/backlog/` and the backlog CLI are gone from the vault, and open wiz proposals are `tasks/` records tagged `meta`
+- [ ] #12 The lx vault's twelve decision records are folded into `meta` design docs stating current rules with their reasons and rejected alternatives, nothing in the vault describes a superseded design, `admin/backlog/` and the backlog CLI are gone from the vault, and open wiz proposals are `tasks/` records tagged `meta`
 - [ ] #13 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
 - [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, add a note about a project and run a workflow by following them
 - [ ] #15 The engine's source and tests contain no agent, prompt, profile or model concept; home's scheduled agent tasks run as plain command workflows via agent-run, with every run stamped, logged, timed out and failed through the same bookkeeping as any other workflow
