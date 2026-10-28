@@ -59,7 +59,7 @@ SubFolders Verbatim
 Channel anu
 Far :anu-remote:
 Near :anu-local:
-Patterns INBOX Archive "Sent Items" Drafts "Deleted Items" "Junk E-Mail"
+Patterns INBOX Archive "Sent Items" Drafts "Deleted Items"
 Create Near
 Sync All
 Expunge Both
