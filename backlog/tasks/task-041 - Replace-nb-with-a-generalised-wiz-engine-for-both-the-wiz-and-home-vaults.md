@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T08:20:00Z'
+updated_date: '2026-10-29T08:30:00Z'
 labels:
   - pkb
   - wiz
@@ -327,14 +327,15 @@ Outside scripts are just CLI users and aren't a wiz concept: `unit-oncall`, the
   reach), and it serves lx too. lx's `admin/tools/calendar-export` is deleted
   and `watson-run` loses its calendar step. The lx workflow stays on watson:
   watson already pulls the lxconvenor mailbox into `~/wiz-mail/lxconvenor`
-  for `mail-export`, so the invites are there as files, and mu was only ever
-  the way to find the messages with a calendar part. The exporter gains a
-  `--maildir` option that walks a Maildir for those instead (same parsing
-  after that), so the lx calendar gets descriptions and attendees for the
-  first time without weddle running anything for lx. Each vault has a command
-  workflow (home: `command: calendar-archive`, `host: weddle`; lx:
-  `command: calendar-archive --calendar lxconvenor --maildir ~/wiz-mail/lxconvenor`,
-  `host: watson`; both `requires: [calendar-archive]`) and the same `_types/event.md`
+  for `mail-export`, and mu is installed there (2026-10-29, Homebrew) with
+  its store rooted at that Maildir, so the exporter runs unchanged and the
+  lx calendar gets descriptions and attendees for the first time without
+  weddle running anything for lx. `watson-run` (later the lx mail workflow)
+  runs `mu index` after its mbsync pull, as weddle's `mu-index` unit does.
+  Each vault has a command workflow (home: `command: calendar-archive`,
+  `host: weddle`; lx: `command: calendar-archive --calendar lxconvenor`,
+  `host: watson`; both `requires: [calendar-archive, mu]`) and the same
+  `_types/event.md`
   by convention: `calendar`, `uid`, `title`, `location`, `start`, `end`,
   `all_day`, `busy`, `description`, `organizer`, `attendees`, `source`.
   Attendees resolve to people links where a `person` record's email matches,
@@ -422,7 +423,7 @@ unmatched records unless a type such as `note` claims them.
    - convert `admin/tools/schemas/*.json` to `_types/` plus `mdbase.yaml`
    - add the dancecard and other Starlark workflows, and command workflows for
      watson's jobs, including the skills review, and for the lxconvenor
-     calendar (`host: watson`, invites from `~/wiz-mail/lxconvenor`)
+     calendar (`host: watson`, invites via mu over `~/wiz-mail/lxconvenor`)
    - add `_types/event.md` and `events/`; delete `admin/tools/calendar-export`
      and `_generated/calendar.md`
    - update `wiz-install` and `wiz-update` to the new pin format, and update
@@ -462,7 +463,7 @@ unmatched records unless a type such as `note` claims them.
      Both are runner-agnostic.
    - **`bin/calendar-archive`:** grow a `--calendar` selector and an
      `lxconvenor` entry (`LXCONVENOR_ICS_URL`, already in watson's mise env),
-     a `--maildir` walker as the alternative to mu, write
+     write
      `event` records into the vault it's run from instead of JSONL, and
      resolve attendees to people links. Its systemd timer goes; `wiz due`
      runs it as each vault's workflow.
@@ -587,5 +588,5 @@ though the same launchd concern applies to the new scheduler plist.
 - [ ] #13 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
 - [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, append to a daily and run a workflow by following them
 - [ ] #15 The engine's source and tests contain no agent, prompt, profile or model concept; home's scheduled agent tasks run as plain command workflows via agent-run, with every run stamped, logged, timed out and failed through the same bookkeeping as any other workflow
-- [ ] #16 Both vaults carry an `event` type with the same fields, filled by `calendar-archive` as a command workflow in each (home on weddle, lx on watson, reading the invites from watson's lxconvenor Maildir); the lx dancecard's coming-up section and home's calendar questions are answered by `wiz query` over those records, attendees link to people records where an email matches, `admin/tools/calendar-export`, `_generated/calendar.md`, `data/calendars/*.jsonl` and the calendar-archive timer are gone, and a re-run against an unchanged calendar touches no file
+- [ ] #16 Both vaults carry an `event` type with the same fields, filled by `calendar-archive` as a command workflow in each (home on weddle, lx on watson, reading the invites through watson's mu index of the lxconvenor Maildir); the lx dancecard's coming-up section and home's calendar questions are answered by `wiz query` over those records, attendees link to people records where an email matches, `admin/tools/calendar-export`, `_generated/calendar.md`, `data/calendars/*.jsonl` and the calendar-archive timer are gone, and a re-run against an unchanged calendar touches no file
 <!-- AC:END -->
