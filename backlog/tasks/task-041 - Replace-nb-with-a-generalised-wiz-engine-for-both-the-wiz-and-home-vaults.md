@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-28T11:29:00Z'
+updated_date: '2026-10-29T08:05:00Z'
 labels:
   - pkb
   - wiz
@@ -320,8 +320,29 @@ Outside scripts are just CLI users and aren't a wiz concept: `unit-oncall`, the
   first-time-sender banner) moves into `mail-export` on watson. It then writes
   mail _records_ with `thread`, `from`, `date` and a cleaned `summary`, so the
   dancecard's mail section becomes a query.
-- `calendar-export` writes event records instead of `_generated/calendar.md`,
-  and `calendar.go` is deleted.
+- Calendars become `event` records, written by one exporter for both vaults,
+  and `calendar.go` is deleted. dotfiles' `calendar-archive` already does
+  the hard part for home (feed as the skeleton, invites from the mail via mu
+  for description, organiser and attendees, history frozen past the feed's
+  reach), and weddle syncs the lxconvenor mailbox too, so it archives all
+  four calendars from weddle. lx's `admin/tools/calendar-export` is deleted
+  and `watson-run` loses its calendar step: watson has no mail, so the lx
+  calendar never had descriptions or attendees before. Each vault has a
+  command workflow (`command: calendar-archive --calendar lxconvenor`,
+  `host: weddle`, `requires: [calendar-archive]`) and the same `_types/event.md`
+  by convention: `calendar`, `uid`, `title`, `location`, `start`, `end`,
+  `all_day`, `busy`, `description`, `organizer`, `attendees`, `source`.
+  Attendees resolve to people links where a `person` record's email matches,
+  including cross-vault, so the dancecard's coming-up section and "who have I
+  met with about X" are queries. Three rules: the name is `event`, not
+  `meeting`, because lectures, out-of-office blocks and deadlines are in the
+  feeds too (a meeting is an event with attendees, which a query can say);
+  the exporter owns the whole record, so notes about a meeting go in dailies
+  and tasks that link to it and reach it as backlinks; and the exporter
+  writes the Markdown files directly then runs `wiz validate`, never `wiz
+  add` per record, since home's archive is 7,475 occurrences today and a
+  process per record would take minutes. Only the live year churns; frozen
+  history never changes.
 - `check.go` splits. Generic Git, SSH and engine checks stay in the engine; LX
   setup diagnosis moves into the `/wiz-help` skill's text, because it needs
   judgement, which decision-6 assigns to skills.
@@ -361,6 +382,11 @@ should commit in reviewable chunks, one per conversion. The target schema:
     two machines merge cleanly
 - **bookmarks:** `*.bookmark.md` (23 files) become a `bookmark` type in
   `bookmarks/` with `url`, `title`, `comment` and `tags`.
+- **events:** `data/calendars/<calendar>.jsonl` (anu, phdconvenor, adirh;
+  7,475 occurrences) becomes `event` records under `events/`, one per
+  occurrence, written by `calendar-archive` as the command workflow described
+  under "What leaves wiz's Go code". The JSONL files and the "Calendar
+  archive" section of `CLAUDE.md` go; `wiz query` replaces `jq` and `rg`.
 - **links:** all links become path-form and validated. Numeric-id links (for
   example `[[projects/16]]`) and ambiguous bare names are resolved or reported.
 - **assets:** `docs/` typst sources, `data/`, `scripts/` and `images/` are
@@ -390,9 +416,12 @@ unmatched records unless a type such as `note` claims them.
 2. **`~/.nb/wiz`, the lx vault** (gitlab.anu.edu.au:u2548636/wiz):
    - convert `admin/tools/schemas/*.json` to `_types/` plus `mdbase.yaml`
    - add the dancecard and other Starlark workflows, and command workflows for
-     watson's jobs, including the skills review
+     watson's jobs, including the skills review, and for the lxconvenor
+     calendar (`host: weddle`)
+   - add `_types/event.md` and `events/`; delete `admin/tools/calendar-export`
+     and `_generated/calendar.md`
    - update `wiz-install` and `wiz-update` to the new pin format, and update
-     `watson-run`
+     `watson-run` (minus its calendar step)
    - update `CLAUDE.md` and `start-here.md` (the commands list), and the `wiz`,
      `wiz-email`, `wiz-help` and `wiz-sync` skills, whose names don't change
    - in its `admin/backlog`, edit or replace decisions 3, 6, 9 and 11 in the
@@ -426,6 +455,11 @@ unmatched records unless a type such as `note` claims them.
      is given, and add `--expect-changes`, which exits non-zero when
      `git status --porcelain` in the working directory is empty after the run.
      Both are runner-agnostic.
+   - **`bin/calendar-archive`:** grow a `--calendar` selector and an
+     `lxconvenor` entry (`LXCONVENOR_ICS_URL` in weddle's mise env), write
+     `event` records into the vault it's run from instead of JSONL, and
+     resolve attendees to people links. Its systemd timer goes; `wiz due`
+     runs it as each vault's workflow.
    - **pkb package:** delete it. `pkb-health` moves to `bin/pkb-health` as a
      `uv run --script` (add it to `extend-include` in `ruff.toml`) and runs as a
      command workflow. Drop the pkb steps from CI and the editable install from
@@ -515,6 +549,13 @@ without trouble.
   just opened skills to colleagues, and the naming rule served only Ben. The
   review of colleagues' skill edits is a watson workflow, not an engine
   feature.
+- **Events are records, generated** (added 2026-10-29, after
+  `calendar-archive` landed in dotfiles). A record type over an asset file
+  because events are what people, projects and tasks join on, and the join
+  wants links and `wiz query`, not `jq`. Generated rather than hand-kept
+  because the feed is the only honest source of cancellations and moves, and
+  invites alone miss anything Ben created himself. One exporter on weddle for
+  both vaults because that's where the mail is.
 - **Done todos:** migrate all of them as `status: done`, taking the creation
   date for the filename from nb's timestamp id, so history stays queryable.
 
@@ -539,4 +580,5 @@ though the same launchd concern applies to the new scheduler plist.
 - [ ] #13 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
 - [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, append to a daily and run a workflow by following them
 - [ ] #15 The engine's source and tests contain no agent, prompt, profile or model concept; home's scheduled agent tasks run as plain command workflows via agent-run, with every run stamped, logged, timed out and failed through the same bookkeeping as any other workflow
+- [ ] #16 Both vaults carry an `event` type with the same fields, filled by `calendar-archive` as a `host: weddle` command workflow in each; the lx dancecard's coming-up section and home's calendar questions are answered by `wiz query` over those records, attendees link to people records where an email matches, `admin/tools/calendar-export`, `_generated/calendar.md`, `data/calendars/*.jsonl` and the calendar-archive timer are gone, and a re-run against an unchanged calendar touches no file
 <!-- AC:END -->
