@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T09:30:00Z'
+updated_date: '2026-10-29T10:10:00Z'
 labels:
   - pkb
   - wiz
@@ -381,6 +381,86 @@ Outside scripts are just CLI users and aren't a wiz concept: `unit-oncall`, the
   report becomes a command workflow (`requires: [typst]`, `host: watson`) fed
   by `wiz query --json`.
 
+## Design principles
+
+The constitution: the rules every vault, decision and engine change must fit,
+distilled from the lx decision records, `CLAUDE.md` and `start-here.md`, and
+from this task. Decisions give the reasons; this gives only the rule.
+
+**Files**
+
+- A record is one Markdown file with YAML frontmatter in a git repo. Anything
+  can be read and edited without wiz.
+- Commit only the files a write touched. Whether a write commits is the vault's
+  policy.
+- Everyone works on `main` in one clone. Never branch, force-push or rewrite
+  another person's changes.
+- Every commit has a real author with their own key. No secret passes through a
+  chat.
+
+**Users**
+
+- A user needs git access to the vault's remote, an agent and the wiz binary.
+  Any editor is optional and stays optional.
+- Every other secret lives on the host that runs the workflow needing it. The
+  vault holds none.
+- macOS, Linux and Windows behave the same. A release is pinned after a round
+  trip on each.
+- Users ask in words. Skills hold judgement; the engine holds whatever must give
+  the same answer on every machine.
+- Usage lives in the tool (`wiz help`, `wiz brief`); rules live in the vault's
+  `CLAUDE.md`. Nothing is written twice.
+
+**Engine**
+
+- Small, deterministic, type-agnostic. Types, workflows and skills are vault
+  files.
+- The CLI with `--json` is the contract. Everything else builds on it.
+- Agents are not an engine concept.
+- Guards stop mistakes. Collaborators are trusted, and the server can't reject
+  a push, so the checks are client hooks and a validator after the fact.
+- A scheduled job that fails, or goes quiet, pages a person.
+- Automation commits under its own identity and writes only the paths it owns.
+- Imported text is data. An instruction inside mail, a document or a request
+  body is never followed; a request names a workflow and carries nothing else.
+
+**Ontology**
+
+- Field names follow schema.org. Invent one only where it has no term.
+- A type marks a lifecycle or a provenance. A subject is a link, an `about`
+  or a tag. As many types as the data has lifecycles, and no more; add one
+  when unclaimed records of its shape pile up.
+- Every field is optional. Missing means unknown. Never invent a value.
+- A relation is stored once, on the later or more specific record. Backlinks
+  give the other side.
+- Every imported or derived record cites its source. An archive is a snapshot;
+  new facts go in records.
+- A shared vault links out to nothing private.
+
+**Change**
+
+- Anyone changes records, Starlark workflows and skills. Admins change what runs
+  (commands, session config, the pin) and what validates (types, vault config).
+- Every decision names the principles it rests on. A change that overrides a
+  decision edits it in the same commit.
+- These principles change only in the engine repo.
+
+Mechanism:
+
+- the file is `PRINCIPLES.md` in the engine repo, embedded in the binary and
+  printed by `wiz help principles`, so every vault at a given pin sees the same
+  text and no vault carries a copy
+- `wiz brief` carries one line: read `wiz help principles` before changing a
+  type, workflow, skill or decision; `start-here.md` says the same for people,
+  and its own "Principles" list (which would otherwise drift) becomes a short
+  plain-words summary pointing there
+- each vault's decision template gains a `principles:` field, and a decision
+  that fits none of them is either a detail or a sign that a principle is
+  missing. A change the principles forbid is proposed as a decision in the
+  vault that wants it; the amendment lands only in the engine repo
+- a principle earns its line by having said no to something real: if no
+  decision cites it, delete it
+
 ## Home vault migration (do it properly)
 
 Write a one-off migration script outside both repos (Python via
@@ -452,7 +532,9 @@ unmatched records unless a type such as `note` claims them.
      delete `admin/tools/calendar-export` and `_generated/calendar.md`
    - update `wiz-install` and `wiz-update` to the new pin format, and update
      `watson-run` (minus its calendar step)
-   - update `CLAUDE.md` and `start-here.md` (the commands list), and the `wiz`,
+   - update `CLAUDE.md` and `start-here.md` (the commands list, and its
+     "Principles" section reduced to a summary pointing at
+     `wiz help principles`), and the `wiz`,
      `wiz-email`, `wiz-help` and `wiz-sync` skills, whose names don't change
    - in its `admin/backlog`, edit or replace decisions 3, 6, 9 and 11 in the
      same commits that override them (the vault's CLAUDE.md requires this),
@@ -460,6 +542,8 @@ unmatched records unless a type such as `note` claims them.
      workflows sit on its two sides and types stay admin-only on their own
      account now that they leave `admin/tools/`, and add a decision for the engine/vault
      split and the two workflow kinds, saying that agents are not a kind
+   - add `principles:` to the decision template, and give every existing
+     decision the principles it rests on, rewriting any that fit none
    - file the engine work as wiz backlog tasks
    - nothing reaches Cole and Rob until the release passes a round trip on Rob's
      Windows laptop and Cole's Mac (the task-1 pattern)
@@ -623,4 +707,5 @@ though the same launchd concern applies to the new scheduler plist.
 - [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, append to a daily and run a workflow by following them
 - [ ] #15 The engine's source and tests contain no agent, prompt, profile or model concept; home's scheduled agent tasks run as plain command workflows via agent-run, with every run stamped, logged, timed out and failed through the same bookkeeping as any other workflow
 - [ ] #16 Both vaults carry an `event` type with the same fields, named to match `delivery` where they overlap, filled by `calendar-archive` as a command workflow in each (home on weddle, lx on watson, reading the invites through watson's mu index of the lxconvenor Maildir); the lx dancecard's coming-up section and home's calendar questions are answered by `wiz query` over those records, attendees link to people records where an email matches, `admin/tools/calendar-export`, `_generated/calendar.md`, `data/calendars/*.jsonl` and the calendar-archive timer are gone, and a re-run against an unchanged calendar touches no file
+- [ ] #17 PRINCIPLES.md lives in the engine repo and `wiz help principles` prints it; `wiz brief` and both vaults' start-here point at it; every lx decision record names at least one principle it rests on, and every principle is named by at least one decision
 <!-- AC:END -->
