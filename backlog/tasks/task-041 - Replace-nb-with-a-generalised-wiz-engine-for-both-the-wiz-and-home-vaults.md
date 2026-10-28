@@ -1,10 +1,10 @@
 ---
 id: TASK-041
 title: Replace nb with a generalised wiz engine for both the lx and home vaults
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T12:00:00Z'
+updated_date: '2026-10-28T23:40:00Z'
 labels:
   - pkb
   - wiz
