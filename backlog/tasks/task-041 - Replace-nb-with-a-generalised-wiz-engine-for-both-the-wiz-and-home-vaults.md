@@ -1,10 +1,10 @@
 ---
 id: TASK-041
-title: Replace nb with a generalised wiz engine for both the wiz and home vaults
+title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: To Do
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-28T10:14:00Z'
+updated_date: '2026-10-28T10:31:00Z'
 labels:
   - pkb
   - wiz
@@ -30,14 +30,16 @@ priority: medium
 Replace nb with a generalised wiz: one Go engine that manages and validates
 typed collections of Markdown records and the relationships between them, and
 runs workflows over them, manually or on timers. Each collection ("vault")
-supplies its own types and workflows as files. The shared LX vault (`~/.nb/wiz`)
-and Ben's private notebook (`~/.nb/home`) both become vaults of this engine, and
-nb, pkb-agent and pkb-todo retire.
+supplies its own types and workflows as files. The shared LX vault (`~/.nb/wiz`,
+named `lx`) and Ben's private notebook (`~/.nb/home`, named `home`) both become
+vaults of this engine, and nb, pkb-agent and pkb-todo retire.
 
-This task is the whole cross-repo change. It's written to be executed on weddle
-in one push, with every repo moved in lockstep. Cole and Rob have been briefed
-and support making wiz general purpose, which is part of wiz's own mission
-("work in other scenarios").
+This task is the design and the map of the whole cross-repo change. It is too
+large to be Done in one go: before work starts, split it into child tasks, one
+per step of the order of work below, each of which leaves every repo working on
+its own. Cole and Rob have been briefed and support making wiz general purpose,
+which is part of wiz's own mission ("work in other scenarios"); a multi-vault
+future, with different types and workflows per vault, is the point.
 
 ## Why
 
@@ -64,14 +66,17 @@ and support making wiz general purpose, which is part of wiz's own mission
 - **Engine:** the Go binary, in its own repo. It knows nothing about LX,
   deliveries or any particular types.
 - **Vault:** a Git repo of records plus its own config, types and workflows. A
-  vault's config follows the [mdbase](https://github.com/mdbase-dev/mdbase-spec)
-  layout, adopting the file format but not depending on mdbase's tools:
+  vault's config borrows the [mdbase](https://github.com/mdbase-dev/mdbase-spec)
+  layout, because a config format is needed and theirs is fine. Wiz is
+  mdbase-shaped, not mdbase-conformant: the spec is at 0.3 and carries
+  lifecycle, data-contract and projection machinery no vault asks for, and
+  chasing its fixtures would pull the engine towards features nobody uses.
   - `mdbase.yaml` at the root, with a format version
   - type definitions in `_types/`, each embedding a JSON Schema 2020-12, which
     is wiz's existing schema dialect
-  - type matching by path glob (wiz's folder-per-type) or by frontmatter rule
-  - Run mdbase's conformance fixtures against the Go engine where they apply, so
-    wiz can become a third mdbase implementation.
+  - type matching by path glob only (wiz's folder-per-type; home becomes
+    folder-per-type too, and the `note` catch-all is a lowest-precedence glob
+    over the root). Frontmatter-rule matching is not needed by either vault.
 - **Vault-level rules in config:**
   - `links_out: none`, which enforces wiz's one-way rule (home may link into
     wiz; wiz never links out)
@@ -94,8 +99,7 @@ and support making wiz general purpose, which is part of wiz's own mission
   - the shared LX vault is named `lx`
 - A vault's name is declared in its `mdbase.yaml` (`name: lx`), never derived
   from its folder. The name is used in the registry, cross-vault links
-  (`[[lx:people/cole-cooney]]`), vault-specific slash commands (`/lx-email`)
-  and `--all` output.
+  (`[[lx:people/cole-cooney]]`) and `--all` output.
 - Repos and folders carry a `wiz-` prefix, so Claude desktop (which shows the
   folder name above the session list) reads `wiz-lx`:
   - the GitLab project `u2548636/wiz` is renamed `u2548636/wiz-lx`, so a fresh
@@ -109,24 +113,26 @@ and support making wiz general purpose, which is part of wiz's own mission
 - Avoid wizard-themed jargon ("spells" and the like): every extra term costs
   non-technical colleagues.
 
-### Slash commands
+### Slash commands and skills
 
-- Generic commands are named for the tool and mean the same thing in every
-  vault:
-  - `/wiz` runs the vault's workflow named `dancecard`, whose content each vault
-    defines
-  - `/wiz-sync` shares and gets the latest
-  - `/wiz-help` explains wiz and checks the setup
-- On Ben's machines, `wiz run dancecard --all` merges every vault's dancecard.
-- Vault-specific commands carry the vault's name: `/wiz-email` becomes
-  `/lx-email`, and anything home-only is `/home-…`. Nothing called `/wiz-…` is
-  ever vault-specific.
-- The generic skills ship with the engine. `wiz skills` writes them into a
-  vault's `.claude/skills/`, and `wiz-update` refreshes them when the pin moves.
-  The guard protects them like `admin/tools/`, and vaults don't edit them.
-  - A Claude Code plugin declared in the vault's `.claude/settings.json` would
-    be cleaner. Adopt it only if it's verified to install and load from Claude
-    desktop's Code tab on Cole's and Rob's machines.
+- Skills belong to the vault, as decision-12 says: they live in
+  `.claude/skills/`, anyone may edit them, and the engine ships nothing into
+  `.claude/`. The `/wiz` skill's triage rules and report layout are LX
+  judgement, not generic text, and decision-6 puts judgement in skills. The
+  engine's own instructions reach a session through `wiz brief` (below), which
+  carries the command table, so a vault never copies generic text.
+- Cole's and Rob's commands don't change: `/wiz` (the dancecard), `/wiz-email`,
+  `/wiz-sync` and `/wiz-help`. Each vault's `/wiz` runs that vault's workflow
+  named `dancecard`. On Ben's machines, `wiz run dancecard --all` merges every
+  vault's dancecard, and home's own commands take whatever names Ben likes,
+  since only he sees them.
+- Open skills are a hygiene risk, not a security one: a skill can mislead
+  Claude but can't widen its permissions, because `.claude/settings.json` is
+  admin-only. The check is a command workflow on watson, outside the engine:
+  over every vault Ben admins, `agent-run` reviews skills changed since the
+  last run against a short rubric (calls only `wiz` and Git, doesn't route
+  around the guards, doesn't tell Claude to touch protected paths) and files a
+  task for Ben when one fails it.
 - Shrink `ben:pkb` (a personal skill, so it appears in every session including
   LX ones) to what's genuinely Ben's (email, role hubs), so it doesn't compete
   with `/wiz`.
@@ -151,10 +157,10 @@ and support making wiz general purpose, which is part of wiz's own mission
 ### No "current notebook"
 
 - A machine-local registry at `~/.config/wiz/vaults.toml` maps names to paths
-  (`home`, `wiz`). On a collaborator's machine it has one entry or none, and the
+  (`home`, `lx`). On a collaborator's machine it has one entry or none, and the
   engine falls back to the vault containing the working directory.
 - Every command takes explicit vault names or `--all`. Cross-vault links are
-  written `[[wiz:people/cole-cooney]]` and resolved through registry names.
+  written `[[lx:people/cole-cooney]]` and resolved through registry names.
 
 ### CLI is a contract
 
@@ -163,26 +169,33 @@ release it needs stable `--json` output and these commands:
 
 - `query` (CEL filter, using cel-go)
 - `show` and `path`
-- `add`, `update` and `append`
+- `add`, `update` and `append`. Fields are set generically (a repeatable
+  `--set key=value`, or JSON on stdin), never as a flag per field, so the CLI
+  learns nothing about any type
 - `rename`, which repairs links
 - `validate`
 - `run <workflow>`
 - `due`, which runs whatever is due on this host
+- `job <workflow>`, which asks another host to run a workflow (below)
 - `sync`
 - `guard`
 
 ### Commits and sync
 
-- Every engine write commits exactly the files it touched. `rename` also commits
-  the files whose links it repaired. A workflow's writes land as one commit
-  carrying the workflow's name. The engine never runs `git add --all`.
+- The invariant is that the engine never commits a file it wasn't asked to
+  touch: a commit holds exactly the files of the write that made it (`rename`
+  adds the files whose links it repaired; a workflow's writes land as one
+  commit carrying the workflow's name). The engine never runs `git add --all`.
+- Whether a write commits immediately is per-vault sync policy, not a
+  universal rule. In lx it does, as now. In home it doesn't: twenty daily
+  appends would be twenty commits, and the scheduled sync batches them anyway.
 - Edits made in an editor stay uncommitted until something names them
   (`wiz sync <files>`, as now).
 - Sync is per-vault policy:
   - home: a scheduled sync that commits dirty files that validate, leaves
     invalid ones uncommitted and lists them in the problems report, then pulls
     with rebase and pushes
-  - wiz: explicit sync, or through its skill, as now
+  - lx: explicit sync, or through its skill, as now
 
 ### Workflows: exactly two kinds
 
@@ -191,28 +204,34 @@ A workflow is itself a typed record, validated like everything else:
 ```yaml
 ---
 title: Morning job health check
-trigger: { schedule: "0 7 * * *" } # or { manual: health } or { on_change: "tasks/**" }
+trigger: { schedule: "0 7 * * *" } # or { manual: true }
 host: weddle # optional; omit = any machine meeting `requires`
 requires: [uv] # command workflows only; checked on PATH
-command: pkb-health data/health.toml # or run: admin/workflows/x.star
+command: pkb-health data/health.toml # or run: x.star
 ---
 ```
 
+A workflow is named by its file, so a manual trigger needs no name of its own.
+
 1. **Starlark workflows** (`run: *.star`, go.starlark.net) run anywhere,
-   including managed and Windows laptops, with nothing to install. They're
-   sandboxed and pure over records. Go does the loading, parsing, CEL filtering
-   and backlink resolution; Starlark receives lists of dicts and returns text
-   and/or record writes. Its API is roughly:
+   including managed and Windows laptops, with nothing to install, and they're
+   sandboxed and pure over records. The sandbox is what matters: it's what
+   lets colleagues and future vault owners write workflows, the same way
+   decision-11 lets anyone write a Typst job because a Typst job can't run
+   commands. Go does the loading, parsing, CEL filtering and backlink
+   resolution; Starlark receives lists of dicts and returns text and/or record
+   writes. Its API is roughly:
    - `ctx.query(cel)`, `ctx.get(path)`, `ctx.links(rec, field)`,
      `ctx.backlinks(rec)`
    - `ctx.today`, `ctx.me`, and the starlark-go `time` module
    - `ctx.add` / `ctx.update` / `ctx.append`
-   - `ctx.run(name, **args)`
 
-   There is **no exec, filesystem or network access**, and no per-vault option
-   to grant it. `ctx.run` invokes a _declared_ command workflow by name, so host
-   pinning, `requires` and admin-only rules still apply. Starlark tests are
-   `*_test.star` files that the engine runs against fixture vaults.
+   There is **no exec, filesystem or network access**, no per-vault option to
+   grant it, and no way for a Starlark workflow to invoke a command workflow.
+   Add such a bridge only when a workflow needs it, with its own decision
+   record. There is no Starlark test framework: the engine's Go tests run a
+   `.star` file against a fixture vault and compare its output to a golden
+   file, which is the harness the Go tests already have.
 
 2. **Command workflows** (`command:`) run an external program, with `requires:`
    and optional `host:`. Where `requires` isn't met the workflow reports "needs
@@ -222,40 +241,54 @@ command: pkb-health data/health.toml # or run: admin/workflows/x.star
    same semantics as pkb-agent prompt tasks today. A prompt task fails unless it
    changed the vault.
 
+The two kinds map onto decision-12's two roles. Starlark workflows are open:
+anyone may add or edit one, because it can't run code. Command workflows are
+admin-only, because they can. The vault config states which path each kind
+lives under, and the guard enforces it like `admin/tools/`.
+
 Built-ins, not workflow kinds:
 
 - **Scheduler:** `wiz due --all`, fired by one systemd timer on Linux and one
   launchd job on macOS, runs what is due for _this_ host across all registered
   vaults. Run stamps are kept locally on each machine. `host:` replaces the
   "enable this timer on weddle ONLY" comments.
+- **Requests:** `wiz job <workflow>` from a machine that isn't the workflow's
+  host writes a request record and syncs it, and the host's next `wiz due`
+  runs it and closes the request. This is today's `wiz job` (199 lines) kept,
+  not a new mechanism: a laptop can't reach watson, so a record is the only
+  trigger that works.
 - **Sync.**
 
 Outside scripts are just CLI users and aren't a wiz concept: `unit-oncall`, the
-`launchd-run` failure path and shell functions. Workflow definitions live under
-a protected path (`admin/workflows/`) that only admins change.
+`launchd-run` failure path and shell functions.
 
 ### Updates and distribution
 
 - Engine releases are tags in the engine repo. The release script pushes each
   platform build (macOS arm64, Windows amd64, Linux amd64) as a parentless
-  commit on `refs/tools/<version>/<os>-<arch>` into _every_ vault remote that
-  pins engine versions.
+  commit on `refs/tools/<version>/<os>-<arch>` into the lx vault's remote, the
+  one vault whose users install from a pin.
 - Collaborators keep cloning one repo and installing over SSH with checksum
   verification, exactly as with today's `wiz-install`. They need no access to
   the engine repo.
-- Each vault pins its engine version (as `admin/tools/wiz-release.sha256` does
-  now). Moving home's pin never touches wiz's. Home-only features stay dormant
-  in the shared vault because types and workflows live in vaults, not the
-  binary.
-- watson currently rebuilds wiz from `main` (`admin/tools/watson-run`). After
-  the split it builds the engine from the engine repo's `main` (or the pin ---
-  decide and record it).
+- The lx vault pins its engine version (as `admin/tools/wiz-release.sha256`
+  does now), and watson builds that pin. Home-only features stay dormant in
+  the shared vault because types and workflows live in vaults, not the binary.
+- Ben's machines don't install through vault pins. Two vaults with two pins
+  and one `~/.wiz/bin/wiz` would have each vault's SessionStart hook
+  installing its own pin over the other's. Instead, the helix pattern: a
+  `wiz-build` script in dotfiles builds the engine from the rev in a
+  `wiz/pinned-rev` file into `~/.local/bin`, `dotfiles doctor` checks it, and
+  the engine's backward compatibility with older vault format versions is what
+  lets that one build serve every vault. No mise entry, and no binaries pushed
+  to home's remote.
 
 ### What leaves wiz's Go code
 
-- `dancecard.go` (475 lines) becomes a Starlark workflow in the wiz vault, with
+- `dancecard.go` (475 lines) becomes a Starlark workflow in the lx vault, with
   tasks by owner (the current user first), leads, coming up and mail. Port its
-  `vault_test.go` coverage to `*_test.star` before deleting the Go.
+  `vault_test.go` coverage to golden-output tests over the `.star` file before
+  deleting the Go.
 - Mail cleaning (reply prefixes, quote-start detection, the Outlook
   first-time-sender banner) moves into `mail-export` on watson. It then writes
   mail _records_ with `thread`, `from`, `date` and a cleaned `summary`, so the
@@ -265,9 +298,10 @@ a protected path (`admin/workflows/`) that only admins change.
 - `check.go` splits. Generic Git, SSH and engine checks stay in the engine; LX
   setup diagnosis moves into the `/wiz-help` skill's text, because it needs
   judgement, which decision-6 assigns to skills.
-- `wiz job` becomes "trigger a command workflow pinned to `host: watson`". The
-  deliveries report becomes a command workflow (`requires: [typst]`,
-  `host: watson`) fed by `wiz query --json`.
+- `jobs.go` stays as the request built-in (`wiz job`), generalised from "a
+  Typst file in `admin/jobs/`" to "a workflow with a `host:`". The deliveries
+  report becomes a command workflow (`requires: [typst]`, `host: watson`) fed
+  by `wiz query --json`.
 
 ## Home vault migration (do it properly)
 
@@ -282,9 +316,9 @@ should commit in reviewable chunks, one per conversion. The target schema:
     `tasks/YYYY-MM-DD-<slug>.md`, using the same `task` type and field names as
     wiz
   - fields: `status: open | blocked | done`, `due_date`, optional `agent`
-  - the `#blocked` tag becomes `status: blocked`, and the `#bot` tag becomes
-    `requested_by: automation`
-  - `oncall` remains a tag
+  - the `#blocked` tag becomes `status: blocked`
+  - `bot` and `oncall` remain tags. In lx `requested_by` is a people link, and
+    a shared field name must keep its shared type
 - **workflows:** home's current `tasks/` (pkb-agent definitions: `health.md`,
   `claude-retrospective.md`) become workflow records in `admin/workflows/`. That
   frees `tasks/` for tasks.
@@ -294,8 +328,8 @@ should commit in reviewable chunks, one per conversion. The target schema:
   - appending is an engine operation, `wiz append home daily "…"`
   - `.gitattributes` marks `dailies/** merge=union`, so concurrent appends from
     two machines merge cleanly
-- **bookmarks:** `*.bookmark.md` (23 files) become a `bookmark` type with `url`,
-  `title`, `comment` and `tags`.
+- **bookmarks:** `*.bookmark.md` (23 files) become a `bookmark` type in
+  `bookmarks/` with `url`, `title`, `comment` and `tags`.
 - **links:** all links become path-form and validated. Numeric-id links (for
   example `[[projects/16]]`) and ambiguous bare names are resolved or reported.
 - **assets:** `docs/` typst sources, `data/`, `scripts/` and `images/` are
@@ -322,17 +356,19 @@ unmatched records unless a type such as `note` claims them.
    `u2548636/wiz` to `u2548636/wiz-lx` to free the name. Then create
    `u2548636/wiz` from `admin/tools/wiz` with its history preserved
    (`git filter-repo --subdirectory-filter`).
-2. **`~/.nb/wiz`** (gitlab.anu.edu.au:u2548636/wiz):
+2. **`~/.nb/wiz`, the lx vault** (gitlab.anu.edu.au:u2548636/wiz):
    - convert `admin/tools/schemas/*.json` to `_types/` plus `mdbase.yaml`
    - add the dancecard and other Starlark workflows, and command workflows for
-     watson's jobs
+     watson's jobs, including the skills review
    - update `wiz-install` and `wiz-update` to the new pin format, and update
      `watson-run`
    - update `CLAUDE.md` and `start-here.md` (the commands list), and the `wiz`,
-     `wiz-email`, `wiz-help` and `wiz-sync` skills
-   - in its `admin/backlog`, edit or replace decisions 3, 6, 9, 11 and 12 in the
-     same commits that override them (wiz's CLAUDE.md requires this), and add a
-     decision for the engine/vault split and the two workflow kinds
+     `wiz-email`, `wiz-help` and `wiz-sync` skills, whose names don't change
+   - in its `admin/backlog`, edit or replace decisions 3, 6, 9 and 11 in the
+     same commits that override them (the vault's CLAUDE.md requires this),
+     extend decision-12 so open Starlark workflows and admin-only command
+     workflows sit on its two sides, and add a decision for the engine/vault
+     split and the two workflow kinds
    - file the engine work as wiz backlog tasks
    - nothing reaches Cole and Rob until the release passes a round trip on Rob's
      Windows laptop and Cole's Mac (the task-1 pattern)
@@ -342,9 +378,9 @@ unmatched records unless a type such as `note` claims them.
 4. **`~/projects/claude-plugin-personal`:** rewrite the `ben:pkb` skill
    (`SKILL.md`, `email.md`) for the wiz CLI, then `dotfiles update`.
 5. **This dotfiles repo:**
-   - **mise:** drop the `github:xwmx/nb` pin from `mise/config.toml`, and decide
-     how the engine is installed on Ben's machines (a pinned release via mise's
-     GitHub backend, or built from source like `helix-build`).
+   - **mise:** drop the `github:xwmx/nb` pin from `mise/config.toml`. The
+     engine is built from source by a new `bin/wiz-build` at the rev in
+     `wiz/pinned-rev`, modelled on `helix-build`.
    - **files to delete:**
      - `bin/nb`, `tests/test_nb.py` and the `nb/*.nb-plugin` files
      - the `nb_plugin_links` function in `lib/symlink-manifest.sh`
@@ -359,7 +395,7 @@ unmatched records unless a type such as `note` claims them.
      command workflow. Drop the pkb steps from CI and the editable install from
      `install.sh` and `dotfiles update`.
    - **`bin/unit-oncall`, and the failure path in `bin/launchd-run`:** switch to
-     `wiz add home task --tag oncall --requested-by automation --unit <unit> …`,
+     `wiz add home task --set title=… --set tags=[bot,oncall] --set unit=<unit>`,
      close it with an `update` found by
      `wiz query home 'unit == "<unit>" && status == "open"'` (not by title), and
      `wiz sync home`. The home `task` type gains a `unit` field.
@@ -380,7 +416,7 @@ unmatched records unless a type such as `note` claims them.
    - **CI:** add the engine's test suite to `.github/workflows/security.yml` if
      it's vendored or called from here.
 6. **watson:** registry entry, engine build, and `watson-run` reduced to
-   `wiz due wiz` (or equivalent).
+   `wiz due lx` (or equivalent).
 7. **daysy and any other Mac:** registry, engine install, the launchd scheduler;
    the nb-sync plist unloaded and removed.
 
@@ -388,18 +424,19 @@ unmatched records unless a type such as `note` claims them.
 
 1. In the engine repo: the split, vault config loading, registry and multi-vault
    commands, the CLI contract with `--json`, and the commit-touched-files model.
-   The wiz vault converts to `_types/` + `mdbase.yaml` with identical validation
+   The lx vault converts to `_types/` + `mdbase.yaml` with identical validation
    results, and nb still serves home.
 2. The workflow records, the command and prompt kinds, and the scheduler. This
    absorbs pkb-agent; at this point watson's jobs, home's health check and the
    retrospective run as workflows.
-3. Starlark: the host, API, tests and dancecard port, and the mail and calendar
-   exports writing records.
+3. Starlark: the host, API, golden tests and dancecard port, and the mail and
+   calendar exports writing records. Nothing after this step depends on it:
+   if it slips, steps 4 to 6 go ahead and the Go dancecard keeps serving lx.
 4. The engine gains the daily, task-append and bookmark operations needed by
    home.
 5. Home migration, run as a dry run, reviewed, then applied.
 6. The dotfiles cutover, the skill rewrite, and nb's retirement on every host.
-7. The collaborator release: pin the release in the wiz vault only after the
+7. The collaborator release: pin the release in the lx vault only after the
    Windows and Mac round trip, then tell Cole and Rob what changed.
 
 Rollback until step 6: nb still reads both vaults, because records stay plain
@@ -410,20 +447,27 @@ without trouble.
 
 - **Watson:** it runs the engine version pinned in the lx vault, not `main`, so
   the shared vault's automation runs exactly what Cole and Rob run.
-- **Installing the engine on Ben's machines:** the same way as collaborators,
-  through the vault's pin and `wiz-install`. During development, a `wiz-build`
-  script (like `helix-build`) puts a source build in `~/.local/bin` ahead of
-  it. No mise entry.
-- **mdbase conformance:** target only types, matching, validation, links and
-  rename. Skip mdbase's CEL views and its event/runtime companion, since wiz's
-  workflows are its own. Track the spec's fixtures; don't contribute upstream
-  until v0.3 is final.
+- **Installing the engine on Ben's machines:** a source build pinned in
+  dotfiles (`bin/wiz-build`, `wiz/pinned-rev`), never a vault pin, for the
+  reason given under distribution. No mise entry.
+- **mdbase:** the layout only. Conformance, the fixtures and any upstream
+  contribution are a possible future, not a target, and the decision record
+  for the engine/vault split says so.
 - **CEL in Starlark:** only through `ctx.query(cel_string)`, evaluated in Go.
   That keeps one query language with one evaluation site.
-- **`on_change` triggers:** checked at sync time, after pull and rebase, by
-  diffing the old and new HEAD against each workflow's glob. Never via Git
-  hooks, which can be missing or skipped. Defer the trigger if no first-wave
-  workflow needs it.
+- **Starlark stays** (reviewed 2026-10-28 and challenged as a language for one
+  workflow). It's kept because the multi-vault future needs per-vault
+  workflows that colleagues and vault owners can write themselves, and the
+  sandbox is what makes that safe to open up. What went instead: the
+  Starlark-to-command bridge (`ctx.run`), the `*_test.star` framework, and
+  `on_change` triggers, none of which a first-wave workflow needs. Add any of
+  them with its own decision record when a workflow does.
+- **Skills stay vault-owned** (same review). Engine-shipped generic skills, a
+  `wiz skills` command and the vault-name prefix on commands (`/lx-email`)
+  were dropped: the `/wiz` skill's content is LX judgement, decision-12 had
+  just opened skills to colleagues, and the naming rule served only Ben. The
+  review of colleagues' skill edits is a watson workflow, not an engine
+  feature.
 - **Done todos:** migrate all of them as `status: done`, taking the creation
   date for the filename from nb's timestamp id, so history stays queryable.
 
@@ -434,17 +478,17 @@ though the same launchd concern applies to the new scheduler plist.
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 The engine lives in its own repo and contains no LX-specific types, folders or logic; a vault's types, rules and workflows come only from files in that vault (mdbase.yaml + _types/ + admin/workflows/)
-- [ ] #2 The wiz vault validates with the same results under the new engine as under wiz v0.9.0 before any record changes
+- [ ] #2 The lx vault validates with the same results under the new engine as under wiz v0.9.0 before any record changes
 - [ ] #3 Every CLI command takes explicit vault names or --all, resolved via ~/.config/wiz/vaults.toml, with stable --json output; there is no current-notebook state
-- [ ] #4 Engine writes commit exactly the files they touched (plus link-repaired files on rename); nothing runs git add --all
-- [ ] #5 Starlark workflows run on macOS arm64, Linux amd64 and Windows amd64 with nothing installed, have no exec/filesystem/network access, and reach external programs only through ctx.run on a declared command workflow
+- [ ] #4 No engine commit ever holds a file the write that made it didn't touch (plus link-repaired files on rename); nothing runs git add --all; whether a write commits at once is per-vault policy
+- [ ] #5 Starlark workflows run on macOS arm64, Linux amd64 and Windows amd64 with nothing installed and have no exec, filesystem or network access and no way to invoke a command workflow; anyone may add one, while command workflows are admin-only and the guard enforces the split
 - [ ] #6 A command workflow whose requires: is unmet, or whose host: is another machine, reports itself unavailable rather than failing
-- [ ] #7 One scheduler (wiz due --all, from one systemd timer on Linux and one launchd job on macOS) runs every due workflow for its host across all vaults, and a failed run files an oncall task
-- [ ] #8 The wiz dancecard is a Starlark workflow whose output matches the Go version on the same vault and date, with its test coverage ported to *_test.star; dancecard.go and calendar.go are deleted
+- [ ] #7 One scheduler (wiz due --all, from one systemd timer on Linux and one launchd job on macOS) runs every due workflow for its host across all vaults, and a failed run on weddle files an oncall task through the unit's OnFailure wiring
+- [ ] #8 The lx dancecard is a Starlark workflow whose output matches the Go version on the same vault and date, covered by golden-output tests in the engine's Go suite; dancecard.go and calendar.go are deleted
 - [ ] #9 Home is migrated: no *.todo.md, *.bookmark.md, YYYYMMDD.md or .index files remain, every tags field is a YAML list, and wiz validate home reports no problems
 - [ ] #10 Concurrent appends to the same daily from two machines sync without a conflict
-- [ ] #11 Cole and Rob each complete a get-latest, edit and share round trip on their own machines with the new release before it is pinned in the wiz vault
-- [ ] #12 Wiz's decision records overridden by this change (3, 6, 9, 11, 12) are edited or replaced in the commits that override them, and a new decision records the engine/vault split
+- [ ] #11 Cole and Rob each complete a get-latest, edit and share round trip on their own machines with the new release before it is pinned in the lx vault, and their slash commands keep their names
+- [ ] #12 The lx vault's decision records overridden by this change (3, 6, 9, 11) are edited or replaced in the commits that override them, decision-12 is extended for the two workflow kinds, and a new decision records the engine/vault split and the mdbase-layout-only choice
 - [ ] #13 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
 - [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, append to a daily and run a workflow by following them
 <!-- AC:END -->
