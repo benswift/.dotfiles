@@ -8,6 +8,12 @@
 # older vault format anyway, so one build at this pin serves every vault in
 # the registry. It goes into ~/.local/bin/wiz, ahead of nothing else.
 #
+# The exception is PINNED_HOSTS: watson runs the lx automation, so it runs
+# exactly the wiz the collaborators do, from ~/.wiz/bin, and has no key to the
+# engine's source. There this builds nothing, and --check passes when that
+# install runs. Naming the host, rather than skipping a build whose clone
+# fails, keeps a lost key on any other machine a failure.
+#
 # The engine repo is cloned to $WIZ_SRC and built with the Go its mise.toml
 # names. The version wiz reports carries the commit (`v1.0.0-3-g63b7857`),
 # which is how --check knows what is installed. An unchanged pin makes this a
@@ -19,6 +25,7 @@
 #   wiz-build --force      rebuild even when the pinned rev is installed
 #   wiz-build --check      report status only; non-zero if not on the pin
 #   wiz-build --no-test    skip the engine's test suite before installing
+#   wiz-build --pinned-host  exit 0 if this host runs the vault-pinned wiz
 set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -29,6 +36,8 @@ WIZ_PREFIX="${WIZ_PREFIX:-$HOME/.local}"
 REPO_URL="git@gitlab.anu.edu.au:u2548636/wiz-engine.git"
 PIN_FILE="$DOTFILES_DIR/wiz/pinned-rev"
 WIZ="$WIZ_PREFIX/bin/wiz"
+PINNED_HOSTS=(watson)
+PINNED_WIZ="$HOME/.wiz/bin/wiz"
 
 MODE=build
 RUN_TESTS=true
@@ -38,8 +47,9 @@ while [[ $# -gt 0 ]]; do
     --force) MODE=force ;;
     --check) MODE=check ;;
     --no-test) RUN_TESTS=false ;;
+    --pinned-host) MODE=pinned-host ;;
     -h | --help)
-        sed -n '/^# Usage:/,/^#   wiz-build --no-test/p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '/^# Usage:/,/^#   wiz-build --pinned-host/p' "$0" | sed 's/^# \{0,1\}//'
         exit 0
         ;;
     *)
@@ -141,7 +151,26 @@ report() {
     info "wiz $("$WIZ" version) installed at $WIZ"
 }
 
+pinned_host() {
+    local host
+    host="$(hostname -s)"
+    [[ " ${PINNED_HOSTS[*]} " == *" $host "* ]]
+}
+
+if pinned_host; then
+    [[ "$MODE" == pinned-host ]] && exit 0
+    if ! version="$("$PINNED_WIZ" version 2>/dev/null)"; then
+        error "no pinned wiz at $PINNED_WIZ --- the lx vault's admin/tools/wiz-install puts it there"
+        exit 1
+    fi
+    info "$(hostname -s) runs the lx vault's pinned wiz ($version at $PINNED_WIZ)"
+    exit 0
+fi
+
 case "$MODE" in
+pinned-host)
+    exit 1
+    ;;
 check)
     report && check_shadowing
     ;;
