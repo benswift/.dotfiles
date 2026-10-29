@@ -196,6 +196,13 @@ def main(argv: list[str] | None = None) -> int:
         case ["do" | "undo" | "block" | "unblock"]:
             print(__doc__, file=sys.stderr)
             return 2
+        case ["-h" | "--help"]:
+            print(__doc__)
+            return 0
+        # A flag is never a task title, so a mistyped option files nothing.
+        case [first, *_] if first.startswith("-"):
+            print(f"todo: unknown option {first}\n{__doc__}", file=sys.stderr)
+            return 2
         case [*words]:
             wiz(
                 "add",
