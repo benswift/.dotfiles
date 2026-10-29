@@ -72,6 +72,30 @@ create_symlink_with_backup() {
     create_symlink "$source_path" "$target"
 }
 
+# Remove links under ~/.config/systemd that point into this repo but are no
+# longer in the manifest: a retired unit's, or every one on a Mac. Units from
+# other repos are left alone, and so are .wants/ links: those record what is
+# enabled, which is systemctl's to change.
+prune_systemd_links() {
+    local dir="$HOME/.config/systemd" link wanted entry
+    [[ -d "$dir" ]] || return 0
+    wanted=" "
+    for entry in "${SYMLINK_MANIFEST[@]}"; do
+        wanted+="$(manifest_target "$entry") "
+    done
+    while IFS= read -r link; do
+        [[ "$link" != *.wants/* && "$(readlink "$link")" == "$DOTFILES_DIR"/* ]] || continue
+        [[ "$wanted" == *" $link "* ]] && continue
+        if [[ "$DRY_RUN" == "true" ]]; then
+            echo -e "${YELLOW}[DRY RUN] Would remove stale link: $link${NC}"
+        else
+            rm "$link"
+            echo -e "${GREEN}✓ Removed stale link: $link${NC}"
+        fi
+    done < <(find "$dir" -type l)
+    [[ "$DRY_RUN" == "true" ]] || find "$dir" -mindepth 1 -type d -empty -delete
+}
+
 main() {
     echo "Setting up dotfiles symlinks..."
     echo "Dotfiles directory: $DOTFILES_DIR"
@@ -91,6 +115,9 @@ main() {
     for entry in "${SYMLINK_MANIFEST_WITH_BACKUP[@]}"; do
         create_symlink_with_backup "$(manifest_source "$entry")" "$(manifest_target "$entry")"
     done
+
+    echo -e "\nPruning stale systemd links..."
+    prune_systemd_links
 
     echo -e "\n${GREEN}Done!${NC}"
 }

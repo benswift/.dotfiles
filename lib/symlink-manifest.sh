@@ -95,3 +95,13 @@ if [[ -f "$DOTFILES_DIR/private/manifest.sh" ]]; then
     # shellcheck disable=SC1091  # the private overlay's, absent in public CI
     source "$DOTFILES_DIR/private/manifest.sh"
 fi
+
+# systemd units are Linux's; a Mac's jobs are the plists in launchd/.
+if [[ "$(uname -s)" != Linux ]]; then
+    _linux_only=()
+    for _entry in "${SYMLINK_MANIFEST[@]}"; do
+        [[ "${_entry##*:}" == \~/.config/systemd/* ]] || _linux_only+=("$_entry")
+    done
+    SYMLINK_MANIFEST=("${_linux_only[@]}")
+    unset _linux_only _entry
+fi
