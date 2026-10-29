@@ -1,5 +1,5 @@
 [Unit]
-Description=Validate the wiz vault every 15 minutes
+Description=Run the lx vault's due workflows on watson every 15 minutes
 
 [Timer]
 OnCalendar=*:02/15

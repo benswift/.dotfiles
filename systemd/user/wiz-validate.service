@@ -1,5 +1,5 @@
 [Unit]
-Description=Validate the wiz vault on watson and share the report
+Description=Run the lx vault's due workflows on watson
 Documentation=file:///home/ben/.nb/wiz/admin/tools/watson-run
 OnFailure=unit-oncall@%n.service
 OnSuccess=unit-oncall-clear@%n.service
