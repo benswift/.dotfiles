@@ -56,7 +56,7 @@ SYMLINK_MANIFEST=(
     "systemd/user/wiz-due.service:~/.config/systemd/user/wiz-due.service"
     "systemd/user/wiz-due.timer:~/.config/systemd/user/wiz-due.timer"
     # unit-oncall: template units, instanced by any timer that wants a failure
-    # to reach the notebook. Never enabled themselves --- a job opts in with
+    # to reach the ben vault. Never enabled themselves --- a job opts in with
     # OnFailure=unit-oncall@%n.service / OnSuccess=unit-oncall-clear@%n.service
     "systemd/user/unit-oncall@.service:~/.config/systemd/user/unit-oncall@.service"
     "systemd/user/unit-oncall-clear@.service:~/.config/systemd/user/unit-oncall-clear@.service"
