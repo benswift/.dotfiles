@@ -50,18 +50,18 @@ def test_claude_subscription_clears_api_routing() -> None:
     assert environ["ANTHROPIC_API_KEY"] == "pay-as-you-go"
 
 
-def test_deepseek_maps_admin_secret_without_storing_it() -> None:
+def test_openrouter_maps_admin_secret_without_storing_it() -> None:
     profile = mod.Profile(
-        name="deepseek",
+        name="openrouter",
         runner="claude",
-        env={"ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic"},
-        secret_env={"ANTHROPIC_API_KEY": "DEEPSEEK_API_TOKEN"},
+        env={"ANTHROPIC_BASE_URL": "https://openrouter.ai/api"},
+        secret_env={"ANTHROPIC_AUTH_TOKEN": "OPENROUTER_API_KEY"},
     )
 
-    child = mod.resolve_environment(profile, {"DEEPSEEK_API_TOKEN": "secret"})
+    child = mod.resolve_environment(profile, {"OPENROUTER_API_KEY": "secret"})
 
-    assert child["ANTHROPIC_API_KEY"] == "secret"
-    assert child["ANTHROPIC_BASE_URL"] == "https://api.deepseek.com/anthropic"
+    assert child["ANTHROPIC_AUTH_TOKEN"] == "secret"
+    assert child["ANTHROPIC_BASE_URL"] == "https://openrouter.ai/api"
 
 
 def test_missing_profile_secret_fails_loudly() -> None:
@@ -77,9 +77,9 @@ def test_missing_profile_secret_fails_loudly() -> None:
 
 def test_claude_command_preserves_headless_settings(tmp_path: Path) -> None:
     command = mod.build_command(
-        mod.Profile(name="deepseek", runner="claude"),
+        mod.Profile(name="openrouter", runner="claude"),
         prompt="tick",
-        model="deepseek-v4-flash",
+        model="provider/model",
         cwd=tmp_path,
         claude_dangerously_skip_permissions=False,
         claude_disallowed_tools="AskUserQuestion",
@@ -91,7 +91,7 @@ def test_claude_command_preserves_headless_settings(tmp_path: Path) -> None:
     assert command == [
         "/opt/claude",
         "--model",
-        "deepseek-v4-flash",
+        "provider/model",
         "--effort",
         "max",
         "--print",

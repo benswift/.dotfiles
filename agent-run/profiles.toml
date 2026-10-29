@@ -29,20 +29,6 @@ unset_env = ["OPENAI_API_KEY"]
 # whose model and endpoint do not belong in this global registry.
 runner = "claude"
 
-[profiles.deepseek]
-runner = "claude"
-model = "deepseek-v4-flash"
-unset_env = [
-  "ANTHROPIC_API_KEY",
-  "ANTHROPIC_AUTH_TOKEN",
-  "ANTHROPIC_BASE_URL",
-  "ANTHROPIC_MODEL",
-  "ANTHROPIC_SMALL_FAST_MODEL",
-  "API_TIMEOUT_MS",
-]
-env = { ANTHROPIC_BASE_URL = "https://api.deepseek.com/anthropic", ANTHROPIC_SMALL_FAST_MODEL = "deepseek-v4-flash", API_TIMEOUT_MS = "600000" }
-secret_env = { ANTHROPIC_API_KEY = "DEEPSEEK_API_TOKEN" }
-
 [profiles.openrouter]
 runner = "claude"
 # Only the auth route is cleared. OpenRouter serves many models through one

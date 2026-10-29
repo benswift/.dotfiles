@@ -187,9 +187,9 @@ symlinks each skill into `~/.agents/skills` so Codex and Matilda see them too.
 @bin/agent-run runs unattended agent jobs; profiles in @agent-run/profiles.toml
 select the runner and auth route, the caller supplies prompt, model and
 permissions. Subscription profiles are `*-sub`, API-billed ones `*-api`
-(@agent-run/profiles.toml's comments say what each clears). `openrouter` and
-`deepseek` reach third-party endpoints through Claude Code's
-Anthropic-compatible surface; put their keys in the untracked mise env.
+(@agent-run/profiles.toml's comments say what each clears). `openrouter` reaches
+third-party endpoints through Claude Code's Anthropic-compatible surface; put
+its key in the untracked mise env.
 
 A caller that passes no `--profile` (and no `AGENT_PROFILE`) gets the registry's
 `default`, which is the one line to change when the subscription provider
