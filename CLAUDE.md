@@ -48,10 +48,16 @@ Editor and multiplexer config: @helix/, @zellij/, @ghostty/. AI agents:
 `private/` is a separate private repo (`benswift/dotfiles-private`), cloned
 inside this checkout: gitignored here, re-included for rg/fd/helix by @.ignore.
 It holds mail, weddle's backups, private ssh hosts and anything else naming
-institutional accounts or infrastructure, and has its own `CLAUDE.md`. Commit
-there with `git -C private`, separately from this repo. @lib/private.sh lists
-the hooks it plugs into. Nothing public may depend on it: every hook is
-optional, so a machine without it still bootstraps.
+institutional accounts or infrastructure, and has its own `CLAUDE.md`.
+@lib/private.sh lists the hooks it plugs into. Nothing public may depend on it:
+every hook is optional, so a machine without it still bootstraps.
+
+**Changes under `private/` are invisible to this repo's git.** `git status` here
+won't show them, and committing here won't include them. Commit and push them in
+the overlay itself (`git -C private add <file>`, `git -C private commit`,
+`git -C private push`). A change spanning both repos is two commits, and the
+overlay's goes first when pushing: a public commit that expects a file the
+overlay hasn't pushed breaks `dotfiles update` on every other machine.
 
 @.github/workflows/security.yml runs ruff, shellcheck, the portable test suite,
 a lock audit (@scripts/audit-locks.py) and gitleaks on every push. A tool the
