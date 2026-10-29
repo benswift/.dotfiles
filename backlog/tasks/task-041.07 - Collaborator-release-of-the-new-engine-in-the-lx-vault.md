@@ -4,7 +4,7 @@ title: Collaborator release of the new engine in the lx vault
 status: In Progress
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
-updated_date: '2026-10-28T23:40:00Z'
+updated_date: '2026-10-29T00:58:00Z'
 labels:
   - pkb
   - wiz
@@ -41,4 +41,6 @@ Step 7 of TASK-041's order of work. Groundwork (_types/, mdbase.yaml, events/, w
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-10-29: everything up to the round trip is done. v0.10.0 is published (engine tag, builds on the lx remote's refs/tools with SHA256SUMS beside them, not pinned) and installs and validates on weddle and watson; admin/tools/wiz-install takes a version, for the round trip (on lx main). The switch is staged in ~/projects/wiz-lx-switch (README.md says how): rewritten CLAUDE.md, start-here.md, the four skills (/wiz-help takes over check.go's LX checks), watson-run (wiz due lx at the pin), wiz-check, the hooks and their test, mdbase.yaml, five meta design docs folding the twelve decisions (3, 6, 9 and 11 dropped, their live parts folded in), task-26 as a tasks/ record tagged meta, and the deletions (admin/tools/wiz, schemas, calendar-export, _generated/calendar.md, admin/backlog, backlog.config.yml). Dry-run on a scratch clone validated clean; watson ran the switched vault's workflows against a scratch remote, one commit each, exit 0. Waiting on Cole and Rob's round trip, then apply.sh, the unit's description, and the GitLab rename. Found while testing: commit 8fde84d1 (Cole, 2026-10-28) added j.cooney@anu.edu.au as an admin in admin/tools/identities, around the guards; watson's problems report flags it.
+
+2026-10-29: watson's scheduler is live ahead of the switch. lx's interim admin/tools/watson-run installs v0.10.0 by name and runs wiz due lx (mail, calendar, validate, weekly skills review, stamped so its first run is next Monday), then still writes _generated/calendar.md for the v0.9.1 dancecard. events/ is automation's in mdbase.yaml, and the lxconvenor calendar is 76 event records on main. Until the switch, a deliveries report asked for with v0.9.1's wiz job (an old-style task assigned to watson) isn't picked up; run it as wiz job lx deliveries-report from a v0.10.0 machine instead. The staged watson-run is the final one.
 <!-- SECTION:NOTES:END -->
