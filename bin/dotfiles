@@ -322,6 +322,11 @@ check_launchd() {
     local plist label installed info code
     for plist in "$DOTFILES_DIR"/launchd/*.plist; do
         label=$(basename "$plist" .plist)
+        # A pinned host's lx workflows run under the vault's watson-run,
+        # started from weddle; a wiz-due agent there would run them twice.
+        if [[ "$label" == com.benswift.wiz-due ]] && "$DOTFILES_DIR/bin/wiz-build" --pinned-host; then
+            continue
+        fi
         installed="$HOME/Library/LaunchAgents/$label.plist"
         if [[ ! -f "$installed" ]]; then
             check_fail "$label not installed (see launchd/$label.plist header)"
