@@ -4,7 +4,7 @@ title: Collaborator release of the new engine in the lx vault
 status: In Progress
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
-updated_date: '2026-10-29T03:15:00Z'
+updated_date: '2026-10-29T03:19:00Z'
 labels:
   - pkb
   - wiz
@@ -45,4 +45,6 @@ Step 7 of TASK-041's order of work. Groundwork (_types/, mdbase.yaml, events/, w
 2026-10-29: watson's scheduler is live ahead of the switch. lx's interim admin/tools/watson-run installs v0.10.0 by name and runs wiz due lx (mail, calendar, validate, weekly skills review, stamped so its first run is next Monday), then still writes _generated/calendar.md for the v0.9.1 dancecard. events/ is automation's in mdbase.yaml, and the lxconvenor calendar is 76 event records on main. Until the switch, a deliveries report asked for with v0.9.1's wiz job (an old-style task assigned to watson) isn't picked up; run it as wiz job lx deliveries-report from a v0.10.0 machine instead. The staged watson-run is the final one.
 
 2026-10-29: switched at Ben's call ahead of the round trip, which Cole and Rob now do as their move onto it. 30f31d66 is the switch (v0.10.0 pinned); deleting _generated/calendar.md went in separately as automation (aa659b9f), since the commit guard keeps that path to automation. watson ran the final watson-run by hand (exit 0) before the timer resumed. The GitLab project is u2548636/wiz-lx; weddle's, daysy's and watson's clones point there. wiz check doesn't follow the move by itself: GitLab redirects the old SSH path silently and prints its move notice only on a push after the old path was used, so Cole's and Rob's instructions set the remote. Open: AC1 and AC5 close when Cole and Rob have pulled, installed v0.10.0, set the remote and shared an edit.
+
+2026-10-29: the switch commit also picked up the old engine's local bin/ and dist/ builds (106 MiB, 65 files), because deleting admin/tools/wiz took its .gitignore with it before apply.sh's git add -A. Caught before Cole or Rob pulled; with Ben's go-ahead, main was rewritten without them (force push allowed for the push only, then off again), watson's and daysy's clones reset, GitLab housekeeping run. The old builds not on refs/tools (v0.1.0 to v0.3.1) are kept in ~/projects/wiz-engine/dist.
 <!-- SECTION:NOTES:END -->
