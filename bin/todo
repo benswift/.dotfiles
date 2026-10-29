@@ -84,9 +84,7 @@ def wiz(*args: str, capture: bool = True) -> str:
 
 
 def open_tasks() -> list[Task]:
-    query = (
-        f'type == "task" && status != "done" && (vault == "ben" || agent == "{ME}")'
-    )
+    query = f'type == "task" && status != "done" && (vault == "ben" || agent == "{ME}")'
     records = json.loads(wiz("query", "ben", "lx", "-json", query))
     tasks = [
         Task(
