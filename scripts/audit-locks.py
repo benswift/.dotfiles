@@ -7,11 +7,15 @@
 Read locks directly so auditing never installs their packages or evaluates
 project build hooks. Registry packages require hashes; unknown source types
 fail closed. Editable/virtual local projects are covered by their dependencies.
+
+Audits this repo, or the repo named by the one optional argument (the private
+overlay's CI audits itself that way).
 """
 
 from __future__ import annotations
 
 import subprocess
+import sys
 import tempfile
 import tomllib
 from pathlib import Path
@@ -42,7 +46,11 @@ def requirements(path: Path) -> str:
 
 
 def main() -> int:
-    root = Path(__file__).resolve().parents[1]
+    root = (
+        Path(sys.argv[1]).resolve()
+        if len(sys.argv) > 1
+        else Path(__file__).resolve().parents[1]
+    )
     paths = (
         subprocess.check_output(["git", "ls-files", "-z", "*.lock"], cwd=root)
         .decode()
