@@ -19,7 +19,7 @@ Exits non-zero when a host has stopped delivering (see STALE_DAYS). That is
 the point of the check, not a side effect: the failure this pipeline actually
 suffers is not a unit that fails, it is a unit that succeeds and ships
 nothing --- daysy went five weeks unnoticed that way. Paired with
-`OnFailure=unit-oncall@%n.service`, a silent stall becomes a home task.
+`OnFailure=unit-oncall@%n.service`, a silent stall becomes a ben task.
 
 A host's age is its `.last-ship` heartbeat (bin/ship-claude-logs writes one
 per successful run) where it has one, and its newest session otherwise. The

@@ -1,5 +1,5 @@
 [Unit]
-Description=File a home-vault task for failed unit %i
+Description=File a task in the ben vault for failed unit %i
 Documentation=file:///home/ben/.dotfiles/bin/unit-oncall
 
 [Service]

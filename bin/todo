@@ -9,7 +9,7 @@
   todo do <n>...        mark done
   todo undo <n>...      reopen
   todo block <n>...     mark blocked; `unblock` reopens
-  todo <words...>       a new home task titled from the words, no quoting
+  todo <words...>       a new ben task titled from the words, no quoting
 
 The numbers are the rows of the last listing, remembered in
 ~/.local/state/todo/last.json, so `todo do 3` closes the third row shown. A
@@ -19,7 +19,7 @@ past unit-oncall's 24h re-arm) collapse to one row, and `do` on it closes
 them all. The lx section lists that vault's open tasks whose agent is Ben;
 closing one shares it with the team at once.
 
-Everything goes through the wiz CLI; home's writes are shared by its next
+Everything goes through the wiz CLI; the ben vault's writes are shared by its next
 scheduled sync.
 """
 
@@ -67,7 +67,7 @@ class Task:
 
     @property
     def section(self) -> str:
-        if self.vault != "home":
+        if self.vault != "ben":
             return "lx"
         if "bot" in self.tags:
             return "bot"
@@ -85,9 +85,9 @@ def wiz(*args: str, capture: bool = True) -> str:
 
 def open_tasks() -> list[Task]:
     query = (
-        f'type == "task" && status != "done" && (vault == "home" || agent == "{ME}")'
+        f'type == "task" && status != "done" && (vault == "ben" || agent == "{ME}")'
     )
-    records = json.loads(wiz("query", "home", "lx", "-json", query))
+    records = json.loads(wiz("query", "ben", "lx", "-json", query))
     tasks = [
         Task(
             vault=r["vault"],
@@ -190,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
                 for ref in group if verb == "do" else group[:1]:
                     wiz("update", ref, "-set", f"status={status}", capture=False)
                     vault = ref.split(":", 1)[0]
-                    if vault != "home":
+                    if vault != "ben":
                         shared.add(vault)
             for vault in shared:
                 wiz("sync", vault, capture=False)
@@ -201,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
         case [*words]:
             wiz(
                 "add",
-                "home",
+                "ben",
                 "task",
                 "-title",
                 " ".join(words),

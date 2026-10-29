@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# vault-render --- render a vault file to PDF or DOCX and open it: the home
+# vault-render --- render a vault file to PDF or DOCX and open it: the ben
 # vault's pdf and docx command workflows, which wiz runs from the vault root
 # with the file in WIZ_ARG_PATH:
 #
-#   wiz run home pdf path=docs/llms-unplugged-prospectus.md
-#   wiz run home docx path=notes/2026-10-29-board-paper.md
+#   wiz run ben pdf path=docs/llms-unplugged-prospectus.md
+#   wiz run ben docx path=notes/2026-10-29-board-paper.md
 #
 # Markdown goes through pandoc, with the ANU template (anu.typst in pandoc's
 # templates folder) when there is one; that template reads a doc's subtitle,

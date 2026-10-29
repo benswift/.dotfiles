@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 # The database, in Ben's home wiz vault.
-VAULT_FILE = "home:data/student-db.json"
+VAULT_FILE = "ben:data/student-db.json"
 
 
 class StudentDB:

@@ -17,7 +17,7 @@
 #           the reconnects.
 # Failures  launchd has no OnFailure equivalent, so it lives here: -n
 #           consecutive non-zero exits (default 3, so a transient blip stays
-#           quiet) file a home-vault task and send a Pushover page, once per
+#           quiet) file a task in the ben vault and send a Pushover page, once per
 #           breakage.
 #           Repeats while still broken stay quiet, a success re-arms, and a
 #           breakage older than REARM_HOURS pages again so a persistent one
@@ -99,10 +99,10 @@ if ((status == 0)); then
 		# task Ben wrote himself is never touched. Best effort, like filing.
 		while IFS= read -r task; do
 			[[ -n "$task" ]] || continue
-			if wiz update "home:$task" -set status=done >/dev/null 2>>"$LOG"; then
+			if wiz update "ben:$task" -set status=done >/dev/null 2>>"$LOG"; then
 				say "closed $task"
 			fi
-		done < <(wiz query home -json "type == \"task\" && unit == \"$job\" && status == \"open\"" 2>>"$LOG" | jq -r '.[].path' 2>>"$LOG")
+		done < <(wiz query ben -json "type == \"task\" && unit == \"$job\" && status == \"open\"" 2>>"$LOG" | jq -r '.[].path' 2>>"$LOG")
 	fi
 	exit 0
 fi
@@ -159,7 +159,7 @@ EOT
 # The task is the record; the page is the nudge towards it. Both best effort:
 # neither a vault nor a Pushover outage must mask the log, which already has
 # the full story. The vault's scheduled sync shares the task.
-if printf '%s\n' "$description" | wiz add home task -title "$title" \
+if printf '%s\n' "$description" | wiz add ben task -title "$title" \
 	-set status=open -set "tags=[bot,oncall]" -set "unit=$job" >/dev/null 2>>"$LOG"; then
 	say "filed a task"
 else

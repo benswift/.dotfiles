@@ -138,10 +138,10 @@ Each script's header has the detail. Notable ones:
 - `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to
   `⚠ <reason>` while an agent is blocked (undone on the next prompt)
 - `wiz-due` units (@systemd/user/wiz-due.service, its launchd twin) --- run
-  every registered vault's due workflows on this host; home's are in the vault's
+  every registered vault's due workflows on this host; ben's are in the vault's
   `workflows/`, among them `pkb-health` (the job health check) and
   `calendar-archive`. `todo` lists and edits Ben's open tasks across vaults;
-  `unit-oncall` and `launchd-run` file failures as home tasks
+  `unit-oncall` and `launchd-run` file failures as ben tasks
 - `dmarc-summary` --- report on the DMARC aggregate reports a Fastmail rule
   files into `~/Maildir/personal/DMARC`. Exits non-zero when a message failed
   DMARC, which under `p=reject` means it bounced

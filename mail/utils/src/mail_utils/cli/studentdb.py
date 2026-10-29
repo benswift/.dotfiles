@@ -101,7 +101,7 @@ def students(
         typer.Option(
             "--file",
             "-f",
-            help="Path to database file (default: the home vault's data/student-db.json)",
+            help="Path to database file (default: the ben vault's data/student-db.json)",
         ),
     ] = None,
 ) -> None:
@@ -132,7 +132,7 @@ def people(
         typer.Option(
             "--file",
             "-f",
-            help="Path to database file (default: the home vault's data/student-db.json)",
+            help="Path to database file (default: the ben vault's data/student-db.json)",
         ),
     ] = None,
 ) -> None:

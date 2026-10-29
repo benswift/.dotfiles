@@ -169,7 +169,7 @@ check_tools() {
     # The registry is how wiz's commands and the wiz-due scheduler find the
     # vaults; one missing here silently drops out of both.
     local vault dir
-    for vault in home lx; do
+    for vault in ben lx; do
         if dir=$(wiz path "$vault" 2>/dev/null) && [[ -f "$dir/mdbase.yaml" ]]; then
             check_pass "wiz vault $vault registered ($dir)"
         else
