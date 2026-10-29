@@ -110,8 +110,8 @@ Examples:
         --wifi-ssid MyNet --wifi-password secret \\
         --tailscale-authkey tskey-auth-... --ssh-key ~/.ssh/id_ed25519.pub
 
-    kiosk --target pi --url https://slop.university/signage/portrait/ \\
-        --hostname slopu-kiosk-1 --wifi-ssid ANU-Secure \\
+    kiosk --target pi --url https://example.com/signage/ \\
+        --hostname lobby-kiosk-1 --wifi-ssid Campus-Secure \\
         --wifi-enterprise-user "\$RPI_SSID" --wifi-enterprise-pass "\$RPI_PASSWORD" \\
         --wifi-ca-cert /path/to/institution-ca.pem --wifi-domain-suffix radius.example.edu \\
         --tailscale-tag tag:signage --ssh-key ~/.ssh/id_ed25519.pub
