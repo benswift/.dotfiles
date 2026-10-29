@@ -1,0 +1,6 @@
+[Unit]
+Description=Restart networking, then reboot, if the kiosk stays offline
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/kiosk-netwatch

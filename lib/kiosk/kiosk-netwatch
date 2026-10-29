@@ -1,0 +1,32 @@
+#!/bin/bash
+# Recover a kiosk that has lost its network. The browser watchdog can only
+# reload the page, so a dropped wifi association otherwise leaves Chromium's
+# error page up until someone power-cycles the device. Offline for 10 minutes:
+# restart NetworkManager. Still offline at 20: reboot, at most once an hour so
+# a site-wide outage can't turn into a reboot loop. Any HTTP answer from the
+# kiosk URL's host counts as online, so a server-side error never triggers it.
+set -euo pipefail
+
+state=/run/kiosk-netwatch
+url=$(cat /boot/firmware/kiosk-url.txt 2>/dev/null || cat /etc/kiosk-url.txt)
+mkdir -p "$state"
+
+if curl -sS -o /dev/null --max-time 20 "$url"; then
+    touch "$state/online"
+    rm -f "$state/nudged"
+    exit 0
+fi
+
+# The first failed check after boot starts the clock.
+[[ -e "$state/online" ]] || touch "$state/online"
+offline=$(($(date +%s) - $(stat -c %Y "$state/online")))
+uptime=$(cut -d. -f1 /proc/uptime)
+
+if ((offline >= 1200 && uptime >= 3600)); then
+    echo "offline for ${offline}s; rebooting"
+    systemctl reboot
+elif ((offline >= 600)) && [[ ! -e "$state/nudged" ]]; then
+    echo "offline for ${offline}s; restarting NetworkManager"
+    touch "$state/nudged"
+    systemctl restart NetworkManager
+fi

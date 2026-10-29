@@ -161,10 +161,13 @@ def render(values: dict[str, str], output: Path) -> None:
         ("kiosk-watchdog.py", "kiosk-watchdog"),
         ("kiosk-browser", "kiosk-browser"),
         ("kiosk-set-url", "kiosk-set-url"),
+        ("kiosk-netwatch", "kiosk-netwatch"),
     ):
         write_file(
             f"/usr/local/bin/{target}", (ASSETS / asset).read_text(), mode="0755"
         )
+    for asset in ("kiosk-netwatch.service", "kiosk-netwatch.timer"):
+        write_file(f"/etc/systemd/system/{asset}", (ASSETS / asset).read_text())
     write_file("/etc/kiosk-url.txt", values["url"] + "\n")
     if wyse:
         # Wifi country is a kernel option on this target (see preseed.cfg).
@@ -173,12 +176,12 @@ def render(values: dict[str, str], output: Path) -> None:
             fill((ASSETS / "wyse/greetd.toml").read_text(), user=user),
         )
         commands = [
-            ["systemctl", "enable", "ssh", "greetd"],
+            ["systemctl", "enable", "ssh", "greetd", "kiosk-netwatch.timer"],
             ["systemctl", "set-default", "graphical.target"],
         ]
     else:
         commands = [
-            ["systemctl", "enable", "--now", "ssh"],
+            ["systemctl", "enable", "--now", "ssh", "kiosk-netwatch.timer"],
             ["rm", "-f", "/etc/xdg/autostart/piwiz.desktop"],
             ["raspi-config", "nonint", "do_boot_behaviour", "B4"],
         ]

@@ -191,6 +191,9 @@ def test_url_stays_data(tmp_path: Path, public_key: Path, url: str) -> None:
     watchdog = files["/usr/local/bin/kiosk-watchdog"]
     assert watchdog == (assets / "kiosk-watchdog.py").read_text()
     ast.parse(watchdog)
+    netwatch = files["/usr/local/bin/kiosk-netwatch"]
+    assert netwatch == (assets / "kiosk-netwatch").read_text()
+    assert "/etc/systemd/system/kiosk-netwatch.timer" in files
     assert all(url not in str(command) for command in data["runcmd"])
 
 
