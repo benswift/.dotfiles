@@ -78,8 +78,8 @@ reaches the server from a host running mbsync in push mode; on a pull-only host
 ## Student database
 
 `student-db` reads the single normalised database at `data/student-db.json` in
-the ben vault (`wiz path ben:data/student-db.json`) --- every student Ben has
-a stake in, whether as SOCY convenor or as a supervisor in another school. There
+the ben vault (`wiz path ben:data/student-db.json`) --- every student Ben has a
+stake in, whether as SOCY convenor or as a supervisor in another school. There
 is no second file; `ben-phd-students.json` was merged away because the ten
 students it duplicated were the only place the two records ever disagreed.
 
