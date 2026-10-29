@@ -29,8 +29,9 @@ For prose work, the skill chain is: draft with benswift-writer (voice and
 content quirks --- plain, technically confident prose grounded in concrete
 specifics, footnotes, extensive links), then run jamesian (BALANCED preset by
 default; LAYERED for academic). Jamesian owns sentence and paragraph
-architecture, em-dash discipline (sparing), opening patterns, and signposting
---- don't reintroduce those decisions inside the benswift-writer overlay.
+architecture, em-dash discipline (sparing), opening patterns, and
+signposting --- don't reintroduce those decisions inside the benswift-writer
+overlay.
 
 ### Harness instruction files
 
@@ -83,10 +84,9 @@ replacements.
   CLI (not Playwright directly) for browser automation and UI testing
 - **Tasks**: use the `backlog` CLI (Backlog.md); the
   `ben:project-manager-backlog` skill covers task format and workflow
-- **Notes**: my personal knowledge base is the wiz vault `ben`
-  (`wiz path ben`), managed with the `wiz` CLI. Use the `ben:pkb` skill
-  whenever a task involves notes, tasks, journal entries, people, projects or
-  the knowledge base
+- **Notes**: my personal knowledge base is the wiz vault `ben` (`wiz path ben`),
+  managed with the `wiz` CLI. Use the `ben:pkb` skill whenever a task involves
+  notes, tasks, journal entries, people, projects or the knowledge base
 
 ## Coding rules
 
@@ -122,6 +122,9 @@ asked: land a commit at each logical checkpoint, but only when the full suite of
 tests, lints, and other checks passes --- never commit a red state. Commit to
 the current branch (don't branch first) and commit locally only; leave pushing
 to me as a deliberate step.
+
+`~/.dotfiles/private` is its own git repo (the private overlay): commit and push
+changes there with `git -C ~/.dotfiles/private`, not from `~/.dotfiles`.
 
 ### Formatter hook
 
