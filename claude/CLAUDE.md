@@ -85,7 +85,7 @@ replacements.
 - **Tasks**: use the `backlog` CLI (Backlog.md); the
   `ben:project-manager-backlog` skill covers task format and workflow
 - **Notes**: my personal knowledge base is the wiz vault `ben` (`wiz path ben`),
-  managed with the `wiz` CLI. Use the `ben:pkb` skill whenever a task involves
+  managed with the `wiz` CLI. Use the `ben:vault` skill whenever a task involves
   notes, tasks, journal entries, people, projects or the knowledge base
 
 ## Coding rules

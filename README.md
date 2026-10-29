@@ -65,7 +65,7 @@ The `create_symlinks.sh` script sets up all necessary symlinks and directories.
 
 ### Personal skills plugin (`ben`)
 
-My personal Claude Code skills library (pkb, benswift-writer, phdconvenor, etc.)
+My personal Claude Code skills library (mail, vault, benswift-writer, phdconvenor, etc.)
 lives in a separate **private** repo,
 [`benswift/claude-plugin-personal`](https://github.com/benswift/claude-plugin-personal),
 loaded as a Claude Code plugin. The setup:
@@ -82,7 +82,7 @@ loaded as a Claude Code plugin. The setup:
 - **Codex reads the same personal skills** via per-skill symlinks inside
   `~/.agents/skills`, Codex's supported user-level skill directory. Existing
   independently installed skills in that directory are left alone.
-- **Skills appear to Claude** as `ben:<skill-name>` (e.g. `ben:pkb`) and to
+- **Skills appear to Claude** as `ben:<skill-name>` (e.g. `ben:vault`) and to
   Codex by their unnamespaced skill name.
 
 To propagate changes across machines: push from the working checkout, then run
