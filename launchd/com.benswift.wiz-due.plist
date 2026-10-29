@@ -3,7 +3,7 @@
 <!--
   The macOS twin of systemd/user/wiz-due.timer: every 15 minutes, run the wiz
   workflows due on this machine across every registered vault, under
-  bin/launchd-run (PATH, timeout, failure paging --- see its header). Under
+  bin/launchd-run (PATH, timeout, failure paging; see its header). Under
   mise exec so the [env] block reaches the command workflows.
 
   A run launchd defers across sleep fires at the next wake, which may be a

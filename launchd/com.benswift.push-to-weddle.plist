@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   Hourly push of everything this Mac keeps on weddle: bin/push-to-weddle, run
-  under bin/launchd-run (PATH, timeout, failure paging --- see its header).
+  under bin/launchd-run (PATH, timeout, failure paging; see its header).
 
   Hourly is cheap: a run with little to push takes seconds, and launchd never
   starts a second copy of a job that is still running. StartInterval rather

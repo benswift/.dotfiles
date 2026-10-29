@@ -48,9 +48,6 @@ SYMLINK_MANIFEST=(
     "systemd/user/ship-claude-logs.timer:~/.config/systemd/user/ship-claude-logs.timer"
     "systemd/user/ingest-claude-logs.service:~/.config/systemd/user/ingest-claude-logs.service"
     "systemd/user/ingest-claude-logs.timer:~/.config/systemd/user/ingest-claude-logs.timer"
-    # wiz-due-watson: enable the timer on weddle ONLY (it starts the job on watson)
-    "systemd/user/wiz-due-watson.service:~/.config/systemd/user/wiz-due-watson.service"
-    "systemd/user/wiz-due-watson.timer:~/.config/systemd/user/wiz-due-watson.timer"
     # wiz-due: the scheduler for every registered vault's workflows; a
     # workflow's host: decides where it runs, so enable it on every Linux host
     "systemd/user/wiz-due.service:~/.config/systemd/user/wiz-due.service"
