@@ -4,7 +4,7 @@ Description=Run the lx vault's due workflows on watson every 15 minutes
 [Timer]
 OnCalendar=*:02/15
 Persistent=true
-Unit=wiz-validate.service
+Unit=wiz-due-watson.service
 
 [Install]
 WantedBy=timers.target
