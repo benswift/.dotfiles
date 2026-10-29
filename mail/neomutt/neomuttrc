@@ -147,7 +147,8 @@ source ~/.config/neomutt/colors-catppuccin-mocha-true.muttrc
 # source ~/.config/neomutt/colors-tokyonight-storm.muttrc
 # source ~/.config/neomutt/colors-monokai-true.muttrc
 source ~/.config/neomutt/mailcap.muttrc
-source ~/.config/neomutt/aliases
+# Aliases name students and colleagues, so they live in the private ben vault.
+source ~/vaults/wiz-ben/data/neomutt-aliases
 
 # === Account configuration ===
 # Source after mailboxes are defined
