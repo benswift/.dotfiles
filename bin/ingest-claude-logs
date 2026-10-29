@@ -99,6 +99,9 @@ CREATE TABLE IF NOT EXISTS sessions (
     git_branch        TEXT,
     git_repo_url      TEXT,
     agent_version     TEXT,
+    -- 1 for a session a person drove, 0 for a headless run (`claude
+    -- --print`, `codex exec`, an SDK caller), NULL where the log doesn't say.
+    interactive       INTEGER,
     started_at        TEXT,
     ended_at          TEXT,
     message_count     INTEGER NOT NULL,
@@ -112,6 +115,7 @@ CREATE INDEX IF NOT EXISTS sessions_uuid ON sessions(session_uuid);
 CREATE INDEX IF NOT EXISTS sessions_project ON sessions(project_dir);
 CREATE INDEX IF NOT EXISTS sessions_canonical ON sessions(project_canonical);
 CREATE INDEX IF NOT EXISTS sessions_started ON sessions(started_at);
+CREATE INDEX IF NOT EXISTS sessions_interactive ON sessions(interactive);
 """
 
 COLUMNS = (
@@ -125,6 +129,7 @@ COLUMNS = (
     "git_branch",
     "git_repo_url",
     "agent_version",
+    "interactive",
     "started_at",
     "ended_at",
     "message_count",
@@ -182,15 +187,20 @@ def span(lines: list[str]) -> tuple[str | None, str | None]:
 
 def summarise_claude(lines: list[str]) -> dict[str, Any]:
     """Claude Code repeats cwd/gitBranch/version on every record, so take the
-    first of each rather than assuming a header line."""
+    first of each rather than assuming a header line.
+
+    `entrypoint` is `cli` for the interactive TUI and `sdk-*` for a headless
+    caller, `claude --print` included."""
     cwd: str | None = None
     git_branch: str | None = None
     version: str | None = None
+    entrypoint: str | None = None
 
     for entry in entries(lines):
         cwd = cwd or first_str(entry, "cwd")
         git_branch = git_branch or first_str(entry, "gitBranch")
         version = version or first_str(entry, "version")
+        entrypoint = entrypoint or first_str(entry, "entrypoint")
 
     started, ended = span(lines)
     return {
@@ -198,6 +208,7 @@ def summarise_claude(lines: list[str]) -> dict[str, Any]:
         "git_branch": git_branch,
         "git_repo_url": None,
         "agent_version": version,
+        "interactive": None if entrypoint is None else not entrypoint.startswith("sdk"),
         "started_at": started,
         "ended_at": ended,
     }
@@ -205,7 +216,8 @@ def summarise_claude(lines: list[str]) -> dict[str, Any]:
 
 def summarise_codex(lines: list[str]) -> dict[str, Any]:
     """Codex writes a single `session_meta` record first, carrying everything
-    worth knowing --- including the git remote, which Claude never records."""
+    worth knowing --- including the git remote, which Claude never records.
+    Its `originator` is `codex_exec` for a headless `codex exec` run."""
     meta: dict[str, Any] = {}
     for entry in entries(lines):
         if entry.get("type") == "session_meta":
@@ -217,12 +229,14 @@ def summarise_codex(lines: list[str]) -> dict[str, Any]:
     git = meta.get("git")
     git = git if isinstance(git, dict) else {}
 
+    originator = first_str(meta, "originator")
     started, ended = span(lines)
     return {
         "cwd": first_str(meta, "cwd"),
         "git_branch": first_str(git, "branch"),
         "git_repo_url": first_str(git, "repository_url"),
         "agent_version": first_str(meta, "cli_version"),
+        "interactive": None if originator is None else originator != "codex_exec",
         "started_at": first_str(meta, "timestamp") or started,
         "ended_at": ended,
     }
@@ -271,7 +285,7 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     existing = {
         row[1] for row in conn.execute("PRAGMA table_info(sessions)").fetchall()
     }
-    if existing and "agent" not in existing:
+    if existing and not set(COLUMNS) <= existing:
         conn.executescript("DROP TABLE sessions;")
     conn.executescript(SCHEMA)
 
