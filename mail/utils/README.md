@@ -24,7 +24,7 @@ uv run --directory ~/.dotfiles/mail/utils mail-dedupe --help
 | `mail-compose`     | Compose and send emails with Jinja2 templating        |
 | `mail-dedupe`      | Deduplicate messages by Message-ID                    |
 | `mail-analyze`     | Analyze maildir format and identify issues            |
-| `student-db`       | Query the PhD student database (denormalises from nb) |
+| `student-db`       | Query the PhD student database (in the ben vault)     |
 | `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers      |
 
 ## Library usage

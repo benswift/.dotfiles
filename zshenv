@@ -5,10 +5,9 @@
 # Interactive setup belongs in zshrc.
 #
 # zprofile sources this file again: on macOS /etc/zprofile runs path_helper
-# after this file, which pushes every dir below behind /usr/bin (and behind an
-# old Homebrew nb). Re-running restores the order, and `typeset -U` drops the
-# duplicates that leaves, and the ones nested shells (zellij panes) would pile
-# up.
+# after this file, which pushes every dir below behind /usr/bin. Re-running
+# restores the order, and `typeset -U` drops the duplicates that leaves, and
+# the ones nested shells (zellij panes) would pile up.
 
 typeset -U path
 

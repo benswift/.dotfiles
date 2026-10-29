@@ -21,7 +21,7 @@ __all__ = [
     "StudentDatabase",
 ]
 
-# The database, in Ben's home wiz vault.
+# The database, in the ben vault.
 VAULT_FILE = "ben:data/student-db.json"
 
 

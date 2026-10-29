@@ -8,8 +8,9 @@
 #   launchd-run <job> [-t SECONDS] [-n FAILURES] -- <command> [args...]
 #
 # PATH      launchd hands a job only what its plist spells out, so it is set
-#           here once: dotfiles bin, uv tools, mise shims (rclone, nb), homebrew
-#           (mbsync, mu, timeout) and the system dirs (nc, route, hdiutil).
+#           here once: dotfiles bin, ~/.local/bin (uv tools, wiz), mise
+#           shims (rclone), homebrew (mbsync, mu, timeout) and the system
+#           dirs (nc, route, hdiutil).
 # Header    a dated line per run; launchd's log redirection adds none.
 # Timeout   -t caps the wall clock (default 30 min). Without it a run that
 #           straddles the laptop's sleep lives for hours, holds launchd's

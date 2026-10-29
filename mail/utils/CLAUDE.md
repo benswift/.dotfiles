@@ -28,7 +28,7 @@ mail-analyze --help
 | `mail-dedupe`      | Deduplicate messages by Message-ID                        |
 | `mail-analyze`     | Analyze maildir format and identify issues                |
 | `mail-retain`      | Copy ageing Exchange mail into the anu-archive cold store |
-| `student-db`       | Query the PhD student database (denormalises from nb)     |
+| `student-db`       | Query the PhD student database (in the ben vault)         |
 | `mutt-compose-lsp` | Language server for mutt/neomutt compose buffers          |
 
 ## Usage

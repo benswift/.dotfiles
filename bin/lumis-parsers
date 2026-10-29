@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # lumis-parsers --- pre-fetch the tree-sitter WASM parsers that bin/ts-cat
-# (and hence yazi's preview pane, and the nb lumis plugin) highlights with.
+# (and hence yazi's preview pane) highlights with.
 #
 # lumis downloads any missing parser on first use, so this list is a warm-up,
 # not a gate: it covers the languages previewed often enough that a first

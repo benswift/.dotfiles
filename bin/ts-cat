@@ -6,9 +6,9 @@
 #   ts-cat --ext EXT -     highlight stdin as if it were a .EXT file
 #
 # Written for yazi's preview pane (see yazi/yazi.toml, which pipes it through
-# piper.yazi) and nb's highlighter (nb/lumis-highlight.nb-plugin, which uses
-# the stdin form), but it works as a standalone `cat` too. Unlike yazi's
-# built-in previewer --- and unlike bat --- this understands injections, so
+# piper.yazi), but it works as a standalone `cat` too, and `--ext` highlights
+# a stream. Unlike yazi's built-in previewer --- and unlike bat --- this
+# understands injections, so
 # YAML frontmatter in a markdown file and the TypeScript fence at the top of
 # an .astro component get highlighted as YAML and TypeScript.
 #
