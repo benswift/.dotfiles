@@ -1,10 +1,10 @@
 ---
 id: TASK-041.06
 title: Dotfiles cutover and nb's retirement on every host
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
-updated_date: '2026-10-29T00:29:00Z'
+updated_date: '2026-10-29T03:15:00Z'
 labels:
   - pkb
   - wiz
@@ -32,11 +32,11 @@ Keep the nb pin and units as the rollback until home has run on the engine for a
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Home has run on the engine for a week without trouble before nb is removed
-- [ ] #2 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
+- [x] #1 Home has run on the engine for a week without trouble before nb is removed
+- [x] #2 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
 - [x] #3 The ben:pkb skill describes the wiz CLI, and a session following it can add a task, add a note about a project and run a workflow in home
 - [x] #4 unit-oncall files an oncall task on a unit's failure and closes it on success, found by wiz query on its unit field
-- [ ] #5 Every host runs the engine and the wiz-due scheduler, and none runs nb-sync
+- [x] #5 Every host runs the engine and the wiz-due scheduler, and none runs nb-sync
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -47,4 +47,6 @@ Keep the nb pin and units as the rollback until home has run on the engine for a
 2026-10-29: Ben's vault is named ben, not home; its repo becomes benswift/wiz-ben (staying on GitHub) and its path ~/vaults/wiz-ben when nb retires.
 
 2026-10-29: daysy done --- nb-sync unloaded and its plist removed, wiz built at the pin, ben and lx registered, com.benswift.wiz-due installed and running, pkb-tools uninstalled. On waking, daysy's nb-sync had committed and pushed ten stale poster PDFs from docs/<slug>/ (nb's git add --all, after the move to typst/ left them unignored); removed, and the engine's deferred sync now leaves any new file nothing claims uncommitted, so the same can't happen through wiz. Watson's scheduler arrives with the switch.
+
+2026-10-29: finished early at Ben's call, without the week's wait. Both vaults live in ~/vaults (wiz-ben, wiz-lx) on weddle and daysy, registered there, with Claude's session history moved to match; benswift/nb is benswift/wiz-ben on GitHub. nb is gone: bin/nb, tests/test_nb.py, the plugins and nb_plugin_links, nb-sync's units and plist, the mise pin, doctor's check, CI's ignore and the CLAUDE.md lines, plus ~/.nb, ~/.nbrc and a stray /usr/local/bin/nb on weddle. restic backs up ~/vaults; newsyslog rotates wiz-due.log in nb-sync.log's place (daysy needs the sudo cp from jobs.conf's header to pick that up). Doctor is clean on both hosts.
 <!-- SECTION:NOTES:END -->
