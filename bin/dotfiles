@@ -302,10 +302,12 @@ check_launchd() {
     local plist label
     for plist in "$DOTFILES_DIR"/launchd/*.plist; do
         label=$(basename "$plist" .plist)
-        # A pinned host's lx workflows run under the vault's watson-run,
-        # started from weddle; a wiz-due agent there would run them twice.
-        if [[ "$label" == com.benswift.wiz-due ]] && "$DOTFILES_DIR/bin/wiz-build" --pinned-host; then
-            continue
+        # A pinned host runs the lx vault's watson-run agent instead of
+        # wiz-due, which would run its workflows twice; no other host runs it.
+        if "$DOTFILES_DIR/bin/wiz-build" --pinned-host; then
+            [[ "$label" == com.benswift.wiz-due ]] && continue
+        else
+            [[ "$label" == com.benswift.watson-run ]] && continue
         fi
         check_launchd_job "$plist"
     done
