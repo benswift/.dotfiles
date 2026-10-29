@@ -14,12 +14,13 @@
 #   OnSuccess=unit-oncall-clear@%n.service
 #
 # Usage: unit-oncall fail  <unit>   # file a task (deduped, see below)
-#        unit-oncall clear <unit>   # the unit succeeded; re-arm and close its tasks
+#        unit-oncall clear <unit>   # the unit succeeded; re-arm and delete its tasks
 #
 # DEDUP: a unit that fails every 15 minutes must not file 96 tasks a day. The
 # first failure files one and drops a marker; later failures append to the
-# marker instead. A success clears it and closes the task(s), so the bot
-# section only ever lists units still failing. A marker older than REARM_HOURS
+# marker instead. A success clears it and deletes the task(s): a recovered
+# failure is machine output, which belongs in the journal and git history, not
+# among Ben's tasks. A marker older than REARM_HOURS
 # files a fresh task anyway, so a failure that persists past a closed task does
 # not go quiet.
 #
@@ -107,7 +108,7 @@ clear)
 		say "$unit: recovered; marker cleared"
 	fi
 
-	# Close every open task this script filed for the unit (a re-armed failure
+	# Delete every open task this script filed for the unit (a re-armed failure
 	# leaves more than one), found by its unit field, so a task Ben wrote
 	# himself is never touched. This runs on every success, so it writes and
 	# shares only when something matches.
@@ -116,16 +117,16 @@ clear)
 	((${#open[@]})) || exit 0
 
 	for task in "${open[@]}"; do
-		if wiz update "ben:$task" -set status=done >/dev/null 2>>"$LOG"; then
-			say "$unit: recovered; closed $task"
+		if rm -- "$(wiz path "ben:$task")" 2>>"$LOG"; then
+			say "$unit: recovered; deleted $task"
 		else
-			say "$unit: recovered, but FAILED to close $task"
+			say "$unit: recovered, but FAILED to delete $task"
 		fi
 	done
 	if wiz sync ben -m "oncall: $unit recovered" "${open[@]/#/$(wiz path ben)/}" >/dev/null 2>>"$LOG"; then
 		say "$unit: shared"
 	else
-		say "$unit: sync failed --- closed tasks are local until the next sync"
+		say "$unit: sync failed --- the deletions are local until the next sync"
 	fi
 	exit 0
 	;;

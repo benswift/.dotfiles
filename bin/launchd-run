@@ -96,12 +96,13 @@ if ((status == 0)); then
 		rm -f "$marker"
 		echo "launchd-run: $job recovered"
 		say "recovered; marker cleared"
-		# Close the tasks a failure filed, found by their unit field, so a
-		# task Ben wrote himself is never touched. Best effort, like filing.
+		# Delete the tasks a failure filed, found by their unit field, so a
+		# task Ben wrote himself is never touched; wiz due's next sync commits
+		# it. Best effort, like filing.
 		while IFS= read -r task; do
 			[[ -n "$task" ]] || continue
-			if wiz update "ben:$task" -set status=done >/dev/null 2>>"$LOG"; then
-				say "closed $task"
+			if rm -- "$(wiz path "ben:$task")" 2>>"$LOG"; then
+				say "deleted $task"
 			fi
 		done < <(wiz query ben -json "type == \"task\" && unit == \"$job\" && status == \"open\"" 2>>"$LOG" | jq -r '.[].path' 2>>"$LOG")
 	fi
