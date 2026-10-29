@@ -38,7 +38,7 @@ set -euo pipefail
 
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/unit-oncall"
 LOG="$STATE/unit-oncall.log"
-LOCK="$STATE/wiz.lock"
+LOCK="$STATE/push-window.lock"
 WINDOW="$STATE/push-window"
 JOURNAL_LINES="${JOURNAL_LINES:-40}"
 REARM_HOURS="${REARM_HOURS:-24}"
@@ -50,9 +50,9 @@ mkdir -p "$STATE"
 say() { printf '[%s] %s\n' "$(date -Is)" "$*" >>"$LOG"; }
 
 # This page's number within the current burst window, resetting a stale one.
-# Called under the flock below, so concurrent handlers cannot both read the same
-# count. A malformed or missing file starts a fresh window rather than failing:
-# losing a window is a worse outcome than losing the cap for one burst.
+# Called under $LOCK, so concurrent handlers cannot both read the same count.
+# A malformed or missing file starts a fresh window rather than failing: losing
+# a window is a worse outcome than losing the cap for one burst.
 push_seq() {
 	local now start count
 	now="$(date +%s)"
@@ -115,8 +115,6 @@ clear)
 		| jq -r '.[].path' 2>>"$LOG" || true)
 	((${#open[@]})) || exit 0
 
-	exec 9>"$LOCK"
-	flock 9
 	for task in "${open[@]}"; do
 		if wiz update "ben:$task" -set status=done >/dev/null 2>>"$LOG"; then
 			say "$unit: recovered; closed $task"
@@ -236,11 +234,6 @@ $tail_out
 EOF
 )"
 
-# Writes to the vault's working tree, which wiz due and its syncs touch too.
-# Serialise so a concurrent handler cannot land mid-commit.
-exec 9>"$LOCK"
-flock 9
-
 if task="$(printf '%s\n' "$description" | wiz add ben task -json -title "$title" \
 	-set status=open -set "tags=[bot,oncall]" -set "unit=$unit" 2>>"$LOG" | jq -r '.paths[0]')" \
 	&& [[ -n "$task" && "$task" != null ]]; then
@@ -265,7 +258,10 @@ own_output="$(
 		| sed 's/^[^ ]* [^ ]* [^ ]*: //' \
 		| tail -3 || true
 )"
+exec 9>"$LOCK"
+flock 9
 page_n="$(push_seq)"
+flock -u 9
 if ((page_n <= PUSH_CAP)); then
 	page "oncall: $unit" "$(printf 'result=%s exit=%s\n%s' "$result" "$status" "$own_output")"
 	say "$unit: paged ($page_n/$PUSH_CAP this ${PUSH_WINDOW_MIN}m window)"
