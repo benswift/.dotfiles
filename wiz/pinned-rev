@@ -1,4 +1,4 @@
 # The wiz engine commit bin/wiz-build compiles. Bump it with
 # `wiz-build --update` and commit the result, so every machine runs the
 # same engine.
-5714522a1a029297b523f429cf124d95cacc6f4d
+5f0ea014c834f87642cb03a7b753af24d88c07b9
