@@ -30,7 +30,7 @@ SOURCES=(
     /data/git-mirrors
     "$HOME/claude-logs"
     "$HOME/codex-logs"
-    "$HOME/.nb"
+    "$HOME/vaults"
     # weddle's own: unpushed work and gitignored job state (comp4020/agents
     # is not a git repo at all), the secrets file, run stamps
     "$HOME/projects"
@@ -44,7 +44,6 @@ EXCLUDES=(
     "*.partial"
     # regenerated hourly from the logs beside it, and rewritten in place
     "$HOME/claude-logs/analytics.db"
-    "$HOME/.nb/.cache"
     # regenerable: experiment outputs, and a browser profile that churns hourly
     "$HOME/projects/panic_tda"
     "$HOME/.config/google-chrome-for-testing"

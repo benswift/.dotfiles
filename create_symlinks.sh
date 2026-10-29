@@ -92,11 +92,6 @@ main() {
         create_symlink_with_backup "$(manifest_source "$entry")" "$(manifest_target "$entry")"
     done
 
-    echo -e "\nLinking nb plugins..."
-    while IFS= read -r entry; do
-        create_symlink "$(manifest_source "$entry")" "$(manifest_target "$entry")"
-    done < <(nb_plugin_links)
-
     echo -e "\n${GREEN}Done!${NC}"
 }
 

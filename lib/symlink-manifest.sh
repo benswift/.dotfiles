@@ -49,8 +49,6 @@ SYMLINK_MANIFEST=(
     "systemd/user/ship-claude-logs.timer:~/.config/systemd/user/ship-claude-logs.timer"
     "systemd/user/ingest-claude-logs.service:~/.config/systemd/user/ingest-claude-logs.service"
     "systemd/user/ingest-claude-logs.timer:~/.config/systemd/user/ingest-claude-logs.timer"
-    "systemd/user/nb-sync.service:~/.config/systemd/user/nb-sync.service"
-    "systemd/user/nb-sync.timer:~/.config/systemd/user/nb-sync.timer"
     # restic-backup: enable the timers on weddle ONLY (it snapshots weddle's
     # aggregated data, see bin/restic-backup)
     "systemd/user/restic-backup.service:~/.config/systemd/user/restic-backup.service"
@@ -104,17 +102,6 @@ SYMLINK_MANIFEST_WITH_BACKUP=(
     # `ya pkg add` rewrites this to record each plugin's rev and hash
     "yazi/package.toml:~/.config/yazi/package.toml"
 )
-
-# nb plugins are globbed rather than listed: one link per *.nb-plugin file,
-# picked up by nb on its next invocation. Emits "source:target" lines in
-# the same format as the arrays above. Requires DOTFILES_DIR to be set.
-nb_plugin_links() {
-    local plugin
-    for plugin in "$DOTFILES_DIR"/nb/*.nb-plugin; do
-        [[ -e "$plugin" ]] || continue
-        echo "nb/$(basename "$plugin"):~/.nb/.plugins/$(basename "$plugin")"
-    done
-}
 
 # Expand a manifest entry into its two parts. Usage:
 #   manifest_source "entry"  -> absolute path into the repo

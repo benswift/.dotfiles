@@ -46,12 +46,12 @@ jobs:
             uv run --locked --project "$project" --group dev ty check "$project/src"
           done
       - name: Test portable tools
-        # Helix needs the locally built editor/grammars/formatters; nb needs
-        # the global mise installation. Their integration suites stay local.
+        # Helix needs the locally built editor/grammars/formatters, so its
+        # integration suite stays local.
         run: >-
           uv run --no-project --with pytest --with pytest-xdist --with lxml
           --with typer --with pyyaml python -m pytest tests -n 2 -q
-          --ignore=tests/test_helix.py --ignore=tests/test_nb.py
+          --ignore=tests/test_helix.py
   dependencies:
     runs-on: ubuntu-26.04
     timeout-minutes: 15

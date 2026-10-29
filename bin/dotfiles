@@ -118,9 +118,6 @@ check_symlinks() {
     # from lib/symlink-manifest.sh, so the two can't drift.
     local entries=("${SYMLINK_MANIFEST[@]}" "${SYMLINK_MANIFEST_WITH_BACKUP[@]}")
     local entry
-    while IFS= read -r entry; do
-        entries+=("$entry")
-    done < <(nb_plugin_links)
 
     for entry in "${entries[@]}"; do
         local expected target pretty
@@ -249,17 +246,6 @@ check_script_deps() {
             check_fail "$tool not installed"
         fi
     done
-
-    # nb is pinned through mise rather than accepted from whichever unmanaged
-    # copy happens to be earlier on PATH. `mise exec` both verifies that the
-    # configured version is installed and exercises the same resolution path
-    # used by the scheduled notebook jobs.
-    local nb_version
-    if command_exists mise && nb_version=$(mise exec -- nb --version 2>/dev/null); then
-        check_pass "nb $nb_version (mise-managed)"
-    else
-        check_fail "nb not installed by mise (run 'mise install github:xwmx/nb')"
-    fi
 
     # agent-browser is the browser-automation CLI claude/CLAUDE.md prescribes
     if command_exists agent-browser; then
@@ -506,8 +492,8 @@ update() {
     "$DOTFILES_DIR/create_symlinks.sh"
     # Install whatever the pull just changed in mise/config.toml, before the
     # steps below run scripts written against the new versions. A pin that
-    # moved is the case that matters: nb's is infrastructure for the scheduled
-    # jobs, and lumis's CLI is what bin/lumis-parsers drives. A tool on
+    # moved is the case that matters: restic's reads and writes the shared
+    # backup repo, and lumis's CLI is what bin/lumis-parsers drives. A tool on
     # "latest" that is already installed is left alone --- upgrading those is
     # `mise upgrade`'s job. From $HOME, so only the global config is in scope
     # and not a mise.toml in whatever directory this was run from.

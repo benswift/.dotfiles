@@ -25,7 +25,7 @@
 #
 # macOS runs the same race from a different scheduler: launchd defers a
 # StartCalendarInterval job on a sleeping laptop until it wakes, and fires it
-# before wifi has associated (see launchd/com.xwmx.nb-sync.plist).
+# before wifi has associated (see launchd/com.benswift.wiz-due.plist).
 #
 # Usage: wait-for-network [host]          (default: github.com)
 #        WAIT_FOR_NETWORK_TIMEOUT=<secs>  (default: 120)

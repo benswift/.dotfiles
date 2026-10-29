@@ -37,7 +37,7 @@ and `dotfiles doctor` (to verify). Repo filenames usually drop the leading dot
 Paths with no symlink targets, so absent from the manifest: @bin/ (on `PATH` via
 @zshenv), @launchd/ (plists installed by hand, instructions in each header),
 @lib/ (bash helpers), @tests/ (uv single-file tests, run directly:
-`./tests/test_nb.py`), `backlog/` (Backlog.md tasks), @oxfmtrc.json (shared
+`./tests/test_helix.py`), `backlog/` (Backlog.md tasks), @oxfmtrc.json (shared
 markdown/TOML format config).
 
 Editor and multiplexer config: @helix/, @zellij/, @ghostty/. Email: @mail/ (see
@@ -46,8 +46,8 @@ Editor and multiplexer config: @helix/, @zellij/, @ghostty/. Email: @mail/ (see
 
 @.github/workflows/security.yml runs ruff, shellcheck, the package and portable
 test suites, ty, a lock audit (@scripts/audit-locks.py) and gitleaks on every
-push. A tool the tests call must be installed there too; the helix and nb suites
-stay local (see the workflow).
+push. A tool the tests call must be installed there too; the helix suite stays
+local (see the workflow).
 
 ## Python
 
@@ -150,18 +150,14 @@ Each script's header has the detail. Notable ones:
 - `pangram` --- the paid second opinion behind `ai-tropes`, against Pangram's
   detector API. Billed per word, so `--dry-run` costs the estimate first;
   `PANGRAM_API_KEY` goes in the untracked mise env block
-- `ts-cat`, `lumis-parsers` --- tree-sitter highlighting for yazi previews and
-  `nb show`, via lumis. Add a language to `PARSERS` in `lumis-parsers` if it's
-  previewed often; add a `case` override in `ts-cat` if the extension doesn't
-  map to a parser (as with `.mdx`)
+- `ts-cat`, `lumis-parsers` --- tree-sitter highlighting for yazi previews, via
+  lumis. Add a language to `PARSERS` in `lumis-parsers` if it's previewed often;
+  add a `case` override in `ts-cat` if the extension doesn't map to a parser (as
+  with `.mdx`)
 - `kiosk` --- provision a fullscreen Chromium kiosk with wifi and Tailscale
   baked in (cloud-init): `--target pi` flashes an SD card, `--target wyse`
   network-installs a Dell Wyse thin client cabled to a spare NIC (Debian
   netboot, on weddle's `eno1`)
-
-`nb` is a pinned `github:xwmx/nb` mise tool; @bin/nb is the launcher that makes
-bare `nb` resolve the pin in non-interactive agent shells. @tests/test_nb.py
-covers it against a temporary notebook, never `~/.nb`.
 
 yazi's plugin dir is owned by `ya pkg`, which is why @yazi/ configs are
 symlinked file-by-file rather than as a directory.

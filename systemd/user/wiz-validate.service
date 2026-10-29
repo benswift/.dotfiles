@@ -1,6 +1,6 @@
 [Unit]
 Description=Run the lx vault's due workflows on watson
-Documentation=file:///home/ben/.nb/wiz/admin/tools/watson-run
+Documentation=file:///home/ben/vaults/wiz-lx/admin/tools/watson-run
 OnFailure=unit-oncall@%n.service
 OnSuccess=unit-oncall-clear@%n.service
 
