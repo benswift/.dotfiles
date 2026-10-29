@@ -1,7 +1,6 @@
-# Shared ruff config for every Python file in this repo --- the mail/utils
-# package and the single-file `uv run --script` tools in bin/. mail/utils has
-# no [tool.ruff] of its own, so ruff walks up and finds this one, and the whole
-# repo is checked with `ruff check .` from the root.
+# Shared ruff config for every Python file in this repo, chiefly the
+# single-file `uv run --script` tools in bin/. The whole repo is checked with
+# `ruff check .` from the root. The private overlay has its own ruff.toml.
 #
 # The rule selection is deliberately ruff's own default set. As of ruff 0.16
 # that's 413 rules rather than the previous 59, which is where the tuning below
@@ -17,16 +16,9 @@
 # Adding a `uv run --script` tool to bin/ means adding it here too, or it is
 # silently never linted. Regenerate the list with:
 #   grep -rl '^#!/usr/bin/env -S uv run' bin | sort
-# Vendored verbatim from the mutt source (GPL, "version 2020-08-07" in its
-# header). Reformatting it to this repo's taste would only make the next
-# re-vendoring harder to diff, so it is upstream's to lint, not ours.
-extend-exclude = ["mail/mutt_oauth2.py"]
-
 extend-include = [
   "bin/agent-run",
   "bin/ai-tropes",
-  "bin/calendar-archive",
-  "bin/dmarc-summary",
   "bin/hud",
   "bin/ingest-claude-logs",
   "bin/pangram",

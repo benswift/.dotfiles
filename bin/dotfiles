@@ -9,6 +9,7 @@ DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 
 source "$DOTFILES_DIR/lib/log.sh"
 source "$DOTFILES_DIR/lib/symlink-manifest.sh"
+source "$DOTFILES_DIR/lib/private.sh"
 
 pass=0
 fail=0
@@ -186,53 +187,6 @@ check_tools() {
             check_warn "$tool not installed"
         fi
     done
-
-    # mbsync must be SASL-enabled for Office365/Gmail OAuth2 --- the
-    # benswift/tap build provides this, homebrew-core's isync does not. Catches
-    # a stray plain isync silently shadowing the XOAUTH2 one (e.g. after a
-    # botched upgrade).
-    if [[ "$OSTYPE" == darwin* ]] && command_exists mbsync; then
-        if strings "$(command -v mbsync)" 2>/dev/null | grep -q '+HAVE_LIBSASL'; then
-            check_pass "mbsync XOAUTH2 (SASL) support"
-        else
-            check_fail "mbsync lacks SASL --- run 'brew install benswift/tap/isync'"
-        fi
-    fi
-}
-
-# weddle only: the pull-only mail mirror (mail/README.md, "Pull-only plus send").
-check_mail_pull() {
-    [[ "$(hostname -s)" == weddle ]] || return 0
-    section "Checking mail pull..."
-
-    local mbsync="$HOME/.local/bin/mbsync"
-    if [[ -x "$mbsync" ]] && "$mbsync" --version 2>/dev/null | grep -q '^isync 1\.5'; then
-        check_pass "mbsync 1.5 at $mbsync"
-    else
-        check_fail "no isync 1.5 at $mbsync (build steps in mail/README.md)"
-    fi
-    if compgen -G "/usr/lib/*/sasl2/libkdexoauth2.so*" >/dev/null; then
-        check_pass "XOAUTH2 SASL plugin"
-    else
-        check_fail "no XOAUTH2 SASL plugin (sudo apt install libsasl2-modules-kdexoauth2)"
-    fi
-    if [[ "$(readlink "$HOME/Maildir")" == /data/Maildir-imap ]]; then
-        check_pass "Maildir symlink -> /data/Maildir-imap"
-    else
-        check_fail "Maildir symlink points at $(readlink "$HOME/Maildir"), not /data/Maildir-imap"
-    fi
-
-    local unit
-    for unit in mail-pull.timer mu-index.path; do
-        if systemctl --user is-enabled --quiet "$unit" 2>/dev/null; then
-            check_pass "$unit enabled"
-        else
-            check_fail "$unit not enabled (systemctl --user enable --now $unit)"
-        fi
-    done
-    if systemctl --user is-failed --quiet mail-pull.service; then
-        check_fail "mail-pull.service last run failed (journalctl --user -u mail-pull.service)"
-    fi
 }
 
 check_script_deps() {
@@ -312,6 +266,32 @@ check_directories() {
     done
 }
 
+# One tracked plist: installed, identical to the tracked copy, loaded, and its
+# last run clean. Also used by the private overlay's check_private.
+check_launchd_job() {
+    local plist="$1" label installed info code
+    label=$(basename "$plist" .plist)
+    installed="$HOME/Library/LaunchAgents/$label.plist"
+    if [[ ! -f "$installed" ]]; then
+        check_fail "$label not installed (see ${plist#"$DOTFILES_DIR"/} header)"
+        return
+    fi
+    if ! cmp -s "$plist" "$installed"; then
+        check_fail "$label installed copy differs from ${plist#"$DOTFILES_DIR"/}"
+        return
+    fi
+    if ! info=$(launchctl print "gui/$(id -u)/$label" 2>/dev/null); then
+        check_fail "$label not loaded (launchctl bootstrap it)"
+        return
+    fi
+    code=$(sed -n 's/.*last exit code = \([^ ]*\).*/\1/p' <<<"$info" | head -1)
+    if [[ -z "$code" || "$code" == "0" || "$code" == "(never" ]]; then
+        check_pass "$label loaded"
+    else
+        check_fail "$label last exit $code (see ~/Library/Logs/)"
+    fi
+}
+
 # The plists in launchd/ are installed by hand (see each header), so this is
 # what notices an installed copy drifting from the tracked one, a job that was
 # never bootstrapped, or one whose last run failed.
@@ -319,7 +299,7 @@ check_launchd() {
     [[ "$OSTYPE" == darwin* ]] || return 0
     section "Checking launchd jobs..."
 
-    local plist label installed info code
+    local plist label
     for plist in "$DOTFILES_DIR"/launchd/*.plist; do
         label=$(basename "$plist" .plist)
         # A pinned host's lx workflows run under the vault's watson-run,
@@ -327,62 +307,18 @@ check_launchd() {
         if [[ "$label" == com.benswift.wiz-due ]] && "$DOTFILES_DIR/bin/wiz-build" --pinned-host; then
             continue
         fi
-        installed="$HOME/Library/LaunchAgents/$label.plist"
-        if [[ ! -f "$installed" ]]; then
-            check_fail "$label not installed (see launchd/$label.plist header)"
-            continue
-        fi
-        if ! cmp -s "$plist" "$installed"; then
-            check_fail "$label installed copy differs from launchd/$label.plist"
-            continue
-        fi
-        if ! info=$(launchctl print "gui/$(id -u)/$label" 2>/dev/null); then
-            check_fail "$label not loaded (launchctl bootstrap it)"
-            continue
-        fi
-        code=$(sed -n 's/.*last exit code = \([^ ]*\).*/\1/p' <<<"$info" | head -1)
-        if [[ -z "$code" || "$code" == "0" || "$code" == "(never" ]]; then
-            check_pass "$label loaded"
-        else
-            check_fail "$label last exit $code (see ~/Library/Logs/)"
-        fi
+        check_launchd_job "$plist"
     done
 
-    # A plist left behind by a job that no longer exists in launchd/ keeps
-    # running whatever it pointed at.
+    # A plist left behind by a job that no longer exists in launchd/ (or the
+    # private overlay's) keeps running whatever it pointed at.
     local stray
     for stray in "$HOME"/Library/LaunchAgents/com.benswift.*.plist "$HOME"/Library/LaunchAgents/com.xwmx.*.plist; do
         [[ -f "$stray" ]] || continue
         label=$(basename "$stray" .plist)
-        [[ -f "$DOTFILES_DIR/launchd/$label.plist" ]] ||
+        [[ -f "$DOTFILES_DIR/launchd/$label.plist" || -f "$PRIVATE_DIR/launchd/$label.plist" ]] ||
             check_warn "$label installed but not in launchd/ (bootout and remove it)"
     done
-}
-
-# weddle only: bin/restic-backup snapshots weddle's data, so no other host
-# runs its timers.
-check_restic() {
-    [[ "$(hostname -s)" == weddle ]] || return 0
-    section "Checking restic backup..."
-
-    local timer
-    for timer in restic-backup restic-prune restic-check; do
-        if systemctl --user is-enabled --quiet "$timer.timer" 2>/dev/null; then
-            check_pass "$timer.timer enabled"
-        else
-            check_fail "$timer.timer not enabled (systemctl --user enable --now $timer.timer)"
-        fi
-    done
-
-    # restic-backup owns the staleness thresholds; this only reports them.
-    local out line
-    if out=$("$DOTFILES_DIR/bin/restic-backup" status 2>&1); then
-        check_pass "${out%%$'\n'*}"
-    else
-        while IFS= read -r line; do
-            check_warn "${line#restic-backup: }"
-        done <<<"$out"
-    fi
 }
 
 check_skill_yaml() {
@@ -448,6 +384,22 @@ check_agent_config() {
     fi
 }
 
+# The private overlay (lib/private.sh): its own checks, or a note that this
+# machine runs without it.
+check_private() {
+    section "Checking private overlay..."
+    if [[ ! -d "$PRIVATE_DIR/.git" ]]; then
+        check_warn "no overlay at $PRIVATE_DIR --- 'dotfiles update' clones it once this machine's ssh key can read $PRIVATE_REPO"
+        return
+    fi
+    check_pass "overlay at $PRIVATE_DIR"
+    if [[ -f "$PRIVATE_DIR/lib/doctor.sh" ]]; then
+        # shellcheck disable=SC1091  # the private overlay's, absent in public CI
+        source "$PRIVATE_DIR/lib/doctor.sh"
+        private_doctor
+    fi
+}
+
 doctor() {
     echo ""
     echo "╔═══════════════════════════════════════╗"
@@ -461,8 +413,7 @@ doctor() {
     check_mise_tools
     check_directories
     check_launchd
-    check_mail_pull
-    check_restic
+    check_private
     check_agent_config
 
     echo ""
@@ -499,10 +450,12 @@ update() {
         return 1
     fi
 
+    # Before the symlinks, so they pick up the overlay's manifest.
+    private_sync
     "$DOTFILES_DIR/create_symlinks.sh"
     # Install whatever the pull just changed in mise/config.toml, before the
     # steps below run scripts written against the new versions. A pin that
-    # moved is the case that matters: restic's reads and writes the shared
+    # moved is the case that matters: restic's reads and writes a shared
     # backup repo, and lumis's CLI is what bin/lumis-parsers drives. A tool on
     # "latest" that is already installed is left alone --- upgrading those is
     # `mise upgrade`'s job. From $HOME, so only the global config is in scope
@@ -516,11 +469,7 @@ update() {
         echo "wiz build failed --- wiz is still the previously built binary"
     "$DOTFILES_DIR/bin/sync-agent-config" --update-claude
     "$DOTFILES_DIR/bin/lumis-parsers" --update || echo "parser sync failed --- yazi previews fall back to bat"
-    # Editable, so code changes are already live --- this re-resolves after a
-    # dependency change in mail/utils/pyproject.toml, and installs the commands
-    # outright on a machine provisioned before install.sh grew this step.
-    uv tool install --force -e "$DOTFILES_DIR/mail/utils" >/dev/null ||
-        echo "mail-utils install failed --- mail-* commands and mutt-compose-lsp will be missing"
+    private_setup
     echo "Done!"
 }
 

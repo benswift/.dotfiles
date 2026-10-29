@@ -82,8 +82,8 @@ is_python_shebang() {
 
 # --force-exclude makes ruff honour the exclude list in ruff.toml even though
 # the path arrives via --stdin-filename. Without it the hook reformats files
-# the config says to leave alone --- mail/mutt_oauth2.py, which is vendored
-# from mutt. On an excluded path ruff echoes its input back unchanged, so fmt's
+# the config says to leave alone, such as a file vendored verbatim from
+# upstream. On an excluded path ruff echoes its input back unchanged, so fmt's
 # cmp finds no difference and writes nothing.
 fmt_ruff() { fmt ruff format --force-exclude --stdin-filename "$f" -; }
 

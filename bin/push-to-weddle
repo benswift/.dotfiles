@@ -3,8 +3,7 @@
 # Everything this Mac keeps on weddle, pushed in one hourly launchd job
 # (launchd/com.benswift.push-to-weddle.plist, under bin/launchd-run):
 #
-#   ~/Documents, ~/Zotero and   bin/backup
-#   ~/Maildir/anu-archive
+#   ~/Documents, ~/Zotero, mail  backup (from the private overlay)
 #   agent session logs           bin/ship-claude-logs
 #
 # One job rather than three because they share a remote and a metered-network
@@ -26,7 +25,7 @@ fi
 status=0
 # watson keeps nothing that isn't stored elsewhere (wiz lives on GitLab, and
 # it pulls its own mail copy), so it ships only its agent logs.
-if [[ "$(hostname -s)" != "watson" ]]; then
+if [[ "$(hostname -s)" != "watson" ]] && command -v backup >/dev/null; then
 	backup || status=1
 fi
 ship-claude-logs || status=1

@@ -24,3 +24,7 @@ codex.md
 
 # Private Claude Code plugins (cloned separately by install.sh / dotfiles update)
 claude-plugins/
+
+# The private overlay, its own repo (lib/private.sh). .ignore re-includes it
+# for rg, fd and helix, so it searches as part of this tree.
+/private/

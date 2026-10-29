@@ -60,35 +60,6 @@ install_mise() {
     fi
 }
 
-# Mail tooling, per the tiers in mail/README.md. macOS is the full tier:
-# isync (mbsync) with OAuth2 --- homebrew-core's isync is built without SASL,
-# so it can't authenticate to Office365 over XOAUTH2, while the benswift/tap
-# build links a cyrus-sasl that bundles the XOAUTH2 plugin (and survives
-# `brew upgrade`, unlike the old self-compiled binary). Linux gets mu and
-# msmtp only. A pull-only mirror (weddle) also needs isync 1.5 built from
-# source, which mail/README.md's setup steps cover by hand: the distro isync
-# is too old for the config, and no other Linux host wants mbsync at all.
-install_mail_sync() {
-    if [[ "$platform" == "macos" ]]; then
-        if brew list isync &>/dev/null; then
-            info "isync already installed (mbsync with XOAUTH2)"
-            return
-        fi
-        info "Installing isync (mbsync) with XOAUTH2 support..."
-        brew tap benswift/tap
-        brew install benswift/tap/isync
-    elif command_exists apt-get; then
-        if command_exists mu && command_exists msmtp; then
-            info "mu and msmtp already installed"
-            return
-        fi
-        info "Installing mu and msmtp..."
-        sudo apt-get install -y maildir-utils msmtp
-    else
-        warn "no known package manager --- install mu and msmtp manually"
-    fi
-}
-
 # mosh: mitigates high-latency SSH (predictive echo, frame sync, roaming).
 # No prebuilt binaries exist, so it can't come from mise --- platform package
 # manager on both OSes (installs both the client and mosh-server).
@@ -151,7 +122,7 @@ install_helix() {
     # nightly, so bin/helix-build compiles the commit pinned in
     # helix/pinned-rev. A first run also builds ~300 tree-sitter grammars.
     # --no-test because the integration suite wants the language servers, and
-    # install_python_tools has not run yet.
+    # setup_private has not run yet.
     "$DOTFILES_DIR/bin/helix-build" --no-test ||
         warn "helix build failed --- run 'helix-build' once the machine is set up"
 }
@@ -174,17 +145,18 @@ setup_previewers() {
     "$DOTFILES_DIR/bin/lumis-parsers" || warn "parser fetch failed --- ts-cat will fall back to bat"
 }
 
-install_python_tools() {
-    info "Installing Python tools from mail/utils..."
+# The private overlay (lib/private.sh): cloned only if this machine's ssh key
+# can already read it, so a fresh machine bootstraps without GitHub auth and
+# picks it up on a later `dotfiles update`.
+clone_private() {
+    info "Looking for the private overlay..."
+    source "$DOTFILES_DIR/lib/private.sh"
+    private_sync
+}
+
+setup_private() {
     eval "$(mise activate bash)"
-    # Puts mail-compose, mail-dedupe, student-db, mutt-compose-lsp and the rest
-    # on PATH. Editable, so the checkout stays the live source. Not optional:
-    # helix/languages.toml configures mutt-compose-lsp as a language server, so
-    # without this a fresh machine has a broken editor integration and no
-    # obvious sign of why. --force makes it idempotent and picks up dependency
-    # changes on re-runs.
-    uv tool install --force -e "$DOTFILES_DIR/mail/utils" ||
-        warn "mail-utils install failed --- mail-* commands and mutt-compose-lsp will be missing"
+    private_setup
 }
 
 install_claude() {
@@ -245,17 +217,17 @@ main() {
     if [[ "$platform" == "macos" ]]; then
         install_homebrew
     fi
-    install_mail_sync
     install_mosh
     install_vivid
     install_mise
     clone_dotfiles
+    clone_private
     setup_symlinks
     install_mise_tools
     install_helix
     install_wiz
     setup_previewers
-    install_python_tools
+    setup_private
     install_claude
     install_agent_skills
     sync_agent_config
@@ -267,7 +239,8 @@ main() {
     echo "  1. Restart your shell or run: source ~/.zshrc"
     echo "  2. Run 'dotfiles doctor' to verify setup"
     echo "     (note: gitconfig rewrites github https URLs to ssh, so add this"
-    echo "      machine's ssh key to GitHub before running 'dotfiles update')"
+    echo "      machine's ssh key to GitHub before running 'dotfiles update';"
+    echo "      that update also clones the private overlay if it was skipped)"
     if [[ "$platform" == "macos" ]]; then
         echo "  3. Install additional tools as needed with 'brew install' or 'mise use'"
     else

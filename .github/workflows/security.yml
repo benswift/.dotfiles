@@ -28,23 +28,10 @@ jobs:
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
           enable-cache: false
-      - name: Install fd
-        # mail-utils' attachment completion shells out to fd, and its tests
-        # run it for real. Ubuntu ships the binary as fdfind.
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y --no-install-recommends fd-find
-          sudo ln -s "$(command -v fdfind)" /usr/local/bin/fd
       - name: Lint Python and provisioning shell scripts
         run: |
           uvx ruff check .
           shellcheck bin/kiosk bin/check-secrets lib/kiosk/kiosk-browser lib/kiosk/kiosk-set-url lib/kiosk/kiosk-tailscale lib/kiosk/autostart lib/kiosk/wyse/provision.sh lib/kiosk/wyse/disk.sh lib/kiosk/wyse/late.sh
-      - name: Test and type-check packages
-        run: |
-          for project in mail/utils; do
-            uv run --locked --project "$project" --group dev pytest "$project/tests" -q
-            uv run --locked --project "$project" --group dev ty check "$project/src"
-          done
       - name: Test portable tools
         # Helix needs the locally built editor/grammars/formatters, so its
         # integration suite stays local.

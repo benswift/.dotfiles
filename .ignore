@@ -1,0 +1,3 @@
+# Re-include the gitignored private overlay for rg, fd and helix's picker,
+# which give .ignore precedence over .gitignore (lib/private.sh).
+!/private/

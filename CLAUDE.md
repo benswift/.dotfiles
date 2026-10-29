@@ -40,14 +40,23 @@ Paths with no symlink targets, so absent from the manifest: @bin/ (on `PATH` via
 `./tests/test_helix.py`), `backlog/` (Backlog.md tasks), @oxfmtrc.json (shared
 markdown/TOML format config).
 
-Editor and multiplexer config: @helix/, @zellij/, @ghostty/. Email: @mail/ (see
-@mail/README.md). AI agents: @claude/, @codex/, @gemini/, @matilda/,
-@agent-run/.
+Editor and multiplexer config: @helix/, @zellij/, @ghostty/. AI agents:
+@claude/, @codex/, @gemini/, @matilda/, @agent-run/.
 
-@.github/workflows/security.yml runs ruff, shellcheck, the package and portable
-test suites, ty, a lock audit (@scripts/audit-locks.py) and gitleaks on every
-push. A tool the tests call must be installed there too; the helix suite stays
-local (see the workflow).
+### Private overlay
+
+`private/` is a separate private repo (`benswift/dotfiles-private`), cloned
+inside this checkout: gitignored here, re-included for rg/fd/helix by @.ignore.
+It holds mail, weddle's backups, private ssh hosts and anything else naming
+institutional accounts or infrastructure, and has its own `CLAUDE.md`. Commit
+there with `git -C private`, separately from this repo. @lib/private.sh lists
+the hooks it plugs into. Nothing public may depend on it: every hook is
+optional, so a machine without it still bootstraps.
+
+@.github/workflows/security.yml runs ruff, shellcheck, the portable test suite,
+a lock audit (@scripts/audit-locks.py) and gitleaks on every push. A tool the
+tests call must be installed there too; the helix suite stays local (see the
+workflow).
 
 ## Python
 
@@ -57,9 +66,6 @@ local (see the workflow).
 - **Adding a `bin/` tool means adding it to `extend-include` in @ruff.toml**, or
   it is silently never linted (a glob can't work --- it would drag the bash and
   swift scripts through the Python parser).
-- @mail/utils is a real package, installed editable by `install.sh`. It provides
-  `mutt-compose-lsp`, which @helix/languages.toml configures as a language
-  server, so a machine without it has a quietly broken editor.
 
 ## Version control
 
@@ -80,9 +86,8 @@ used when a project has no `mise.toml` of its own.
 
 `~/.config/mise/config.local.toml` is machine-local, untracked, and auto-merged;
 its `[env]` table is **the sole home for secrets** (`PUSHOVER_TOKEN`,
-`PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`, `ANU_PASSWORD`). Nothing here calls
-1Password. Two exceptions, each read through a script whose header explains its
-backend: @bin/vpn, and @bin/mail-secret for everything under @mail/.
+`PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`). Nothing here calls 1Password. The
+private overlay's mail scripts have their own backend (its `CLAUDE.md`).
 
 ### Package installation hierarchy
 
@@ -129,7 +134,6 @@ Each script's header has the detail. Notable ones:
 - `wiz-build` --- builds the wiz engine (`u2548636/wiz-engine`) at the commit in
   @wiz/pinned-rev into `~/.local/bin`, the helix pattern; `--update` moves the
   pin
-- `mailsync` --- sync all email accounts
 - `agent-run` --- headless agent dispatcher (see below)
 - `hx-ghostty` --- open files in helix in a Ghostty tab; `--register` (once per
   Mac) makes it macOS's default for text and source files
@@ -139,12 +143,9 @@ Each script's header has the detail. Notable ones:
   `⚠ <reason>` while an agent is blocked (undone on the next prompt)
 - `wiz-due` units (@systemd/user/wiz-due.service, its launchd twin) --- run
   every registered vault's due workflows on this host; ben's are in the vault's
-  `workflows/`, among them `pkb-health` (the job health check) and
-  `calendar-archive`. `todo` lists and edits Ben's open tasks across vaults;
-  `unit-oncall` and `launchd-run` file failures as ben tasks
-- `dmarc-summary` --- report on the DMARC aggregate reports a Fastmail rule
-  files into `~/Maildir/personal/DMARC`. Exits non-zero when a message failed
-  DMARC, which under `p=reject` means it bounced
+  `workflows/`, among them `pkb-health` (the job health check). `todo` lists and
+  edits Ben's open tasks across vaults; `unit-oncall` and `launchd-run` file
+  failures as ben tasks
 - `ai-tropes` --- screen a draft for AI-writing tells; taxonomy lives in the
   `ben:benswift-writer` skill's `ai-tropes.md`, cross-referenced by pattern id
 - `pangram` --- the paid second opinion behind `ai-tropes`, against Pangram's
@@ -217,7 +218,7 @@ Both headers have the detail.
   this repo tracks only `.claude/settings.json`, which disables the `impeccable`
   plugin (its `PostToolUse` hook fires on every edit and drops
   `.impeccable/hook.cache.json` into whatever it thinks the project root is,
-  including `mail/utils/src/`, from where it shipped in the built wheel).
+  including a package's `src/`, from where it shipped in the built wheel).
 - **Codex** --- `~/.codex/config.toml` is entirely machine-local and
   deliberately untracked; set `project_doc_fallback_filenames = ["CLAUDE.md"]`
   there on each machine. There is no shared Codex profile: the `oy` alias just
@@ -235,25 +236,3 @@ Both headers have the detail.
   - there's also an OpenAI-protocol endpoint at
     `https://matilda.maincode.com/api/v1/code` (model `matilda-code-1.0`, keyed
     by `MATILDA_API_KEY`) on the same subscription.
-
-## Email
-
-@mail/ holds neomutt config, @mail/msmtprc (SMTP), @mail/mbsyncrc (IMAP), and
-email-processing scripts in @mail/utils/. Setup instructions: @mail/README.md.
-
-To drive neomutt (or any TUI) interactively, use the `ht-mcp` MCP server
-(`mcp__ht-mcp__*` tools): create a session with `["bash"]`, run
-`TERM=xterm-direct neomutt`, then send keys and take snapshots. Snapshots are
-plain text and do **not** show the cursor row (it's a background colour), so
-probe position with a side-effect key like `<space>` (tag-entry) and see which
-row gets the `*`.
-
-## Microsoft 365
-
-ANU locks down third-party Graph app registrations and the device-code flow, so
-**there is no API path to ANU calendar or Teams data --- don't reach for
-Graph.**
-
-There is no calendar tool, and don't write one against EventKit: ANU's Exchange
-sync into macOS Calendar.app is too flaky to give answers worth trusting (it is
-reliable on iOS, which is where Ben reads the work calendar).

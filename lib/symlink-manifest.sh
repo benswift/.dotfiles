@@ -12,6 +12,9 @@
 # from the ben marketplace clone (which doesn't exist until claude has run),
 # while preserving skills installed independently by other tools.
 #
+# The private overlay (lib/private.sh) appends its own links, from
+# private/manifest.sh, sourced at the end of this file.
+#
 # Also not listed: matilda/system-defaults.json. Matilda reads it in place
 # from the repo, via MATILDA_CODE_SYSTEM_DEFAULTS_PATH in mise/config.toml ---
 # no symlink, because ~/.matilda/settings.json is Matilda's own to rewrite.
@@ -27,10 +30,6 @@ SYMLINK_MANIFEST=(
     "zshrc:~/.zshrc"
     # ssh
     "ssh_config:~/.ssh/config"
-    # mail
-    "mail/mbsyncrc:~/.mbsyncrc"
-    "mail/msmtprc:~/.msmtprc"
-    "mail/neomutt:~/.config/neomutt"
     # AI agents
     "claude/CLAUDE.md:~/.claude/CLAUDE.md"
     "claude/settings.json:~/.claude/settings.json"
@@ -49,23 +48,6 @@ SYMLINK_MANIFEST=(
     "systemd/user/ship-claude-logs.timer:~/.config/systemd/user/ship-claude-logs.timer"
     "systemd/user/ingest-claude-logs.service:~/.config/systemd/user/ingest-claude-logs.service"
     "systemd/user/ingest-claude-logs.timer:~/.config/systemd/user/ingest-claude-logs.timer"
-    # restic-backup: enable the timers on weddle ONLY (it snapshots weddle's
-    # aggregated data, see bin/restic-backup)
-    "systemd/user/restic-backup.service:~/.config/systemd/user/restic-backup.service"
-    "systemd/user/restic-backup.timer:~/.config/systemd/user/restic-backup.timer"
-    "systemd/user/restic-prune.service:~/.config/systemd/user/restic-prune.service"
-    "systemd/user/restic-prune.timer:~/.config/systemd/user/restic-prune.timer"
-    "systemd/user/restic-check.service:~/.config/systemd/user/restic-check.service"
-    "systemd/user/restic-check.timer:~/.config/systemd/user/restic-check.timer"
-    # mail-pull: enable the timer on weddle ONLY (mail/mbsyncrc-weddle)
-    "systemd/user/mail-pull.service:~/.config/systemd/user/mail-pull.service"
-    "systemd/user/mail-pull.timer:~/.config/systemd/user/mail-pull.timer"
-    # gitlab-mirror: enable the timer on weddle ONLY (it feeds restic-backup)
-    "systemd/user/gitlab-mirror.service:~/.config/systemd/user/gitlab-mirror.service"
-    "systemd/user/gitlab-mirror.timer:~/.config/systemd/user/gitlab-mirror.timer"
-    # mu-index: enable the .path on weddle ONLY (it indexes the Maildir mirror)
-    "systemd/user/mu-index.service:~/.config/systemd/user/mu-index.service"
-    "systemd/user/mu-index.path:~/.config/systemd/user/mu-index.path"
     # wiz-validate: enable the timer on weddle ONLY (it starts the job on watson)
     "systemd/user/wiz-validate.service:~/.config/systemd/user/wiz-validate.service"
     "systemd/user/wiz-validate.timer:~/.config/systemd/user/wiz-validate.timer"
@@ -108,3 +90,8 @@ SYMLINK_MANIFEST_WITH_BACKUP=(
 #   manifest_target "entry"  -> absolute path with ~ expanded
 manifest_source() { echo "$DOTFILES_DIR/${1%%:*}"; }
 manifest_target() { local t="${1##*:}"; echo "${t/#\~/$HOME}"; }
+
+if [[ -f "$DOTFILES_DIR/private/manifest.sh" ]]; then
+    # shellcheck disable=SC1091  # the private overlay's, absent in public CI
+    source "$DOTFILES_DIR/private/manifest.sh"
+fi

@@ -9,7 +9,7 @@ OnSuccess=unit-oncall-clear@%n.service
 [Service]
 Type=oneshot
 ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
-Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PATH=/home/ben/.dotfiles/bin:/home/ben/.dotfiles/private/bin:/home/ben/.local/share/mise/shims:/home/ben/.local/bin:/usr/local/bin:/usr/bin:/bin
 # Under mise exec so the [env] block (agent keys and the like) reaches the
 # command workflows, which run with this process's environment.
 ExecStart=/home/ben/.local/bin/mise exec --cd /home/ben -- /home/ben/.local/bin/wiz due -all

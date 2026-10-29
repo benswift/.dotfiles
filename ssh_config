@@ -3,6 +3,11 @@
 # Comment this line if you don't want it to be added again.
 Include ~/.orbstack/ssh/config
 
+# The private overlay's hosts (lib/private.sh). Up here for the same reason as
+# OrbStack's: an Include after a Host line is scoped to that block. A missing
+# file matches nothing, so a machine without the overlay just skips it.
+Include ~/.dotfiles/private/ssh_config
+
 Host *
   IgnoreUnknown UseKeychain
   AddKeysToAgent yes
@@ -35,62 +40,3 @@ Host gitlab.comp.anu.edu.au
   User git
   IdentityFile ~/.ssh/id_ed25519
   IdentitiesOnly yes
-
-# rpis on tailnet
-Host panic-*
-  User panic
-  StrictHostKeyChecking accept-new
-
-# cybersonic
-# bulwark only accepts SSH from on-campus IPs, so off-campus machines hop via
-# weddle (tailnet-reachable). The Match guard skips the ProxyJump when running
-# on weddle itself --- otherwise ssh would tunnel through itself.
-Match host bulwark exec "test $(hostname -s) != weddle"
-  ProxyJump weddle
-
-Host bulwark
-  User u2548636
-  Hostname bulwark.cecs.anu.edu.au
-  IdentityFile ~/.ssh/cybersonic
-
-Host cybersonic
-  User u2548636
-  Hostname cybersonic.gpu
-  IdentityFile ~/.ssh/cybersonic
-  ProxyJump bulwark
-
-# weddle — tailnet jump host for bulwark (see the Match block above). FQDN so it
-# always resolves through Tailscale, on any network.
-Host weddle
-  User ben
-  Hostname weddle.tail2b9b56.ts.net
-  HostKeyAlias weddle
-
-# jetson orin — use the Tailscale MagicDNS FQDN so resolution always goes
-# through Tailscale (works on any network), and never collides with the
-# local LAN's `jetson-orin.uds.anu.edu.au` entry that points at the wired IP.
-# HostKeyAlias keeps known_hosts stable across address changes.
-Host jetson
-  User jane
-  Hostname jetson-orin.tail2b9b56.ts.net
-  HostKeyAlias jetson-orin
-
-# daysy — Ben's Mac on the tailnet. Tailscale owner shows as benswift@, but the
-# macOS account is `ben`. MagicDNS FQDN resolves on any network; HostKeyAlias
-# keeps known_hosts stable across address changes.
-Host daysy
-  User ben
-  Hostname daysy.tail2b9b56.ts.net
-  HostKeyAlias daysy
-
-# watson — the headless M1 Mac mini on the tailnet. MagicDNS FQDN resolves on
-# any network; HostKeyAlias keeps known_hosts stable across address changes.
-Host watson
-  User ben
-  Hostname watson.tail2b9b56.ts.net
-  HostKeyAlias watson
-
-# strproxy
-Host strproxy
-  User u2548636
-  Hostname strproxy.comp.anu.edu.au

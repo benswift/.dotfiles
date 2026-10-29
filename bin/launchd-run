@@ -33,7 +33,7 @@
 
 set -uo pipefail
 
-export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="$HOME/.dotfiles/bin:$HOME/.dotfiles/private/bin:$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/launchd-run"
 LOG="$STATE/launchd-run.log"

@@ -100,13 +100,11 @@ injecting project-specific rules into your `CLAUDE.md` file:
 mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing
 ```
 
-## Email configuration
+## Private overlay
 
-All email-related configuration has been organized into the `mail/` directory.
-This includes configurations for mbsync (IMAP sync), msmtp (SMTP), neomutt
-(email client), and OAuth2 authentication scripts.
-
-For detailed setup instructions, see [`mail/README.md`](mail/README.md).
+Config that names my accounts and machines (mail, backups, some ssh hosts) lives
+in a separate private repo, cloned into `private/` when the machine can read it.
+Everything here works without it; `lib/private.sh` lists the hooks.
 
 # License
 
