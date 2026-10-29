@@ -4,7 +4,7 @@ title: Dotfiles cutover and nb's retirement on every host
 status: In Progress
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
-updated_date: '2026-10-29T00:10:00Z'
+updated_date: '2026-10-29T00:29:00Z'
 labels:
   - pkb
   - wiz
@@ -45,4 +45,6 @@ Keep the nb pin and units as the rollback until home has run on the engine for a
 2026-10-29: done on weddle --- ben:pkb rewritten for the wiz CLI (and phdconvenor, typst-poster, anu-theme-sync find the vault with wiz path); unit-oncall and launchd-run file and close home tasks by their unit field; bin/todo, note(), cpath and latest in zshrc; student-db via wiz path; the pdf and docx home workflows (bin/vault-render); pkb package, pkb-agent units and calendar-archive units and JSONL mode gone; bin/pkb-health; doctor checks the engine and the registry; CLAUDE.md, claude/CLAUDE.md and mail/utils/CLAUDE.md updated. Waiting: (1) nb itself (bin/nb, tests/test_nb.py, nb/*.nb-plugin and nb_plugin_links, nb-sync units and plist, the mise pin, doctor's nb check, the nb lines in CLAUDE.md and CI) once home has run a week on the engine, i.e. from 2026-11-05, together with the move to ~/vaults/wiz-home and ~/vaults/wiz-lx, the GitHub rename benswift/nb -> wiz-home and restic-backup's paths; (2) daysy, unreachable today: install com.benswift.wiz-due.plist, register the vaults, and unload and remove com.xwmx.nb-sync.plist. nb-sync is stopped and disabled on weddle; daysy's will still fire on its next wake, which pulls the migrated vault (a fast-forward unless daysy has unpushed nb edits, which would merge and want checking with wiz validate home).
 
 2026-10-29: Ben's vault is named ben, not home; its repo becomes benswift/wiz-ben (staying on GitHub) and its path ~/vaults/wiz-ben when nb retires.
+
+2026-10-29: daysy done --- nb-sync unloaded and its plist removed, wiz built at the pin, ben and lx registered, com.benswift.wiz-due installed and running, pkb-tools uninstalled. On waking, daysy's nb-sync had committed and pushed ten stale poster PDFs from docs/<slug>/ (nb's git add --all, after the move to typst/ left them unignored); removed, and the engine's deferred sync now leaves any new file nothing claims uncommitted, so the same can't happen through wiz. Watson's scheduler arrives with the switch.
 <!-- SECTION:NOTES:END -->
