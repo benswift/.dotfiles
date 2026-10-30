@@ -24,7 +24,7 @@
 #   wiz-build --update     move the pin to the engine's main, then build
 #   wiz-build --force      rebuild even when the pinned rev is installed
 #   wiz-build --check      report status only; non-zero if not on the pin
-#   wiz-build --no-test    skip the engine's test suite before installing
+#   wiz-build --no-test    skip the engine's tests, and tests/test_todo_wiz.py after
 #   wiz-build --pinned-host  exit 0 if this host runs the vault-pinned wiz
 set -euo pipefail
 
@@ -127,6 +127,18 @@ build() {
     mv -f "$WIZ.new" "$WIZ"
 }
 
+# bin/todo drives the wiz CLI, so a new engine has to pass its suite too.
+run_tests() {
+    [[ "$RUN_TESTS" == true ]] || return 0
+    local suite="$DOTFILES_DIR/tests/test_todo_wiz.py"
+    [[ -x "$suite" ]] || return 0
+    info "Running the todo integration tests"
+    if ! WIZ="$WIZ" "$suite"; then
+        error "bin/todo fails against this wiz; fix it or move the pin back"
+        return 1
+    fi
+}
+
 check_shadowing() {
     local found
     found="$(command -v wiz 2>/dev/null || true)"
@@ -179,11 +191,13 @@ update)
     build "$(pinned_rev)"
     report
     check_shadowing || true
+    run_tests
     ;;
 force)
     build "$(pinned_rev)"
     report
     check_shadowing || true
+    run_tests
     ;;
 build)
     rev="$(pinned_rev)"
@@ -196,5 +210,6 @@ build)
     build "$rev"
     report
     check_shadowing || true
+    run_tests
     ;;
 esac

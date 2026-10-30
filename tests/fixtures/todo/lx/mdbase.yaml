@@ -1,0 +1,6 @@
+# Like the lx vault: shared, each write committed.
+format: 1
+name: lx
+sync:
+  commit: on_write
+default_role: anyone
