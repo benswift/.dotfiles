@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# claude-git-guard --- Claude Code PreToolUse hook (Bash): refuse the git
+# commands that ~/.claude/CLAUDE.md forbids, so the rule holds even when the
+# instruction is missed.
+#
+#   git push --force / -f      use --force-with-lease instead
+#   git add . / -A / --all     stage specific files by name
+#
+# A permission deny rule can't express the first: a prefix rule for
+# `git push --force` would also catch `--force-with-lease`. Exit 2 blocks the
+# call and hands the message back to the agent; anything else lets it through.
+#
+# Matching is per shell segment (split on ; & | and newlines), with git as the
+# segment's command, so `rg 'git add' .` passes.
+set -euo pipefail
+
+cmd="$(jq -r '.tool_input.command // empty')"
+[[ -n "$cmd" ]] || exit 0
+
+reason="$(
+    CMD="$cmd" perl -e '
+        my $git = qr/^\s*(?:\w+=\S*\s+)*git(?:\s+-C\s+\S+|\s+-c\s+\S+)*\s+/;
+        for my $seg (split /[;&|\n]+/, $ENV{CMD}) {
+            if ($seg =~ /${git}push\b.*?\s(?:--force(?![-\w])|-f\b)/) {
+                print "force push: use --force-with-lease, never a bare --force";
+                exit;
+            }
+            if ($seg =~ /${git}add\b.*?\s(?:-A\b|--all\b|\.(?=\s|$))/) {
+                print "bulk staging: stage specific files by name, not git add . / -A";
+                exit;
+            }
+        }
+    '
+)"
+
+if [[ -n "$reason" ]]; then
+    echo "Blocked by claude-git-guard --- $reason" >&2
+    exit 2
+fi
