@@ -149,9 +149,9 @@ Each script's header has the detail. Notable ones:
   `⚠ <reason>` while an agent is blocked (undone on the next prompt)
 - `wiz-due` units (@systemd/user/wiz-due.service, its launchd twin) --- run
   every registered vault's due workflows on this host; ben's are in the vault's
-  `workflows/`, among them `health` (the job health check, `bin/pkb-health`). `todo` lists and
-  edits Ben's open tasks across vaults; `unit-oncall` and `launchd-run` file
-  failures as ben tasks
+  `workflows/`, among them `health` (the job health check, `bin/pkb-health`).
+  `todo` lists and edits Ben's open tasks across vaults; `unit-oncall` and
+  `launchd-run` file failures as ben tasks
 - `ai-tropes` --- screen a draft for AI-writing tells; taxonomy lives in the
   `ben:benswift-writer` skill's `ai-tropes.md`, cross-referenced by pattern id
 - `pangram` --- the paid second opinion behind `ai-tropes`, against Pangram's
