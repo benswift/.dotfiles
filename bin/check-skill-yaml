@@ -1,0 +1,45 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["pyyaml"]
+# ///
+"""Check that every SKILL.md's front matter parses as YAML; run by dotfiles doctor.
+
+    check-skill-yaml <skills-dir>
+
+Exits non-zero and names each bad file on stderr.
+"""
+
+import sys
+from pathlib import Path
+
+import yaml
+
+
+def front_matter_error(path: Path) -> str | None:
+    text = path.read_text()
+    if not text.startswith("---\n"):
+        return None
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        return "missing closing front matter"
+    try:
+        yaml.safe_load(text[4:end])
+    except yaml.YAMLError as e:
+        return str(e).replace("\n", " ")
+    return None
+
+
+def main() -> None:
+    if len(sys.argv) != 2:
+        sys.exit(__doc__)
+    bad = False
+    for path in sorted(Path(sys.argv[1]).glob("*/SKILL.md")):
+        if error := front_matter_error(path):
+            print(f"{path}: {error}", file=sys.stderr)
+            bad = True
+    sys.exit(1 if bad else 0)
+
+
+if __name__ == "__main__":
+    main()
