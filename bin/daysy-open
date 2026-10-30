@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# daysy-open --- show files made on a headless host (weddle) on daysy, the Mac
+# Ben actually looks at things on: copy them into daysy's /tmp/from-<host>/
+# and `open` them there, so a PDF lands in Preview, an image in the viewer, an
+# .html page in the browser.
+#
+# On daysy itself it just runs `open`. DAYSY_HOST overrides the ssh target.
+#
+# Usage: daysy-open <file-or-dir>...
+set -euo pipefail
+
+DAYSY="${DAYSY_HOST:-daysy}"
+
+if [[ $# -eq 0 || "$1" == -h || "$1" == --help ]]; then
+    sed -n 's/^# \{0,1\}Usage: /Usage: /p' "$0"
+    exit $(($# == 0))
+fi
+
+for f in "$@"; do
+    [[ -e "$f" ]] || {
+        echo "daysy-open: no such file: $f" >&2
+        exit 1
+    }
+done
+
+if [[ "$(hostname -s)" == "$DAYSY" ]]; then
+    exec open "$@"
+fi
+
+dest="/tmp/from-$(hostname -s)"
+ssh "$DAYSY" mkdir -p "$dest"
+# scp's SFTP mode takes the remote path literally, so spaces need no quoting.
+scp -q -r "$@" "$DAYSY:$dest/"
+
+remote=()
+for f in "$@"; do
+    remote+=("$dest/$(basename "$f")")
+done
+# ssh joins its arguments into one remote shell command, so quote each path.
+# shellcheck disable=SC2029  # expanded here on purpose, already quoted
+ssh "$DAYSY" open "${remote[@]@Q}"
+printf '%s\n' "${remote[@]/#/$DAYSY:}"

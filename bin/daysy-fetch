@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+#
+# daysy-fetch --- copy what Ben just downloaded on daysy (his Mac) to this
+# host: by default the newest entry in daysy's ~/Downloads, into the current
+# directory. Prints the local path of each copy.
+#
+# Downloads still in progress (.crdownload, .download, .part) are skipped.
+# DAYSY_HOST overrides the ssh target.
+#
+# Usage: daysy-fetch [-n N] [-l] [name...] [-d dir]
+#   -n N     fetch the N newest entries (default 1)
+#   -l       list the 10 newest entries instead of fetching
+#   name     fetch these entries of ~/Downloads by name instead
+#   -d dir   copy into dir rather than the current directory
+set -euo pipefail
+
+DAYSY="${DAYSY_HOST:-daysy}"
+count=1
+dir=.
+list=false
+names=()
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -n)
+        count="$2"
+        shift
+        ;;
+    -d)
+        dir="$2"
+        shift
+        ;;
+    -l) list=true ;;
+    -h | --help)
+        sed -n '/^# Usage:/,/^#   -d/p' "$0" | sed 's/^# \{0,1\}//'
+        exit 0
+        ;;
+    -*)
+        echo "daysy-fetch: unknown option: $1" >&2
+        exit 1
+        ;;
+    *) names+=("$1") ;;
+    esac
+    shift
+done
+
+newest() {
+    # shellcheck disable=SC2029  # $1 is a number, expanded here on purpose
+    ssh "$DAYSY" "cd ~/Downloads && ls -t | grep -vE '\\.(crdownload|download|part)\$' | head -n $1"
+}
+
+if [[ "$list" == true ]]; then
+    newest 10
+    exit 0
+fi
+
+if [[ ${#names[@]} -eq 0 ]]; then
+    [[ "$count" =~ ^[1-9][0-9]*$ ]] || {
+        echo "daysy-fetch: -n wants a positive number, not $count" >&2
+        exit 1
+    }
+    mapfile -t names < <(newest "$count")
+fi
+[[ ${#names[@]} -gt 0 ]] || {
+    echo "daysy-fetch: nothing in $DAYSY:~/Downloads" >&2
+    exit 1
+}
+
+mkdir -p "$dir"
+for name in "${names[@]}"; do
+    # SFTP-mode scp resolves a relative remote path from home, literally.
+    scp -q -r "$DAYSY:Downloads/$name" "$dir/"
+    echo "$dir/$name"
+done
