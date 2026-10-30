@@ -29,27 +29,27 @@ repeat what the scripts already document.
 ## Repo structure
 
 Config files are symlinked into place (`~/.config/...`, `~/.zshrc`, etc.) by
-@create_symlinks.sh. **Add every new link to @lib/symlink-manifest.sh** --- it
+`create_symlinks.sh`. **Add every new link to `lib/symlink-manifest.sh`** --- it
 is the single source of truth, consumed by both `create_symlinks.sh` (to create)
 and `dotfiles doctor` (to verify). Repo filenames usually drop the leading dot
 (`~/.zshrc` -> `zshrc`).
 
-Paths with no symlink targets, so absent from the manifest: @bin/ (on `PATH` via
-@zshenv), @launchd/ (plists installed by hand, instructions in each header),
-@lib/ (bash helpers), @tests/ (uv single-file tests, run directly:
-`./tests/test_helix.py`), `backlog/` (Backlog.md tasks), @oxfmtrc.json (shared
+Paths with no symlink targets, so absent from the manifest: `bin/` (on `PATH`
+via `zshenv`), `launchd/` (plists installed by hand, instructions in each
+header), `lib/` (bash helpers), `tests/` (uv single-file tests, run directly:
+`./tests/test_helix.py`), `backlog/` (Backlog.md tasks), `oxfmtrc.json` (shared
 markdown/TOML format config).
 
-Editor and multiplexer config: @helix/, @zellij/, @ghostty/. AI agents:
-@claude/, @codex/, @gemini/, @matilda/, @agent-run/.
+Editor and multiplexer config: `helix/`, `zellij/`, `ghostty/`. AI agents:
+`claude/`, `codex/`, `gemini/`, `matilda/`, `agent-run/`.
 
 ### Private overlay
 
 `private/` is a separate private repo (`benswift/dotfiles-private`), cloned
-inside this checkout: gitignored here, re-included for rg/fd/helix by @.ignore.
+inside this checkout: gitignored here, re-included for rg/fd/helix by `.ignore`.
 It holds mail, weddle's backups, private ssh hosts and anything else naming
 institutional accounts or infrastructure, and has its own `CLAUDE.md`.
-@lib/private.sh lists the hooks it plugs into. Nothing public may depend on it:
+`lib/private.sh` lists the hooks it plugs into. Nothing public may depend on it:
 every hook is optional, so a machine without it still bootstraps.
 
 **Changes under `private/` are invisible to this repo's git.** `git status` here
@@ -59,8 +59,8 @@ the overlay itself (`git -C private add <file>`, `git -C private commit`,
 overlay's goes first when pushing: a public commit that expects a file the
 overlay hasn't pushed breaks `dotfiles update` on every other machine.
 
-@.github/workflows/security.yml runs ruff, shellcheck, the portable test suite,
-a lock audit (@scripts/audit-locks.py) and gitleaks on every push. A tool the
+`.github/workflows/security.yml` runs ruff, shellcheck, the portable test suite,
+a lock audit (`scripts/audit-locks.py`) and gitleaks on every push. A tool the
 tests call must be installed there too; the helix and todo-wiz suites stay local
 (see the workflow).
 
@@ -69,9 +69,9 @@ tests call must be installed there too; the helix and todo-wiz suites stay local
 - `bin/` tools are `uv run --script` with PEP 723 metadata and a committed
   `bin/<name>.lock`. After editing a dependency block, run
   `uv lock --script bin/<name>` and commit the lock.
-- **Adding a `bin/` tool means adding it to `extend-include` in @ruff.toml**, or
-  it is silently never linted (a glob can't work --- it would drag the bash and
-  swift scripts through the Python parser).
+- **Adding a `bin/` tool means adding it to `extend-include` in `ruff.toml`**,
+  or it is silently never linted (a glob can't work --- it would drag the bash
+  and swift scripts through the Python parser).
 
 ## Version control
 
@@ -87,7 +87,7 @@ reads it from `origin`.
 
 ## Tool management (mise)
 
-@mise/config.toml (-> `~/.config/mise/config.toml`) sets global tool versions,
+`mise/config.toml` (-> `~/.config/mise/config.toml`) sets global tool versions,
 used when a project has no `mise.toml` of its own.
 
 `~/.config/mise/config.local.toml` is machine-local, untracked, and auto-merged;
@@ -112,42 +112,45 @@ verify it.
 
 ## Editor (helix)
 
-Upstream has tagged no release since 25.07.1, so @bin/helix-build compiles helix
-from the commit in @helix/pinned-rev and installs `hx` into `~/.local/bin`.
-**Don't put helix back in mise** --- `mise activate` puts its bin dir ahead of
-`~/.local/bin`, so a mise-managed copy silently shadows the source build.
+Upstream has tagged no release since 25.07.1, so `bin/helix-build` compiles
+helix from the commit in `helix/pinned-rev` and installs `hx` into
+`~/.local/bin`. **Don't put helix back in mise** --- `mise activate` puts its
+bin dir ahead of `~/.local/bin`, so a mise-managed copy silently shadows the
+source build.
 
 The script's header covers the mechanism and its usage (`--update` moves the
-pin; commit @helix/pinned-rev so the other machines follow). **Never run
+pin; commit `helix/pinned-rev` so the other machines follow). **Never run
 `hx --grammar build` by hand**: it writes grammars that shadow the build's own.
-@tests/test_helix.py, run after every build, guards the setup.
+`tests/test_helix.py`, run after every build, guards the setup.
 
 ## Formatting
 
-@bin/claude-format is a `Write|Edit` hook running the same per-type formatters
+`bin/claude-format` is a `Write|Edit` hook running the same per-type formatters
 Helix runs on save (dispatch table in the script; mirrors
-@helix/languages.toml). Keep the two in sync.
+`helix/languages.toml`). Keep the two in sync.
 
 **KDL files must stay fixed points of `kdlfmt format --kdl-version v1 -`.** The
 `v1` is load-bearing (zellij parses v1 only); the kdl block in
-@helix/languages.toml says why.
+`helix/languages.toml` says why.
 
-## Utilities (@bin/)
+## Utilities (`bin/`)
 
 Each script's header has the detail. Notable ones:
 
 - `dotfiles` --- doctor, update, edit
 - `wiz-build` --- builds the wiz engine (`u2548636/wiz-engine`) at the commit in
-  @wiz/pinned-rev into `~/.local/bin`, the helix pattern; `--update` moves the
+  `wiz/pinned-rev` into `~/.local/bin`, the helix pattern; `--update` moves the
   pin
 - `agent-run` --- headless agent dispatcher (see below)
 - `hx-ghostty` --- open files in helix in a Ghostty tab; `--register` (once per
   Mac) makes it macOS's default for text and source files
 - `zj-switch` --- `Alt s` session switcher, live sessions MRU-first, annotated
   with each session's running agents
+- `claude-git-guard` --- PreToolUse hook blocking bulk staging and bare
+  force-pushes
 - `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to
   `⚠ <reason>` while an agent is blocked (undone on the next prompt)
-- `wiz-due` units (@systemd/user/wiz-due.service, its launchd twin) --- run
+- `wiz-due` units (`systemd/user/wiz-due.service`, its launchd twin) --- run
   every registered vault's due workflows on this host; ben's are in the vault's
   `workflows/`, among them `health` (the job health check, `bin/pkb-health`).
   `todo` lists and edits Ben's open tasks across vaults; `unit-oncall` and
@@ -164,16 +167,16 @@ Each script's header has the detail. Notable ones:
   network-installs a Dell Wyse thin client cabled to a spare NIC (Debian
   netboot, on weddle's `eno1`)
 
-yazi's plugin dir is owned by `ya pkg`, which is why @yazi/ configs are
+yazi's plugin dir is owned by `ya pkg`, which is why `yazi/` configs are
 symlinked file-by-file rather than as a directory.
 
 ## AI coding agents
 
 All of Claude Code, Codex CLI, Gemini CLI and Matilda Code read `CLAUDE.md` as
 the project instructions file, so one file serves them all. Tracked config:
-@claude/CLAUDE.md (global instructions, symlinked to both `~/.claude/CLAUDE.md`
-and `~/.codex/AGENTS.md`), @claude/settings.json, @codex/hooks.json,
-@gemini/settings.json, @matilda/system-defaults.json.
+`claude/CLAUDE.md` (global instructions, symlinked to both `~/.claude/CLAUDE.md`
+and `~/.codex/AGENTS.md`), `claude/settings.json`, `codex/hooks.json`,
+`gemini/settings.json`, `matilda/system-defaults.json`.
 
 ### Personal skills
 
@@ -184,17 +187,17 @@ sessions load the change. **Never edit `~/.claude/plugins/marketplaces/ben/`**:
 it is Claude Code's read-only copy, and every `dotfiles update` deletes and
 re-clones it. Skills appear as `ben:<name>`.
 
-@bin/sync-agent-config registers marketplaces, installs enabled plugins, and
+`bin/sync-agent-config` registers marketplaces, installs enabled plugins, and
 symlinks each skill into `~/.agents/skills` so Codex and Matilda see them too.
 
 ### Headless agent dispatcher
 
-@bin/agent-run runs unattended agent jobs; profiles in @agent-run/profiles.toml
-select the runner and auth route, the caller supplies prompt, model and
-permissions. Subscription profiles are `*-sub`, API-billed ones `*-api`
-(@agent-run/profiles.toml's comments say what each clears). `openrouter` reaches
-third-party endpoints through Claude Code's Anthropic-compatible surface; put
-its key in the untracked mise env.
+`bin/agent-run` runs unattended agent jobs; profiles in
+`agent-run/profiles.toml` select the runner and auth route, the caller supplies
+prompt, model and permissions. Subscription profiles are `*-sub`, API-billed
+ones `*-api` (`agent-run/profiles.toml`'s comments say what each clears).
+`openrouter` reaches third-party endpoints through Claude Code's
+Anthropic-compatible surface; put its key in the untracked mise env.
 
 A caller that passes no `--profile` (and no `AGENT_PROFILE`) gets the registry's
 `default`, which is the one line to change when the subscription provider
@@ -210,9 +213,9 @@ agent-run --profile openrouter --model "provider/model:free" "prompt"
 
 ### Session log analytics
 
-@bin/ship-claude-logs sends each host's Claude and Codex session logs to weddle
+`bin/ship-claude-logs` sends each host's Claude and Codex session logs to weddle
 hourly (systemd timer there; on macOS a step of the push-to-weddle launchd job).
-@bin/ingest-claude-logs summarises them into `~/claude-logs/analytics.db` and
+`bin/ingest-claude-logs` summarises them into `~/claude-logs/analytics.db` and
 fails when a host goes quiet, so weddle's ingester is every other host's alarm.
 Both headers have the detail.
 
@@ -228,8 +231,8 @@ Both headers have the detail.
   there on each machine. There is no shared Codex profile: the `oy` alias just
   selects full-access mode.
 - **Matilda Code** --- `~/.matilda/settings.json` is Matilda's own; the portable
-  half is @matilda/system-defaults.json, read in place (see the `[env]` comment
-  in @mise/config.toml). Keep that file in Matilda's exact byte format, stamp
+  half is `matilda/system-defaults.json`, read in place (see the `[env]` comment
+  in `mise/config.toml`). Keep that file in Matilda's exact byte format, stamp
   and missing trailing newline included.
   - headless login is loopback-OAuth only, no device-code fallback.
     `MATILDA_AUTH_SKIP_BROWSER=1` (`AUTH`, not `OAUTH`) still prints an
