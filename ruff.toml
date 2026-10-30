@@ -18,7 +18,6 @@
 #   grep -rl '^#!/usr/bin/env -S uv run' bin | sort
 extend-include = [
   "bin/agent-run",
-  "bin/ai-tropes",
   "bin/hud",
   "bin/ingest-claude-logs",
   "bin/pangram",

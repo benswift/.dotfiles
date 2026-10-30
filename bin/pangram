@@ -5,10 +5,9 @@
 # ///
 """Check a draft against Pangram's AI-text detector.
 
-The paid second opinion behind bin/ai-tropes: ai-tropes finds the mechanically
-detectable tells for free and locally, this asks a trained classifier and
-returns a verdict with per-segment scores. Run the free pass first --- every
-call here costs money, billed per word.
+Asks a trained classifier and returns a verdict with per-segment scores. Do the
+benswift-writer read-through first --- every call here costs money, billed per
+word.
 
 Talks to the REST API directly rather than through pangram-sdk, which is a thin
 wrapper over three endpoints and would drag `requests` in beside httpx. The
