@@ -136,7 +136,8 @@ subject. Don't use Conventional Commits type prefixes (`feat:`, `fix:`,
 change obvious anyway. Prefer small, focused commits. Stage specific files by
 name rather than `git add .` or `-A`. Always rebase, never merge (unless it's
 the only way, then ask for confirmation); force-push only with
-`--force-with-lease`, never a bare `--force`.
+`--force-with-lease`, never a bare `--force`. A PreToolUse hook
+(`~/.dotfiles/bin/claude-git-guard`) blocks bulk staging and bare force-pushes.
 
 During long-running agentic work, commit as you go rather than waiting to be
 asked: land a commit at each logical checkpoint, but only when the full suite of
@@ -149,23 +150,10 @@ changes there with `git -C ~/.dotfiles/private`, not from `~/.dotfiles`.
 
 ### Formatter hook
 
-A PostToolUse `Write|Edit` hook (`~/.dotfiles/bin/claude-format`) reformats
-every file I edit, running the same per-type formatter Helix runs on save so the
-two never fight over formatting (`oxfmt-helix` for markdown/toml, `ruff format`
-for Python, `typstyle --wrap-text` for Typst, and so on). Matching Helix means
-matching it in both directions: an extensionless file with a `python` or
-`uv run --script` shebang is Python, which Helix formats on save and so does the
-hook; and a path excluded in `ruff.toml` is skipped by both, since Helix formats
-Python through the ruff LSP and the hook passes `--force-exclude`. The catch:
-the first edit to a file that isn't already a fixed point of its formatter
-reflows the whole file, so a one-line change can land as a 100--300 line diff
-mixing the reflow with the real edit. Don't bundle the two. Reproduce the pure
-reflow from HEAD with the file's EXACT dispatch-table command (never a guessed
-flag --- a mismatched invocation formats differently and fights the hook),
-commit that reflow alone, then commit the semantic change on top and check the
-second diff shows only your edit. If matching the hook is impractical, commit
-the working (hook-formatted) file and note the bundled reflow --- it still lands
-as a fresh fixed point, so later edits diff clean.
+A PostToolUse hook (`~/.dotfiles/bin/claude-format`) reformats every file you
+write or edit with the formatter Helix uses on save. When that reflows a whole
+file, so a small edit lands as a large diff, use the `ben:reflow-commit` skill
+to commit the reflow separately.
 
 ### Security
 
