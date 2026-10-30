@@ -31,7 +31,7 @@ jobs:
       - name: Lint Python and provisioning shell scripts
         run: |
           uvx ruff check .
-          shellcheck bin/kiosk bin/check-secrets lib/kiosk/kiosk-browser lib/kiosk/kiosk-set-url lib/kiosk/kiosk-tailscale lib/kiosk/autostart lib/kiosk/wyse/provision.sh lib/kiosk/wyse/disk.sh lib/kiosk/wyse/late.sh
+          shellcheck bin/kiosk bin/check-secrets bin/git-sync lib/kiosk/kiosk-browser lib/kiosk/kiosk-set-url lib/kiosk/kiosk-tailscale lib/kiosk/autostart lib/kiosk/wyse/provision.sh lib/kiosk/wyse/disk.sh lib/kiosk/wyse/late.sh
       - name: Test portable tools
         # Helix needs the locally built editor/grammars/formatters, so its
         # integration suite stays local.

@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+#
+# git-sync --- bring the current branch level with its upstream, as `git sync`
+# (git runs any git-<name> on PATH as a subcommand, so agents and scripts get
+# it too, not just an interactive shell; `gsy` in zshrc is an alias).
+#
+# Fetch, then rebase onto the upstream if it has new commits, then push if
+# there are local ones. A branch that has diverged gets both: after the rebase
+# the push is a fast-forward, so it never needs force. Uncommitted changes are
+# autostashed around the rebase. A rebase that conflicts is aborted, leaving
+# the branch as it was. ~/projects/comp4020/sync-repos runs this in every repo
+# under that folder.
+#
+# Usage: git sync [-n|--dry-run]
+set -uo pipefail
+
+dry_run=false
+case "${1:-}" in
+"") ;;
+-n | --dry-run) dry_run=true ;;
+-h | --help)
+    sed -n 's/^# Usage: /Usage: /p' "$0"
+    exit 0
+    ;;
+*)
+    echo "git sync: unknown argument: $1" >&2
+    exit 2
+    ;;
+esac
+
+die() {
+    echo "git sync: $*" >&2
+    exit 1
+}
+
+run() {
+    if $dry_run; then
+        echo "would run: git $*"
+    else
+        git "$@"
+    fi
+}
+
+branch="$(git symbolic-ref --quiet --short HEAD)" || die "detached HEAD (not on a branch)"
+upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)" ||
+    die "branch '$branch' has no upstream (git push -u to set one)"
+git fetch --prune --quiet || die "fetch failed"
+
+counts="$(git rev-list --left-right --count "$upstream...HEAD")" ||
+    die "could not compare '$branch' with '$upstream'"
+read -r behind ahead <<<"$counts"
+
+if ((behind == 0 && ahead == 0)); then
+    echo "up to date with $upstream"
+    exit 0
+fi
+
+if ((behind > 0)); then
+    if ! run rebase --quiet --autostash "$upstream"; then
+        git rebase --abort >/dev/null 2>&1
+        die "rebase onto $upstream conflicted, so it was aborted --- resolve by hand"
+    fi
+    if ((ahead > 0)); then
+        echo "rebased $ahead commit(s) onto $behind new from $upstream"
+    else
+        echo "fast-forwarded $behind commit(s) from $upstream"
+    fi
+fi
+
+if ((ahead > 0)); then
+    run push --quiet || die "push to $upstream failed"
+    echo "pushed $ahead commit(s) to $upstream"
+fi

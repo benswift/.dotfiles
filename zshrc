@@ -72,36 +72,7 @@ alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_ru
 alias gst="git status"
 alias gd="git diff"
 alias gl="git log --oneline"
-gp() { git pull --rebase; }
-gship() { git push; }
-gsy() {
-  if ! git diff-index --quiet HEAD -- 2>/dev/null; then
-    echo "Uncommitted changes --- commit or stash first." >&2
-    return 1
-  fi
-  local remote
-  remote=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null) || {
-    echo "No upstream tracking branch set." >&2
-    return 1
-  }
-  git fetch || return 1
-  local local_ref upstream_ref base_ref
-  local_ref=$(git rev-parse @)
-  upstream_ref=$(git rev-parse @{u})
-  base_ref=$(git merge-base @ @{u})
-  if [[ "$local_ref" == "$upstream_ref" ]]; then
-    echo "Already up to date."
-  elif [[ "$local_ref" == "$base_ref" ]]; then
-    echo "Pulling (rebase)..."
-    git rebase @{u} || { echo "Rebase conflict --- resolve manually." >&2; git rebase --abort; return 1; }
-  elif [[ "$upstream_ref" == "$base_ref" ]]; then
-    echo "Pushing..."
-    git push
-  else
-    echo "Local and remote have diverged --- resolve manually." >&2
-    return 1
-  fi
-}
+alias gsy="git sync"  # bin/git-sync
 # zellij shortcuts
 zs() { zellij --session "${1:-${PWD##*/}}" "${@:2}"; }
 alias za="zellij attach"

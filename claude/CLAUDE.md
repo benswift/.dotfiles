@@ -100,7 +100,8 @@ data structures is good practice. Match the style of surrounding code.
 ### Publishing
 
 "Push" means push the current branch only. Do not create a branch or PR unless I
-explicitly ask for one.
+explicitly ask for one. `git sync` rebases the current branch onto its upstream
+and pushes it, in one step.
 
 ### Testing
 
