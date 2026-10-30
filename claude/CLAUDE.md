@@ -39,6 +39,15 @@ architecture, em-dash discipline (sparing), opening patterns, and
 signposting --- don't reintroduce those decisions inside the benswift-writer
 overlay.
 
+### Pet hates
+
+- emails open with the substance: no "quick question:", "just a quick one" or
+  similar preamble
+- no AI-writing tells (taxonomy in benswift-writer's `ai-tropes.md`). The worst:
+  anthropomorphising code and tools ("the script is happy", "the hook wants
+  to"), and unearned sermons, a closing moral or "this is a reminder that" the
+  facts haven't earned
+
 ### Harness instruction files
 
 CLAUDE.md, AGENTS.md and SKILL.md are prompts loaded into every session, not
