@@ -140,14 +140,14 @@
       }
     }
   },
-  "tui": "fullscreen",
-  "skipDangerousModePermissionPrompt": true,
-  "editorMode": "vim",
-  "preferredNotifChannel": "ghostty",
-  "agentPushNotifEnabled": true,
   "modelSettings": {
     "claude-opus-5-5": {
       "effortLevel": "high"
     }
-  }
+  },
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "editorMode": "vim",
+  "preferredNotifChannel": "ghostty",
+  "agentPushNotifEnabled": true
 }
