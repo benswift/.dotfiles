@@ -4,7 +4,7 @@ title: Restructure benswift-writer around per-context before/after pairs
 status: To Do
 assignee: []
 created_date: 2026-08-29 01:14
-updated_date: '2026-10-27T06:18:00Z'
+updated_date: '2026-10-30T06:52:00Z'
 labels: []
 dependencies: []
 references:
@@ -28,17 +28,16 @@ Candidate material (real paragraphs with content briefs) is already collected in
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 SKILL.md keeps the universal quirks and the trope pass, and instructs the model to identify the writing context and read exactly one contexts/<name>.md, with a stated nearest-match fallback for contexts not listed
-- [ ] #2 contexts/ contains blog.md, email-colleague.md, email-student.md and academic.md, each opening with a register brief (audience, typical length, formality, sign-off, jamesian preset, what is out of bounds) followed by 3-5 before/after pairs with a one-line gloss per pair and the 'after' placed second
+- [ ] #2 contexts/ contains blog.md, email-colleague.md, email-student.md and academic.md, each opening with a register brief (audience, typical length, formality, sign-off, what is out of bounds) followed by 3-5 before/after pairs with a one-line gloss per pair and the 'after' placed second
 - [ ] #3 In every context file at least one pair's 'after' is Ben's real from-scratch writing, and every 'before' was written blind from a content brief without sight of the 'after'
 - [ ] #4 Pairs within a file cover distinct topics (no two on the same subject) and each context file is under ~1500 words
-- [ ] #5 The jamesian preset choice (BALANCED/LAYERED) lives in each context brief, not in SKILL.md
-- [ ] #6 The SKILL.md description is a folded scalar naming the contexts so the skill triggers on 'reply to this student' or 'draft an email to' as well as 'blog post'
-- [ ] #7 ai-tropes.md and the detection-pass instructions are unchanged in substance
-- [ ] #8 Holdout check done: for each context one brief was held back from the file, the skill's output on that brief compared blind against Ben's real version, and the result recorded in the task notes
-- [ ] #9 Email excerpts in the skill are anonymised (no names, addresses, student IDs) and no candidate material is committed to the public dotfiles repo
-- [ ] #10 Changes committed and pushed in claude-plugin-personal, and the benswift-writer entry in ~/.claude/CLAUDE.md's writing-rules paragraph still describes the skill chain accurately
-- [ ] #11 SKILL.md's workflow ends with a capture step that fires only when Ben rewrites the model's output (not as a standing offer): it anonymises, appends the pair --- model draft, Ben's version, the context it was drafting in --- to inbox.md, commits and pushes in the plugin repo, and prints the running inbox count
-- [ ] #12 inbox.md sits beside SKILL.md, outside contexts/, and is never read while drafting; its own header documents the promote rule --- on 'promote the writer inbox' entries move into the matching contexts/ file under a hard cap of five pairs, so adding one retires the weakest
+- [ ] #5 The SKILL.md description is a folded scalar naming the contexts so the skill triggers on 'reply to this student' or 'draft an email to' as well as 'blog post'
+- [ ] #6 ai-tropes.md and the detection-pass instructions are unchanged in substance
+- [ ] #7 Holdout check done: for each context one brief was held back from the file, the skill's output on that brief compared blind against Ben's real version, and the result recorded in the task notes
+- [ ] #8 Email excerpts in the skill are anonymised (no names, addresses, student IDs) and no candidate material is committed to the public dotfiles repo
+- [ ] #9 Changes committed and pushed in claude-plugin-personal, and the benswift-writer entry in ~/.claude/CLAUDE.md's writing-rules paragraph still describes the skill chain accurately
+- [ ] #10 SKILL.md's workflow ends with a capture step that fires only when Ben rewrites the model's output (not as a standing offer): it anonymises, appends the pair --- model draft, Ben's version, the context it was drafting in --- to inbox.md, commits and pushes in the plugin repo, and prints the running inbox count
+- [ ] #11 inbox.md sits beside SKILL.md, outside contexts/, and is never read while drafting; its own header documents the promote rule --- on 'promote the writer inbox' entries move into the matching contexts/ file under a hard cap of five pairs, so adding one retires the weakest
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -52,11 +51,11 @@ pairs.md (step 3) is single-use scaffolding: one file for Ben to make his whole 
 
 2. Generate the blind befores, **with opus**. For each candidate, spawn a fresh opus subagent with NO writing skill loaded, given only: the audience (from the context), the brief, and a target length. It must not see Ben's text. Opus rather than the usual sonnet default because the before has to be the honest default of the model Ben actually writes with --- a sonnet before would teach the overlay to correct a draft he never receives. Do not have one agent write several befores in a row; each one fresh, so they don't converge.
 
-3. Assemble drafts/benswift-writer/pairs.md: one throwaway working file, all four contexts, already in the shape the shipped files take. Per context: a draft register brief (audience, length, formality, sign-off, jamesian preset, out of bounds), then every candidate as before-then-after with an empty gloss line. Ben's pass happens here and nowhere else --- keep or hand-edit each after, write the gloss naming the move (what the before did that his version doesn't: 'dropped the pre-emptive apology; the ask goes first', 'no summary sentence at the end', 'one concrete number instead of three adjectives'), correct the register briefs, keep 3-5 pairs per context on distinct topics, and mark the cuts and one HOLDOUT per context inline rather than deleting them.
+3. Assemble drafts/benswift-writer/pairs.md: one throwaway working file, all four contexts, already in the shape the shipped files take. Per context: a draft register brief (audience, length, formality, sign-off, out of bounds), then every candidate as before-then-after with an empty gloss line. Ben's pass happens here and nowhere else --- keep or hand-edit each after, write the gloss naming the move (what the before did that his version doesn't: 'dropped the pre-emptive apology; the ask goes first', 'no summary sentence at the end', 'one concrete number instead of three adjectives'), correct the register briefs, keep 3-5 pairs per context on distinct topics, and mark the cuts and one HOLDOUT per context inline rather than deleting them.
 
 4. Split pairs.md into skills/benswift-writer/contexts/{blog,email-colleague,email-student,academic}.md: drop the cut pairs and the holdouts, carry the briefs and surviving pairs across verbatim, and check each file lands under ~1500 words. Diff the pair count per context against pairs.md before moving on --- the split is the one place a pair can go missing. Op-ed is deferred: no real corpus yet.
 
-5. Rewrite SKILL.md into a router: keep Language/Structure/Voice quirks and the whole AI-trope pass; move 'Email: Cheers' and the jamesian preset choice into the context briefs; add the step 'identify the context, read exactly one contexts/ file; for an unlisted context pick the nearest and say which'. Description as a folded scalar listing the contexts and trigger phrases.
+5. Rewrite SKILL.md into a router: keep Language/Structure/Sentences/Voice quirks and the whole AI-trope pass; move 'Email: Cheers' into the context briefs; add the step 'identify the context, read exactly one contexts/ file; for an unlisted context pick the nearest and say which'. Description as a folded scalar listing the contexts and trigger phrases.
 
 6. Add the capture step as the last workflow item in SKILL.md, and ship inbox.md beside it (empty but for the header). Capture is event-triggered --- Ben rewrote the output --- never a standing offer, because a step that asks after every draft is one he learns to skip. It anonymises before it writes (most captures come from real student and colleague mail) and pushes in the same breath, or the next `dotfiles update` re-clone eats the entry. The gloss is left blank: naming the move is curation-time work and is easier across three failures than one. inbox.md's header carries the promote rule, so the file explains itself whenever it is next opened.
 

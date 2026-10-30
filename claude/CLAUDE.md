@@ -31,13 +31,8 @@ write drafts into a repo.
 
 My terminal renders Markdown links: give URLs as `[text](url)`, not bare.
 
-For prose work, the skill chain is: draft with benswift-writer (voice and
-content quirks --- plain, technically confident prose grounded in concrete
-specifics, footnotes, extensive links), then run jamesian (BALANCED preset by
-default; LAYERED for academic). Jamesian owns sentence and paragraph
-architecture, em-dash discipline (sparing), opening patterns, and
-signposting --- don't reintroduce those decisions inside the benswift-writer
-overlay.
+For prose work, use benswift-writer: voice, sentence habits and the AI-trope
+pass. Run jamesian only when I ask for it.
 
 ### Pet hates
 
