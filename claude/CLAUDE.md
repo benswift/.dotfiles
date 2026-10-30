@@ -25,6 +25,10 @@ than continuing to guess.
 Use clear, concise language with Australian English spelling. Don't overuse
 lists or exclamation marks.
 
+When drafting text I'll send elsewhere (email, Ed, Teams), show it as plain
+text, not a blockquote, and pipe it to `clipboard-copy` (works over ssh). Don't
+write drafts into a repo.
+
 For prose work, the skill chain is: draft with benswift-writer (voice and
 content quirks --- plain, technically confident prose grounded in concrete
 specifics, footnotes, extensive links), then run jamesian (BALANCED preset by
