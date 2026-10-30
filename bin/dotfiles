@@ -159,7 +159,7 @@ check_tools() {
 
     # Likewise the wiz engine, built by bin/wiz-build at wiz/pinned-rev, or on
     # a pinned host the lx vault's install (see wiz-build's header).
-    local wiz_status wiz_kind="source build at the pinned rev" vaults=(ben lx)
+    local wiz_status wiz_kind="source build at the pinned rev" vaults=(ben hdr lx)
     if "$DOTFILES_DIR/bin/wiz-build" --pinned-host; then
         wiz_kind="the lx vault's pinned install"
         vaults=(lx)
