@@ -107,7 +107,8 @@ data structures is good practice. Match the style of surrounding code.
 
 "Push" means push the current branch only. Do not create a branch or PR unless I
 explicitly ask for one. `git sync` rebases the current branch onto its upstream
-and pushes it, in one step.
+and pushes it, in one step. After a push, watch its CI to the end and report the
+result.
 
 ### Testing
 
