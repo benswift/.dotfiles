@@ -69,6 +69,11 @@ I read on daysy (my Mac) but mostly work on weddle. When I ask to see something
 you've made, `daysy-open <file>...` copies it over and opens it there;
 `daysy-fetch` copies what I just downloaded on daysy to here (`-h` for options).
 
+The `FLY_API_TOKEN` in my mise env reaches only the
+`comp4020-agentic-coding-studio` Fly org (the course's automation needs it). For
+my `personal` or `anu-school-of-cybernetics` orgs, run
+`env -u FLY_API_TOKEN fly ... -o <slug>` so my own login applies.
+
 Default to ast-grep (`sg`) whenever the target is a code symbol --- a
 function/class/method definition, its callers, an import, a rename, or "show me
 the body of X" from a large file. Treat any task that names a code construct as
