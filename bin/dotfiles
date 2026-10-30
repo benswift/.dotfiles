@@ -266,10 +266,10 @@ check_directories() {
     done
 }
 
-# One tracked plist: installed, identical to the tracked copy, loaded, and its
-# last run clean. Also used by the private overlay's check_private.
+# One tracked plist: installed, identical to the tracked copy, loaded, and not
+# broken. Also used by the private overlay's check_private.
 check_launchd_job() {
-    local plist="$1" label installed info code
+    local plist="$1" label installed job
     label=$(basename "$plist" .plist)
     installed="$HOME/Library/LaunchAgents/$label.plist"
     if [[ ! -f "$installed" ]]; then
@@ -280,21 +280,25 @@ check_launchd_job() {
         check_fail "$label installed copy differs from ${plist#"$DOTFILES_DIR"/}"
         return
     fi
-    if ! info=$(launchctl print "gui/$(id -u)/$label" 2>/dev/null); then
+    if ! launchctl print "gui/$(id -u)/$label" >/dev/null 2>&1; then
         check_fail "$label not loaded (launchctl bootstrap it)"
         return
     fi
-    code=$(sed -n 's/.*last exit code = \([^ ]*\).*/\1/p' <<<"$info" | head -1)
-    if [[ -z "$code" || "$code" == "0" || "$code" == "(never" ]]; then
-        check_pass "$label loaded"
+    # Broken is launchd-run's verdict, not launchd's last exit code, which is
+    # non-zero after any blip the wrapper deliberately ignores (a sleep, a
+    # single failure). The wrapper's marker exists from the page until the
+    # next success.
+    job=$(plutil -extract ProgramArguments.1 raw "$plist")
+    if [[ -f "${XDG_STATE_HOME:-$HOME/.local/state}/launchd-run/$job.failed" ]]; then
+        check_fail "$label failing, paged (see ~/Library/Logs/$job.log)"
     else
-        check_fail "$label last exit $code (see ~/Library/Logs/)"
+        check_pass "$label loaded"
     fi
 }
 
 # The plists in launchd/ are installed by hand (see each header), so this is
 # what notices an installed copy drifting from the tracked one, a job that was
-# never bootstrapped, or one whose last run failed.
+# never bootstrapped, or one launchd-run has paged about.
 check_launchd() {
     [[ "$OSTYPE" == darwin* ]] || return 0
     section "Checking launchd jobs..."
