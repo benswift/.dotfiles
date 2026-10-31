@@ -145,7 +145,7 @@ check_symlinks() {
 check_tools() {
     section "Checking tools..."
 
-    local optional_tools=(neomutt mu mbsync msmtp rclone fzf mosh)
+    local optional_tools=(mu mbsync msmtp rclone fzf mosh)
 
     # helix is built from source by bin/helix-build, not installed by mise, so
     # `hx` merely being on PATH proves nothing: it must be the pinned build,
