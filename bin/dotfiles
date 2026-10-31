@@ -157,15 +157,12 @@ check_tools() {
         check_fail "helix: $(tail -1 <<<"$helix_status")"
     fi
 
-    # Likewise the wiz engine, built by bin/wiz-build from its main, or on a
-    # pinned host the lx vault's install (see wiz-build's header).
-    local wiz_status wiz_kind="source build of main" vaults=(ben hdr lx)
-    if "$DOTFILES_DIR/bin/wiz-build" --pinned-host; then
-        wiz_kind="the lx vault's pinned install"
-        vaults=(lx)
-    fi
+    # Likewise the wiz engine, built by bin/wiz-build from its main. watson
+    # knows only the lx vault, whose automation it runs.
+    local wiz_status vaults=(ben hdr lx)
+    [[ "$(hostname -s)" == watson ]] && vaults=(lx)
     if wiz_status=$("$DOTFILES_DIR/bin/wiz-build" --check 2>&1); then
-        check_pass "wiz ($wiz_kind)"
+        check_pass "wiz (source build of main)"
     else
         check_fail "wiz: $(tail -1 <<<"$wiz_status")"
     fi
@@ -306,13 +303,6 @@ check_launchd() {
     local plist label
     for plist in "$DOTFILES_DIR"/launchd/*.plist; do
         label=$(basename "$plist" .plist)
-        # A pinned host runs the lx vault's watson-run agent instead of
-        # wiz-due, which would run its workflows twice; no other host runs it.
-        if "$DOTFILES_DIR/bin/wiz-build" --pinned-host; then
-            [[ "$label" == com.benswift.wiz-due ]] && continue
-        else
-            [[ "$label" == com.benswift.watson-run ]] && continue
-        fi
         check_launchd_job "$plist"
     done
 

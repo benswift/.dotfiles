@@ -18,10 +18,7 @@ if [[ -d /opt/homebrew ]]; then
   path=(/opt/homebrew/bin /opt/homebrew/sbin $path)
 fi
 
-# ~/.wiz/bin is the collaborators' install of the wiz the lx vault pins. It
-# sits behind ~/.local/bin so bin/wiz-build's source build wins wherever there
-# is one; watson has none, and runs the pinned wiz.
-path=(~/.dotfiles/bin ~/.dotfiles/private/bin(N) ~/.local/bin ~/.wiz/bin(N) ~/.cargo/bin ~/.bun/bin $path ~/.orbstack/bin(N))
+path=(~/.dotfiles/bin ~/.dotfiles/private/bin(N) ~/.local/bin ~/.cargo/bin ~/.bun/bin $path ~/.orbstack/bin(N))
 
 # mise's shims, appended last. `mise activate` only runs from .zshrc, so
 # without this a non-interactive shell sees none of the mise-managed tools ---
