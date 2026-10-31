@@ -71,16 +71,11 @@ actual headings, not bold text as a substitute.
 
 ### Machines
 
-- weddle: my Linux machine, where I mostly work and most sessions run
-- daysy: my Mac, where I read ("daisy" is my misspelling of it). When I ask to
-  see something you've made, `daysy-open <file>...` copies it over and opens it
-  there; `daysy-fetch` copies what I just downloaded on daysy to here (`-h` for
-  options)
-- watson: an always-on ANU Mac mini on the campus network that runs the lx
-  vault's automation, signed in as me to the convenor mailbox and OneDrive.
-  SharePoint is reachable only through it: `~/sharepoint/` links the libraries
-  its OneDrive syncs (the lx vault's `CLAUDE.md` has the rules); from weddle,
-  use `ssh watson` or `rsync`
+- weddle: my Linux box, where I mostly work
+- daysy (not "daisy"): my Mac, where I read. `daysy-open <file>...` shows it
+  something; `daysy-fetch` copies my downloads here (`-h` for options)
+- watson: always-on ANU Mac mini running the lx automation; the only route to
+  SharePoint, via its `~/sharepoint/` (rules in the lx vault's `CLAUDE.md`)
 
 ### Other tools
 
