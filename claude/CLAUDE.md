@@ -72,6 +72,9 @@ actual headings, not bold text as a substitute.
 I read on daysy (my Mac) but mostly work on weddle. When I ask to see something
 you've made, `daysy-open <file>...` copies it over and opens it there;
 `daysy-fetch` copies what I just downloaded on daysy to here (`-h` for options).
+SharePoint is reachable only through watson, where `~/sharepoint/` links the
+libraries its OneDrive syncs (the lx vault's `CLAUDE.md` has the rules); from
+weddle, use `ssh watson` or `rsync`.
 
 The `FLY_API_TOKEN` in my mise env reaches only the
 `comp4020-agentic-coding-studio` Fly org (the course's automation needs it). For
