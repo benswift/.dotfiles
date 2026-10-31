@@ -130,8 +130,8 @@ install_helix() {
 install_wiz() {
     info "Building the wiz engine from source..."
     eval "$(mise activate bash)"
-    # Built at the commit pinned in wiz/pinned-rev rather than installed from
-    # a vault's pin; bin/wiz-build's header says why.
+    # Built from the engine's main rather than installed from a vault's pin;
+    # bin/wiz-build's header says why.
     "$DOTFILES_DIR/bin/wiz-build" ||
         warn "wiz build failed --- run 'wiz-build' once the machine can reach gitlab.anu.edu.au"
 }

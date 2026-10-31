@@ -138,9 +138,8 @@ Helix runs on save (dispatch table in the script; mirrors
 Each script's header has the detail. Notable ones:
 
 - `dotfiles` --- doctor, update, edit
-- `wiz-build` --- builds the wiz engine (`u2548636/wiz-engine`) at the commit in
-  `wiz/pinned-rev` into `~/.local/bin`, the helix pattern; `--update` moves the
-  pin
+- `wiz-build` --- builds the wiz engine's main (`u2548636/wiz-engine`) into
+  `~/.local/bin`
 - `agent-run` --- headless agent dispatcher (see below)
 - `hx-ghostty` --- open files in helix in a Ghostty tab; `--register` (once per
   Mac) makes it macOS's default for text and source files

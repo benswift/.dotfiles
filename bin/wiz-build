@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# wiz-build --- build and install the wiz engine from source, at the commit
-# pinned in wiz/pinned-rev.
+# wiz-build --- build and install the wiz engine from source, at its main.
 #
 # Collaborators install wiz from the build the lx vault pins (its
 # admin/tools/wiz-install, into ~/.wiz/bin). Ben's machines don't: each vault
 # would pin its own version into the one install, and the engine reads every
-# older vault format anyway, so one build at this pin serves every vault in
-# the registry. It goes into ~/.local/bin/wiz, ahead of nothing else.
+# older vault format anyway, so one build of the engine's main serves every
+# vault in the registry, ahead of any release. It goes into ~/.local/bin/wiz, ahead of nothing else.
 #
 # The exception is PINNED_HOSTS: watson runs the lx automation, so it runs
 # exactly the wiz the collaborators do, from ~/.wiz/bin, and has no key to the
@@ -16,14 +15,13 @@
 #
 # The engine repo is cloned to $WIZ_SRC and built with the Go its mise.toml
 # names. The version wiz reports carries the commit (`v1.0.0-3-g63b7857`),
-# which is how --check knows what is installed. An unchanged pin makes this a
-# no-op, so `dotfiles update` only pays for a build when the pin moves.
+# which is how --check knows what is installed. An unchanged main makes this a
+# no-op, so `dotfiles update` only pays for a build when the engine changes.
 #
 # Usage:
-#   wiz-build              build and install the pinned rev (no-op if current)
-#   wiz-build --update     move the pin to the engine's main, then build
-#   wiz-build --force      rebuild even when the pinned rev is installed
-#   wiz-build --check      report status only; non-zero if not on the pin
+#   wiz-build              build and install the engine's main (no-op if current)
+#   wiz-build --force      rebuild even when main is installed
+#   wiz-build --check      report status only; non-zero if not on main as last fetched
 #   wiz-build --no-test    skip the engine's tests, and tests/test_todo_wiz.py after
 #   wiz-build --pinned-host  exit 0 if this host runs the vault-pinned wiz
 set -euo pipefail
@@ -34,7 +32,6 @@ source "$DOTFILES_DIR/lib/log.sh"
 WIZ_SRC="${WIZ_SRC:-${XDG_DATA_HOME:-$HOME/.local/share}/wiz-src}"
 WIZ_PREFIX="${WIZ_PREFIX:-$HOME/.local}"
 REPO_URL="git@gitlab.anu.edu.au:u2548636/wiz-engine.git"
-PIN_FILE="$DOTFILES_DIR/wiz/pinned-rev"
 WIZ="$WIZ_PREFIX/bin/wiz"
 PINNED_HOSTS=(watson)
 PINNED_WIZ="$HOME/.wiz/bin/wiz"
@@ -43,7 +40,6 @@ MODE=build
 RUN_TESTS=true
 while [[ $# -gt 0 ]]; do
     case "$1" in
-    --update) MODE=update ;;
     --force) MODE=force ;;
     --check) MODE=check ;;
     --no-test) RUN_TESTS=false ;;
@@ -60,22 +56,6 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-pinned_rev() {
-    grep -m1 -oE '^[0-9a-f]{40}$' "$PIN_FILE" || {
-        error "$PIN_FILE holds no 40-character commit sha"
-        return 1
-    }
-}
-
-write_pin() {
-    cat >"$PIN_FILE" <<EOF
-# The wiz engine commit bin/wiz-build compiles. Bump it with
-# \`wiz-build --update\` and commit the result, so every machine runs the
-# same engine.
-$1
-EOF
-}
-
 # `wiz version` on a source build prints "v1.0.0-3-g63b7857a".
 installed_rev() {
     [[ -x "$WIZ" ]] || return 1
@@ -90,18 +70,13 @@ ensure_checkout() {
     mise trust -q "$WIZ_SRC/mise.toml" >/dev/null 2>&1 || true
 }
 
-update_pin() {
+# The engine's main, fetched now where the network allows, else as last
+# fetched.
+main_rev() {
     ensure_checkout
-    git -C "$WIZ_SRC" fetch -q --prune --tags origin
-    local rev
-    rev="$(git -C "$WIZ_SRC" rev-parse origin/main)"
-    if [[ "$rev" == "$(pinned_rev 2>/dev/null || true)" ]]; then
-        info "Pin is already at the engine's main ($rev)"
-        return
-    fi
-    write_pin "$rev"
-    info "Pin moved to $rev"
-    warn "commit wiz/pinned-rev so the other machines follow"
+    git -C "$WIZ_SRC" fetch -q --prune --tags origin ||
+        warn "couldn't fetch the engine; using main as last fetched" >&2
+    git -C "$WIZ_SRC" rev-parse origin/main
 }
 
 build() {
@@ -134,7 +109,7 @@ run_tests() {
     [[ -x "$suite" ]] || return 0
     info "Running the todo integration tests"
     if ! WIZ="$WIZ" "$suite"; then
-        error "bin/todo fails against this wiz; fix it or move the pin back"
+        error "bin/todo fails against this wiz; fix bin/todo or the engine"
         return 1
     fi
 }
@@ -150,14 +125,17 @@ check_shadowing() {
 
 report() {
     local want got
-    want="$(pinned_rev)"
+    want="$(git -C "$WIZ_SRC" rev-parse origin/main 2>/dev/null)" || {
+        error "no engine checkout at $WIZ_SRC --- run wiz-build"
+        return 1
+    }
     got="$(installed_rev || true)"
     if [[ -z "$got" ]]; then
         error "no wiz build at $WIZ"
         return 1
     fi
     if [[ "$want" != "$got"* ]]; then
-        error "$WIZ is $got, but the pin is ${want:0:10} --- run wiz-build"
+        error "$WIZ is $got, but the engine's main is ${want:0:10} --- run wiz-build"
         return 1
     fi
     info "wiz $("$WIZ" version) installed at $WIZ"
@@ -186,21 +164,14 @@ pinned-host)
 check)
     report && check_shadowing
     ;;
-update)
-    update_pin
-    build "$(pinned_rev)"
-    report
-    check_shadowing || true
-    run_tests
-    ;;
 force)
-    build "$(pinned_rev)"
+    build "$(main_rev)"
     report
     check_shadowing || true
     run_tests
     ;;
 build)
-    rev="$(pinned_rev)"
+    rev="$(main_rev)"
     installed="$(installed_rev || true)"
     if [[ -n "$installed" && "$rev" == "$installed"* ]]; then
         info "wiz ${rev:0:10} is already installed --- nothing to do"
