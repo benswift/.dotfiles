@@ -54,4 +54,4 @@ def test_unknown_option_is_refused_not_filed(calls: Path) -> None:
 def test_words_still_file_a_task(calls: Path) -> None:
     result = todo(calls, "pay", "henry")
     assert result.returncode == 0
-    assert calls.read_text().startswith("add ben task -title pay henry")
+    assert calls.read_text().startswith("add anu task -title pay henry")

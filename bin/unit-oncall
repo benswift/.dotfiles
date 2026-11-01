@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# unit-oncall: turn a failed systemd user unit into a task in the ben vault.
+# unit-oncall: turn a failed systemd user unit into a task in the anu vault.
 #
 # Scheduled jobs fail silently by default: the journal records it, but nothing
 # reaches Ben unless he goes looking. This is the backchannel --- a failure
-# files an open task in the ben vault (with the tail of the unit's journal),
+# files an open task in the anu vault (with the tail of the unit's journal),
 # tagged bot and oncall with the unit in its `unit` field, and shares it, so it
 # shows up wherever the vault does.
 #
@@ -112,18 +112,18 @@ clear)
 	# leaves more than one), found by its unit field, so a task Ben wrote
 	# himself is never touched. This runs on every success, so it writes and
 	# shares only when something matches.
-	mapfile -t open < <(wiz query ben -json "type == \"task\" && unit == \"$unit\" && status == \"open\"" 2>>"$LOG" \
+	mapfile -t open < <(wiz query anu -json "type == \"task\" && unit == \"$unit\" && status == \"open\"" 2>>"$LOG" \
 		| jq -r '.[].path' 2>>"$LOG" || true)
 	((${#open[@]})) || exit 0
 
 	for task in "${open[@]}"; do
-		if rm -- "$(wiz path "ben:$task")" 2>>"$LOG"; then
+		if rm -- "$(wiz path "anu:$task")" 2>>"$LOG"; then
 			say "$unit: recovered; deleted $task"
 		else
 			say "$unit: recovered, but FAILED to delete $task"
 		fi
 	done
-	if wiz sync ben -m "oncall: $unit recovered" "${open[@]/#/$(wiz path ben)/}" >/dev/null 2>>"$LOG"; then
+	if wiz sync anu -m "oncall: $unit recovered" "${open[@]/#/$(wiz path anu)/}" >/dev/null 2>>"$LOG"; then
 		say "$unit: shared"
 	else
 		say "$unit: sync failed --- the deletions are local until the next sync"
@@ -235,7 +235,7 @@ $tail_out
 EOF
 )"
 
-if task="$(printf '%s\n' "$description" | wiz add ben task -json -title "$title" \
+if task="$(printf '%s\n' "$description" | wiz add anu task -json -title "$title" \
 	-set status=open -set "tags=[bot,oncall]" -set "unit=$unit" 2>>"$LOG" | jq -r '.paths[0]')" \
 	&& [[ -n "$task" && "$task" != null ]]; then
 	printf 'first failure %s\n' "$(date -Is)" >"$marker"
@@ -276,7 +276,7 @@ fi
 
 # Best effort: the task is already on disk, and wiz due's next sync of the
 # vault will carry it if this one cannot (offline, remote unreachable).
-if wiz sync ben -m "oncall: $unit failed" "$(wiz path ben)/$task" >/dev/null 2>>"$LOG"; then
+if wiz sync anu -m "oncall: $unit failed" "$(wiz path anu)/$task" >/dev/null 2>>"$LOG"; then
 	say "$unit: shared"
 else
 	say "$unit: sync failed --- the task is local until the next sync"

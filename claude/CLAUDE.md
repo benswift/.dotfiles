@@ -109,9 +109,10 @@ replacements.
   CLI (not Playwright directly) for browser automation and UI testing
 - **Tasks**: use the `backlog` CLI (Backlog.md); the
   `ben:project-manager-backlog` skill covers task format and workflow
-- **Notes**: my personal knowledge base is the wiz vault `ben` (`wiz path ben`),
-  managed with the `wiz` CLI. Use the `ben:vault` skill whenever a task involves
-  notes, tasks, journal entries, people, projects or the knowledge base
+- **Notes**: my knowledge base is the wiz vaults `anu` (academic work, the
+  default) and `ben` (personal only), managed with the `wiz` CLI. Use the
+  `ben:vault` skill whenever a task involves notes, tasks, journal entries,
+  people, projects or the knowledge base
 
 ## Coding rules
 

@@ -54,16 +54,16 @@ sysup() {
 }
 alias task="backlog task"
 # todo (bin/todo): list / do / block, or bare words for a new task
-# A titled note in the ben vault, opened in the editor; with text on stdin,
+# A titled note in the anu vault, opened in the editor; with text on stdin,
 # that's its body instead: `note Call with Ann < minutes.md`.
 note() {
   [[ $# -gt 0 ]] || { echo "usage: note <title words>" >&2; return 2; }
   local body="" added
   [[ -t 0 ]] || body="$(cat)"
-  added="$(printf '%s' "$body" | wiz add ben note -json -title "$*" | jq -r '.paths[0]')" || return
-  [[ -n "$body" ]] && echo "$added" || "${EDITOR:-hx}" "$(wiz path "ben:$added")"
+  added="$(printf '%s' "$body" | wiz add anu note -json -title "$*" | jq -r '.paths[0]')" || return
+  [[ -n "$body" ]] && echo "$added" || "${EDITOR:-hx}" "$(wiz path "anu:$added")"
 }
-alias latest='wiz query ben "path.startsWith(\"notes/\")" | tail -10'
+alias latest='wiz query anu "path.startsWith(\"notes/\")" | tail -10'
 # Copy a vault file's full path: `cpath ben:notes/2026-10-29-x.md`.
 cpath() { wiz path "$1" | tr -d '\n' | clipboard-copy && echo "copied $(wiz path "$1")"; }
 # alias sc='screencapture -i -t jpg screencap.jpg'

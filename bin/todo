@@ -9,18 +9,19 @@
   todo do <n>...        mark done
   todo undo <n>...      reopen
   todo block <n>...     mark blocked; `unblock` reopens
-  todo <words...>       a new ben task titled from the words, no quoting
+  todo <words...>       a new anu task titled from the words, no quoting
 
 The numbers are the rows of the last listing, remembered in
 ~/.local/state/todo/last.json, so `todo do 3` closes the third row shown. A
 task is "bot" when tagged bot (unit-oncall files job failures so); "blocked"
-is status blocked. Bot tasks with the same title (a job that keeps failing
+is status blocked. The first three sections hold every open task in the anu and
+ben vaults (both Ben's own). Bot tasks with the same title (a job that keeps failing
 past unit-oncall's 24h re-arm) collapse to one row, and `do` on it closes
 them all. The lx section lists that vault's open tasks whose agent is Ben;
 closing one shares it with the team at once.
 
-Everything goes through the wiz CLI; the ben vault's writes are shared by its next
-scheduled sync.
+Everything goes through the wiz CLI; the anu and ben vaults' writes are shared by
+their next scheduled sync.
 """
 
 from __future__ import annotations
@@ -33,6 +34,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ME = "[[people/ben-swift]]"
+# Ben's own vaults: every open task in them is his. Others' tasks (lx) are his
+# only when their agent is him.
+MINE = ("anu", "ben")
 STATE = (
     Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
     / "todo"
@@ -67,7 +71,7 @@ class Task:
 
     @property
     def section(self) -> str:
-        if self.vault != "ben":
+        if self.vault not in MINE:
             return "lx"
         if "bot" in self.tags:
             return "bot"
@@ -84,8 +88,9 @@ def wiz(*args: str, capture: bool = True) -> str:
 
 
 def open_tasks() -> list[Task]:
-    query = f'type == "task" && status != "done" && (vault == "ben" || agent == "{ME}")'
-    records = json.loads(wiz("query", "ben", "lx", "-json", query))
+    mine = " || ".join(f'vault == "{v}"' for v in MINE)
+    query = f'type == "task" && status != "done" && ({mine} || agent == "{ME}")'
+    records = json.loads(wiz("query", *MINE, "lx", "-json", query))
     tasks = [
         Task(
             vault=r["vault"],
@@ -188,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
                 for ref in group if verb == "do" else group[:1]:
                     wiz("update", ref, "-set", f"status={status}", capture=False)
                     vault = ref.split(":", 1)[0]
-                    if vault != "ben":
+                    if vault not in MINE:
                         shared.add(vault)
             for vault in shared:
                 wiz("sync", vault, capture=False)
@@ -206,7 +211,7 @@ def main(argv: list[str] | None = None) -> int:
         case [*words]:
             wiz(
                 "add",
-                "ben",
+                "anu",
                 "task",
                 "-title",
                 " ".join(words),

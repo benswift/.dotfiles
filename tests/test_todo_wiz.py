@@ -56,13 +56,13 @@ class Vaults:
 
     def status(self) -> dict[str, str]:
         """Every task's status, by title (the duplicated bot task as one)."""
-        out = self.run("wiz", "query", "ben", "lx", "-json", 'type == "task"')
+        out = self.run("wiz", "query", "anu", "ben", "lx", "-json", 'type == "task"')
         return {r["title"]: r["fields"].get("status", "") for r in json.loads(out)}
 
 
 @pytest.fixture
 def vaults(tmp_path: Path) -> Vaults:
-    """Fresh ben and lx vaults, registered in a registry of their own."""
+    """Fresh anu, ben and lx vaults, registered in a registry of their own."""
     gitconfig = tmp_path / "gitconfig"
     gitconfig.write_text(
         "[user]\n\tname = Test\n\temail = test@example.com\n"
@@ -81,7 +81,7 @@ def vaults(tmp_path: Path) -> Vaults:
         },
     )
     registry = ["[vaults]"]
-    for name in ("ben", "lx"):
+    for name in ("anu", "ben", "lx"):
         vault, remote = tmp_path / name, tmp_path / f"{name}.git"
         shutil.copytree(FIXTURES / name, vault)
         v.run("git", "init", "-q", "--bare", str(remote))
@@ -97,17 +97,19 @@ def vaults(tmp_path: Path) -> Vaults:
 
 LISTING = """
 todos
-      1  Book dentist
-      2  Renew passport  due 2026-12-01
+      1  Mark assignments
+      2  Book dentist
+      3  Renew passport  due 2026-12-01
 
 blocked
-      3  Waiting on visa
+      4  Waiting on reviewer
+      5  Waiting on visa
 
 bot
-      4  backup failed  ×2
+      6  backup failed  ×2
 
 lx
-      5  Send quote
+      7  Send quote
 
 """
 
@@ -118,11 +120,11 @@ def test_lists_open_tasks_by_section(vaults: Vaults) -> None:
 
 def test_do_closes_a_whole_bot_row_and_shares_lx_at_once(vaults: Vaults) -> None:
     vaults.todo()
-    vaults.todo("do", "4", "5")
+    vaults.todo("do", "6", "7")
     status = vaults.status()
     assert status["backup failed"] == "done"
     assert status["Send quote"] == "done"
-    bot = list((vaults.root / "ben" / "tasks").glob("*-backup-failed.md"))
+    bot = list((vaults.root / "anu" / "tasks").glob("*-backup-failed.md"))
     assert len(bot) == 2
     assert all("status: done" in path.read_text() for path in bot)
     assert vaults.git("lx", "status", "--porcelain") == ""
@@ -131,19 +133,27 @@ def test_do_closes_a_whole_bot_row_and_shares_lx_at_once(vaults: Vaults) -> None
     )
 
 
+def test_do_closes_a_personal_ben_task_without_a_sync(vaults: Vaults) -> None:
+    vaults.todo()
+    vaults.todo("do", "2")
+    assert vaults.status()["Book dentist"] == "done"
+    assert "Book dentist" not in vaults.todo()
+
+
 def test_block_and_unblock_move_a_task_between_sections(vaults: Vaults) -> None:
     vaults.todo()
-    vaults.todo("block", "1")
+    vaults.todo("block", "2")
     assert vaults.status()["Book dentist"] == "blocked"
-    assert "      3  Book dentist\n\nbot" in vaults.todo()
-    vaults.todo("unblock", "3")
+    assert "      5  Book dentist\n\nbot" in vaults.todo()
+    vaults.todo("unblock", "5")
     assert vaults.status()["Book dentist"] == "open"
 
 
-def test_words_file_a_valid_ben_task(vaults: Vaults) -> None:
+def test_words_file_a_valid_anu_task(vaults: Vaults) -> None:
     vaults.todo("pay", "henry")
     assert vaults.status()["pay henry"] == "open"
-    vaults.run("wiz", "validate", "ben")
+    assert list((vaults.root / "anu" / "tasks").glob("*-pay-henry.md"))
+    vaults.run("wiz", "validate", "anu")
 
 
 if __name__ == "__main__":
