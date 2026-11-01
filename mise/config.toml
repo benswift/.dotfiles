@@ -56,6 +56,9 @@ fzf = "latest"
 # bin/ts-cat's fallback previewer. Via mise rather than brew/apt so the binary
 # is called `bat` on both platforms (Debian's package installs it as `batcat`).
 bat = "latest"
+# git's pager (gitconfig). Via mise rather than apt so both platforms get a
+# current delta --- Ubuntu ships 0.16.
+delta = "latest"
 # bin/ts-cat's highlighter (tree-sitter with nvim-treesitter queries; WASM
 # parsers cached in ~/.local/share/lumis by bin/lumis-parsers). The supported
 # npm CLI installs the matching prebuilt `lumis` binary for each platform as an

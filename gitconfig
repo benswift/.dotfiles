@@ -11,6 +11,15 @@
 	# Treat spaces before tabs, lines that are indented with 8 or more spaces, and all kinds of trailing whitespace as an error
 	whitespace = space-before-tab,trailing-space
 	autocrlf = input
+	# git only pages terminal output, so agents and scripts reading `git diff`
+	# still get the raw patch
+	pager = delta
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
 
 [init]
    defaultBranch = main
