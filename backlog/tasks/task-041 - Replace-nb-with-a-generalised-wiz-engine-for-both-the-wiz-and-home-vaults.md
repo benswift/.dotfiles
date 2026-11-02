@@ -4,7 +4,7 @@ title: Replace nb with a generalised wiz engine for both the lx and home vaults
 status: In Progress
 assignee: []
 created_date: '2026-10-28T09:55:00Z'
-updated_date: '2026-10-29T10:58:00Z'
+updated_date: '2026-11-02T01:00:00Z'
 labels:
   - pkb
   - wiz
@@ -763,21 +763,27 @@ slot across a sleep.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The engine lives in its own repo and contains no LX-specific types, folders or logic; a vault's types, rules and workflows come only from files in that vault (mdbase.yaml + _types/ + admin/workflows/)
+- [x] #1 The engine lives in its own repo and contains no LX-specific types, folders or logic; a vault's types, rules and workflows come only from files in that vault (mdbase.yaml + _types/ + admin/workflows/)
 - [ ] #2 The lx vault validates with the same results under the new engine as under wiz v0.9.0 before any record changes
-- [ ] #3 Every CLI command takes explicit vault names or --all, resolved via ~/.config/wiz/vaults.toml, with stable --json output; there is no current-notebook state
-- [ ] #4 No engine commit ever holds a file the write that made it didn't touch (plus link-repaired files on rename); nothing runs git add --all; whether a write commits at once is per-vault policy
-- [ ] #5 Starlark workflows run on macOS arm64, Linux amd64 and Windows amd64 with nothing installed and have no exec, filesystem or network access and no way to invoke a command workflow; anyone may add one, while command workflows, `_types/` and `mdbase.yaml` are admin-only and the guard enforces the split
-- [ ] #6 A command workflow whose requires: is unmet, or whose host: is another machine, reports itself unavailable rather than failing
-- [ ] #7 One scheduler (wiz due --all, from one systemd timer on Linux and one launchd job on macOS) runs every due workflow for its host across all vaults, and a failed run on weddle files an oncall task through the unit's OnFailure wiring
-- [ ] #8 The lx dancecard is a Starlark workflow whose output matches the Go version on the same vault and date, covered by golden-output tests in the engine's Go suite; dancecard.go and calendar.go are deleted
+- [x] #3 Every CLI command takes explicit vault names or --all, resolved via ~/.config/wiz/vaults.toml, with stable --json output; there is no current-notebook state
+- [x] #4 No engine commit ever holds a file the write that made it didn't touch (plus link-repaired files on rename); nothing runs git add --all; whether a write commits at once is per-vault policy
+- [x] #5 Starlark workflows run on macOS arm64, Linux amd64 and Windows amd64 with nothing installed and have no exec, filesystem or network access and no way to invoke a command workflow; anyone may add one, while command workflows, `_types/` and `mdbase.yaml` are admin-only and the guard enforces the split
+- [x] #6 A command workflow whose requires: is unmet, or whose host: is another machine, reports itself unavailable rather than failing
+- [x] #7 One scheduler (wiz due --all, from one systemd timer on Linux and one launchd job on macOS) runs every due workflow for its host across all vaults, and a failed run on weddle files an oncall task through the unit's OnFailure wiring
+- [x] #8 The lx dancecard is a Starlark workflow whose output matches the Go version on the same vault and date, covered by golden-output tests in the engine's Go suite; dancecard.go and calendar.go are deleted
 - [x] #9 Home is migrated: no *.todo.md, *.bookmark.md, YYYYMMDD.md or .index files remain, every tags field is a YAML list, and wiz validate home reports no problems
 - [x] #10 Home has no `daily`, `bookmark` or `role` type; its `docs/` holds doc records and `typst/` the sources; and no instruction in the vault, the skill or dotfiles tells an agent to append to a day file
-- [ ] #11 Cole and Rob each complete a get-latest, edit and share round trip on their own machines with the new release before it is pinned in the lx vault, and their slash commands keep their names
+- [x] #11 Cole and Rob each complete a get-latest, edit and share round trip on their own machines with the new release before it is pinned in the lx vault, and their slash commands keep their names
 - [ ] #12 The lx vault's twelve decision records are folded into `meta` design docs stating current rules with their reasons and rejected alternatives, nothing in the vault describes a superseded design, `admin/backlog/` and the backlog CLI are gone from the vault, and open wiz proposals are `tasks/` records tagged `meta`
 - [x] #13 No dotfiles file, unit, plist, test, mise pin or doc still invokes or describes nb, pkb-agent or pkb-todo, and dotfiles doctor verifies the engine instead
 - [ ] #14 The ben:pkb skill and both vaults' CLAUDE.md files describe the wiz CLI and the new record types, and an agent session in each vault can add a task, add a note about a project and run a workflow by following them
-- [ ] #15 The engine's source and tests contain no agent, prompt, profile or model concept; home's scheduled agent tasks run as plain command workflows via agent-run, with every run stamped, logged, timed out and failed through the same bookkeeping as any other workflow
+- [x] #15 The engine's source and tests contain no agent, prompt, profile or model concept; home's scheduled agent tasks run as plain command workflows via agent-run, with every run stamped, logged, timed out and failed through the same bookkeeping as any other workflow
 - [ ] #16 Both vaults carry an `event` type with the same fields, named to match `delivery` where they overlap, filled by `calendar-archive` as a command workflow in each (home on weddle, lx on watson, reading the invites through watson's mu index of the lxconvenor Maildir); the lx dancecard's coming-up section and home's calendar questions are answered by `wiz query` over those records, attendees link to people records where an email matches, `admin/tools/calendar-export`, `_generated/calendar.md`, `data/calendars/*.jsonl` and the calendar-archive timer are gone, and a re-run against an unchanged calendar touches no file
 - [ ] #17 PRINCIPLES.md lives in the engine repo and `wiz help principles` prints it; `wiz brief` and both vaults' start-here point at it; and a colleague's Claude, asked why wiz works the way it does, answers from the principles and the meta docs without a stale answer being available
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Audit 2026-11-02: ticked ACs met via Done subtasks .01-.04, .06 and the confirmed Cole/Rob round trip. Still open: #2 (v0.9.0 comparison, now unverifiable), #12 (wiz-lx/admin/backlog/ still exists, contradicting 041.07 AC #2), #14 and #16 (wording predates the ben/anu split and the ben:vault skill), #17 (principles pointer absent from start-here.md and the ben/anu CLAUDE.md files).
+<!-- SECTION:NOTES:END -->

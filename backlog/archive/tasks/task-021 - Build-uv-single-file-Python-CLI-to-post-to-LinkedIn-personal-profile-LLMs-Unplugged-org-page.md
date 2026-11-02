@@ -5,8 +5,8 @@ title: >-
   Unplugged org page)
 status: To Do
 assignee: []
-created_date: '2026-07-11 22:34'
-updated_date: '2026-07-31 13:25'
+created_date: 2026-07-11 22:34
+updated_date: '2026-11-02T01:00:00Z'
 labels:
   - linkedin
   - tooling
@@ -80,3 +80,9 @@ Bun is not needed. uv is already available everywhere; no new tool to add. (If i
 9. Document the one-time browser setup in the script's header comment; add a bin/ entry to dotfiles CLAUDE.md if warranted.
 10. Add a tests/ entry if any pure logic (e.g. token-cache staleness) is worth covering.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Archived by audit 2026-11-02: superseded. Slop University posts to LinkedIn via a Make webhook (slop-university ops/post-to-linkedin.py), which avoids the API's token refresh and legal-entity gate on Page posting; Ben prefers that route.
+<!-- SECTION:NOTES:END -->

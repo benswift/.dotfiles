@@ -3,7 +3,8 @@ id: TASK-023
 title: Diagnose codex TUI freeze after zellij detach/reattach on daysy
 status: To Do
 assignee: []
-created_date: '2026-07-13 07:05'
+created_date: 2026-07-13 07:05
+updated_date: '2026-11-02T01:00:00Z'
 labels:
   - codex
   - zellij
@@ -34,3 +35,9 @@ Also record: codex + zellij versions at the time, whether the alternate_screen=n
 - [ ] #1 next freeze on daysy is triaged with the three checks and the failure mode identified (process stopped / stale-size redraw / output withheld)
 - [ ] #2 either an upstream issue is filed with the collected evidence, or the alternate_screen=never workaround is confirmed to prevent recurrence and documented in CLAUDE.md
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Archived by audit 2026-11-02: same root cause as TASK-033 (zellij misroutes attach-time host replies, zellij#5365; the DECRPM report wedged codex's input parser). Codex >= 0.148 discards the reply; no freezes on daysy or weddle since September.
+<!-- SECTION:NOTES:END -->

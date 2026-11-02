@@ -4,7 +4,7 @@ title: Collaborator release of the new engine in the lx vault
 status: In Progress
 assignee: []
 created_date: '2026-10-28T22:19:00Z'
-updated_date: '2026-10-29T03:19:00Z'
+updated_date: '2026-11-02T01:00:00Z'
 labels:
   - pkb
   - wiz
@@ -28,7 +28,7 @@ Step 7 of TASK-041's order of work. Groundwork (_types/, mdbase.yaml, events/, w
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Cole and Rob each complete a get-latest, edit and share round trip on their own machines with the new release before it is pinned in the lx vault, and their slash commands keep their names
+- [x] #1 Cole and Rob each complete a get-latest, edit and share round trip on their own machines with the new release before it is pinned in the lx vault, and their slash commands keep their names
 - [x] #2 The lx vault's twelve decision records are folded into meta design docs stating current rules with their reasons and rejected alternatives, nothing in the vault describes a superseded design, admin/backlog/ and the backlog CLI are gone from the vault, and open wiz proposals are tasks/ records tagged meta
 - [x] #3 The lx CLAUDE.md describes the wiz CLI and the new record types, and a session following it can add a task, add a note about a project and run a workflow
 - [x] #4 start-here.md points at wiz help principles, and a colleague's Claude, asked why wiz works the way it does, answers from the principles and the meta docs
@@ -47,4 +47,6 @@ Step 7 of TASK-041's order of work. Groundwork (_types/, mdbase.yaml, events/, w
 2026-10-29: switched at Ben's call ahead of the round trip, which Cole and Rob now do as their move onto it. 30f31d66 is the switch (v0.10.0 pinned); deleting _generated/calendar.md went in separately as automation (aa659b9f), since the commit guard keeps that path to automation. watson ran the final watson-run by hand (exit 0) before the timer resumed. The GitLab project is u2548636/wiz-lx; weddle's, daysy's and watson's clones point there. wiz check doesn't follow the move by itself: GitLab redirects the old SSH path silently and prints its move notice only on a push after the old path was used, so Cole's and Rob's instructions set the remote. Open: AC1 and AC5 close when Cole and Rob have pulled, installed v0.10.0, set the remote and shared an edit.
 
 2026-10-29: the switch commit also picked up the old engine's local bin/ and dist/ builds (106 MiB, 65 files), because deleting admin/tools/wiz took its .gitignore with it before apply.sh's git add -A. Caught before Cole or Rob pulled; with Ben's go-ahead, main was rewritten without them (force push allowed for the push only, then off again), watson's and daysy's clones reset, GitLab housekeeping run. The old builds not on refs/tools (v0.1.0 to v0.3.1) are kept in ~/projects/wiz-engine/dist.
+
+Audit 2026-11-02: Ben confirms Cole and Rob completed the round trip. AC #5 left open: lx remote is u2548636/wiz-lx, but the old path and Cole's, Rob's and watson's clones are unverified.
 <!-- SECTION:NOTES:END -->

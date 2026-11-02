@@ -1,9 +1,10 @@
 ---
 id: TASK-022
 title: Move HuggingFace and uv caches to /data disk
-status: To Do
+status: Done
 assignee: []
-created_date: '2026-07-12 05:51'
+created_date: 2026-07-12 05:51
+updated_date: '2026-11-02T01:00:00Z'
 labels:
   - storage
   - maintenance
@@ -19,9 +20,15 @@ Weddle's root volume (/dev/nvme0n1p2, 1.8T) was ~91% full. A newly-discovered em
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 panic_tda job confirmed finished (no python/mix experiment process holding ~/.cache/huggingface open) before starting
-- [ ] #2 ~/.cache/huggingface moved to /data (e.g. /data/huggingface) with HF_HOME set in zshenv so tools find it
-- [ ] #3 ~/.cache/uv moved to /data (e.g. /data/uv-cache) with UV_CACHE_DIR set in zshenv
-- [ ] #4 Integrity verified (file count + byte totals match) before deleting the originals
-- [ ] #5 A subsequent huggingface/uv operation resolves the new location correctly and / usage has dropped to roughly 35%
+- [x] #1 panic_tda job confirmed finished (no python/mix experiment process holding ~/.cache/huggingface open) before starting
+- [x] #2 ~/.cache/huggingface moved to /data (e.g. /data/huggingface) with HF_HOME set in zshenv so tools find it
+- [x] #3 ~/.cache/uv moved to /data (e.g. /data/uv-cache) with UV_CACHE_DIR set in zshenv
+- [x] #4 Integrity verified (file count + byte totals match) before deleting the originals
+- [x] #5 A subsequent huggingface/uv operation resolves the new location correctly and / usage has dropped to roughly 35%
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Audit 2026-11-02: done on weddle with symlinks instead of HF_HOME/UV_CACHE_DIR: ~/.cache/huggingface -> /data/huggingface (838G), ~/.cache/uv -> /data/uv-cache (249G). uv cache dir resolves through the link; / at 38%, /data at 50%.
+<!-- SECTION:NOTES:END -->
