@@ -1,109 +1,62 @@
 #!/usr/bin/env bash
-
+# Compile a set list of chord charts into one PDF, named for next Sunday, and
+# open it.
+#
+#   church-chart [song[:key]]...
+#
+# Songs come from the chord-charts repo ($CHORD_CHARTS, default
+# ~/projects/chord-charts) and are typeset fresh by its bin/opc, each in its
+# own key or the one given (10000-reasons:E). With no songs named, pick them
+# with fzf (ESC when done), giving each a key or Enter for its own.
 set -euo pipefail
 
-# Configuration
-CHURCH_MUSIC_DIR="$HOME/Documents/Church/Music"
-CHORD_CHARTS_DIR="$CHURCH_MUSIC_DIR/chord-charts"
-LEAD_SHEETS_DIR="$CHURCH_MUSIC_DIR/lead-sheets"
+repo=${CHORD_CHARTS:-$HOME/projects/chord-charts}
+[ -x "$repo/bin/opc" ] || { echo "church-chart: no chord-charts repo at $repo" >&2; exit 1; }
+command -v pdfunite >/dev/null || { echo "church-chart: needs pdfunite (poppler)" >&2; exit 1; }
 
-# Calculate next Sunday's date
-date_of_next_sunday() {
-    # Get current day of week (1=Monday, 7=Sunday)
-    local day_of_week
-    day_of_week=$(date +%u)
+# a header field of a song: field name song
+field() { sed -n "/^\$/q; s/^$1: *//p" "$repo/songs/$2.opc"; }
 
-    # Calculate days until next Sunday
-    local days_until_sunday=$(( (7 - day_of_week) % 7 ))
-
-    # If today is Sunday and we haven't passed midnight, use today
-    if [ "$days_until_sunday" -eq 0 ]; then
-        days_until_sunday=0
-    fi
-
-    # Calculate next Sunday's date
-    if [ "$(uname)" = "Darwin" ]; then
-        # macOS
-        date -v+"${days_until_sunday}d" +%Y-%m-%d
-    else
-        # Linux
-        date -d "+${days_until_sunday} days" +%Y-%m-%d
-    fi
+next_sunday() {
+  local days=$(((7 - $(date +%u)) % 7))
+  if [ "$(uname)" = Darwin ]; then date -v+"${days}d" +%F; else date -d "+$days days" +%F; fi
 }
 
-# Check dependencies
-if ! command -v fzf &> /dev/null; then
-    echo "Error: fzf is not installed. Install with: brew install fzf"
-    exit 1
+picks=("$@")
+if [ ${#picks[@]} -eq 0 ]; then
+  command -v fzf >/dev/null || { echo "church-chart: needs fzf to pick songs" >&2; exit 1; }
+  # song <tab> title (key) song, read from each song's header in one pass
+  menu=$(awk '
+    FNR == 1 { song = FILENAME; sub(/.*\//, "", song); sub(/\.opc$/, "", song); title = key = "" }
+    /^title:/ { title = $0; sub(/^title: */, "", title) }
+    /^key:/ { key = $2 }
+    /^$/ { printf "%s\t%s  (%s)  \033[2m%s\033[0m\n", song, title, key, song; nextfile }
+  ' "$repo"/songs/*.opc | sort -t$'\t' -k2)
+  while song=$(fzf --prompt="Song $((${#picks[@]} + 1)) (ESC when done): " --height=40% \
+    --ansi --delimiter=$'\t' --with-nth=2 <<<"$menu" | cut -f1); do
+    own=$(field key "$song" | awk '{print $1}')
+    read -r -p "Key for $(field title "$song") [$own]: " key </dev/tty
+    picks+=("$song${key:+:$key}")
+  done
 fi
+[ ${#picks[@]} -gt 0 ] || { echo "No songs picked"; exit 0; }
 
-if ! command -v pdfunite &> /dev/null; then
-    echo "Error: pdfunite is not installed. Install with: brew install poppler"
-    exit 1
-fi
-
-# Check if music directories exist
-if [ ! -d "$CHORD_CHARTS_DIR" ] && [ ! -d "$LEAD_SHEETS_DIR" ]; then
-    echo "Error: Neither $CHORD_CHARTS_DIR nor $LEAD_SHEETS_DIR exists"
-    exit 1
-fi
-
-# Build list of available PDFs
-candidates=()
-
-if [ -d "$CHORD_CHARTS_DIR" ]; then
-    while IFS= read -r file; do
-        candidates+=("chord-charts/$file")
-    done < <(find "$CHORD_CHARTS_DIR" -name "*.pdf" -exec basename {} \; | sort)
-fi
-
-if [ -d "$LEAD_SHEETS_DIR" ]; then
-    while IFS= read -r file; do
-        candidates+=("lead-sheets/$file")
-    done < <(find "$LEAD_SHEETS_DIR" -name "*.pdf" -exec basename {} \; | sort)
-fi
-
-if [ ${#candidates[@]} -eq 0 ]; then
-    echo "Error: No PDF files found in chord-charts or lead-sheets directories"
-    exit 1
-fi
-
-# Select songs using fzf (press ESC to finish selection)
-selected_charts=()
-count=1
-
-echo "Select charts using fzf (press ESC when done)"
-while true; do
-    # Temporarily disable exit on error for fzf
-    set +e
-    chart=$(printf '%s\n' "${candidates[@]}" | fzf --prompt="Select chart $count (ESC to finish): " --height=40%)
-    fzf_exit=$?
-    set -e
-
-    # ESC or Ctrl+C will result in non-zero exit code
-    if [ $fzf_exit -ne 0 ]; then
-        break
-    fi
-
-    selected_charts+=("$chart")
-    ((count++))
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+charts=()
+for i in "${!picks[@]}"; do
+  song=${picks[$i]%%:*}
+  key=${picks[$i]#"$song"}
+  out=$tmp/$i.pdf
+  "$repo/bin/opc" -q ${key:+-k "${key#:}"} -o "$out" "$song" >/dev/null
+  charts+=("$out")
 done
 
-if [ ${#selected_charts[@]} -eq 0 ]; then
-    echo "No charts selected, exiting"
-    exit 0
+set_list=/tmp/$(next_sunday).pdf
+pdfunite "${charts[@]}" "$set_list"
+echo "Set list: $set_list"
+if [ "$(uname)" = Darwin ]; then
+  open "$set_list"
+elif [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && command -v xdg-open >/dev/null; then
+  xdg-open "$set_list"
 fi
-
-echo "Selected ${#selected_charts[@]} chart(s)"
-
-# Generate output filename
-output_filename="/tmp/$(date_of_next_sunday).pdf"
-
-# Build pdfunite command
-cd "$CHURCH_MUSIC_DIR"
-pdfunite "${selected_charts[@]}" "$output_filename"
-
-# Open the compiled PDF
-open "$output_filename"
-
-echo "Compiled chord charts saved to: $output_filename"
