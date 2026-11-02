@@ -1,18 +1,18 @@
 ---
 id: TASK-033
 title: Return Zellij to an upstream release after host-reply fix ships
-status: To Do
+status: Done
 assignee: []
-created_date: '2026-08-19 23:29'
-updated_date: '2026-09-06 04:43'
+created_date: 2026-08-19 23:29
+updated_date: '2026-11-02T00:06:00Z'
 labels:
   - maintenance
   - zellij
   - codex
 dependencies: []
 references:
-  - 'https://github.com/zellij-org/zellij/issues/5365'
-  - 'https://github.com/zellij-org/zellij/pull/5375'
+  - https://github.com/zellij-org/zellij/issues/5365
+  - https://github.com/zellij-org/zellij/pull/5375
 priority: medium
 ---
 
@@ -25,7 +25,7 @@ The dotfiles temporarily installed Zellij from `benswift/zellij` (PR #5375 rebas
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 The official release is installed on daysy and weddle, and fresh login shells resolve that release
-- [ ] #2 Codex remains responsive after at least five zj-switch round trips on the released Zellij build
+- [x] #2 Codex remains responsive after at least five zj-switch round trips on the released Zellij build
 - [x] #3 mise/config.toml uses the normal prebuilt zellij = "latest" entry and no longer references any fork revision (was lbmeng's pre-0.45 branch; as of 2026-08-21 it is benswift/zellij host-reply-isolation-v0.45.0, i.e. PR #5375 rebased onto the v0.45.0 tag)
 - [x] #4 Codex on the installed release stays responsive to the misrouted attach burst: either an official Zellij release contains host-reply isolation (#5365 / #5375 or equivalent) OR the installed Codex is >= 0.148.0, which discards the stray reply (verified 2026-09-06)
 <!-- AC:END -->
@@ -114,4 +114,8 @@ CONTRIBUTING.md says minor fixes "might take a long while" and to ask on Discord
 Ben accepted the Codex-side fix as sufficient. mise/config.toml is back to `zellij = "latest"`; weddle installed v0.45.1 and a fresh login shell resolves `~/.local/share/mise/installs/zellij/latest/zellij` (`zellij 0.45.1`). The fork install dirs under `~/.local/share/mise/installs/cargo-https-github-com-*-zellij` are now orphaned and can go with `mise prune`. daysy and the five round trips remain.
 
 daysy done too (2026-09-06): pulled 67ba138, installed prebuilt zellij 0.45.1 (aarch64-apple-darwin), login shell resolves it, codex there is 0.152.0. Fork installs (benswift and lbmeng revs) and stale 0.44.3/0.45.0 uninstalled on both machines. Five zellij sessions on daysy were still running on the old fork server at the time; they need a detach/restart before a 0.45.1 client can attach.
+
+## 2026-11-02 closed
+
+Two months on stock zellij 0.45.1 with Codex >= 0.148 on daysy and weddle and no Codex freezes, which covers AC #2. Upstream is still unfixed (#5365 open, PR #5375 open and unmerged, v0.45.1 still the latest release), but Codex's workaround makes it harmless for us. Reopen if a stock-crossterm TUI wedges after attach in zellij.
 <!-- SECTION:NOTES:END -->
