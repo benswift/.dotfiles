@@ -111,12 +111,33 @@ fmt_oxfmt_code() {
     rm -f "$tmp"
 }
 
+# A project can turn a language's format-on-save off in its own
+# .helix/languages.toml (`auto-format = false`), e.g. a co-author's repo whose
+# files must not be reflowed. Helix honours that, so the hook must too. Only the
+# nearest .helix/ counts, as Helix uses the nearest one as its workspace.
+helix_autoformat_off() {
+    local dir
+    dir="$(dirname "$f")"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/.helix/languages.toml" ]]; then
+            python3 -I -c '
+import sys, tomllib
+langs = tomllib.load(open(sys.argv[1], "rb")).get("language", [])
+sys.exit(0 if any(l.get("name") == sys.argv[2] and l.get("auto-format") is False for l in langs) else 1)
+' "$dir/.helix/languages.toml" "$1"
+            return
+        fi
+        dir="$(dirname "$dir")"
+    done
+    return 1
+}
+
 case "$f" in
 */backlog/*.md) ;; # Backlog.md CLI owns these files' serialisation
 *.md | *.markdown | *.deck.svx) fmt oxfmt-helix --stdin-filepath file.md "$f" ;;
 *.mdx) fmt oxfmt-helix --stdin-filepath file.mdx "$f" ;;
 *.typ) fmt typstyle --wrap-text ;;
-*.tex) fmt tex-fmt --stdin ;;
+*.tex) helix_autoformat_off latex || fmt tex-fmt --stdin ;;
 *.toml) fmt oxfmt-helix --stdin-filepath file.toml "$f" ;;
 *.kdl) fmt kdlfmt format --kdl-version v1 - ;; # zellij parses KDL v1 only
 *.astro) fmt_prettier ;;
