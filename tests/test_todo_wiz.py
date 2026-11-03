@@ -150,12 +150,11 @@ def test_do_and_undo_commit_a_ben_task_without_sharing(vaults: Vaults) -> None:
 
 
 def test_do_commits_only_the_task_it_closed(vaults: Vaults) -> None:
+    (vaults.root / "anu" / "scratch.md").write_text("half-written\n")
     vaults.todo()
-    vaults.todo("pay", "henry")
     vaults.todo("do", "1")
     assert vaults.git("anu", "log", "-1", "--format=%s").startswith("todo: close ")
-    pending = vaults.git("anu", "status", "--porcelain")
-    assert "pay-henry" in pending and "mark-assignments" not in pending
+    assert vaults.git("anu", "status", "--porcelain") == "?? scratch.md"
 
 
 def test_block_and_unblock_move_a_task_between_sections(vaults: Vaults) -> None:
@@ -195,6 +194,9 @@ def test_words_file_a_valid_anu_task(vaults: Vaults) -> None:
     assert vaults.status()["pay henry"] == "open"
     assert list((vaults.root / "anu" / "tasks").glob("*-pay-henry.md"))
     vaults.run("wiz", "validate", "anu")
+    assert vaults.git("anu", "status", "--porcelain") == ""
+    assert vaults.git("anu", "log", "-1", "--format=%s") == "todo: add pay henry"
+    assert vaults.git("anu", "rev-list", "--count", "origin/main..HEAD") == "1"
 
 
 if __name__ == "__main__":

@@ -20,7 +20,15 @@ def calls(tmp_path: Path) -> Path:
     log = tmp_path / "wiz-calls"
     fake = tmp_path / "bin" / "wiz"
     fake.parent.mkdir()
-    fake.write_text(f'#!/bin/sh\necho "$*" >> {log}\necho "[]"\n')
+    fake.write_text(
+        f'#!/bin/sh\necho "$*" >> {log}\n'
+        'case "$1" in\n'
+        '  add) echo \'{"vault": "anu", "paths": ["tasks/new.md"]}\' ;;\n'
+        "  path) echo /vaults/anu ;;\n"
+        '  sync) echo "Saved locally; not shared"; exit 1 ;;\n'
+        '  *) echo "[]" ;;\n'
+        "esac\n"
+    )
     fake.chmod(0o755)
     return log
 
@@ -55,6 +63,9 @@ def test_words_still_file_a_task(calls: Path) -> None:
     result = todo(calls, "pay", "henry")
     assert result.returncode == 0
     assert calls.read_text().startswith("add anu task -title pay henry")
+    assert "sync anu -local -m todo: add pay henry /vaults/anu/tasks/new.md" in (
+        calls.read_text()
+    )
 
 
 @pytest.mark.parametrize("verb", ["e", "edit"])

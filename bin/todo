@@ -23,9 +23,9 @@ past unit-oncall's 24h re-arm) collapse to one row, and `do` on it closes
 them all. The lx section lists that vault's open tasks whose agent is Ben;
 closing one shares it with the team at once.
 
-Everything goes through the wiz CLI. `do`, `undo`, `block` and `unblock`
-commit what they change; the anu and ben vaults' commits are shared by their
-next scheduled sync. New tasks stay uncommitted until that sync.
+Everything goes through the wiz CLI. Every command but the listing and `e`
+commits what it changes; the anu and ben vaults' commits are shared by their
+next scheduled sync.
 """
 
 from __future__ import annotations
@@ -174,7 +174,7 @@ def remembered(numbers: list[str]) -> list[list[str]]:
 
 
 def commit(vault: str, paths: list[str], message: str) -> None:
-    """Commit the vault's changed task files. Ben's own vaults defer their
+    """Commit the vault's new or changed task files. Ben's own vaults defer their
     commits and keep them local, for their scheduled sync to share; any other
     vault's change is shared at once."""
     root = Path(wiz("path", vault).strip())
@@ -239,16 +239,21 @@ def main(argv: list[str] | None = None) -> int:
             print(f"todo: unknown option {first}\n{__doc__}", file=sys.stderr)
             return 2
         case [*words]:
-            wiz(
-                "add",
-                "anu",
-                "task",
-                "-title",
-                " ".join(words),
-                "-set",
-                "status=open",
-                capture=False,
+            title = " ".join(words)
+            added = json.loads(
+                wiz(
+                    "add",
+                    "anu",
+                    "task",
+                    "-title",
+                    title,
+                    "-set",
+                    "status=open",
+                    "-json",
+                )
             )
+            commit("anu", added["paths"], f"todo: add {title}")
+            print(f"added {', '.join('anu:' + p for p in added['paths'])}")
             return 0
     return 2
 
