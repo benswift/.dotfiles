@@ -55,3 +55,10 @@ def test_words_still_file_a_task(calls: Path) -> None:
     result = todo(calls, "pay", "henry")
     assert result.returncode == 0
     assert calls.read_text().startswith("add anu task -title pay henry")
+
+
+@pytest.mark.parametrize("verb", ["e", "edit"])
+def test_edit_with_words_files_a_task(calls: Path, verb: str) -> None:
+    result = todo(calls, verb, "the", "slides")
+    assert result.returncode == 0
+    assert calls.read_text().startswith(f"add anu task -title {verb} the slides")

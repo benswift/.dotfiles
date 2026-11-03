@@ -149,6 +149,29 @@ def test_block_and_unblock_move_a_task_between_sections(vaults: Vaults) -> None:
     assert vaults.status()["Book dentist"] == "open"
 
 
+def test_e_opens_every_file_of_the_rows_in_the_editor(vaults: Vaults) -> None:
+    log = vaults.root / "editor-args"
+    editor = vaults.root / "editor"
+    editor.write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" > {log}\n')
+    editor.chmod(0o755)
+    vaults.todo()
+    subprocess.run(
+        [str(SCRIPT), "e", "6", "2"],
+        env={**vaults.env, "VISUAL": "", "EDITOR": f"{editor} --vsplit"},
+        check=True,
+    )
+    args = log.read_text().splitlines()
+    assert args[0] == "--vsplit"
+    opened = [Path(a) for a in args[1:]]
+    assert all(p.is_file() and p.is_relative_to(vaults.root) for p in opened)
+    assert sorted(p.name.endswith("-backup-failed.md") for p in opened) == [
+        False,
+        True,
+        True,
+    ]
+    assert "Book dentist" in opened[-1].read_text()
+
+
 def test_words_file_a_valid_anu_task(vaults: Vaults) -> None:
     vaults.todo("pay", "henry")
     assert vaults.status()["pay henry"] == "open"

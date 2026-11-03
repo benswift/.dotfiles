@@ -3,16 +3,19 @@
 # requires-python = ">=3.12"
 # dependencies = []
 # ///
-"""todo: Ben's open tasks, and the few edits that need no editor.
+"""todo: Ben's open tasks, the quick edits to them, and a way into an editor.
 
   todo                  list open tasks: todos, blocked, bot, then lx
   todo do <n>...        mark done
   todo undo <n>...      reopen
   todo block <n>...     mark blocked; `unblock` reopens
+  todo e <n>...         open in $VISUAL, else $EDITOR, else hx (or `todo edit`)
   todo <words...>       a new anu task titled from the words, no quoting
 
 The numbers are the rows of the last listing, remembered in
-~/.local/state/todo/last.json, so `todo do 3` closes the third row shown. A
+~/.local/state/todo/last.json, so `todo do 3` closes the third row shown and
+`todo e 3` opens it (every file of a collapsed bot row). `todo e`/`edit`
+followed by anything but numbers files a task, as any other words do. A
 task is "bot" when tagged bot (unit-oncall files job failures so); "blocked"
 is status blocked. The first three sections hold every open task in the anu and
 ben vaults (both Ben's own). Bot tasks with the same title (a job that keeps failing
@@ -28,6 +31,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -198,6 +202,16 @@ def main(argv: list[str] | None = None) -> int:
             for vault in shared:
                 wiz("sync", vault, capture=False)
             return 0
+        case ["e" | "edit", *numbers] if numbers and all(n.isdigit() for n in numbers):
+            paths = [
+                wiz("path", ref).strip()
+                for group in remembered(numbers)
+                for ref in group
+            ]
+            editor = shlex.split(
+                os.environ.get("VISUAL") or os.environ.get("EDITOR") or "hx"
+            )
+            os.execvp(editor[0], [*editor, *paths])
         case ["do" | "undo" | "block" | "unblock"]:
             print(__doc__, file=sys.stderr)
             return 2
