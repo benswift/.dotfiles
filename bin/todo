@@ -23,8 +23,9 @@ past unit-oncall's 24h re-arm) collapse to one row, and `do` on it closes
 them all. The lx section lists that vault's open tasks whose agent is Ben;
 closing one shares it with the team at once.
 
-Everything goes through the wiz CLI; the anu and ben vaults' writes are shared by
-their next scheduled sync.
+Everything goes through the wiz CLI. `do`, `undo`, `block` and `unblock`
+commit what they change; the anu and ben vaults' commits are shared by their
+next scheduled sync. New tasks stay uncommitted until that sync.
 """
 
 from __future__ import annotations
@@ -58,6 +59,7 @@ MOCHA = {
     "overlay1": ((127, 132, 156), 90),
 }
 SECTION_STYLE = {"todos": "lavender", "blocked": "yellow", "bot": "mauve", "lx": "teal"}
+VERB_LABEL = {"do": "close", "undo": "reopen", "block": "block", "unblock": "unblock"}
 
 
 @dataclass(frozen=True)
@@ -171,6 +173,20 @@ def remembered(numbers: list[str]) -> list[list[str]]:
     return out
 
 
+def commit(vault: str, paths: list[str], message: str) -> None:
+    """Commit the vault's changed task files. Ben's own vaults defer their
+    commits and keep them local, for their scheduled sync to share; any other
+    vault's change is shared at once."""
+    root = Path(wiz("path", vault).strip())
+    files = [str(root / p) for p in paths]
+    if vault not in MINE:
+        wiz("sync", vault, "-m", message, *files, capture=False)
+        return
+    out = wiz("sync", vault, "-local", "-m", message, *files)
+    if out.rstrip().rsplit("\n", 1)[-1] != "Saved locally; not shared":
+        sys.exit(f"todo: couldn't commit to {vault}:\n{out.rstrip()}")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
     match args:
@@ -192,15 +208,15 @@ def main(argv: list[str] | None = None) -> int:
                 "block": "blocked",
                 "unblock": "open",
             }[verb]
-            shared = set()
+            touched: dict[str, list[str]] = {}
             for group in groups:
                 for ref in group if verb == "do" else group[:1]:
                     wiz("update", ref, "-set", f"status={status}", capture=False)
-                    vault = ref.split(":", 1)[0]
-                    if vault not in MINE:
-                        shared.add(vault)
-            for vault in shared:
-                wiz("sync", vault, capture=False)
+                    vault, path = ref.split(":", 1)
+                    touched.setdefault(vault, []).append(path)
+            for vault, paths in touched.items():
+                what = Path(paths[0]).stem if len(paths) == 1 else f"{len(paths)} tasks"
+                commit(vault, paths, f"todo: {VERB_LABEL[verb]} {what}")
             return 0
         case ["e" | "edit", *numbers] if numbers and all(n.isdigit() for n in numbers):
             paths = [

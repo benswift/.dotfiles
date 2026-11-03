@@ -127,17 +127,35 @@ def test_do_closes_a_whole_bot_row_and_shares_lx_at_once(vaults: Vaults) -> None
     bot = list((vaults.root / "anu" / "tasks").glob("*-backup-failed.md"))
     assert len(bot) == 2
     assert all("status: done" in path.read_text() for path in bot)
+    assert vaults.git("anu", "status", "--porcelain") == ""
+    assert vaults.git("anu", "log", "-1", "--format=%s") == "todo: close 2 tasks"
     assert vaults.git("lx", "status", "--porcelain") == ""
     assert vaults.git("lx", "rev-parse", "HEAD") == vaults.git(
         "lx", "rev-parse", "origin/main"
     )
 
 
-def test_do_closes_a_personal_ben_task_without_a_sync(vaults: Vaults) -> None:
+def test_do_and_undo_commit_a_ben_task_without_sharing(vaults: Vaults) -> None:
     vaults.todo()
     vaults.todo("do", "2")
     assert vaults.status()["Book dentist"] == "done"
-    assert "Book dentist" not in vaults.todo()
+    assert vaults.git("ben", "status", "--porcelain") == ""
+    assert vaults.git("ben", "log", "-1", "--format=%s").startswith("todo: close ")
+    assert vaults.git("ben", "rev-list", "--count", "origin/main..HEAD") == "1"
+    vaults.todo("undo", "2")
+    assert vaults.status()["Book dentist"] == "open"
+    assert vaults.git("ben", "status", "--porcelain") == ""
+    assert vaults.git("ben", "log", "-1", "--format=%s").startswith("todo: reopen ")
+    assert vaults.git("ben", "rev-list", "--count", "origin/main..HEAD") == "2"
+
+
+def test_do_commits_only_the_task_it_closed(vaults: Vaults) -> None:
+    vaults.todo()
+    vaults.todo("pay", "henry")
+    vaults.todo("do", "1")
+    assert vaults.git("anu", "log", "-1", "--format=%s").startswith("todo: close ")
+    pending = vaults.git("anu", "status", "--porcelain")
+    assert "pay-henry" in pending and "mark-assignments" not in pending
 
 
 def test_block_and_unblock_move_a_task_between_sections(vaults: Vaults) -> None:
