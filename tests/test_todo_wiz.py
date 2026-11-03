@@ -5,9 +5,9 @@
 # ///
 """Run bin/todo against the real wiz, to catch drift in the engine's CLI.
 
-todo leans on wiz's flag spellings, its -json record shape and exit code 1
-meaning "fine". test_todo.py stubs wiz out, so only this suite notices when a
-new engine changes any of them. bin/wiz-build runs it after every build.
+todo leans on wiz's flag spellings, its -json record shape, and sync's exit
+code and status line. test_todo.py stubs wiz out, so only this suite notices
+when a new engine changes any of them. bin/wiz-build runs it after every build.
 
 The vaults are tests/fixtures/todo, copied into git repos with bare remotes so
 lx's `wiz sync` has somewhere to push. CI can't build the engine (its repo is

@@ -37,6 +37,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import NoReturn
 
 ME = "[[people/ben-swift]]"
 # Ben's own vaults: every open task in them is his. Others' tasks (lx) are his
@@ -59,7 +60,13 @@ MOCHA = {
     "overlay1": ((127, 132, 156), 90),
 }
 SECTION_STYLE = {"todos": "lavender", "blocked": "yellow", "bot": "mauve", "lx": "teal"}
-VERB_LABEL = {"do": "close", "undo": "reopen", "block": "block", "unblock": "unblock"}
+# Each status verb: the status it sets, and how its commit message names it.
+VERBS = {
+    "do": ("done", "close"),
+    "undo": ("open", "reopen"),
+    "block": ("blocked", "block"),
+    "unblock": ("open", "unblock"),
+}
 
 
 @dataclass(frozen=True)
@@ -84,11 +91,13 @@ class Task:
         return "blocked" if self.status == "blocked" else "todos"
 
 
-def wiz(*args: str, capture: bool = True) -> str:
+def wiz(*args: str, capture: bool = True, ok: tuple[int, ...] = (0,)) -> str:
+    """Run wiz, exiting on any exit code but those in ok. Only sync (which exits
+    1 when it didn't share) needs more than 0."""
     result = subprocess.run(
         ["wiz", *args], capture_output=capture, text=True, check=False
     )
-    if result.returncode not in (0, 1):
+    if result.returncode not in ok:
         sys.exit(f"todo: wiz {' '.join(args)} failed: {(result.stderr or '').strip()}")
     return result.stdout if capture else ""
 
@@ -180,58 +189,66 @@ def commit(vault: str, paths: list[str], message: str) -> None:
     root = Path(wiz("path", vault).strip())
     files = [str(root / p) for p in paths]
     if vault not in MINE:
-        wiz("sync", vault, "-m", message, *files, capture=False)
+        wiz("sync", vault, "-m", message, *files, capture=False, ok=(0, 1))
         return
-    out = wiz("sync", vault, "-local", "-m", message, *files)
+    out = wiz("sync", vault, "-local", "-m", message, *files, ok=(0, 1))
     if out.rstrip().rsplit("\n", 1)[-1] != "Saved locally; not shared":
         sys.exit(f"todo: couldn't commit to {vault}:\n{out.rstrip()}")
 
 
+def list_tasks() -> int:
+    listing = rows(open_tasks())
+    STATE.parent.mkdir(parents=True, exist_ok=True)
+    STATE.write_text(json.dumps([[t.ref for t in group] for _, group in listing]))
+    print(render(listing), end="")
+    return 0
+
+
+def set_status(verb: str, numbers: list[str]) -> int:
+    status, label = VERBS[verb]
+    # Resolve every number before touching anything, so a typo in the second
+    # does not leave the first half-applied.
+    groups = remembered(numbers)
+    touched: dict[str, list[str]] = {}
+    for group in groups:
+        for ref in group if verb == "do" else group[:1]:
+            wiz("update", ref, "-set", f"status={status}")
+            print(f"{status}: {ref}")
+            vault, path = ref.split(":", 1)
+            touched.setdefault(vault, []).append(path)
+    for vault, paths in touched.items():
+        what = Path(paths[0]).stem if len(paths) == 1 else f"{len(paths)} tasks"
+        commit(vault, paths, f"todo: {label} {what}")
+    return 0
+
+
+def edit(numbers: list[str]) -> NoReturn:
+    paths = [wiz("path", ref).strip() for group in remembered(numbers) for ref in group]
+    editor = shlex.split(os.environ.get("VISUAL") or os.environ.get("EDITOR") or "hx")
+    os.execvp(editor[0], [*editor, *paths])
+
+
+def add_task(words: list[str]) -> int:
+    title = " ".join(words)
+    added = json.loads(
+        wiz("add", "anu", "task", "-title", title, "-set", "status=open", "-json")
+    )
+    commit("anu", added["paths"], f"todo: add {title}")
+    print(f"added {', '.join('anu:' + p for p in added['paths'])}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = sys.argv[1:] if argv is None else argv
-    match args:
+    match sys.argv[1:] if argv is None else argv:
         case []:
-            listing = rows(open_tasks())
-            STATE.parent.mkdir(parents=True, exist_ok=True)
-            STATE.write_text(
-                json.dumps([[t.ref for t in group] for _, group in listing])
-            )
-            print(render(listing), end="")
-            return 0
-        case ["do" | "undo" | "block" | "unblock" as verb, *numbers] if numbers:
-            # Resolve every number before touching anything, so a typo in the
-            # second does not leave the first half-applied.
-            groups = remembered(numbers)
-            status = {
-                "do": "done",
-                "undo": "open",
-                "block": "blocked",
-                "unblock": "open",
-            }[verb]
-            touched: dict[str, list[str]] = {}
-            for group in groups:
-                for ref in group if verb == "do" else group[:1]:
-                    wiz("update", ref, "-set", f"status={status}")
-                    print(f"{status}: {ref}")
-                    vault, path = ref.split(":", 1)
-                    touched.setdefault(vault, []).append(path)
-            for vault, paths in touched.items():
-                what = Path(paths[0]).stem if len(paths) == 1 else f"{len(paths)} tasks"
-                commit(vault, paths, f"todo: {VERB_LABEL[verb]} {what}")
-            return 0
-        case ["e" | "edit", *numbers] if numbers and all(n.isdigit() for n in numbers):
-            paths = [
-                wiz("path", ref).strip()
-                for group in remembered(numbers)
-                for ref in group
-            ]
-            editor = shlex.split(
-                os.environ.get("VISUAL") or os.environ.get("EDITOR") or "hx"
-            )
-            os.execvp(editor[0], [*editor, *paths])
-        case ["do" | "undo" | "block" | "unblock"]:
+            return list_tasks()
+        case [verb, *numbers] if verb in VERBS and numbers:
+            return set_status(verb, numbers)
+        case [verb] if verb in VERBS:
             print(__doc__, file=sys.stderr)
             return 2
+        case ["e" | "edit", *numbers] if numbers and all(n.isdigit() for n in numbers):
+            edit(numbers)
         case ["-h" | "--help"]:
             print(__doc__)
             return 0
@@ -239,24 +256,8 @@ def main(argv: list[str] | None = None) -> int:
         case [first, *_] if first.startswith("-"):
             print(f"todo: unknown option {first}\n{__doc__}", file=sys.stderr)
             return 2
-        case [*words]:
-            title = " ".join(words)
-            added = json.loads(
-                wiz(
-                    "add",
-                    "anu",
-                    "task",
-                    "-title",
-                    title,
-                    "-set",
-                    "status=open",
-                    "-json",
-                )
-            )
-            commit("anu", added["paths"], f"todo: add {title}")
-            print(f"added {', '.join('anu:' + p for p in added['paths'])}")
-            return 0
-    return 2
+        case words:
+            return add_task(words)
 
 
 if __name__ == "__main__":
