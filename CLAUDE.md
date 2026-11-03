@@ -150,8 +150,9 @@ Each script's header has the detail. Notable ones:
 - `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to
   `⚠ <reason>` while an agent is blocked (undone on the next prompt)
 - `wiz-due` units (`systemd/user/wiz-due.service`, its launchd twin) --- run
-  every registered vault's due workflows on this host; anu's are in the vault's
-  `workflows/`, among them `health` (the job health check, `bin/pkb-health`).
+  every registered vault's due workflows on this host, then `wiz sync -all`;
+  anu's are in the vault's `workflows/`, among them `health` (the job health
+  check, `bin/pkb-health`).
   `todo` lists and edits Ben's open tasks across vaults; `unit-oncall` and
   `launchd-run` file failures as anu tasks
 - `pangram` --- check a draft against Pangram's paid AI-text detector API.

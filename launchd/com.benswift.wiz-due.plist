@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   The macOS twin of systemd/user/wiz-due.timer: every 15 minutes, run the wiz
-  workflows due on this machine across every registered vault, under
+  workflows due on this machine, then sync every registered vault, under
   bin/launchd-run (PATH, timeout, failure paging; see its header). Under
   mise exec so the [env] block reaches the command workflows.
 
@@ -29,7 +29,7 @@
         <string>--</string>
         <string>/bin/sh</string>
         <string>-c</string>
-        <string>in-darkwake &amp;&amp; exit 0; wait-for-network || exit 0; mise exec --cd "$HOME" -- wiz due -all</string>
+        <string>in-darkwake &amp;&amp; exit 0; wait-for-network || exit 0; mise exec --cd "$HOME" -- sh -c 'wiz due -all; s=$?; wiz sync -all || exit; exit $s'</string>
     </array>
     <key>StartInterval</key>
     <integer>900</integer>
