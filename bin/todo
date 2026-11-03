@@ -211,7 +211,8 @@ def main(argv: list[str] | None = None) -> int:
             touched: dict[str, list[str]] = {}
             for group in groups:
                 for ref in group if verb == "do" else group[:1]:
-                    wiz("update", ref, "-set", f"status={status}", capture=False)
+                    wiz("update", ref, "-set", f"status={status}")
+                    print(f"{status}: {ref}")
                     vault, path = ref.split(":", 1)
                     touched.setdefault(vault, []).append(path)
             for vault, paths in touched.items():

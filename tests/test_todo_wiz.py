@@ -137,7 +137,7 @@ def test_do_closes_a_whole_bot_row_and_shares_lx_at_once(vaults: Vaults) -> None
 
 def test_do_and_undo_commit_a_ben_task_without_sharing(vaults: Vaults) -> None:
     vaults.todo()
-    vaults.todo("do", "2")
+    assert vaults.todo("do", "2") == "done: ben:tasks/2026-01-02-book-dentist.md\n"
     assert vaults.status()["Book dentist"] == "done"
     assert vaults.git("ben", "status", "--porcelain") == ""
     assert vaults.git("ben", "log", "-1", "--format=%s").startswith("todo: close ")
