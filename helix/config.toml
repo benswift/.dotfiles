@@ -1,11 +1,11 @@
-theme = "catppuccin_mocha"
+# ANSI-only themes, so helix takes the terminal's palette like everything else.
+theme = { light = "term16_light", dark = "term16_dark" }
 
 [editor]
 cursorline = true
 auto-save = true
 bufferline = "multiple"
 color-modes = true
-true-color = true
 gutters = ["diagnostics", "diff"]
 
 [editor.cursor-shape]
