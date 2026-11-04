@@ -80,7 +80,6 @@ zl() { local out; out=$(zellij list-sessions); echo "$out" | grep -v EXITED; ech
 alias zr="zellij run --"
 alias zk="zellij kill-session"
 alias prettify-md='oxfmt -c ~/.dotfiles/oxfmtrc.json "**/*.md"'
-alias neomutt='env TERM=xterm-direct neomutt'
 alias nm='neomutt'
 # Clipboard via OSC 52 (works locally and over SSH in ghostty); see
 # bin/clipboard-copy for the fallback chain when there's no terminal
