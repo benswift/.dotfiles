@@ -8,8 +8,59 @@ rex.bind("alt+h", "pane.focus", { direction = "left" })
 rex.bind("alt+l", "pane.focus", { direction = "right" })
 rex.bind("alt+j", "pane.focus", { direction = "down" })
 rex.bind("alt+k", "pane.focus", { direction = "up" })
-rex.bind("alt+f", "pane.minimize_all_floating")
+rex.bind("alt+f", "toggle_floating")
 
 -- Brackets by physical key: a bare `[` opens Rex's physical-key syntax.
 rex.bind("alt+[BracketLeft]", "session.previous")
 rex.bind("alt+[BracketRight]", "session.next")
+
+-- zellij's Alt f: toggle the active window's floating panes, opening one
+-- (in the focused pane's cwd) when there are none.
+rex.action{
+  name  = "toggle_floating",
+  title = "Toggle Floating Panes",
+  run   = function(ctx, args)
+    local view, err = rex.session.view{}
+    if err ~= nil then error(err, 0) end
+    local window
+    for _, w in ipairs(view.windows) do
+      if w.window_id == view.active_window_id then window = w end
+    end
+    if window == nil then error("no active window", 0) end
+
+    local floats, shown = {}, false
+    for _, l in ipairs(window.layers) do
+      if l.kind ~= "tiled" then
+        table.insert(floats, l)
+        if l.state ~= "minimized" then shown = true end
+      end
+    end
+
+    if #floats == 0 then
+      local cwd
+      local p = rex.block.call("com.superlogical.terminal", "process",
+        { block_id = window.focused_block_id })
+      if p ~= nil and p.foreground ~= nil then cwd = p.foreground.cwd end
+      local _, lerr = rex.session.new_layer{
+        window_id = window.window_id,
+        bounds = { 0.15, 0.15, 0.7, 0.7 },
+        focus = true,
+        layout = rex.layout.block{
+          flavor = "com.superlogical.terminal.shell",
+          options = { cwd = cwd },
+        },
+      }
+      if lerr ~= nil then error(lerr, 0) end
+      return
+    end
+
+    for i, l in ipairs(floats) do
+      local _, serr = rex.session.set_layer_state{
+        layer_id = l.layer_id,
+        state = shown and "minimized" or "normal",
+        focus = (not shown) and i == #floats,
+      }
+      if serr ~= nil then error(serr, 0) end
+    end
+  end,
+}
