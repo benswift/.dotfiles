@@ -1,0 +1,304 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""Find an earlier interactive Claude Code or Codex session by what Ben typed.
+
+  claude-find-session [options] TERM...
+
+Every TERM must appear (case-insensitively) somewhere in the session's user
+prompts, not necessarily in the same one. Matches print newest first: local
+start time, host, project, title, the prompts that matched, and the command
+that resumes the session.
+
+  -p, --project TEXT   substring of the project (`~/projects/jane`, `jane`)
+  --host NAME          only sessions run on this host
+  --since DATE         sessions started on or after YYYY-MM-DD
+  --until DATE         sessions started before YYYY-MM-DD
+  --days N             sessions started in the last N days
+  -n, --limit N        at most N matches (default 10)
+
+Candidates come from ~/claude-logs/analytics.db (bin/ingest-claude-logs), so
+headless runs are never searched, and the text from the session files shipped
+alongside it (bin/ship-claude-logs). Both live on weddle only: elsewhere the
+script re-runs itself there over ssh. Shipping is hourly, so the last hour's
+sessions may not be found yet.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shlex
+import socket
+import sqlite3
+import sys
+from collections.abc import Iterator
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
+from itertools import repeat
+from pathlib import Path
+from typing import Any
+
+HOME = Path.home()
+DB = HOME / "claude-logs" / "analytics.db"
+INDEX_HOST = "weddle"
+SNIPPET = 160
+
+# Slash-command invocations arrive as XML-ish wrappers; everything else that
+# starts with `<` (task notifications, local command output, system
+# reminders) is harness text, not something Ben typed.
+COMMAND_RE = re.compile(r"<command-name>(.*?)</command-name>", re.DOTALL)
+ARGS_RE = re.compile(r"<command-args>(.*?)</command-args>", re.DOTALL)
+HARNESS_PREFIXES = ("<", "Caveat:", "[Request interrupted", "# AGENTS.md")
+
+
+@dataclass
+class Session:
+    file_path: str
+    agent: str
+    uuid: str
+    host: str
+    project: str
+    cwd: str
+    started_at: str
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="claude-find-session",
+        description="Find an earlier interactive agent session by its prompts.",
+    )
+    parser.add_argument("terms", nargs="+", metavar="TERM")
+    parser.add_argument("-p", "--project")
+    parser.add_argument("--host")
+    parser.add_argument("--since", type=date.fromisoformat)
+    parser.add_argument("--until", type=date.fromisoformat)
+    parser.add_argument("--days", type=int)
+    parser.add_argument("-n", "--limit", type=int, default=10)
+    # The host Ben is sitting at, so a resume command for a session on that
+    # host needs no ssh. Set by the ssh re-run; nobody passes it by hand.
+    parser.add_argument("--from", dest="from_host", help=argparse.SUPPRESS)
+    # The session running this search matches its own terms; leave it out.
+    parser.add_argument(
+        "--skip",
+        default=os.environ.get("CLAUDE_CODE_SESSION_ID"),
+        help=argparse.SUPPRESS,
+    )
+    return parser.parse_args(argv)
+
+
+def candidates(conn: sqlite3.Connection, args: argparse.Namespace) -> list[Session]:
+    """Sessions passing the metadata filters, newest first.
+
+    `interactive IS NOT 0` keeps sessions from before Claude Code logged its
+    entrypoint (NULL), which were overwhelmingly typed by hand."""
+    where = ["interactive IS NOT 0"]
+    params: list[str] = []
+    if args.project:
+        where.append("instr(lower(coalesce(project_canonical, '')), ?) > 0")
+        params.append(args.project.lower())
+    if args.host:
+        where.append("host = ?")
+        params.append(args.host)
+    since = args.since
+    if args.days is not None:
+        since = max(since or date.min, date.today() - timedelta(days=args.days))
+    if since:
+        where.append("started_at >= ?")
+        params.append(since.isoformat())
+    if args.until:
+        where.append("started_at < ?")
+        params.append(args.until.isoformat())
+    rows = conn.execute(
+        "SELECT file_path, agent, session_uuid, host,"
+        " coalesce(project_canonical, project_dir), coalesce(cwd, ''),"
+        " coalesce(started_at, '')"
+        f" FROM sessions WHERE {' AND '.join(where)}"
+        " ORDER BY started_at DESC",
+        params,
+    )
+    return [Session(*row) for row in rows]
+
+
+def records(path: Path) -> Iterator[dict[str, Any]]:
+    with path.open(errors="replace") as lines:
+        for line in lines:
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(entry, dict):
+                yield entry
+
+
+def typed(text: str) -> str | None:
+    """What Ben typed, or None for harness-injected text."""
+    command = COMMAND_RE.search(text)
+    if command:
+        args = ARGS_RE.search(text)
+        return f"{command.group(1)} {args.group(1) if args else ''}".strip()
+    text = text.strip()
+    if not text or text.startswith(HARNESS_PREFIXES):
+        return None
+    return text
+
+
+def texts(content: Any, kind: str) -> Iterator[str]:
+    if isinstance(content, str):
+        yield content
+    elif isinstance(content, list):
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == kind:
+                text = block.get("text")
+                if isinstance(text, str):
+                    yield text
+
+
+def prompts(session: Session) -> tuple[list[str], str | None]:
+    """The session's typed prompts in order, and its latest AI title."""
+    found: list[str] = []
+    title: str | None = None
+    for entry in records(HOME / session.file_path):
+        kind = entry.get("type")
+        if session.agent == "codex":
+            payload = entry.get("payload")
+            if (
+                kind == "response_item"
+                and isinstance(payload, dict)
+                and payload.get("type") == "message"
+                and payload.get("role") == "user"
+            ):
+                raw = list(texts(payload.get("content"), "input_text"))
+            else:
+                continue
+        elif kind == "ai-title" and isinstance(entry.get("aiTitle"), str):
+            title = entry["aiTitle"]
+            continue
+        elif kind == "user" and not (
+            entry.get("isMeta") or entry.get("isCompactSummary")
+        ):
+            message = entry.get("message")
+            raw = list(
+                texts(
+                    message.get("content") if isinstance(message, dict) else None,
+                    "text",
+                )
+            )
+        else:
+            continue
+        found.extend(p for p in map(typed, raw) if p)
+    return found, title
+
+
+def might_match(path: Path, terms: list[str]) -> bool:
+    """Cheap byte-level prefilter before any JSON parsing.
+
+    A term with a quote or backslash is escaped in the raw JSON, so it can't be
+    looked for this way and is left to the full check."""
+    try:
+        data = path.read_bytes().lower()
+    except OSError:
+        return False
+    return all(
+        term.encode() in data for term in terms if '"' not in term and "\\" not in term
+    )
+
+
+def check(session: Session, terms: list[str]) -> tuple[list[str], str | None] | None:
+    """The session's prompts and title if every term is in what Ben typed."""
+    if not might_match(HOME / session.file_path, terms):
+        return None
+    found, title = prompts(session)
+    typed_text = "\n".join(found).lower()
+    if not all(term in typed_text for term in terms):
+        return None
+    return found, title
+
+
+def snippet(prompt: str, term: str) -> str:
+    flat = " ".join(prompt.split())
+    if len(flat) <= SNIPPET:
+        return flat
+    at = max(flat.lower().find(term) - SNIPPET // 3, 0)
+    cut = flat[at : at + SNIPPET]
+    return ("…" if at else "") + cut + ("…" if at + SNIPPET < len(flat) else "")
+
+
+def resume_command(session: Session, here: str) -> str:
+    tool = "codex resume" if session.agent == "codex" else "claude --resume"
+    command = f"{tool} {session.uuid}"
+    if session.cwd:
+        command = f"cd {shlex.quote(session.cwd)} && {command}"
+    if session.host == here:
+        return command
+    return f"ssh -t {session.host} {shlex.quote(command)}"
+
+
+def local_time(stamp: str) -> str:
+    try:
+        moment = datetime.fromisoformat(stamp)
+    except ValueError:
+        return stamp or "?"
+    return moment.astimezone().strftime("%Y-%m-%d %H:%M")
+
+
+def report(
+    session: Session, found: list[str], title: str | None, terms: list[str], here: str
+) -> str:
+    header = f"{local_time(session.started_at)}  {session.host}  {session.project}"
+    lines = [f"{header}  {title}" if title else header]
+    shown: list[str] = []
+    for term in terms:
+        hit = next((p for p in found if term in p.lower()), None)
+        if hit and hit not in shown:
+            shown.append(hit)
+            lines.append(f"  > {snippet(hit, term)}")
+    lines.append(f"  {resume_command(session, here)}")
+    return "\n".join(lines)
+
+
+def rerun_on_index_host(argv: list[str], args: argparse.Namespace, here: str) -> None:
+    skip = ["--skip", args.skip] if args.skip else []
+    remote = shlex.join(["claude-find-session", "--from", here, *skip, *argv])
+    os.execvp("ssh", ["ssh", INDEX_HOST, remote])
+
+
+def main() -> None:
+    argv = sys.argv[1:]
+    args = parse_args(argv)
+    here = args.from_host or socket.gethostname().split(".")[0].lower()
+    if not DB.exists():
+        if here == INDEX_HOST:
+            sys.exit(f"claude-find-session: no index at {DB}; run ingest-claude-logs")
+        rerun_on_index_host(argv, args, here)
+
+    terms = [term.lower() for term in args.terms]
+    conn = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
+    sessions = [s for s in candidates(conn, args) if s.uuid != args.skip]
+    # Reading the files is the whole cost (~11GB unfiltered), so spread it over
+    # the cores; map() keeps the newest-first order.
+    pool = ProcessPoolExecutor()
+    matches = 0
+    for session, result in zip(
+        sessions, pool.map(check, sessions, repeat(terms), chunksize=16), strict=False
+    ):
+        if result is None:
+            continue
+        if matches:
+            print()
+        print(report(session, *result, terms, here), flush=True)
+        matches += 1
+        if matches >= args.limit:
+            break
+    pool.shutdown(cancel_futures=True)
+    if not matches:
+        sys.exit("claude-find-session: no matching session")
+
+
+if __name__ == "__main__":
+    main()

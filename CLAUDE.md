@@ -218,7 +218,8 @@ agent-run --profile openrouter --model "provider/model:free" "prompt"
 hourly (systemd timer there; on macOS a step of the push-to-weddle launchd job).
 `bin/ingest-claude-logs` summarises them into `~/claude-logs/analytics.db` and
 fails when a host goes quiet, so weddle's ingester is every other host's alarm.
-Both headers have the detail.
+`bin/claude-find-session` searches the indexed sessions' prompts. The headers
+have the detail.
 
 ### Per-agent notes
 

@@ -19,6 +19,7 @@
 extend-include = [
   "bin/agent-run",
   "bin/check-skill-yaml",
+  "bin/claude-find-session",
   "bin/hud",
   "bin/ingest-claude-logs",
   "bin/pangram",
