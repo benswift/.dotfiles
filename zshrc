@@ -102,15 +102,6 @@ else
 fi
 
 eval "$(mise activate zsh)"
-# LS_COLORS via vivid's ansi theme, so file colours come from the terminal's
-# own palette. Cached because the output is static.
-_lscolors_cache=~/.cache/vivid-lscolors-ansi
-if [[ ! -r $_lscolors_cache ]] && command -v vivid &>/dev/null; then
-  mkdir -p ~/.cache
-  vivid generate ansi > $_lscolors_cache
-fi
-[[ -r $_lscolors_cache ]] && export LS_COLORS="$(<$_lscolors_cache)"
-unset _lscolors_cache
 eval "$(zoxide init zsh)"
 
 case "$(hostname -s)" in

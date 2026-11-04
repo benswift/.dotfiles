@@ -81,18 +81,6 @@ install_mosh() {
     fi
 }
 
-# vivid (zshrc's LS_COLORS): mise covers Linux, but upstream ships no arm64
-# macOS binary, so the Mac gets Homebrew's.
-install_vivid() {
-    [[ "$platform" == "macos" ]] || return 0
-    if command_exists vivid; then
-        info "vivid already installed"
-        return
-    fi
-    info "Installing vivid..."
-    brew install vivid
-}
-
 clone_dotfiles() {
     if [[ -d "$DOTFILES_DIR" ]]; then
         info "Dotfiles already exist at $DOTFILES_DIR"
@@ -218,7 +206,6 @@ main() {
         install_homebrew
     fi
     install_mosh
-    install_vivid
     install_mise
     clone_dotfiles
     clone_private
