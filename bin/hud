@@ -27,7 +27,7 @@ from rich.text import Text
 # ANSI colour names, so the hud takes the terminal's own palette.
 STYLE = {
     "fg": Style(color="default"),
-    "header": Style(color="white"),
+    "header": Style(bold=True),
     "orange": Style(color="bright_red", bold=True),
     "blue": Style(color="blue", bold=True),
     "purple": Style(color="magenta", bold=True),
