@@ -103,31 +103,31 @@ else
 fi
 
 eval "$(mise activate zsh)"
-# LS_COLORS via vivid, cached because the output is static per theme
-# (delete the cache file after changing theme)
-_lscolors_cache=~/.cache/vivid-lscolors
+# LS_COLORS via vivid's ansi theme, so file colours come from the terminal's
+# own palette. Cached because the output is static.
+_lscolors_cache=~/.cache/vivid-lscolors-ansi
 if [[ ! -r $_lscolors_cache ]] && command -v vivid &>/dev/null; then
   mkdir -p ~/.cache
-  vivid generate catppuccin-mocha > $_lscolors_cache
+  vivid generate ansi > $_lscolors_cache
 fi
 [[ -r $_lscolors_cache ]] && export LS_COLORS="$(<$_lscolors_cache)"
 unset _lscolors_cache
 eval "$(zoxide init zsh)"
 
 case "$(hostname -s)" in
-  daysy)       _prompt_host_color='%F{#f9e2af}' ;;
-  weddle)      _prompt_host_color='%F{#a6e3a1}' ;;
-  cybersonic)  _prompt_host_color='%F{#cba6f7}' ;;
-  jetson-orin) _prompt_host_color='%F{#94e2d5}' ;;
-  strproxy)    _prompt_host_color='%F{#fab387}' ;;
-  *)           _prompt_host_color='%F{#fab387}' ;;
+  daysy)       _prompt_host_color='%F{yellow}' ;;
+  weddle)      _prompt_host_color='%F{green}' ;;
+  cybersonic)  _prompt_host_color='%F{magenta}' ;;
+  jetson-orin) _prompt_host_color='%F{cyan}' ;;
+  strproxy)    _prompt_host_color='%F{9}' ;;
+  *)           _prompt_host_color='%F{9}' ;;
 esac
 
 _prompt_precmd() {
   local exit_status=$?
-  local sep_color='%F{#45475a}'
-  local dir_color='%F{#89b4fa}'
-  local vcs_color='%F{#cba6f7}'
+  local sep_color='%F{8}'
+  local dir_color='%F{blue}'
+  local vcs_color='%F{magenta}'
 
   print -P "${sep_color}${(l:$COLUMNS::─:)}%f"
 
@@ -137,7 +137,7 @@ _prompt_precmd() {
   local host=""
   [[ -n "$_prompt_host_color" ]] && host="%B${_prompt_host_color}%m%f%b "
 
-  PROMPT="${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{#a6e3a1}.%F{#f38ba8})❯%f "
+  PROMPT="${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{green}.%F{red})❯%f "
 }
 autoload -Uz add-zsh-hook
 add-zsh-hook precmd _prompt_precmd
