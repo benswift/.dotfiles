@@ -35,13 +35,9 @@ case "$cmd" in
         elapsed=$(( $(date +%s) - start ))
         (( elapsed >= threshold_seconds )) || exit 0
 
-        if [[ -n "${ZELLIJ_SESSION_NAME:-}" ]]; then
-            proj="$ZELLIJ_SESSION_NAME"
-        else
-            cwd=$(jq -r '.cwd // empty' <<<"$input")
-            proj="${cwd##*/}"
-            [[ -n "$proj" ]] || proj="?"
-        fi
+        cwd=$(jq -r '.cwd // empty' <<<"$input")
+        proj="${cwd##*/}"
+        [[ -n "$proj" ]] || proj="?"
 
         minutes=$((elapsed / 60))
         seconds=$((elapsed % 60))

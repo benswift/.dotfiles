@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
-# Claude Code hook handler that sends Pushover notifications and briefly
-# renames a zellij pane when the agent needs attention.
-# Reads the hook payload (JSON) from stdin and dispatches by subcommand:
-#   start          record turn-start time          (UserPromptSubmit hook)
-#   stop           notify if turn ran >= threshold (Stop hook)
-#   notify         agent wants attention           (Notification hook)
-#   session-end    restore its pane title           (SessionEnd hook)
+# Claude Code hook: send a Pushover notification when a long turn ends.
 #
-# Threshold defaults to 300s (5 min); override with CLAUDE_NOTIFY_THRESHOLD.
-# Notifications are tagged "host:project" using $ZELLIJ_SESSION_NAME when
-# running inside zellij, falling back to the cwd basename from the payload.
+# UserPromptSubmit calls `start`; Stop calls `stop`. Both receive the hook
+# payload as JSON on stdin. The threshold defaults to 300s (5 min); override it
+# with CLAUDE_NOTIFY_THRESHOLD. Notifications are tagged "host:project", the
+# project being the cwd basename from the payload.
 #
 # Nothing here may fail loudly: a hook that exits non-zero surfaces as an
-# error inside Claude Code, so notification and pane operations are best-effort.
+# error inside Claude Code, so notification delivery is best-effort.
 
 set -euo pipefail
 
@@ -24,54 +19,10 @@ input=$(cat)
 sid=$(echo "$input" | jq -r '.session_id // empty')
 [[ -n "$sid" ]] || exit 0
 
-if [[ -n "${ZELLIJ_SESSION_NAME:-}" ]]; then
-    proj="$ZELLIJ_SESSION_NAME"
-else
-    cwd=$(echo "$input" | jq -r '.cwd // empty')
-    proj="${cwd##*/}"
-    [[ -n "$proj" ]] || proj="?"
-fi
-
-host=$(hostname -s)
 stamp_file="$stamp_dir/claude-turn-$sid"
 
-# --- pane naming, but only while the agent is blocked ------------------------
-#
-# A zellij rename is sticky: it overrides every subsequent OSC title until
-# undone. Claude Code sets an OSC title continuously --- an animated spinner
-# plus the task in progress --- and that is strictly more informative than any
-# state glyph we could substitute. So the title is taken over only once the
-# agent has gone quiet and stopped saying anything, and handed straight back
-# when work resumes. Zellij keeps tracking the program's title underneath, so
-# undo-rename-pane restores whatever Claude Code most recently set.
-#
-# ZELLIJ_PANE_ID is exported into the pane and inherited by claude, so this
-# targets the agent's own pane rather than whichever pane happens to be
-# focused.
-rename_pane() {
-    [[ -n "${ZELLIJ_PANE_ID:-}" ]] || return 0
-    command -v zellij &>/dev/null || return 0
-    zellij action rename-pane --pane-id "$ZELLIJ_PANE_ID" "$1" &>/dev/null || return 0
-}
-
-restore_pane() {
-    [[ -n "${ZELLIJ_PANE_ID:-}" ]] || return 0
-    command -v zellij &>/dev/null || return 0
-    zellij action undo-rename-pane --pane-id "$ZELLIJ_PANE_ID" &>/dev/null || return 0
-}
-
 case "$cmd" in
-    session-end)
-        restore_pane
-        ;;
-    notify)
-        # Notification carries why it wants you (a permission request, or that
-        # it's been waiting); prefer that over a generic marker.
-        reason=$(echo "$input" | jq -r '.message // empty' | head -c 48)
-        rename_pane "⚠ ${reason:-needs you}"
-        ;;
     start)
-        restore_pane
         date +%s > "$stamp_file"
         ;;
     stop)
@@ -80,6 +31,9 @@ case "$cmd" in
         rm -f "$stamp_file"
         elapsed=$(( $(date +%s) - start ))
         (( elapsed >= threshold_seconds )) || exit 0
+        cwd=$(echo "$input" | jq -r '.cwd // empty')
+        proj="${cwd##*/}"
+        [[ -n "$proj" ]] || proj="?"
         minutes=$((elapsed / 60))
         seconds=$((elapsed % 60))
         msg=$(printf 'Turn finished in %dm %02ds' "$minutes" "$seconds")
@@ -88,10 +42,10 @@ case "$cmd" in
             title=$(jq -r 'select(.type=="ai-title") | .aiTitle' "$transcript" 2>/dev/null | tail -n1)
             [[ -n "$title" ]] && msg="${msg}"$'\n'"${title}"
         fi
-        echo "$msg" | notify-pushover --title "Claude done: $host:$proj" || true
+        echo "$msg" | notify-pushover --title "Claude done: $(hostname -s):$proj" || true
         ;;
     *)
-        echo "Usage: $(basename "$0") {start|stop|notify|session-end}" >&2
+        echo "Usage: $(basename "$0") {start|stop}" >&2
         exit 1
         ;;
 esac

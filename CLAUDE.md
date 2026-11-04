@@ -149,8 +149,8 @@ Each script's header has the detail. Notable ones:
   with each session's running agents
 - `claude-git-guard` --- PreToolUse hook blocking bulk staging and bare
   force-pushes
-- `claude-turn-tracker` --- Pushover notifications, plus zellij pane rename to
-  `⚠ <reason>` while an agent is blocked (undone on the next prompt)
+- `claude-turn-tracker`, `codex-turn-notify` --- Pushover notification when a
+  long agent turn ends
 - `wiz-due` units (`systemd/user/wiz-due.service`, its launchd twin) --- run
   every registered vault's due workflows on this host, then `wiz sync -all`;
   anu's are in the vault's `workflows/`, among them `health` (the job health
