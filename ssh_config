@@ -8,6 +8,10 @@ Include ~/.orbstack/ssh/config
 # file matches nothing, so a machine without the overlay just skips it.
 Include ~/.dotfiles/private/ssh_config
 
+# Rex's TERM guard, written by `rex terminfo setup` (which can't edit this
+# symlinked file itself). Up top so its SetEnv TERM wins.
+Include ~/.config/rex/ssh_config
+
 Host *
   IgnoreUnknown UseKeychain
   AddKeysToAgent yes
