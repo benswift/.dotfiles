@@ -104,7 +104,7 @@ def wiz(*args: str, capture: bool = True, ok: tuple[int, ...] = (0,)) -> str:
 
 def open_tasks() -> list[Task]:
     mine = " || ".join(f'vault == "{v}"' for v in MINE)
-    query = f'type == "task" && status != "done" && ({mine} || agent == "{ME}")'
+    query = f'type == "task" && !(status in ["done", "cancelled"]) && ({mine} || agent == "{ME}")'
     records = json.loads(wiz("query", *MINE, "lx", "-json", query))
     tasks = [
         Task(
