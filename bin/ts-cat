@@ -57,7 +57,8 @@ fi
 # 0 turns truncation off, for callers that show the whole file.
 MAX_LINES="${TS_CAT_MAX_LINES:-5000}"
 
-# Matches the theme Helix and zj-switch use.
+# lumis themes are hex palettes from Neovim colour schemes, so previews can't
+# follow the terminal's ANSI palette the way helix and the prompt do.
 THEME="${TS_CAT_THEME:-catppuccin_mocha}"
 
 # lumis picks a language from the file extension (falling back to shebang).
