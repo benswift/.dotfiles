@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+#
+# rex-claude --- open a Remote Control Claude Code tab in a running Rex session.
+#
+#   rex-claude [-b] [-d DIR] [-n] QUERY [PROMPT]
+#
+# Built for a ShellFish Shortcut on the phone: pick a session with a few
+# letters, send a first prompt, then carry on in the Claude app. The agent runs
+# as `ay` does (`claude --dangerously-skip-permissions`, spelled out because
+# ShellFish's non-interactive shell has no aliases) plus `--remote-control`.
+#
+# QUERY matches session labels the way zoxide matches paths: every
+# space-separated keyword must appear, in order, case-insensitively, so
+# `rex tabs` finds `rex-sessions-tabs`. A label equal to QUERY wins outright;
+# otherwise exactly one label must match. Rex records no session usage, so
+# there's no frecency tie-break: an ambiguous query lists the candidates and
+# exits 3, as rex itself does.
+#
+# The tab opens in the background (--focus=false) in DIR, which defaults to the
+# working directory of whatever runs in the session's focused pane. That's a
+# directory already in use, so Claude's folder-trust prompt (unanswerable from
+# the phone) shouldn't appear.
+#
+# Prints the Remote Control link (claude.ai/code/session_...) on stdout once
+# Claude shows it, for the Shortcut to open; progress and errors go to stderr.
+#
+#   -b      PROMPT is base64. ShellFish splices Shortcut variables into the
+#           command line, so encoding there keeps quotes and `$` intact
+#   -d DIR  working directory for the new tab
+#   -n      dry run: print what would open, open nothing
+
+set -euo pipefail
+
+usage() {
+    sed -n '5p' "$0" | sed 's/^#   //' >&2
+    exit 2
+}
+
+decode=0 dir="" dry_run=0
+while getopts "bd:n" opt; do
+    case $opt in
+    b) decode=1 ;;
+    d) dir=$OPTARG ;;
+    n) dry_run=1 ;;
+    *) usage ;;
+    esac
+done
+shift $((OPTIND - 1))
+[[ $# -ge 1 && $# -le 2 ]] || usage
+query=$1 prompt=${2:-}
+((decode)) && prompt=$(printf '%s' "$prompt" | base64 -d)
+
+# Session list on stdin; prints "ID<TAB>LABEL" for each label that equals the
+# query, or, when none does, for each zoxide-style match.
+match_sessions() {
+    jq -r --arg q "$query" '
+        ($q | ascii_downcase) as $exact
+        | ($exact | split(" ") | map(select(. != ""))) as $kws
+        | [.sessions[] | select(.label | ascii_downcase == $exact)] as $hits
+        | if $hits != [] then $hits[]
+          else .sessions[]
+               | select(.label | ascii_downcase as $s
+                   | reduce $kws[] as $k (0;
+                       if . == null then null
+                       else ($s[.:] | index($k)) as $i
+                            | if $i == null then null else . + $i + ($k | length) end
+                       end) != null)
+          end
+        | "\(.session_id)\t\(.label)"'
+}
+
+mapfile -t matches < <(rex ls --json | match_sessions)
+case ${#matches[@]} in
+0)
+    echo "rex-claude: no session matches \"$query\"; sessions are:" >&2
+    rex ls --json | jq -r '.sessions[] | "  " + .label' >&2
+    exit 1
+    ;;
+1) IFS=$'\t' read -r session label <<<"${matches[0]}" ;;
+*)
+    echo "rex-claude: \"$query\" matches several sessions:" >&2
+    printf '%s\n' "${matches[@]}" | cut -f2 | sed 's/^/  /' >&2
+    exit 3
+    ;;
+esac
+
+if [[ -z $dir ]]; then
+    block=$(rex session inspect "$session" --json | jq -r '
+        .active_window_id as $w
+        | first(.windows[] | select(.window_id == $w)) | .focused_block_id // empty')
+    [[ -n $block ]] || {
+        echo "rex-claude: session $label has no focused pane; pass -d DIR" >&2
+        exit 1
+    }
+    dir=$(rex block call -s "$session" -b "$block" process |
+        jq -r '.foreground.cwd // .child.cwd // empty')
+    [[ -n $dir ]] || {
+        echo "rex-claude: can't read the focused pane's directory; pass -d DIR" >&2
+        exit 1
+    }
+fi
+
+# Rex starts a terminal in $HOME when its directory is missing, without saying.
+[[ -d $dir ]] || {
+    echo "rex-claude: no such directory: $dir" >&2
+    exit 1
+}
+
+# --remote-control takes an optional name, so it must be attached with `=` or
+# it would swallow the prompt.
+name="$label-$(date +%H%M)"
+cmd=(claude --dangerously-skip-permissions "--remote-control=$name")
+[[ -n $prompt ]] && cmd+=(-- "$prompt")
+
+if ((dry_run)); then
+    printf 'session\t%s\ndir\t%s\nname\t%s\ncommand\t%s\n' \
+        "$label" "$dir" "$name" "${cmd[*]}"
+    exit 0
+fi
+
+block=$(rex window new -s "$session" claude -c "$dir" --focus=false --json \
+    -- "${cmd[@]}" | jq -r '.block_ids[0]')
+echo "opened $name in $label ($dir)" >&2
+
+# Rex keeps a pane that fails quickly open, so a startup error can still be
+# captured; a pane that has already gone counts as exited.
+for _ in $(seq 30); do
+    sleep 1
+    state=$(rex block call -s "$session" -b "$block" process 2>/dev/null) ||
+        state='{"last_exit": "gone"}'
+    if jq -e '.last_exit != null' <<<"$state" >/dev/null; then
+        echo "rex-claude: claude exited at startup:" >&2
+        { rex capture -s "$session" -b "$block" --trim 2>/dev/null || true; } | tail -n 20 >&2
+        exit 1
+    fi
+    screen=$(rex capture -s "$session" -b "$block" --trim 2>/dev/null) || true
+    if grep -q 'trust this folder' <<<"$screen"; then
+        echo "rex-claude: claude is asking whether to trust $dir; answer it in the tab" >&2
+        exit 1
+    fi
+    url=$(grep -o 'https://claude\.ai/code/session_[A-Za-z0-9]*' <<<"$screen" | head -n 1) || true
+    if [[ -n $url ]]; then
+        echo "$url"
+        exit 0
+    fi
+done
+echo "rex-claude: no Remote Control link after 30s; check the tab" >&2
+exit 1
