@@ -1,0 +1,17 @@
+[Unit]
+Description=Rex personal server, reachable from the tailnet
+Documentation=https://www.superlogical.com/rex/docs/linux/remote-access.md
+# Personal server for weddle's thin-client use: Rex.app on daysy adds this host
+# ("Add Remote Host…", address `weddle`). The tailnet listener rides the
+# machine's own tailscaled, which identifies callers; only the node's owner gets
+# in. Needs lingering (`loginctl enable-linger`) so sessions outlive logins.
+# Binary from bin/rex-install. Enable with
+# `systemctl --user daemon-reload && systemctl --user enable --now rex`.
+
+[Service]
+ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
+ExecStart=/home/ben/.local/bin/rex server run --extra-listen tailnet://:7297
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

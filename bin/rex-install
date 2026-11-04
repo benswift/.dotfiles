@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# rex-install --- install the Rex server/CLI binary into ~/.local/bin (Linux).
+#
+# Rex's own installer (pkgs.superlogical.com/rex/install.sh) either adds a
+# system package repository with services and an ssh_config include, or with
+# --tarball puts the binary in /usr/local/bin via sudo. This does what its
+# --tarball does, but per-user and with nothing outside ~/.local/bin, so the
+# trial reverts by deleting one file: it reads the channel's release from the
+# release API, checks the archive's sha256 and installs the `rex` inside it.
+# The server itself runs from systemd/user/rex.service. Macs get rex from
+# Rex.app instead.
+#
+# A running server keeps its old binary until restarted
+# (`systemctl --user restart rex`, which ends every session on it).
+#
+# Usage:
+#   rex-install                    install the channel's latest (no-op if current)
+#   rex-install --channel NAME     stable, preview (default) or snapshot
+#   rex-install --check            report status only; non-zero if not current
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+source "$DOTFILES_DIR/lib/log.sh"
+
+RELEASES="https://blob.superlogical.com"
+REX="${REX_PREFIX:-$HOME/.local}/bin/rex"
+# stable has no release yet
+CHANNEL=preview
+MODE=install
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --channel)
+        [[ $# -ge 2 ]] || {
+            error "--channel needs a value"
+            exit 1
+        }
+        CHANNEL="$2"
+        shift
+        ;;
+    --check) MODE=check ;;
+    -h | --help)
+        sed -n '/^# Usage:/,/^#   rex-install --check/p' "$0" | sed 's/^# \{0,1\}//'
+        exit 0
+        ;;
+    *)
+        error "unknown option: $1"
+        exit 1
+        ;;
+    esac
+    shift
+done
+
+[[ "$(uname -s)" == Linux ]] || {
+    error "Linux only; on macOS, rex comes with Rex.app"
+    exit 1
+}
+case "$(uname -m)" in
+x86_64 | amd64) arch=amd64 ;;
+aarch64 | arm64) arch=arm64 ;;
+*)
+    error "Rex has no build for $(uname -m)"
+    exit 1
+    ;;
+esac
+file="rex-linux-$arch.tar.gz"
+
+release=$(curl -fsS "$RELEASES/api/releases/rex/$CHANNEL") || {
+    error "no $CHANNEL release of Rex"
+    exit 1
+}
+want_commit=$(jq -r .commit <<<"$release")
+version=$(jq -r .version <<<"$release")
+artifact=$(jq -c --arg f "$file" '.artifacts[] | select(.filename == $f)' <<<"$release")
+[[ -n "$artifact" ]] || {
+    error "the $CHANNEL release has no $file"
+    exit 1
+}
+
+have_commit=""
+[[ -x "$REX" ]] && have_commit=$("$REX" version --json | jq -r .commit)
+
+if [[ "$have_commit" == "$want_commit" ]]; then
+    info "rex $version ($CHANNEL) is installed"
+    exit 0
+fi
+if [[ "$MODE" == check ]]; then
+    if [[ -z "$have_commit" ]]; then
+        warn "rex is not installed (run rex-install)"
+    else
+        warn "rex is behind $CHANNEL's $version (run rex-install)"
+    fi
+    exit 1
+fi
+
+dir=$(mktemp -d)
+trap 'rm -rf "$dir"' EXIT
+info "Downloading rex $version ($CHANNEL)"
+curl -fsSL "$(jq -r .downloadUrl <<<"$artifact")" -o "$dir/$file"
+printf '%s  %s\n' "$(jq -r .sha256 <<<"$artifact")" "$dir/$file" | sha256sum -c --quiet - || {
+    error "$file does not match its published sha256"
+    exit 1
+}
+tar -xzf "$dir/$file" -C "$dir" rex
+install -D -m 0755 "$dir/rex" "$REX"
+info "Installed rex $version into $REX"
+[[ -z "$have_commit" ]] ||
+    warn "a running Rex server keeps the old version until restarted"

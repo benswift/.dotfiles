@@ -40,8 +40,10 @@ header), `lib/` (bash helpers), `tests/` (uv single-file tests, run directly:
 `./tests/test_helix.py`), `backlog/` (Backlog.md tasks), `oxfmtrc.json` (shared
 markdown/TOML format config).
 
-Editor and multiplexer config: `helix/`, `zellij/`, `ghostty/`. AI agents:
-`claude/`, `codex/`, `gemini/`, `matilda/`, `agent-run/`.
+Editor and multiplexer config: `helix/`, `zellij/`, `ghostty/`, `rex/` (Rex, on
+trial alongside zellij: weddle runs its server from `systemd/user/rex.service`
+with the binary from `bin/rex-install`; daysy's Rex.app connects to it). AI
+agents: `claude/`, `codex/`, `gemini/`, `matilda/`, `agent-run/`.
 
 ### Private overlay
 
@@ -152,9 +154,8 @@ Each script's header has the detail. Notable ones:
 - `wiz-due` units (`systemd/user/wiz-due.service`, its launchd twin) --- run
   every registered vault's due workflows on this host, then `wiz sync -all`;
   anu's are in the vault's `workflows/`, among them `health` (the job health
-  check, `bin/pkb-health`).
-  `todo` lists and edits Ben's open tasks across vaults; `unit-oncall` and
-  `launchd-run` file failures as anu tasks
+  check, `bin/pkb-health`). `todo` lists and edits Ben's open tasks across
+  vaults; `unit-oncall` and `launchd-run` file failures as anu tasks
 - `pangram` --- check a draft against Pangram's paid AI-text detector API.
   Billed per word, so `--dry-run` costs the estimate first; `PANGRAM_API_KEY`
   goes in the untracked mise env block

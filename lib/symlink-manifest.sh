@@ -37,6 +37,7 @@ SYMLINK_MANIFEST=(
     "agent-run/profiles.toml:~/.config/agent-run/profiles.toml"
     # tools
     "mise/config.toml:~/.config/mise/config.toml"
+    "rex/init.lua:~/.config/rex/init.lua"
     # yazi: linked file-by-file rather than as a directory, because
     # ~/.config/yazi/plugins is owned by `ya pkg`
     "yazi/yazi.toml:~/.config/yazi/yazi.toml"
@@ -59,6 +60,8 @@ SYMLINK_MANIFEST=(
     "systemd/user/unit-oncall-clear@.service:~/.config/systemd/user/unit-oncall-clear@.service"
     # enable on headless Linux hosts (see its header)
     "systemd/user/portal-headless.service:~/.config/systemd/user/portal-headless.service"
+    # Rex server for thin-client use from daysy; enable on weddle only
+    "systemd/user/rex.service:~/.config/systemd/user/rex.service"
     # oncall drop-ins for units that other repos own: linked file-by-file
     # because the .d/ dirs also hold machine-local overrides
     "systemd/user/aps-scrape.service.d/oncall.conf:~/.config/systemd/user/aps-scrape.service.d/oncall.conf"
