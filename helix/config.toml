@@ -1,11 +1,13 @@
-# ANSI-only themes, so helix takes the terminal's palette like everything else.
-theme = { light = "term16_light", dark = "term16_dark" }
+# ANSI-only, so helix takes the terminal's palette like everything else.
+theme = "term16_dark"
 
 [editor]
 cursorline = true
 auto-save = true
 bufferline = "multiple"
 color-modes = true
+# term16's popups share the editor background, so they need an edge.
+popup-border = "all"
 gutters = ["diagnostics", "diff"]
 
 [editor.cursor-shape]

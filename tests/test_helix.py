@@ -322,15 +322,13 @@ def test_no_shadowing_grammar_directory() -> None:
     )
 
 
-def test_configured_themes_exist() -> None:
+def test_configured_theme_exists() -> None:
     with CONFIG_TOML.open("rb") as handle:
         theme = tomllib.load(handle).get("theme")
     assert theme, "helix/config.toml names no theme"
-    names = theme.values() if isinstance(theme, dict) else [theme]
-    for name in names:
-        assert (HELIX_SRC / "runtime" / "themes" / f"{name}.toml").is_file(), (
-            f"theme {name!r} is gone from this helix build"
-        )
+    assert (HELIX_SRC / "runtime" / "themes" / f"{theme}.toml").is_file(), (
+        f"theme {theme!r} is gone from this helix build"
+    )
 
 
 @pytest.mark.xdist_group("pty")
