@@ -25,9 +25,15 @@ than continuing to guess.
 Use clear, concise language with Australian English spelling. Don't overuse
 lists or exclamation marks.
 
+I sometimes dictate, so spoken punctuation ("full stop", "comma", "smiley face")
+is punctuation, never literal text.
+
 When drafting text I'll send elsewhere (email, Ed, Teams), show it as plain
 text, not a blockquote, and pipe it to `clipboard-copy` (works over ssh). Don't
-write drafts into a repo.
+write drafts into a repo. Never send anything until I've seen the draft, unless
+I say "send it". Messages to people outside the project carry only what the
+recipient needs for the ask: no other projects, internal plans or who leads
+what.
 
 My terminal renders Markdown links: give URLs as `[text](url)`, not bare.
 
