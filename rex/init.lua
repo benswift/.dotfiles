@@ -9,3 +9,7 @@ rex.bind("alt+l", "pane.focus", { direction = "right" })
 rex.bind("alt+j", "pane.focus", { direction = "down" })
 rex.bind("alt+k", "pane.focus", { direction = "up" })
 rex.bind("alt+f", "pane.minimize_all_floating")
+
+-- Brackets by physical key: a bare `[` opens Rex's physical-key syntax.
+rex.bind("alt+[BracketLeft]", "session.previous")
+rex.bind("alt+[BracketRight]", "session.next")
