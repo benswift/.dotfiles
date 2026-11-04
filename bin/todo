@@ -49,17 +49,9 @@ STATE = (
     / "last.json"
 )
 
-# Catppuccin Mocha, the theme every terminal thing in the dotfiles uses.
-# Truecolour when the terminal says so, else the nearest of the 16 ANSI
-# colours, which the same theme maps back onto the palette.
-MOCHA = {
-    "lavender": ((180, 190, 254), 35),
-    "yellow": ((249, 226, 175), 33),
-    "mauve": ((203, 166, 247), 35),
-    "teal": ((148, 226, 213), 36),
-    "overlay1": ((127, 132, 156), 90),
-}
-SECTION_STYLE = {"todos": "lavender", "blocked": "yellow", "bot": "mauve", "lx": "teal"}
+# ANSI colour codes, so the listing takes the terminal's own palette.
+ANSI = {"blue": 94, "yellow": 33, "magenta": 35, "cyan": 36, "dim": 90}
+SECTION_STYLE = {"todos": "blue", "blocked": "yellow", "bot": "magenta", "lx": "cyan"}
 # Each status verb: the status it sets, and how its commit message names it.
 VERBS = {
     "do": ("done", "close"),
@@ -146,10 +138,7 @@ def use_color() -> bool:
 def paint(name: str, text: str, bold: bool = False) -> str:
     if not use_color():
         return text
-    rgb, ansi = MOCHA[name]
-    truecolor = os.environ.get("COLORTERM") in ("truecolor", "24bit")
-    fg = "38;2;{};{};{}".format(*rgb) if truecolor else str(ansi)
-    return f"\033[{'1;' if bold else ''}{fg}m{text}\033[0m"
+    return f"\033[{'1;' if bold else ''}{ANSI[name]}m{text}\033[0m"
 
 
 def render(listing: list[tuple[str, list[Task]]]) -> str:
@@ -161,9 +150,9 @@ def render(listing: list[tuple[str, list[Task]]]) -> str:
             section = sec
             out += ["", paint(SECTION_STYLE[sec], sec, bold=True)]
         t = group[0]
-        number = paint("overlay1", f"{n:>5}")
-        due = paint("overlay1", f"  due {t.due}") if t.due else ""
-        count = paint("overlay1", f"  ×{len(group)}") if len(group) > 1 else ""
+        number = paint("dim", f"{n:>5}")
+        due = paint("dim", f"  due {t.due}") if t.due else ""
+        count = paint("dim", f"  ×{len(group)}") if len(group) > 1 else ""
         out.append(f"  {number}  {t.title}{due}{count}")
     return "\n".join([*out, ""]) + "\n"
 

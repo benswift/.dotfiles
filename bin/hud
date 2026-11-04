@@ -24,25 +24,25 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 
-MOCHA = {
-    "fg": Style(color="#cdd6f4"),
-    "bg4": Style(color="#a6adc8"),
-    "bg4_dim": Style(color="#a6adc8", dim=True),
-    "orange": Style(color="#fab387", bold=True),
-    "blue": Style(color="#89b4fa", bold=True),
-    "purple": Style(color="#cba6f7", bold=True),
-    "green": Style(color="#a6e3a1"),
-    "aqua": Style(color="#94e2d5"),
-    "yellow": Style(color="#f9e2af"),
-    "yellow_bold": Style(color="#f9e2af", bold=True),
-    "red": Style(color="#f38ba8", bold=True),
+# ANSI colour names, so the hud takes the terminal's own palette.
+STYLE = {
+    "fg": Style(color="default"),
+    "header": Style(color="white"),
+    "orange": Style(color="bright_red", bold=True),
+    "blue": Style(color="blue", bold=True),
+    "purple": Style(color="magenta", bold=True),
+    "green": Style(color="green"),
+    "aqua": Style(color="cyan"),
+    "yellow": Style(color="yellow"),
+    "yellow_bold": Style(color="yellow", bold=True),
+    "red": Style(color="red", bold=True),
     "dim": Style(dim=True),
 }
 
 AGENT_STYLES = {
-    "claude": MOCHA["orange"],
-    "codex": MOCHA["blue"],
-    "gemini": MOCHA["purple"],
+    "claude": STYLE["orange"],
+    "codex": STYLE["blue"],
+    "gemini": STYLE["purple"],
 }
 
 STRAY_PATTERNS = [
@@ -324,35 +324,35 @@ def build_footer(
     servers = data["servers"]
 
     footer = Text()
-    stray_count_style = MOCHA["yellow"] if strays else MOCHA["green"]
-    hog_count_style = MOCHA["red"] if cpu_hogs else MOCHA["green"]
-    footer.append(str(len(agents)), style=MOCHA["green"])
-    footer.append(" agent(s), ", style=MOCHA["dim"])
-    footer.append(str(len(mail_clients)), style=MOCHA["green"])
-    footer.append(" mail, ", style=MOCHA["dim"])
-    footer.append(str(len(servers)), style=MOCHA["green"])
-    footer.append(" server(s), ", style=MOCHA["dim"])
+    stray_count_style = STYLE["yellow"] if strays else STYLE["green"]
+    hog_count_style = STYLE["red"] if cpu_hogs else STYLE["green"]
+    footer.append(str(len(agents)), style=STYLE["green"])
+    footer.append(" agent(s), ", style=STYLE["dim"])
+    footer.append(str(len(mail_clients)), style=STYLE["green"])
+    footer.append(" mail, ", style=STYLE["dim"])
+    footer.append(str(len(servers)), style=STYLE["green"])
+    footer.append(" server(s), ", style=STYLE["dim"])
     footer.append(str(len(strays)), style=stray_count_style)
-    footer.append(" stray(s), ", style=MOCHA["dim"])
+    footer.append(" stray(s), ", style=STYLE["dim"])
     footer.append(str(len(cpu_hogs)), style=hog_count_style)
-    footer.append(" cpu hog(s)", style=MOCHA["dim"])
+    footer.append(" cpu hog(s)", style=STYLE["dim"])
     footer.append("\n")
 
     if state == STATE_ENTERING:
-        footer.append("kill PID: ", style=MOCHA["yellow_bold"])
-        footer.append(input_buf, style=MOCHA["fg"])
-        footer.append("▏", style=MOCHA["yellow"])
-        footer.append("    (enter=confirm, esc=cancel)", style=MOCHA["dim"])
+        footer.append("kill PID: ", style=STYLE["yellow_bold"])
+        footer.append(input_buf, style=STYLE["fg"])
+        footer.append("▏", style=STYLE["yellow"])
+        footer.append("    (enter=confirm, esc=cancel)", style=STYLE["dim"])
     elif state == STATE_CONFIRMING and target is not None:
         pid, label = target
-        footer.append(f"kill {label} (PID {pid})? ", style=MOCHA["red"])
-        footer.append("[y/N]", style=MOCHA["yellow_bold"])
+        footer.append(f"kill {label} (PID {pid})? ", style=STYLE["red"])
+        footer.append("[y/N]", style=STYLE["yellow_bold"])
     else:
-        footer.append("q quit  •  k kill-by-pid", style=MOCHA["dim"])
+        footer.append("q quit  •  k kill-by-pid", style=STYLE["dim"])
 
     if message:
-        footer.append("  •  ", style=MOCHA["dim"])
-        footer.append(message, style=MOCHA["aqua"])
+        footer.append("  •  ", style=STYLE["dim"])
+        footer.append(message, style=STYLE["aqua"])
     return footer
 
 
@@ -369,63 +369,63 @@ def build_narrow(data: dict, width: int, header: Text, footer: Text) -> Group:
 
     def cwd_line(t: Text, cwd: str) -> None:
         t.append("  ")
-        t.append(fit_path(cwd, path_budget) or "—", style=MOCHA["aqua"])
+        t.append(fit_path(cwd, path_budget) or "—", style=STYLE["aqua"])
         t.append("\n")
 
     def render_agent(t: Text, a: dict) -> None:
         t.append(a["agent"], style=AGENT_STYLES[a["agent"]])
         t.append("  ")
-        t.append(a["pid"], style=MOCHA["fg"])
+        t.append(a["pid"], style=STYLE["fg"])
         t.append("  ")
-        t.append(a["elapsed"], style=MOCHA["dim"])
+        t.append(a["elapsed"], style=STYLE["dim"])
         t.append("\n")
         cwd_line(t, a["cwd"])
 
     def render_mail(t: Text, m: dict) -> None:
-        t.append("neomutt", style=MOCHA["green"])
+        t.append("neomutt", style=STYLE["green"])
         t.append("  ")
-        t.append(m["pid"], style=MOCHA["fg"])
+        t.append(m["pid"], style=STYLE["fg"])
         t.append("  ")
-        t.append(m["elapsed"], style=MOCHA["dim"])
+        t.append(m["elapsed"], style=STYLE["dim"])
         t.append("\n")
         cwd_line(t, m["cwd"])
 
     def render_stray(t: Text, s: dict) -> None:
-        t.append(s["label"], style=MOCHA["yellow_bold"])
+        t.append(s["label"], style=STYLE["yellow_bold"])
         t.append("  ")
-        t.append(s["pid"], style=MOCHA["fg"])
+        t.append(s["pid"], style=STYLE["fg"])
         t.append("\n")
         t.append("  ")
-        t.append(f"{s['status']} · {s['elapsed']}", style=MOCHA["dim"])
+        t.append(f"{s['status']} · {s['elapsed']}", style=STYLE["dim"])
         t.append("\n")
 
     def render_hog(t: Text, h: dict) -> None:
-        cpu_style = MOCHA["red"] if h["cpu"] >= 50 else MOCHA["yellow_bold"]
+        cpu_style = STYLE["red"] if h["cpu"] >= 50 else STYLE["yellow_bold"]
         t.append(h["name"], style=cpu_style)
         t.append("  ")
-        t.append(h["pid"], style=MOCHA["fg"])
+        t.append(h["pid"], style=STYLE["fg"])
         t.append("  ")
         t.append(f"{h['cpu']:.1f}%", style=cpu_style)
         t.append("\n")
         cwd_line(t, h["cwd"])
 
     def render_server(t: Text, s: dict) -> None:
-        t.append(s["cmd"], style=MOCHA["red"])
+        t.append(s["cmd"], style=STYLE["red"])
         t.append("  ")
-        t.append(s["pid"], style=MOCHA["fg"])
+        t.append(s["pid"], style=STYLE["fg"])
         t.append("  ")
-        t.append(f":{s['port']}", style=MOCHA["fg"])
+        t.append(f":{s['port']}", style=STYLE["fg"])
         t.append("\n")
         cwd_line(t, s["cwd"])
 
     def section(title: str, entries: list, render, empty: str) -> Text:
         t = Text()
-        t.append(title, style=MOCHA["bg4"])
+        t.append(title, style=STYLE["header"])
         if entries:
-            t.append(f" ({len(entries)})", style=MOCHA["dim"])
+            t.append(f" ({len(entries)})", style=STYLE["dim"])
         t.append("\n")
         if not entries:
-            t.append(f"  {empty}\n", style=MOCHA["dim"])
+            t.append(f"  {empty}\n", style=STYLE["dim"])
         else:
             for e in entries:
                 render(t, e)
@@ -457,9 +457,9 @@ def build_display(
 ) -> Group:
     now = datetime.now().astimezone().strftime("%H:%M:%S")
     header = Text()
-    header.append("hud", style=Style(color="#cdd6f4", bold=True))
+    header.append("hud", style=Style(bold=True))
     header.append("  ")
-    header.append(now, style=MOCHA["yellow"])
+    header.append(now, style=STYLE["yellow"])
     header.append("\n")
 
     footer = build_footer(data, state, input_buf, target, message)
@@ -479,14 +479,14 @@ def build_display(
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=MOCHA["bg4"],
+        header_style=STYLE["header"],
     )
-    agent_table.add_column("AGENT", min_width=8, style=MOCHA["fg"])
-    agent_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
-    agent_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
-    agent_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
-    agent_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
-    agent_table.add_column("CWD", style=MOCHA["aqua"])
+    agent_table.add_column("AGENT", min_width=8, style=STYLE["fg"])
+    agent_table.add_column("PID", justify="right", min_width=6, style=STYLE["fg"])
+    agent_table.add_column("%CPU", justify="right", min_width=5, style=STYLE["fg"])
+    agent_table.add_column("%MEM", justify="right", min_width=5, style=STYLE["fg"])
+    agent_table.add_column("ELAPSED", justify="right", min_width=9, style=STYLE["fg"])
+    agent_table.add_column("CWD", style=STYLE["aqua"])
 
     for a in agents:
         style = AGENT_STYLES[a["agent"]]
@@ -500,7 +500,7 @@ def build_display(
         )
     if not agents:
         agent_table.add_row(
-            Text("(no agents running)", style=MOCHA["dim"]),
+            Text("(no agents running)", style=STYLE["dim"]),
             "",
             "",
             "",
@@ -514,18 +514,18 @@ def build_display(
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=MOCHA["bg4"],
+        header_style=STYLE["header"],
     )
-    stray_table.add_column("STRAY", min_width=16, style=MOCHA["fg"])
-    stray_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
-    stray_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
-    stray_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
-    stray_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
-    stray_table.add_column("STATUS", style=MOCHA["dim"])
+    stray_table.add_column("STRAY", min_width=16, style=STYLE["fg"])
+    stray_table.add_column("PID", justify="right", min_width=6, style=STYLE["fg"])
+    stray_table.add_column("%CPU", justify="right", min_width=5, style=STYLE["fg"])
+    stray_table.add_column("%MEM", justify="right", min_width=5, style=STYLE["fg"])
+    stray_table.add_column("ELAPSED", justify="right", min_width=9, style=STYLE["fg"])
+    stray_table.add_column("STATUS", style=STYLE["dim"])
 
     for s in strays:
         stray_table.add_row(
-            Text(s["label"], style=MOCHA["yellow_bold"]),
+            Text(s["label"], style=STYLE["yellow_bold"]),
             s["pid"],
             s["cpu"],
             s["mem"],
@@ -534,7 +534,7 @@ def build_display(
         )
     if not strays:
         stray_table.add_row(
-            Text("(no stray processes)", style=MOCHA["dim"]),
+            Text("(no stray processes)", style=STYLE["dim"]),
             "",
             "",
             "",
@@ -548,17 +548,17 @@ def build_display(
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=MOCHA["bg4"],
+        header_style=STYLE["header"],
     )
-    hog_table.add_column("CPU HOG", min_width=16, style=MOCHA["fg"])
-    hog_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
-    hog_table.add_column("%CPU", justify="right", min_width=6, style=MOCHA["fg"])
-    hog_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
-    hog_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
-    hog_table.add_column("CWD", style=MOCHA["aqua"])
+    hog_table.add_column("CPU HOG", min_width=16, style=STYLE["fg"])
+    hog_table.add_column("PID", justify="right", min_width=6, style=STYLE["fg"])
+    hog_table.add_column("%CPU", justify="right", min_width=6, style=STYLE["fg"])
+    hog_table.add_column("%MEM", justify="right", min_width=5, style=STYLE["fg"])
+    hog_table.add_column("ELAPSED", justify="right", min_width=9, style=STYLE["fg"])
+    hog_table.add_column("CWD", style=STYLE["aqua"])
 
     for h in cpu_hogs:
-        cpu_style = MOCHA["red"] if h["cpu"] >= 50 else MOCHA["yellow_bold"]
+        cpu_style = STYLE["red"] if h["cpu"] >= 50 else STYLE["yellow_bold"]
         hog_table.add_row(
             Text(h["name"], style=cpu_style),
             h["pid"],
@@ -569,7 +569,7 @@ def build_display(
         )
     if not cpu_hogs:
         hog_table.add_row(
-            Text("(no cpu hogs)", style=MOCHA["dim"]),
+            Text("(no cpu hogs)", style=STYLE["dim"]),
             "",
             "",
             "",
@@ -583,18 +583,18 @@ def build_display(
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=MOCHA["bg4"],
+        header_style=STYLE["header"],
     )
-    mail_table.add_column("MAIL", min_width=8, style=MOCHA["fg"])
-    mail_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
-    mail_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
-    mail_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
-    mail_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
-    mail_table.add_column("CWD", style=MOCHA["aqua"])
+    mail_table.add_column("MAIL", min_width=8, style=STYLE["fg"])
+    mail_table.add_column("PID", justify="right", min_width=6, style=STYLE["fg"])
+    mail_table.add_column("%CPU", justify="right", min_width=5, style=STYLE["fg"])
+    mail_table.add_column("%MEM", justify="right", min_width=5, style=STYLE["fg"])
+    mail_table.add_column("ELAPSED", justify="right", min_width=9, style=STYLE["fg"])
+    mail_table.add_column("CWD", style=STYLE["aqua"])
 
     for m in mail_clients:
         mail_table.add_row(
-            Text("neomutt", style=MOCHA["green"]),
+            Text("neomutt", style=STYLE["green"]),
             m["pid"],
             m["cpu"],
             m["mem"],
@@ -603,7 +603,7 @@ def build_display(
         )
     if not mail_clients:
         mail_table.add_row(
-            Text("(no mail clients)", style=MOCHA["dim"]),
+            Text("(no mail clients)", style=STYLE["dim"]),
             "",
             "",
             "",
@@ -617,19 +617,19 @@ def build_display(
         show_lines=False,
         box=None,
         padding=(0, 1),
-        header_style=MOCHA["bg4"],
+        header_style=STYLE["header"],
     )
-    server_table.add_column("SERVER", min_width=12, style=MOCHA["fg"])
-    server_table.add_column("PID", justify="right", min_width=6, style=MOCHA["fg"])
-    server_table.add_column("PORT", justify="right", min_width=5, style=MOCHA["fg"])
-    server_table.add_column("%CPU", justify="right", min_width=5, style=MOCHA["fg"])
-    server_table.add_column("%MEM", justify="right", min_width=5, style=MOCHA["fg"])
-    server_table.add_column("ELAPSED", justify="right", min_width=9, style=MOCHA["fg"])
-    server_table.add_column("CWD", style=MOCHA["aqua"])
+    server_table.add_column("SERVER", min_width=12, style=STYLE["fg"])
+    server_table.add_column("PID", justify="right", min_width=6, style=STYLE["fg"])
+    server_table.add_column("PORT", justify="right", min_width=5, style=STYLE["fg"])
+    server_table.add_column("%CPU", justify="right", min_width=5, style=STYLE["fg"])
+    server_table.add_column("%MEM", justify="right", min_width=5, style=STYLE["fg"])
+    server_table.add_column("ELAPSED", justify="right", min_width=9, style=STYLE["fg"])
+    server_table.add_column("CWD", style=STYLE["aqua"])
 
     for s in servers:
         server_table.add_row(
-            Text(s["cmd"], style=MOCHA["red"]),
+            Text(s["cmd"], style=STYLE["red"]),
             s["pid"],
             s["port"],
             s["cpu"],
@@ -639,7 +639,7 @@ def build_display(
         )
     if not servers:
         server_table.add_row(
-            Text("(no dev servers running)", style=MOCHA["dim"]),
+            Text("(no dev servers running)", style=STYLE["dim"]),
             "",
             "",
             "",
