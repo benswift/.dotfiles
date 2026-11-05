@@ -87,29 +87,12 @@ is_python_shebang() {
 # cmp finds no difference and writes nothing.
 fmt_ruff() { fmt ruff format --force-exclude --stdin-filename "$f" -; }
 
-# .astro is formatted by the *project's* prettier, not a global one --- see
-# bin/prettier-helix for why. The wrapper is the same one Helix's astro
-# formatter uses, so the two can't drift, and it passes the buffer through
-# untouched in a repo with no prettier installed.
-fmt_prettier() { fmt prettier-helix "$f"; }
-
-# TypeScript and JavaScript go through plain oxfmt, not oxfmt-helix: the
-# dotfiles config is tuned for prose (80 columns, proseWrap) and code takes
-# oxfmt's own defaults (100 columns). Run from the file's directory so the
-# nearest project .oxfmtrc.json applies when there is one --- Helix runs the
-# same command from the project root and resolves the same config. oxfmt
-# finds that config from the real path in --stdin-filepath, so the project's
-# ignorePatterns apply too: an excluded file comes back unchanged.
-fmt_oxfmt_code() {
-    command -v oxfmt &>/dev/null || return 0
-    local tmp
-    tmp="$(mktemp)"
-    if (cd "$(dirname "$f")" && oxfmt --stdin-filepath "$f") <"$f" >"$tmp" 2>/dev/null &&
-        ! cmp -s "$tmp" "$f"; then
-        cat "$tmp" >"$f"
-    fi
-    rm -f "$tmp"
-}
+# Astro, TypeScript and JavaScript go through the project's own oxfmt (see
+# bin/oxfmt-project), not oxfmt-helix: the dotfiles config is tuned for prose
+# (80 columns, proseWrap), and code takes the project's .oxfmtrc.json or
+# oxfmt's own defaults (100 columns). Helix's formatters for these languages
+# call the same wrapper, so the two can't drift.
+fmt_oxfmt_code() { fmt oxfmt-project "$f"; }
 
 # A project can turn a language's format-on-save off in its own
 # .helix/languages.toml (`auto-format = false`), e.g. a co-author's repo whose
@@ -140,8 +123,7 @@ case "$f" in
 *.tex) helix_autoformat_off latex || fmt tex-fmt --stdin ;;
 *.toml) fmt oxfmt-helix --stdin-filepath file.toml "$f" ;;
 *.kdl) fmt kdlfmt format --kdl-version v1 - ;; # zellij parses KDL v1 only
-*.astro) fmt_prettier ;;
-*.ts | *.tsx | *.mts | *.cts | *.js | *.jsx | *.mjs | *.cjs) fmt_oxfmt_code ;;
+*.astro | *.ts | *.tsx | *.mts | *.cts | *.js | *.jsx | *.mjs | *.cjs) fmt_oxfmt_code ;;
 *.py) fmt_ruff ;;
 *.ex | *.exs | *.heex) fmt_mix ;;
 *.rs) fmt_rust ;;

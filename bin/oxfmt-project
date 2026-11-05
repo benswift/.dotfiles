@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# oxfmt-project --- format a buffer with the project's own oxfmt, as a
+# stdin->stdout formatter.
+#
+# oxfmt formats .astro (and .svelte) through packages it loads from the
+# project, such as @astrojs/compiler-rs, which a global oxfmt can't resolve. So
+# this walks up from the file to the nearest node_modules/.bin/oxfmt, which
+# also means a save formats exactly as the project's `pnpm format` and CI do.
+# With no project oxfmt it falls back to the global one; if that fails too (an
+# .astro file outside any project, say), the buffer passes through unchanged.
+#
+# It runs from the file's directory with the file's absolute path, so the
+# project's .oxfmtrc.json, its overrides and its ignorePatterns all apply.
+#
+# Usage: oxfmt-project <buffer-path>   (reads stdin, writes stdout)
+#
+# Helix's astro, typescript and javascript formatters (helix/languages.toml)
+# and bin/claude-format both call this --- keep the three in sync.
+set -euo pipefail
+
+f="${1:?usage: oxfmt-project <buffer-path>}"
+case "$f" in
+/*) ;;
+*) f="$PWD/$f" ;;
+esac
+dir="$(dirname "$f")"
+
+oxfmt=""
+d="$dir"
+while :; do
+    if [[ -x "$d/node_modules/.bin/oxfmt" ]]; then
+        oxfmt="$d/node_modules/.bin/oxfmt"
+        break
+    fi
+    [[ "$d" == "/" ]] && break
+    d="$(dirname "$d")"
+done
+[[ -n "$oxfmt" ]] || oxfmt="$(command -v oxfmt || true)"
+
+input="$(mktemp)"
+output="$(mktemp)"
+trap 'rm -f "$input" "$output"' EXIT
+cat >"$input"
+
+if [[ -n "$oxfmt" && -d "$dir" ]] &&
+    (cd "$dir" && "$oxfmt" --stdin-filepath "$f") <"$input" >"$output" 2>/dev/null; then
+    cat "$output"
+else
+    cat "$input"
+fi

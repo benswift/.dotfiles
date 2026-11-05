@@ -155,58 +155,43 @@ formatter = { command = "kdlfmt", args = [
   "-",
 ] }
 
-# astro: every Astro repo here checks `prettier --check '**/*.astro'` in CI,
-# but prettier and prettier-plugin-astro are project-local devDependencies, so
-# there's no global binary to name here. prettier-helix walks up from the
-# buffer to the nearest node_modules/.bin/prettier and passes through when it
-# finds none. Without this block Helix has no astro formatter at all, and
-# every .astro edit ships unformatted and fails CI at the far end.
-[[language]]
-name = "astro"
-auto-format = true
-formatter = { command = "prettier-helix", args = ["%{file_path_absolute}"] }
-
-# typescript/javascript: plain oxfmt, not oxfmt-helix --- the dotfiles config
-# is tuned for prose, and code takes oxfmt's defaults (100 columns) unless the
-# project has an .oxfmtrc.json, which oxfmt finds from the working directory.
-# The file's path lets the project's ignorePatterns apply. bin/claude-format
-# runs the same command from the file's directory.
+# astro, typescript and javascript: the project's own oxfmt, through
+# bin/oxfmt-project, not oxfmt-helix --- the dotfiles config is tuned for
+# prose, and code takes the project's .oxfmtrc.json or oxfmt's defaults (100
+# columns). oxfmt formats .astro only with packages from the project
+# (`"astro": true` in .oxfmtrc.json), which a global oxfmt can't load; the
+# wrapper finds the project's binary, falls back to the global one, and passes
+# the buffer through if neither works. bin/claude-format calls the same
+# wrapper.
 #
 # Formatter paths are %{file_path_absolute}, never %{buffer_name}: helix runs
 # a formatter from the document's directory, but %{buffer_name} is relative to
 # helix's own cwd, so from anywhere but the project root it names a file that
 # doesn't exist.
 [[language]]
+name = "astro"
+auto-format = true
+formatter = { command = "oxfmt-project", args = ["%{file_path_absolute}"] }
+
+[[language]]
 name = "typescript"
 auto-format = true
-formatter = { command = "oxfmt", args = [
-  "--stdin-filepath",
-  "%{file_path_absolute}",
-] }
+formatter = { command = "oxfmt-project", args = ["%{file_path_absolute}"] }
 
 [[language]]
 name = "tsx"
 auto-format = true
-formatter = { command = "oxfmt", args = [
-  "--stdin-filepath",
-  "%{file_path_absolute}",
-] }
+formatter = { command = "oxfmt-project", args = ["%{file_path_absolute}"] }
 
 [[language]]
 name = "javascript"
 auto-format = true
-formatter = { command = "oxfmt", args = [
-  "--stdin-filepath",
-  "%{file_path_absolute}",
-] }
+formatter = { command = "oxfmt-project", args = ["%{file_path_absolute}"] }
 
 [[language]]
 name = "jsx"
 auto-format = true
-formatter = { command = "oxfmt", args = [
-  "--stdin-filepath",
-  "%{file_path_absolute}",
-] }
+formatter = { command = "oxfmt-project", args = ["%{file_path_absolute}"] }
 
 [language-server.mutt-compose-lsp]
 command = "mutt-compose-lsp"
