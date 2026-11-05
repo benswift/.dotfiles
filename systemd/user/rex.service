@@ -1,20 +1,18 @@
 [Unit]
 Description=Rex personal server, reachable from the tailnet
 Documentation=https://www.superlogical.com/rex/docs/linux/remote-access.md
-# Personal server for weddle's thin-client use: Rex.app on daysy adds this host
-# ("Add Remote Host…", address `weddle`). The tailnet listener rides the
-# machine's own tailscaled, which identifies callers; only the node's owner gets
-# in. Rex for iOS pairs with the HTTPS address of Rex's own tsnet node instead:
-# `--tailscale` runs it as `rex` (https://rex.<tailnet>.ts.net, login kept in
-# ~/.local/state/rex/tsnet). It must be a start flag: `rex server tailscale on`
-# lasts only until the next restart.
+# Personal server for weddle's thin-client use. `--tailscale` runs Rex's own
+# tsnet node `rex` (https://rex.<tailnet>.ts.net, login kept in
+# ~/.local/state/rex/tsnet); Rex.app on daysy and Rex for iOS both connect to
+# that address, and only the node's owner gets in. It must be a start flag:
+# `rex server tailscale on` lasts only until the next restart.
 # Needs lingering (`loginctl enable-linger`) so sessions outlive logins.
 # Binary from bin/rex-install. Enable with
 # `systemctl --user daemon-reload && systemctl --user enable --now rex`.
 
 [Service]
 ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
-ExecStart=/home/ben/.local/bin/rex server run --extra-listen tailnet://:7297 --tailscale
+ExecStart=/home/ben/.local/bin/rex server run --tailscale
 Restart=on-failure
 
 [Install]
