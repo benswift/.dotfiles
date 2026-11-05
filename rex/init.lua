@@ -10,9 +10,10 @@ rex.bind("alt+j", "pane.focus", { direction = "down" })
 rex.bind("alt+k", "pane.focus", { direction = "up" })
 rex.bind("alt+f", "toggle_floating")
 
--- Brackets by physical key: a bare `[` opens Rex's physical-key syntax.
-rex.bind("alt+[BracketLeft]", "session.previous")
-rex.bind("alt+[BracketRight]", "session.next")
+-- Sidebar order, not most-recent: Rex can't tell config which session the app
+-- is showing, so a last-session toggle isn't possible.
+rex.bind("ctrl+j", "session.next")
+rex.bind("ctrl+k", "session.previous")
 
 -- zellij's Alt f: toggle the active window's floating panes, opening one
 -- (in the focused pane's cwd) when there are none.
