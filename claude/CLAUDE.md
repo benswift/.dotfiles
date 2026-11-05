@@ -113,12 +113,13 @@ replacements.
 - **Frontend web**: semantic HTML with accessibility, modern browser features,
   Grid/Flexbox, modern ES6+ with functional patterns. Use the `agent-browser`
   CLI (not Playwright directly) for browser automation and UI testing
-- **Tasks**: use the `backlog` CLI (Backlog.md); the
-  `ben:project-manager-backlog` skill covers task format and workflow
-- **Notes**: my knowledge base is the wiz vaults `anu` (academic work, the
-  default) and `ben` (personal only), managed with the `wiz` CLI. Use the
-  `ben:vault` skill whenever a task involves notes, tasks, journal entries,
-  people, projects or the knowledge base
+- **Notes and tasks**: my knowledge base is the wiz vaults `anu` (academic work,
+  the default) and `ben` (personal only), managed with the `wiz` CLI. A "task"
+  or "todo" always means a wiz task. Use the `ben:vault` skill whenever a
+  request involves notes, tasks, journal entries, people, projects or the
+  knowledge base
+- **Backlog.md**: only when I say "backlog" explicitly; the
+  `ben:project-manager-backlog` skill covers it
 
 ## Coding rules
 
