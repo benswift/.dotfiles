@@ -159,7 +159,7 @@ formatter = { command = "kdlfmt", args = [
 # bin/oxfmt-project, not oxfmt-helix --- the dotfiles config is tuned for
 # prose, and code takes the project's .oxfmtrc.json or oxfmt's defaults (100
 # columns). oxfmt formats .astro only with packages from the project
-# (`"astro": true` in .oxfmtrc.json), which a global oxfmt can't load; the
+# (its `astro` option in .oxfmtrc.json), which a global oxfmt can't load; the
 # wrapper finds the project's binary, falls back to the global one, and passes
 # the buffer through if neither works. bin/claude-format calls the same
 # wrapper.
