@@ -105,17 +105,21 @@ eval "$(mise activate zsh)"
 eval "$(zoxide init zsh)"
 
 case "$(hostname -s)" in
-  daysy)       _prompt_host_color='%F{yellow}' ;;
-  weddle)      _prompt_host_color='%F{green}' ;;
-  cybersonic)  _prompt_host_color='%F{magenta}' ;;
-  jetson-orin) _prompt_host_color='%F{cyan}' ;;
-  strproxy)    _prompt_host_color='%F{9}' ;;
-  *)           _prompt_host_color='%F{9}' ;;
+  daysy)       _prompt_host_color=yellow ;;
+  weddle)      _prompt_host_color=green ;;
+  cybersonic)  _prompt_host_color=magenta ;;
+  jetson-orin) _prompt_host_color=cyan ;;
+  strproxy)    _prompt_host_color=9 ;;
+  *)           _prompt_host_color=9 ;;
 esac
+
+# The host shows as a badge (black on the host colour) and tints the rule
+# above each prompt, so the machine is obvious at a glance. bin/claude-statusline
+# draws the same badge.
 
 _prompt_precmd() {
   local exit_status=$?
-  local sep_color='%F{8}'
+  local sep_color="%F{${_prompt_host_color}}"
   local dir_color='%F{blue}'
   local vcs_color='%F{magenta}'
 
@@ -124,8 +128,7 @@ _prompt_precmd() {
   local vcs
   vcs=$(git branch --show-current 2>/dev/null)
 
-  local host=""
-  [[ -n "$_prompt_host_color" ]] && host="%B${_prompt_host_color}%m%f%b "
+  local host="%B%K{${_prompt_host_color}}%F{black} %m %f%k%b "
 
   PROMPT="${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{green}.%F{red})❯%f "
 }
