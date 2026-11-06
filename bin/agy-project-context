@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# agy-project-context --- Antigravity CLI SessionStart hook: inject a project's
-# CLAUDE.md files, which agy never loads itself (it reads only AGENTS.md and
-# GEMINI.md, and no setting adds a filename).
+# agy-project-context --- Antigravity CLI SessionStart hook: inject the
+# CLAUDE.md files of a repo not yet moved to AGENTS.md, which agy never loads
+# itself (it reads only AGENTS.md and GEMINI.md, and no setting adds a
+# filename).
 #
 # For each workspace path agy passes on stdin, collects CLAUDE.md from the git
 # root down to the workspace folder (the set Claude Code loads at startup),

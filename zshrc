@@ -67,7 +67,7 @@ alias latest='wiz query anu "path.startsWith(\"notes/\")" | tail -10'
 # Copy a vault file's full path: `cpath ben:notes/2026-10-29-x.md`.
 cpath() { wiz path "$1" | tr -d '\n' | clipboard-copy && echo "copied $(wiz path "$1")"; }
 # alias sc='screencapture -i -t jpg screencap.jpg'
-alias update-usage-rules='mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
+alias update-usage-rules='mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
 # git shortcuts
 alias gst="git status"
 alias gd="git diff"

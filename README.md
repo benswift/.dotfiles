@@ -48,7 +48,7 @@ Linux.
 ## AI coding agents
 
 This repo provides shared configuration for multiple AI coding agents, with
-`CLAUDE.md` as the common project-level instructions file.
+`AGENTS.md` as the common project-level instructions file.
 
 ### How each agent uses these files
 
@@ -64,8 +64,8 @@ This repo provides shared configuration for multiple AI coding agents, with
 - **Antigravity CLI**: the global instructions are also symlinked to
   `~/.gemini/AGENTS.md`. `antigravity/settings.json` and its seed are merged
   into `~/.gemini/antigravity-cli/settings.json` the same way, and a
-  `SessionStart` hook (`antigravity/hooks.json`) injects each project's
-  `CLAUDE.md`, which `agy` doesn't read on its own.
+  `SessionStart` hook (`antigravity/hooks.json`) injects the `CLAUDE.md` of a
+  repo that has no `AGENTS.md`, which `agy` doesn't read on its own.
 
 The `create_symlinks.sh` script sets up all necessary symlinks and directories.
 
@@ -100,10 +100,10 @@ a fresh host install Claude Code before running `dotfiles update`.
 ### Elixir projects tip
 
 The [Usage Rules](https://hexdocs.pm/usage_rules/) package is excellent for
-injecting project-specific rules into your `CLAUDE.md` file:
+injecting project-specific rules into your `AGENTS.md` file:
 
 ```bash
-mix usage_rules.sync CLAUDE.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing
+mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing
 ```
 
 ## Private overlay

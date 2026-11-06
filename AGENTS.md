@@ -61,7 +61,7 @@ agents: `claude/`, `codex/`, `antigravity/`, `agent-run/`.
 `private/` is a separate private repo (`benswift/dotfiles-private`), cloned
 inside this checkout: gitignored here, re-included for rg/fd/helix by `.ignore`.
 It holds mail, weddle's backups, private ssh hosts and anything else naming
-institutional accounts or infrastructure, and has its own `CLAUDE.md`.
+institutional accounts or infrastructure, and has its own `AGENTS.md`.
 `lib/private.sh` lists the hooks it plugs into. Nothing public may depend on it:
 every hook is optional, so a machine without it still bootstraps.
 
@@ -106,7 +106,7 @@ used when a project has no `mise.toml` of its own.
 `~/.config/mise/config.local.toml` is machine-local, untracked, and auto-merged;
 its `[env]` table is **the sole home for secrets** (`PUSHOVER_TOKEN`,
 `PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`). Nothing here calls 1Password. The
-private overlay's mail scripts have their own backend (its `CLAUDE.md`).
+private overlay's mail scripts have their own backend (its `AGENTS.md`).
 
 ### Package installation hierarchy
 
@@ -184,14 +184,15 @@ symlinked file-by-file rather than as a directory.
 
 ## AI coding agents
 
-`CLAUDE.md` is the project instructions file for every agent, so one file serves
-them all. Claude Code and Codex read it themselves; Antigravity CLI (`agy`)
-reads only `AGENTS.md` and `GEMINI.md`, so its `SessionStart` hook
-(`antigravity/hooks.json`, running `bin/agy-project-context`) injects the
-project's `CLAUDE.md` files. Tracked config: `claude/CLAUDE.md` (global
-instructions, symlinked to `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` and
-`~/.gemini/AGENTS.md`), `claude/settings.json`, `codex/hooks.json`,
-`antigravity/settings.json` and `antigravity/hooks.json`.
+`AGENTS.md` is the project instructions file, read natively by Claude Code,
+Codex and Antigravity CLI (`agy`); Claude loads it beside any `CLAUDE.md`
+(`pluginConfigs` in `claude/settings.json`). For repos that still have only a
+`CLAUDE.md`, Codex falls back to it (below) and `agy`'s `SessionStart` hook
+(`antigravity/hooks.json`, running `bin/agy-project-context`) injects it.
+Tracked config: `claude/CLAUDE.md` (global instructions, symlinked to
+`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` and `~/.gemini/AGENTS.md`),
+`claude/settings.json`, `codex/hooks.json`, `antigravity/settings.json` and
+`antigravity/hooks.json`.
 
 ### Personal skills
 
@@ -245,8 +246,8 @@ have the detail.
   including a package's `src/`, from where it shipped in the built wheel).
 - **Codex** --- `~/.codex/config.toml` is entirely machine-local and
   deliberately untracked; set `project_doc_fallback_filenames = ["CLAUDE.md"]`
-  there on each machine. There is no shared Codex profile: the `oy` alias just
-  selects full-access mode.
+  there on each machine, for repos without an `AGENTS.md`. There is no shared
+  Codex profile: the `oy` alias just selects full-access mode.
 - **Antigravity CLI** --- `modelProvider` in `antigravity/settings.json` bills
   `GEMINI_API_KEY` (untracked mise env) pay-as-you-go instead of signing in. The
   `gy` alias just selects full-access mode.

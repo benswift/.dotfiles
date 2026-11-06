@@ -56,6 +56,9 @@ documentation. Be short, clear and direct: state the instruction, and include
 rationale only where the bare instruction would be reverted or misapplied
 without it (a non-obvious constraint, a footgun, a deliberate deviation).
 
+A repo's instructions file is `AGENTS.md`, which Claude Code, Codex and
+Antigravity all read. Never create a `CLAUDE.md`.
+
 When you edit one, **delete what the edit supersedes**. Never leave a record of
 a decision that has been overridden, a note that something "used to" work
 another way, a dated changelog entry, or a war story about how a bug was found.
