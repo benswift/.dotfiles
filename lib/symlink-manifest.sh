@@ -14,10 +14,6 @@
 #
 # The private overlay (lib/private.sh) appends its own links, from
 # private/manifest.sh, sourced at the end of this file.
-#
-# Also not listed: matilda/system-defaults.json. Matilda reads it in place
-# from the repo, via MATILDA_CODE_SYSTEM_DEFAULTS_PATH in mise/config.toml ---
-# no symlink, because ~/.matilda/settings.json is Matilda's own to rewrite.
 
 SYMLINK_MANIFEST=(
     # home directory dotfiles
@@ -34,6 +30,7 @@ SYMLINK_MANIFEST=(
     "claude/CLAUDE.md:~/.claude/CLAUDE.md"
     "claude/settings.json:~/.claude/settings.json"
     "claude/CLAUDE.md:~/.codex/AGENTS.md"
+    "claude/CLAUDE.md:~/.gemini/AGENTS.md"
     "agent-run/profiles.toml:~/.config/agent-run/profiles.toml"
     # tools
     "mise/config.toml:~/.config/mise/config.toml"
@@ -80,9 +77,15 @@ SYMLINK_MANIFEST_WITH_BACKUP=(
     # Hook definitions are portable; Codex stores their machine-local trust
     # hashes separately in ~/.codex/config.toml.
     "codex/hooks.json:~/.codex/hooks.json"
-    "gemini/settings.json:~/.gemini/settings.json"
     # `ya pkg add` rewrites this to record each plugin's rev and hash
     "yazi/package.toml:~/.config/yazi/package.toml"
+)
+
+# JSON configs a tool replaces wholesale (a symlink there becomes a plain file
+# on its next start): the repo file's keys are merged into the target with jq,
+# and keys the tool added are kept.
+JSON_MERGE_MANIFEST=(
+    "antigravity/settings.json:~/.gemini/antigravity-cli/settings.json"
 )
 
 # Expand a manifest entry into its two parts. Usage:

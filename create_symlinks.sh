@@ -72,6 +72,34 @@ create_symlink_with_backup() {
     create_symlink "$source_path" "$target"
 }
 
+merge_json() {
+    local source_path="$1"
+    local target="$2"
+    local tmp
+
+    if ! command -v jq &>/dev/null; then
+        echo -e "${YELLOW}⚠ jq not installed, skipped merge: $target${NC}"
+        return 0
+    fi
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo -e "${YELLOW}[DRY RUN] Would merge $source_path into $target${NC}"
+        return 0
+    fi
+
+    mkdir -p "$(dirname "$target")"
+    # A leftover symlink (or nothing) means there are no tool keys to keep.
+    [[ -L "$target" ]] && rm "$target"
+    tmp="$(mktemp "$target.XXXXXX")"
+    if [[ -f "$target" ]]; then
+        jq -s '.[0] * .[1]' "$target" "$source_path" >"$tmp"
+    else
+        jq . "$source_path" >"$tmp"
+    fi
+    chmod 600 "$tmp"
+    mv "$tmp" "$target"
+    echo -e "${GREEN}✓ Merged: $source_path -> $target${NC}"
+}
+
 # Remove links under ~/.config/systemd that point into this repo but are no
 # longer in the manifest: a retired unit's, or every one on a Mac. Units from
 # other repos are left alone, and so are .wants/ links: those record what is
@@ -114,6 +142,11 @@ main() {
     echo -e "\nLinking tool-rewritten configs (with backup)..."
     for entry in "${SYMLINK_MANIFEST_WITH_BACKUP[@]}"; do
         create_symlink_with_backup "$(manifest_source "$entry")" "$(manifest_target "$entry")"
+    done
+
+    echo -e "\nMerging tool-replaced JSON configs..."
+    for entry in "${JSON_MERGE_MANIFEST[@]}"; do
+        merge_json "$(manifest_source "$entry")" "$(manifest_target "$entry")"
     done
 
     echo -e "\nPruning stale systemd links..."

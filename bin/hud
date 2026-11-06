@@ -42,7 +42,7 @@ STYLE = {
 AGENT_STYLES = {
     "claude": STYLE["orange"],
     "codex": STYLE["blue"],
-    "gemini": STYLE["purple"],
+    "agy": STYLE["purple"],
 }
 
 STRAY_PATTERNS = [

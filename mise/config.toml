@@ -18,13 +18,6 @@ bun = "latest"
 "npm:agent-browser" = "latest"
 "npm:backlog.md" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
-# Matilda Code, Maincode's coding agent CLI (a Gemini-CLI fork). Published
-# only to npm, so the npm backend is the only route; the native optional deps
-# (node-pty, clipboard) ship prebuilt for linux-x64 and darwin-arm64, and its
-# postinstall only prints a PATH tip, so nothing is compiled on either host.
-"npm:@maincode-ai/matilda-code" = { version = "latest", allow_low_downloads = true, allow_builds = [
-  "@maincode-ai/matilda-code",
-] }
 yazi = "latest"
 # Zellij still misroutes attach-time host replies into the focused pane
 # (zellij-org/zellij#5365, fix PR #5375 unmerged as of v0.45.1). Codex >= 0.148
@@ -37,8 +30,7 @@ zoxide = "latest"
 # release since 25.07.1 and ships no nightly. Do not add it back --- mise
 # activate puts its bin dir ahead of ~/.local/bin, so a mise-managed helix
 # silently shadows the source build.
-gemini = "latest"
-# Antigravity CLI, Gemini CLI's successor for individual accounts.
+# Antigravity CLI, Gemini CLI's successor.
 agy = "latest"
 codex = "latest"
 glab = "latest"
@@ -106,17 +98,3 @@ trufflehog = "3.97.9"
 
 [settings]
 idiomatic_version_file_enable_tools = []
-
-# Exported into every shell mise touches --- including via the shims, so a
-# systemd unit or other non-interactive caller gets it too.
-[env]
-# Matilda's settings layer three deep: SystemDefaults < User < Workspace.
-# ~/.matilda/settings.json (User) is Matilda's own file --- `auth login` writes
-# the selected provider, the model and the UI name back into it, and an atomic
-# rewrite replaces a symlink with a real file, so tracking it doesn't hold. The
-# portable half instead goes in the lowest layer, which Matilda reads but never
-# writes, and which this points at directly in the repo (no symlink needed).
-# The file ships already stamped "$version": 5 in Matilda's own byte format;
-# an unstamped one gets migrated in place on first run, leaving a modified
-# file and a stray .orig beside it.
-MATILDA_CODE_SYSTEM_DEFAULTS_PATH = "{{env.HOME}}/.dotfiles/matilda/system-defaults.json"

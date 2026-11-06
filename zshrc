@@ -37,7 +37,7 @@ alias aym="claude --dangerously-skip-permissions --effort max"
 # proxy there), so the Max login is used; local/user settings still load.
 alias ayf="claude --setting-sources user,local --dangerously-skip-permissions --model fable --effort high"
 alias oy="command codex --dangerously-bypass-approvals-and-sandbox"
-alias gyolo="gemini --yolo"
+alias gy="agy --dangerously-skip-permissions"
 sysup() {
   if [[ "$OSTYPE" == darwin* ]]; then
     HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS=1 brew upgrade --formula --yes

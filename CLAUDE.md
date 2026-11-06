@@ -43,7 +43,7 @@ markdown/TOML format config).
 Editor and multiplexer config: `helix/`, `zellij/`, `ghostty/`, `rex/` (Rex, on
 trial alongside zellij: weddle runs its server from `systemd/user/rex.service`
 with the binary from `bin/rex-install`; daysy's Rex.app connects to it). AI
-agents: `claude/`, `codex/`, `gemini/`, `matilda/`, `agent-run/`.
+agents: `claude/`, `codex/`, `antigravity/`, `agent-run/`.
 
 ### Private overlay
 
@@ -173,11 +173,12 @@ symlinked file-by-file rather than as a directory.
 
 ## AI coding agents
 
-All of Claude Code, Codex CLI, Gemini CLI and Matilda Code read `CLAUDE.md` as
-the project instructions file, so one file serves them all. Tracked config:
-`claude/CLAUDE.md` (global instructions, symlinked to both `~/.claude/CLAUDE.md`
-and `~/.codex/AGENTS.md`), `claude/settings.json`, `codex/hooks.json`,
-`gemini/settings.json`, `matilda/system-defaults.json`.
+Claude Code and Codex CLI read `CLAUDE.md` as the project instructions file, so
+one file serves them all; Antigravity CLI (`agy`) reads only `AGENTS.md` and
+`GEMINI.md`, so it misses project `CLAUDE.md`s. Tracked config:
+`claude/CLAUDE.md` (global instructions, symlinked to `~/.claude/CLAUDE.md`,
+`~/.codex/AGENTS.md` and `~/.gemini/AGENTS.md`), `claude/settings.json`,
+`codex/hooks.json` and `antigravity/settings.json`.
 
 ### Personal skills
 
@@ -189,7 +190,7 @@ it is Claude Code's read-only copy, and every `dotfiles update` deletes and
 re-clones it. Skills appear as `ben:<name>`.
 
 `bin/sync-agent-config` registers marketplaces, installs enabled plugins, and
-symlinks each skill into `~/.agents/skills` so Codex and Matilda see them too.
+symlinks each skill into `~/.agents/skills` so Codex sees them too.
 
 ### Headless agent dispatcher
 
@@ -232,16 +233,9 @@ have the detail.
   deliberately untracked; set `project_doc_fallback_filenames = ["CLAUDE.md"]`
   there on each machine. There is no shared Codex profile: the `oy` alias just
   selects full-access mode.
-- **Matilda Code** --- `~/.matilda/settings.json` is Matilda's own; the portable
-  half is `matilda/system-defaults.json`, read in place (see the `[env]` comment
-  in `mise/config.toml`). Keep that file in Matilda's exact byte format, stamp
-  and missing trailing newline included.
-  - headless login is loopback-OAuth only, no device-code fallback.
-    `MATILDA_AUTH_SKIP_BROWSER=1` (`AUTH`, not `OAUTH`) still prints an
-    authorize URL pointing at a random `127.0.0.1:<port>` on that host. Open it
-    on a machine with a browser, then either `curl` the failed
-    `.../callback?code=...` on the headless host or `ssh -L` the port first ---
-    the waiting process holds the PKCE verifier.
-  - there's also an OpenAI-protocol endpoint at
-    `https://matilda.maincode.com/api/v1/code` (model `matilda-code-1.0`, keyed
-    by `MATILDA_API_KEY`) on the same subscription.
+- **Antigravity CLI** --- `agy` replaces
+  `~/.gemini/antigravity-cli/settings.json` at startup, so `create_symlinks.sh`
+  merges `antigravity/settings.json`'s keys into it (`JSON_MERGE_MANIFEST`)
+  rather than linking it. Those keys bill `GEMINI_API_KEY` (untracked mise env)
+  pay-as-you-go instead of signing in. The `gy` alias just selects full-access
+  mode.

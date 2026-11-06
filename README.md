@@ -58,15 +58,17 @@ This repo provides shared configuration for multiple AI coding agents, with
   `~/.codex/hooks.json`. Model selection, project-instruction fallbacks,
   trusted-project paths and UI state remain machine-local in
   `~/.codex/config.toml`; the `oy` alias only selects full-access mode.
-- **Gemini CLI**: `gemini/settings.json` tells Gemini to read `CLAUDE.md` and
-  `GEMINI.md` as context files.
+- **Antigravity CLI**: the global instructions are also symlinked to
+  `~/.gemini/AGENTS.md`. `antigravity/settings.json` is merged into
+  `~/.gemini/antigravity-cli/settings.json`, not linked, since `agy` replaces
+  that file at startup.
 
 The `create_symlinks.sh` script sets up all necessary symlinks and directories.
 
 ### Personal skills plugin (`ben`)
 
-My personal Claude Code skills library (mail, vault, benswift-writer, phdconvenor, etc.)
-lives in a separate **private** repo,
+My personal Claude Code skills library (mail, vault, benswift-writer,
+phdconvenor, etc.) lives in a separate **private** repo,
 [`benswift/claude-plugin-personal`](https://github.com/benswift/claude-plugin-personal),
 loaded as a Claude Code plugin. The setup:
 
