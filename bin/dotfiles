@@ -147,14 +147,12 @@ check_symlinks() {
         target=$(manifest_target "$entry")
         pretty="${target/#$HOME/\~}"
 
-        if [[ ! -f "$target" ]]; then
-            check_fail "$pretty missing"
-        elif jq -e --slurpfile want "$source_path" \
-            '. as $live | $want[0] | to_entries | all(.value == $live[.key])' \
-            "$target" &>/dev/null; then
-            check_pass "$pretty has ${entry%%:*}'s keys"
+        if [[ ! -f "$target" || -L "$target" ]]; then
+            check_fail "$pretty missing (or still a symlink) --- run create_symlinks.sh"
+        elif [[ "$(settings_merge "$source_path" "$target" | jq -S .)" == "$(jq -S . "$target")" ]]; then
+            check_pass "$pretty has ${entry%%:*}'s settings"
         else
-            check_fail "$pretty lacks keys from ${entry%%:*} --- run create_symlinks.sh"
+            check_fail "$pretty differs from ${entry%%:*} --- run create_symlinks.sh"
         fi
     done
 }
@@ -468,12 +466,41 @@ update() {
     echo "Done!"
 }
 
+# What a machine's merged settings files hold beyond the repo's layers: keys
+# only this machine has, and seed keys it has changed. Promote one by editing
+# the repo layer it belongs in.
+settings() {
+    local entry
+    for entry in "${JSON_MERGE_MANIFEST[@]}"; do
+        local source_path target seed
+        source_path=$(manifest_source "$entry")
+        target=$(manifest_target "$entry")
+        seed="${source_path%.json}.seed.json"
+        echo -e "${CYAN}${target/#$HOME/\~}${NC}"
+        if [[ ! -f "$target" ]]; then
+            echo "  missing"
+            continue
+        fi
+        jq -r --slurpfile enforced "$source_path" \
+            --slurpfile seed "$( [[ -f "$seed" ]] && echo "$seed" || echo /dev/null)" '
+            ($enforced[0] // {}) as $e | ($seed[0] // {}) as $s
+            | to_entries[]
+            | .key as $k
+            | select($k != "$schema" and ($e | has($k) | not))
+            | if ($s | has($k)) then
+                select(.value != $s[$k]) | "  seed changed  \($k) = \(.value | tojson)"
+              else "  machine only  \($k) = \(.value | tojson)" end
+            | .[:160]' "$target"
+    done
+}
+
 usage() {
     echo "Usage: dotfiles <command>"
     echo ""
     echo "Commands:"
     echo "  doctor    Check if everything is set up correctly"
     echo "  update    Pull latest changes and re-run symlinks"
+    echo "  settings  Show machine-local changes to merged agent settings"
     echo "  edit      Open dotfiles in editor"
     echo "  cd        Print dotfiles directory (use: cd \$(dotfiles cd))"
     echo ""
@@ -482,6 +509,7 @@ usage() {
 case "${1:-}" in
     doctor) doctor ;;
     update) update ;;
+    settings) settings ;;
     edit)   "${EDITOR:-hx}" "$DOTFILES_DIR" ;;
     cd)     echo "$DOTFILES_DIR" ;;
     *)      usage ;;

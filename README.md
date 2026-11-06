@@ -53,15 +53,17 @@ This repo provides shared configuration for multiple AI coding agents, with
 ### How each agent uses these files
 
 - **Claude Code**: `claude/CLAUDE.md` is symlinked to `~/.claude/CLAUDE.md`.
+  `claude/settings.json` (keys the repo owns) and `claude/settings.seed.json`
+  (defaults a machine may change) are merged into `~/.claude/settings.json`, not
+  linked, so `/model` and plugin installs never touch the repo.
 - **Codex CLI**: the same global instructions are symlinked to
   `~/.codex/AGENTS.md`, and portable notification hooks are symlinked to
   `~/.codex/hooks.json`. Model selection, project-instruction fallbacks,
   trusted-project paths and UI state remain machine-local in
   `~/.codex/config.toml`; the `oy` alias only selects full-access mode.
 - **Antigravity CLI**: the global instructions are also symlinked to
-  `~/.gemini/AGENTS.md`. `antigravity/settings.json` is merged into
-  `~/.gemini/antigravity-cli/settings.json`, not linked, since `agy` replaces
-  that file at startup.
+  `~/.gemini/AGENTS.md`. `antigravity/settings.json` and its seed are merged
+  into `~/.gemini/antigravity-cli/settings.json` the same way.
 
 The `create_symlinks.sh` script sets up all necessary symlinks and directories.
 

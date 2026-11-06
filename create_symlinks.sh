@@ -87,17 +87,16 @@ merge_json() {
     fi
 
     mkdir -p "$(dirname "$target")"
-    # A leftover symlink (or nothing) means there are no tool keys to keep.
-    [[ -L "$target" ]] && rm "$target"
     tmp="$(mktemp "$target.XXXXXX")"
-    if [[ -f "$target" ]]; then
-        jq -s '.[0] * .[1]' "$target" "$source_path" >"$tmp"
-    else
-        jq . "$source_path" >"$tmp"
-    fi
+    settings_merge "$source_path" "$target" >"$tmp"
     chmod 600 "$tmp"
-    mv "$tmp" "$target"
-    echo -e "${GREEN}✓ Merged: $source_path -> $target${NC}"
+    if [[ -f "$target" && ! -L "$target" ]] && cmp -s "$tmp" "$target"; then
+        rm "$tmp"
+        echo -e "${GREEN}✓ In sync: $target${NC}"
+    else
+        mv -f "$tmp" "$target"
+        echo -e "${GREEN}✓ Merged: $source_path -> $target${NC}"
+    fi
 }
 
 # Remove links under ~/.config/systemd that point into this repo but are no
@@ -144,7 +143,7 @@ main() {
         create_symlink_with_backup "$(manifest_source "$entry")" "$(manifest_target "$entry")"
     done
 
-    echo -e "\nMerging tool-replaced JSON configs..."
+    echo -e "\nMerging tool-rewritten settings..."
     for entry in "${JSON_MERGE_MANIFEST[@]}"; do
         merge_json "$(manifest_source "$entry")" "$(manifest_target "$entry")"
     done

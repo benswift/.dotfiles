@@ -5,9 +5,6 @@
     "commit": "",
     "pr": ""
   },
-  "permissions": {
-    "defaultMode": "default"
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -131,14 +128,5 @@
       }
     }
   },
-  "modelSettings": {
-    "claude-opus-5-5": {
-      "effortLevel": "high"
-    }
-  },
-  "tui": "fullscreen",
-  "skipDangerousModePermissionPrompt": true,
-  "editorMode": "vim",
-  "preferredNotifChannel": "ghostty",
-  "agentPushNotifEnabled": true
+  "skipDangerousModePermissionPrompt": true
 }

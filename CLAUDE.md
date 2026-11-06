@@ -21,6 +21,8 @@ repeat what the scripts already document.
 
 - `dotfiles doctor` --- check if everything is set up correctly
 - `dotfiles update` --- pull latest and re-run symlinks
+- `dotfiles settings` --- list keys a machine's merged agent settings hold
+  beyond the repo's layers, to promote into one
 - `dotfiles edit` --- open dotfiles in editor
 - `dotfiles cd` --- print the dotfiles directory (for `cd "$(dotfiles cd)"`)
 - `./install.sh` --- bootstrap a new machine (also works via curl)
@@ -33,6 +35,15 @@ Config files are symlinked into place (`~/.config/...`, `~/.zshrc`, etc.) by
 is the single source of truth, consumed by both `create_symlinks.sh` (to create)
 and `dotfiles doctor` (to verify). Repo filenames usually drop the leading dot
 (`~/.zshrc` -> `zshrc`).
+
+Agent settings files that their tool rewrites (`claude/settings.json`,
+`antigravity/settings.json`) are merged into place instead
+(`JSON_MERGE_MANIFEST`), so tool writes never dirty the repo. Put a key in the
+enforced file (`<name>.json`) when the repo should own it on every machine, and
+in the seed file (`<name>.seed.json`) when it's only a default that a tool
+command such as `/model` may change; `lib/settings-merge.jq` has the rules.
+**Never edit the live file to change a shared setting**: edit a layer and run
+`create_symlinks.sh`.
 
 Paths with no symlink targets, so absent from the manifest: `bin/` (on `PATH`
 via `zshenv`), `launchd/` (plists installed by hand, instructions in each
@@ -233,9 +244,6 @@ have the detail.
   deliberately untracked; set `project_doc_fallback_filenames = ["CLAUDE.md"]`
   there on each machine. There is no shared Codex profile: the `oy` alias just
   selects full-access mode.
-- **Antigravity CLI** --- `agy` replaces
-  `~/.gemini/antigravity-cli/settings.json` at startup, so `create_symlinks.sh`
-  merges `antigravity/settings.json`'s keys into it (`JSON_MERGE_MANIFEST`)
-  rather than linking it. Those keys bill `GEMINI_API_KEY` (untracked mise env)
-  pay-as-you-go instead of signing in. The `gy` alias just selects full-access
-  mode.
+- **Antigravity CLI** --- `modelProvider` in `antigravity/settings.json` bills
+  `GEMINI_API_KEY` (untracked mise env) pay-as-you-go instead of signing in. The
+  `gy` alias just selects full-access mode.

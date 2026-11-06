@@ -28,7 +28,6 @@ SYMLINK_MANIFEST=(
     "ssh_config:~/.ssh/config"
     # AI agents
     "claude/CLAUDE.md:~/.claude/CLAUDE.md"
-    "claude/settings.json:~/.claude/settings.json"
     "claude/CLAUDE.md:~/.codex/AGENTS.md"
     "claude/CLAUDE.md:~/.gemini/AGENTS.md"
     "agent-run/profiles.toml:~/.config/agent-run/profiles.toml"
@@ -81,10 +80,12 @@ SYMLINK_MANIFEST_WITH_BACKUP=(
     "yazi/package.toml:~/.config/yazi/package.toml"
 )
 
-# JSON configs a tool replaces wholesale (a symlink there becomes a plain file
-# on its next start): the repo file's keys are merged into the target with jq,
-# and keys the tool added are kept.
+# Settings files a tool rewrites as you use it (`/model`, plugin installs, a
+# replaced symlink): merged, not linked, so tool writes never dirty the repo.
+# The repo file is the enforced layer and an optional sibling
+# `<name>.seed.json` the seed layer; lib/settings-merge.jq says what each owns.
 JSON_MERGE_MANIFEST=(
+    "claude/settings.json:~/.claude/settings.json"
     "antigravity/settings.json:~/.gemini/antigravity-cli/settings.json"
 )
 
@@ -93,6 +94,18 @@ JSON_MERGE_MANIFEST=(
 #   manifest_target "entry"  -> absolute path with ~ expanded
 manifest_source() { echo "$DOTFILES_DIR/${1%%:*}"; }
 manifest_target() { local t="${1##*:}"; echo "${t/#\~/$HOME}"; }
+
+# Print the result of merging a JSON_MERGE_MANIFEST source's layers into the
+# live file at target (absent or a symlink counts as empty). Needs jq.
+settings_merge() {
+    local source_path="$1" target="$2" live='{}'
+    local seed="${source_path%.json}.seed.json"
+    local seed_args=(--argjson seed '[]')
+    [[ -f "$seed" ]] && seed_args=(--slurpfile seed "$seed")
+    [[ -f "$target" && ! -L "$target" ]] && live="$(<"$target")"
+    jq -f "$DOTFILES_DIR/lib/settings-merge.jq" \
+        --slurpfile enforced "$source_path" "${seed_args[@]}" <<<"$live"
+}
 
 if [[ -f "$DOTFILES_DIR/private/manifest.sh" ]]; then
     # shellcheck disable=SC1091  # the private overlay's, absent in public CI
