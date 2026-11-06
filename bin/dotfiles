@@ -199,6 +199,29 @@ check_tools() {
             check_warn "$tool not installed"
         fi
     done
+
+    check_rex
+}
+
+# On Linux the Rex server runs from bin/rex-install's binary, which nothing
+# updates automatically, and a running server keeps its old binary until
+# restarted. Skipped where rex-install never ran.
+check_rex() {
+    local rex="$HOME/.local/bin/rex"
+    [[ "$(uname -s)" == Linux && -x "$rex" ]] || return 0
+    local rex_status installed running
+    if ! rex_status=$("$DOTFILES_DIR/bin/rex-install" --check 2>&1); then
+        check_fail "rex: $(tail -1 <<<"$rex_status")"
+        return
+    fi
+    installed=$("$rex" version --json | jq -r .rex_version)
+    if ! running=$("$rex" server status --json --autostart=false 2>/dev/null | jq -r .rex_version); then
+        check_pass "rex $installed (server not running)"
+    elif [[ "$running" == "$installed" ]]; then
+        check_pass "rex $installed (server running it)"
+    else
+        check_fail "rex server runs $running, $installed is installed --- systemctl --user restart rex"
+    fi
 }
 
 check_script_deps() {
