@@ -30,6 +30,7 @@ SYMLINK_MANIFEST=(
     "claude/CLAUDE.md:~/.claude/CLAUDE.md"
     "claude/CLAUDE.md:~/.codex/AGENTS.md"
     "claude/CLAUDE.md:~/.gemini/AGENTS.md"
+    "antigravity/hooks.json:~/.gemini/config/hooks.json"
     "agent-run/profiles.toml:~/.config/agent-run/profiles.toml"
     # tools
     "mise/config.toml:~/.config/mise/config.toml"

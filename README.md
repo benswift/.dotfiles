@@ -63,7 +63,9 @@ This repo provides shared configuration for multiple AI coding agents, with
   `~/.codex/config.toml`; the `oy` alias only selects full-access mode.
 - **Antigravity CLI**: the global instructions are also symlinked to
   `~/.gemini/AGENTS.md`. `antigravity/settings.json` and its seed are merged
-  into `~/.gemini/antigravity-cli/settings.json` the same way.
+  into `~/.gemini/antigravity-cli/settings.json` the same way, and a
+  `SessionStart` hook (`antigravity/hooks.json`) injects each project's
+  `CLAUDE.md`, which `agy` doesn't read on its own.
 
 The `create_symlinks.sh` script sets up all necessary symlinks and directories.
 

@@ -1,0 +1,11 @@
+{
+  "project-claude-md": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "~/.dotfiles/bin/agy-project-context",
+        "timeout": 10
+      }
+    ]
+  }
+}

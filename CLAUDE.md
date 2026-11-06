@@ -184,12 +184,14 @@ symlinked file-by-file rather than as a directory.
 
 ## AI coding agents
 
-Claude Code and Codex CLI read `CLAUDE.md` as the project instructions file, so
-one file serves them all; Antigravity CLI (`agy`) reads only `AGENTS.md` and
-`GEMINI.md`, so it misses project `CLAUDE.md`s. Tracked config:
-`claude/CLAUDE.md` (global instructions, symlinked to `~/.claude/CLAUDE.md`,
-`~/.codex/AGENTS.md` and `~/.gemini/AGENTS.md`), `claude/settings.json`,
-`codex/hooks.json` and `antigravity/settings.json`.
+`CLAUDE.md` is the project instructions file for every agent, so one file serves
+them all. Claude Code and Codex read it themselves; Antigravity CLI (`agy`)
+reads only `AGENTS.md` and `GEMINI.md`, so its `SessionStart` hook
+(`antigravity/hooks.json`, running `bin/agy-project-context`) injects the
+project's `CLAUDE.md` files. Tracked config: `claude/CLAUDE.md` (global
+instructions, symlinked to `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` and
+`~/.gemini/AGENTS.md`), `claude/settings.json`, `codex/hooks.json`,
+`antigravity/settings.json` and `antigravity/hooks.json`.
 
 ### Personal skills
 

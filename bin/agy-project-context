@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# agy-project-context --- Antigravity CLI SessionStart hook: inject a project's
+# CLAUDE.md files, which agy never loads itself (it reads only AGENTS.md and
+# GEMINI.md, and no setting adds a filename).
+#
+# For each workspace path agy passes on stdin, collects CLAUDE.md from the git
+# root down to the workspace folder (the set Claude Code loads at startup),
+# skipping any directory that also has an AGENTS.md or GEMINI.md, since agy
+# loads that itself. Prints agy's hook output: one system message, or {} when
+# there is nothing to add.
+set -euo pipefail
+
+context=""
+while IFS= read -r workspace; do
+    [[ -d "$workspace" ]] || continue
+    root="$(git -C "$workspace" rev-parse --show-toplevel 2>/dev/null || echo "$workspace")"
+    dirs=()
+    dir="$workspace"
+    while :; do
+        dirs=("$dir" "${dirs[@]}")
+        [[ "$dir" == "$root" || "$dir" == / ]] && break
+        dir="$(dirname "$dir")"
+    done
+    for dir in "${dirs[@]}"; do
+        file="$dir/CLAUDE.md"
+        [[ -f "$file" && ! -e "$dir/AGENTS.md" && ! -e "$dir/GEMINI.md" ]] || continue
+        context+="Contents of $file (project instructions):"$'\n\n'"$(<"$file")"$'\n\n'
+    done
+done < <(jq -r '.workspacePaths[]?')
+
+if [[ -z "$context" ]]; then
+    echo '{}'
+else
+    jq -n --arg msg "$context" '{injectSteps: [{systemMessage: {systemMessage: $msg}}]}'
+fi
