@@ -112,7 +112,7 @@ replacements.
   pydantic/sqlmodel for validation, httpx over requests, typer for CLIs, loguru
   for logging, pathlib over os.path, pytest with parallel execution
 - **Elixir/Phoenix**: read the usage_rules, use Ash declarative resources,
-  Phoenix LiveView, use generators, PhoenixTest syntax, tidewave for debugging
+  Phoenix LiveView, use generators, PhoenixTest syntax
 - **Frontend web**: semantic HTML with accessibility, modern browser features,
   Grid/Flexbox, modern ES6+ with functional patterns. Use the `agent-browser`
   CLI (not Playwright directly) for browser automation and UI testing
