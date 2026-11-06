@@ -2,11 +2,8 @@
 rust = "latest"
 uv = "latest"
 node = "lts"
-# Machine-level bootstrap only, so `mise exec -- pnpm` resolves in every repo
-# (including ones that deliberately keep pnpm out of their own mise.toml).
-# It does not decide the version: pnpm self-switches to a repo's
-# package.json `packageManager` pin when there is one. Hence "latest" --- a
-# pin here would just be a second, staler answer to a question the repo owns.
+# For repos without a mise.toml. A project declares its own pnpm, and its
+# committed mise.lock decides the version.
 pnpm = "latest"
 bun = "latest"
 # Node CLIs via the npm backend rather than `bun install -g`. A bun-global

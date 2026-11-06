@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# mise-bump --- move each project's mise.lock to the newest versions its
+# mise.toml allows (`mise lock --bump`), then check that every project that
+# changed still installs: `mise install`, plus `pnpm install --frozen-lockfile`
+# beside a pnpm-lock.yaml (a new pnpm can reject the lockfile an old one
+# wrote). Prints what moved and leaves the changes uncommitted, to test and
+# commit per project.
+#
+# Usage: mise-bump [DIR...]
+#   DIR is a directory holding a committed mise.lock. With none, every
+#   committed mise.lock under ~/projects, except ~/projects/archive.
+#
+# conda: tools (Ghostscript) are left out of the bump: mise can't resolve their
+# macOS arm64 entry from Linux, and they're pinned to an exact version anyway.
+set -euo pipefail
+
+# "tool version" per line, from a mise.lock's [[tools.<name>]] entries.
+versions() {
+    awk '/^\[\[tools\./ { t = $0; gsub(/^\[\[tools\.|\]\]$|"/, "", t) }
+         /^version = / { v = $3; gsub(/"/, "", v); print t, v }' "$1" | LC_ALL=C sort
+}
+
+lock_dirs() {
+    if (($#)); then
+        printf '%s\n' "$@"
+        return
+    fi
+    find "$HOME/projects" -maxdepth 4 -name mise.lock \
+        -not -path '*/node_modules/*' -not -path "$HOME/projects/archive/*" |
+        while read -r lock; do
+            git -C "$(dirname "$lock")" ls-files --error-unmatch mise.lock >/dev/null 2>&1 &&
+                dirname "$lock"
+        done | LC_ALL=C sort
+}
+
+changed=0 failed=0
+while read -r dir; do
+    name="${dir#"$HOME"/projects/}"
+    if [[ -n "$(git -C "$dir" status --porcelain -- mise.toml mise.lock)" ]]; then
+        echo "skip  $name: uncommitted mise.toml or mise.lock"
+        continue
+    fi
+    before="$(versions "$dir/mise.lock")"
+    # Name the tools only when some must be left out: a bare `mise lock` also
+    # covers tools that tasks declare.
+    tools=()
+    if grep -q "^\[\[tools\.\"conda:" "$dir/mise.lock"; then
+        mapfile -t tools < <(awk '$1 !~ /^conda:/ { print $1 }' <<<"$before")
+    fi
+    if ! err="$(cd "$dir" && mise lock --bump "${tools[@]}" 2>&1)"; then
+        echo "FAIL  $name: mise lock --bump: $(tail -n 1 <<<"$err")"
+        failed=$((failed + 1))
+        continue
+    fi
+    after="$(versions "$dir/mise.lock")"
+    [[ "$before" == "$after" ]] && continue
+    changed=$((changed + 1))
+    echo "bump  $name:"
+    LC_ALL=C join -a 2 <(echo "$before") <(echo "$after") |
+        awk 'NF == 3 && $2 != $3 { print "        " $1 " " $2 " -> " $3 } NF == 2 { print "        " $1 " (new) " $2 }'
+    if ! err="$(cd "$dir" && mise install 2>&1)"; then
+        echo "FAIL  $name: mise install: $(tail -n 1 <<<"$err")"
+        failed=$((failed + 1))
+    elif [[ -f "$dir/pnpm-lock.yaml" ]] &&
+        ! err="$(cd "$dir" && CI=1 mise exec -- pnpm install --frozen-lockfile 2>&1)"; then
+        echo "FAIL  $name: pnpm install --frozen-lockfile: $(grep -m 1 -E 'ERR_|×' <<<"$err" || tail -n 1 <<<"$err")"
+        failed=$((failed + 1))
+    fi
+done < <(lock_dirs "$@")
+
+echo "$changed bumped, $failed failed"
+((failed == 0))

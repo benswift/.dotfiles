@@ -153,6 +153,9 @@ Each script's header has the detail. Notable ones:
 - `dotfiles` --- doctor, update, edit
 - `wiz-build` --- builds the wiz engine's main (`u2548636/wiz-engine`) into
   `~/.local/bin`
+- `mise-bump` --- moves every project's committed `mise.lock` to the newest
+  versions its `mise.toml` allows, checks each still installs, and leaves the
+  changes uncommitted
 - `agent-run` --- headless agent dispatcher (see below)
 - `hx-ghostty` --- open files in helix in a Ghostty tab; `--register` (once per
   Mac) makes it macOS's default for text and source files

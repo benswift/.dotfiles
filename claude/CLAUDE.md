@@ -106,7 +106,13 @@ replacements.
 ## Language and framework preferences
 
 - **mise**: always available via global config (`~/.config/mise/config.toml`).
-  When a project has its own `mise.toml`, prefix commands with `mise exec --`
+  When a project has its own `mise.toml`, prefix commands with `mise exec --`. A
+  project's `mise.toml` declares every tool it and its CI need (no
+  `packageManager` field, no corepack): languages and databases at a major or
+  exact version, other tools such as pnpm and uv at `"latest"`. Its committed
+  `mise.lock` fixes the exact versions; `mise lock` after editing `mise.toml`,
+  and `mise-bump` to take updates. CI installs through mise (`jdx/mise-action`,
+  or the mise.run installer on GitLab)
 - **Python**: _always_ use `uv`, Python 3.12+ with type hints, fail fast (let
   exceptions bubble, no bare `except`). Prefer polars over pandas,
   pydantic/sqlmodel for validation, httpx over requests, typer for CLIs, loguru
