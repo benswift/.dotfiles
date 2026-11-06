@@ -157,9 +157,23 @@ sync_codex_skills() {
         done
     fi
 
-    info "Exposed Claude personal skills to Codex in $agent_skills"
+    info "Exposed Claude personal skills to Codex and agy in $agent_skills"
+}
+
+# agy reads global skills only from ~/.gemini/config/skills, so point that at
+# the shared directory Codex reads.
+link_agy_skills() {
+    local agy_skills="$HOME/.gemini/config/skills"
+
+    if [[ -e "$agy_skills" && ! -L "$agy_skills" ]]; then
+        warn "$agy_skills is a real directory, not linking it to ~/.agents/skills"
+        return
+    fi
+    mkdir -p "$(dirname "$agy_skills")"
+    ln -sfn "$HOME/.agents/skills" "$agy_skills"
 }
 
 sync_claude_plugins
 remove_legacy_codex_profile
 sync_codex_skills
+link_agy_skills

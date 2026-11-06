@@ -203,7 +203,8 @@ it is Claude Code's read-only copy, and every `dotfiles update` deletes and
 re-clones it. Skills appear as `ben:<name>`.
 
 `bin/sync-agent-config` registers marketplaces, installs enabled plugins, and
-symlinks each skill into `~/.agents/skills` so Codex sees them too.
+symlinks each skill into `~/.agents/skills` so Codex sees them too, and links
+`agy`'s global skills directory (`~/.gemini/config/skills`) to it.
 
 ### Headless agent dispatcher
 
