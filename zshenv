@@ -32,3 +32,6 @@ path+=(~/.local/share/mise/shims)
 export RUBY_YJIT_ENABLE=true
 export EDITOR="hx"
 export EXT_MIDI_OUT_DEVICE_NAME="Maschine 2 Virtual Input"
+# Rex draws kitty graphics but isn't on Claude Code's terminal allowlist; the
+# image-preview@ben plugin needs this to draw images under Read calls.
+[[ $TERM_PROGRAM == rex ]] && export CLAUDE_CODE_FORCE_TERMINAL_IMAGES=1
