@@ -122,7 +122,6 @@ case "$f" in
 *.typ) fmt typstyle --wrap-text ;;
 *.tex) helix_autoformat_off latex || fmt tex-fmt --stdin ;;
 *.toml) fmt oxfmt-helix --stdin-filepath file.toml "$f" ;;
-*.kdl) fmt kdlfmt format --kdl-version v1 - ;; # zellij parses KDL v1 only
 *.astro | *.ts | *.tsx | *.mts | *.cts | *.js | *.jsx | *.mjs | *.cjs) fmt_oxfmt_code ;;
 *.py) fmt_ruff ;;
 *.ex | *.exs | *.heex) fmt_mix ;;

@@ -7,7 +7,7 @@
 # zprofile sources this file again: on macOS /etc/zprofile runs path_helper
 # after this file, which pushes every dir below behind /usr/bin. Re-running
 # restores the order, and `typeset -U` drops the duplicates that leaves, and
-# the ones nested shells (zellij panes) would pile up.
+# the ones nested shells would pile up.
 
 typeset -U path
 

@@ -2,7 +2,7 @@
 -- the systemd unit's on weddle). Everything not bound here is Rex's default.
 -- After editing: `rex config check`, then `rex config reload` on that machine.
 
--- zellij's Alt layer: terminal as a tiling window manager.
+-- Alt layer: terminal as a tiling window manager.
 rex.bind("alt+n", "pane.split", { direction = "auto" })
 rex.bind("alt+h", "pane.focus", { direction = "left" })
 rex.bind("alt+l", "pane.focus", { direction = "right" })
@@ -15,7 +15,7 @@ rex.bind("alt+f", "toggle_floating")
 rex.bind("ctrl+j", "session.next")
 rex.bind("ctrl+k", "session.previous")
 
--- zellij's Alt f: toggle the active window's floating panes, opening one
+-- Alt f: toggle the active window's floating panes, opening one
 -- (in the focused pane's cwd) when there are none.
 rex.action{
   name  = "toggle_floating",

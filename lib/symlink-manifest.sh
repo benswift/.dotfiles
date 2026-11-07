@@ -68,7 +68,6 @@ SYMLINK_MANIFEST=(
     # whole-directory configs
     "ghostty:~/.config/ghostty"
     "helix:~/.config/helix"
-    "zellij:~/.config/zellij"
 )
 
 # Targets that tools rewrite in place (so a real file may already exist

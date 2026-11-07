@@ -3,7 +3,7 @@
 My dotfiles. They've gone through many ups and downs over the years, but at the
 moment they're:
 
-- text and terminal centric (hx, zellij, yazi)
+- text and terminal centric (hx, Rex, yazi)
 - cross-platform (macOS and linux)
 - designed to work just as well over ssh as run locally
 

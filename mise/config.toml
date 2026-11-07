@@ -16,11 +16,6 @@ bun = "latest"
 "npm:backlog.md" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 yazi = "latest"
-# Zellij still misroutes attach-time host replies into the focused pane
-# (zellij-org/zellij#5365, fix PR #5375 unmerged as of v0.45.1). Codex >= 0.148
-# discards the stray reply instead of wedging on it, so the prebuilt release is
-# fine again; TASK-033 tracks the upstream fix.
-zellij = "latest"
 zoxide = "latest"
 # helix is deliberately absent: bin/helix-build compiles it from the main
 # commit pinned in helix/pinned-rev, because upstream has not tagged a
@@ -38,8 +33,8 @@ pandoc = "latest"
 ast-grep = "latest"
 jq = "latest"
 fd = "latest"
-# bin/zj-switch's picker. Via mise rather than apt/brew so both platforms get
-# the same (and a current) fzf --- Debian ships 0.44, from 2023.
+# bin/church-chart's song picker. Via mise rather than apt/brew so both
+# platforms get the same (and a current) fzf --- Debian ships 0.44, from 2023.
 fzf = "latest"
 # bin/ts-cat's fallback previewer. Via mise rather than brew/apt so the binary
 # is called `bat` on both platforms (Debian's package installs it as `batcat`).
@@ -71,7 +66,6 @@ restic = "0.19.1"
 "cargo:mergiraf" = "latest"
 oxipng = "latest"
 "github:WGUNDERWOOD/tex-fmt" = { version = "latest", exe = "tex-fmt" }
-"github:hougesen/kdlfmt" = { version = "latest", exe = "kdlfmt" }
 flyctl = "latest"
 oxfmt = "latest"
 typstyle = "latest"

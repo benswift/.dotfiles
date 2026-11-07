@@ -95,7 +95,6 @@ FORMATTER_SAMPLES = {
     "mdx": "# Heading\n\n{/* _class: hero */}\n\nsome  prose\n",
     "astromotion-deck": "# Slide\n\n{/* _class: hero */}\n\nsome  prose\n",
     "toml": 'a  =  1\n[table]\nb = "two"\n',
-    "kdl": 'node "value" {\n  child 1\n}\n',
     "typst": "= Heading\n\nSome prose.\n",
     "latex": "\\documentclass{article}\n\\begin{document}\nHi\n\\end{document}\n",
     "astro": "---\nconst x = 1;\n---\n\n<h1>{x}</h1>\n",

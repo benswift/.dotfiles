@@ -51,10 +51,10 @@ header), `lib/` (bash helpers), `tests/` (uv single-file tests, run directly:
 `./tests/test_helix.py`), `backlog/` (Backlog.md tasks), `oxfmtrc.json` (shared
 markdown/TOML format config).
 
-Editor and multiplexer config: `helix/`, `zellij/`, `ghostty/`, `rex/` (Rex, on
-trial alongside zellij: weddle runs its server from `systemd/user/rex.service`
-with the binary from `bin/rex-install`; daysy's Rex.app connects to it). AI
-agents: `claude/`, `codex/`, `antigravity/`, `agent-run/`.
+Editor and multiplexer config: `helix/`, `ghostty/`, `rex/` (weddle runs the Rex
+server from `systemd/user/rex.service` with the binary from `bin/rex-install`;
+daysy's Rex.app connects to it). AI agents: `claude/`, `codex/`, `antigravity/`,
+`agent-run/`.
 
 ### Private overlay
 
@@ -142,10 +142,6 @@ pin; commit `helix/pinned-rev` so the other machines follow). **Never run
 Helix runs on save (dispatch table in the script; mirrors
 `helix/languages.toml`). Keep the two in sync.
 
-**KDL files must stay fixed points of `kdlfmt format --kdl-version v1 -`.** The
-`v1` is load-bearing (zellij parses v1 only); the kdl block in
-`helix/languages.toml` says why.
-
 ## Utilities (`bin/`)
 
 Each script's header has the detail. Notable ones:
@@ -159,8 +155,6 @@ Each script's header has the detail. Notable ones:
 - `agent-run` --- headless agent dispatcher (see below)
 - `hx-ghostty` --- open files in helix in a Ghostty tab; `--register` (once per
   Mac) makes it macOS's default for text and source files
-- `zj-switch` --- `Alt s` session switcher, live sessions MRU-first, annotated
-  with each session's running agents
 - `claude-git-guard` --- PreToolUse hook blocking bulk staging and bare
   force-pushes
 - `claude-turn-tracker`, `codex-turn-notify` --- Pushover notification when a

@@ -2,8 +2,7 @@
 #
 # Copy stdin to the system clipboard using an OSC 52 escape sequence, so it
 # works both locally and over remote SSH connections in any terminal that
-# supports it (e.g. ghostty). zellij forwards OSC 52 to the host terminal by
-# default, so it works inside a zellij session too.
+# supports it (e.g. ghostty).
 #
 # Falls back to native clipboard tools (pbcopy/xclip/wl-copy) when there is no
 # controlling terminal to receive the escape sequence (e.g. a pipe in a cron

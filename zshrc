@@ -73,12 +73,6 @@ alias gst="git status"
 alias gd="git diff"
 alias gl="git log --oneline"
 alias gsy="git sync"  # bin/git-sync
-# zellij shortcuts
-zs() { zellij --session "${1:-${PWD##*/}}" "${@:2}"; }
-alias za="zellij attach"
-zl() { local out; out=$(zellij list-sessions); echo "$out" | grep -v EXITED; echo; echo "$out" | grep EXITED; }
-alias zr="zellij run --"
-alias zk="zellij kill-session"
 alias prettify-md='oxfmt -c ~/.dotfiles/oxfmtrc.json "**/*.md"'
 alias nm='neomutt'
 # Clipboard via OSC 52 (works locally and over SSH in ghostty); see
