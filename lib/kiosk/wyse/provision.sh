@@ -16,11 +16,20 @@
 # calls back, at which point grub.cfg becomes installed.cfg so a box that still
 # boots the network first boots its disk. First boot phones home,
 # reboots into the kiosk, and this checks over SSH that Chromium is up.
+# Chromium loads no page until a display is connected, so without one the
+# check stops at "running" (it loads once a display is plugged in). The box
+# routes through this machine only while this runs: afterwards it shows
+# Chromium's error page and is off the tailnet until it's on a real network.
 #
-# Once per box, in the BIOS (F2; Dell's default BIOS password on Wyse units
-# is often "Fireport"): set Power Management > AC Recovery to Power On, so the
-# kiosk comes back after a power cut, and make sure UEFI network boot is
-# enabled. Then F12 at power-on picks the onboard NIC for this one-off boot.
+# A factory-fresh Wyse 5070 tries the network before its eMMC, so it needs no
+# keyboard or display here: cable it, power it on. If it boots its disk
+# instead, F12 at power-on picks the onboard NIC (UEFI IPv4). Once the install
+# is done, in the BIOS (F2; Dell's default password on Wyse units is often
+# "Fireport"): set Power Management > AC Recovery to Power On, so the kiosk
+# comes back after a power cut, and put the eMMC ahead of network boot. Many
+# 5070s have no wifi card; the check warns when one was given wifi settings
+# but has none, and then it needs ethernet (or a USB wifi adapter) where it
+# goes.
 
 readonly WYSE_SERVER_IP=192.168.242.1
 readonly WYSE_HTTP_PORT=8242
@@ -156,29 +165,50 @@ wyse_wait_event() {
     done
 }
 
-# After the kiosk reboots: SSH in and report what Chromium is showing.
+# After the kiosk reboots: SSH in and report what Chromium is showing, and
+# whether the box can use the wifi it was given.
 wyse_verify() {
     local ip="$1" key="${ssh_key_file%.pub}" deadline=$((SECONDS + 600)) out
     local ssh_opts=(-o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no
         -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR)
     [[ -f "$key" ]] && ssh_opts+=(-i "$key")
+    # Line 1: wifi device or not; line 2: display connected or not; then
+    # Chromium's DevTools page list, which stays closed until a display is.
+    # shellcheck disable=SC2016  # expanded on the kiosk
+    local probe='systemctl --user is-active chromium-kiosk.service >/dev/null || exit 1
+nmcli -t -f TYPE device | grep -qx wifi && echo wifi || echo nowifi
+grep -qx connected /sys/class/drm/card*-*/status 2>/dev/null && echo display || echo nodisplay
+curl -fsS http://127.0.0.1:9222/json/list 2>/dev/null || true'
+    local result=1 wifi="" display="" shown=""
     while ((SECONDS < deadline)); do
-        local shown=""
-        if out=$(ssh "${ssh_opts[@]}" "$username@$ip" \
-            "systemctl --user is-active chromium-kiosk.service >/dev/null &&
-             curl -fsS http://127.0.0.1:9222/json/list" 2>/dev/null); then
-            shown=$(python3 -c 'import json, sys
+        # shellcheck disable=SC2029  # $probe is the script text, sent as is
+        if out=$(ssh "${ssh_opts[@]}" "$username@$ip" "$probe" 2>/dev/null); then
+            wifi=$(sed -n 1p <<<"$out")
+            display=$(sed -n 2p <<<"$out")
+            shown=$(sed -n '3,$p' <<<"$out" | python3 -c 'import json, sys
 pages = [p for p in json.load(sys.stdin) if p["type"] == "page"]
-print(pages[0]["url"] if pages else "")' <<<"$out" 2>/dev/null || true)
+print(pages[0]["url"] if pages else "")' 2>/dev/null || true)
         fi
         if [[ -n "$shown" ]]; then
             info "✓ Chromium is up, showing $shown"
-            return 0
+            result=0
+            break
+        fi
+        if [[ "$display" == nodisplay ]]; then
+            info "✓ Chromium is running; no display is connected, so it has no page"
+            info "  to check yet (it loads once one is plugged in)"
+            result=0
+            break
         fi
         sleep 10
     done
-    warn "Couldn't confirm Chromium over SSH ($username@$ip) --- check the screen"
-    return 1
+    ((result == 0)) ||
+        warn "Couldn't confirm Chromium over SSH ($username@$ip) --- check the screen"
+    if [[ -n "$wifi_ssid" && "$wifi" == nowifi ]]; then
+        warn "This box has no wifi device, so $wifi_ssid can't be used: it needs"
+        warn "ethernet where it's deployed, or a USB wifi adapter Debian supports."
+    fi
+    return "$result"
 }
 
 provision_wyse() {
@@ -226,8 +256,9 @@ provision_wyse() {
         "$work/http" "$work/events" &
     wyse_serve_pid=$!
 
-    info "Ready on $interface. Power on the Wyse cabled to it, press F12, and"
-    info "pick the onboard NIC (UEFI IPv4). Waiting..."
+    info "Ready on $interface. Power on the Wyse cabled to it. If it boots its"
+    info "disk instead, power it on with F12 and pick the onboard NIC (UEFI IPv4)."
+    info "Waiting..."
     local ip
     ip=$(wyse_wait_event preseed 0)
     info "✓ Installer booted on $ip --- installing Debian (10--20 minutes)"
@@ -243,6 +274,9 @@ provision_wyse() {
 
     echo
     info "✓ $hostname is ready --- unplug it and deploy."
+    echo "Until it's on a real network it shows Chromium's error page and is off the"
+    echo "tailnet: this machine has stopped routing for it."
+    echo "In its BIOS: AC Recovery to Power On, and the eMMC ahead of network boot."
     if [[ -n "$tailscale_authkey" ]]; then
         echo "Then: tailscale ssh $username@$hostname"
     fi

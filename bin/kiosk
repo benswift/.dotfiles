@@ -24,8 +24,10 @@
 # DNS and TFTP on that NIC (NAT to this machine's uplink), the Wyse PXE-boots
 # an unattended Debian install (lib/kiosk/wyse/preseed.cfg), late_command
 # seeds cloud-init with the same user-data a Pi gets, and first boot phones
-# home. One box per run. lib/kiosk/wyse/provision.sh has the mechanism, and
-# what to set once in each box's BIOS.
+# home. One box per run, needing no keyboard or display. Many Wyse 5070s have
+# no wifi card, so they need ethernet where they're deployed.
+# lib/kiosk/wyse/provision.sh has the mechanism, and what to set in each box's
+# BIOS once it's installed.
 #
 #   kiosk --target pi --url https://example.com --hostname lobby-pi \
 #         --wifi-ssid MyNet --wifi-password secret \
