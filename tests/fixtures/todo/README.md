@@ -1,6 +1,6 @@
 # todo fixture vaults
 
-Three minimal vaults for `tests/test_todo_wiz.py`, which copies them into git
+Four minimal vaults for `tests/test_todo_wiz.py`, which copies them into git
 repos and runs `bin/todo` against the real `wiz`. They carry only what `todo`
-reads: the task fields of the real anu, ben and lx vaults, and the person record
+reads: the task fields of the real anu, ben, hdr and lx vaults, and the person record
 lx tasks name as their agent. Keep the task types in step with those vaults.

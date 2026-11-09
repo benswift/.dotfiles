@@ -5,7 +5,7 @@
 # ///
 """todo: Ben's open tasks, the quick edits to them, and a way into an editor.
 
-  todo                  list open tasks: anu, ben, blocked, bot, then lx
+  todo                  list open tasks: anu, ben, hdr, blocked, bot, then lx
   todo do <n>...        mark done
   todo undo <n>...      reopen
   todo block <n>...     mark blocked; `unblock` reopens
@@ -17,14 +17,14 @@ The numbers are the rows of the last listing, remembered in
 `todo e 3` opens it (every file of a collapsed bot row). `todo e`/`edit`
 followed by anything but numbers files a task, as any other words do. A
 task is "bot" when tagged bot (unit-oncall files job failures so); "blocked"
-is status blocked. The anu and ben sections hold each vault's other open
-tasks; blocked and bot hold both vaults' (all are Ben's own). Bot tasks with the
+is status blocked. The anu, ben and hdr sections hold each vault's other open
+tasks; blocked and bot hold all three vaults' (all are Ben's own). Bot tasks with the
 same title (a job that keeps failing past unit-oncall's 24h re-arm) collapse to
 one row, and `do` on it closes them all. The lx section lists that vault's open
 tasks whose agent is Ben; closing one shares it with the team at once.
 
 Everything goes through the wiz CLI. Every command but the listing and `e`
-commits what it changes; the anu and ben vaults' commits are shared by their
+commits what it changes; Ben's own vaults' commits are shared by their
 next scheduled sync.
 """
 
@@ -42,7 +42,7 @@ from typing import NoReturn
 ME = "[[people/ben-swift]]"
 # Ben's own vaults: every open task in them is his. Others' tasks (lx) are his
 # only when their agent is him.
-MINE = ("anu", "ben")
+MINE = ("anu", "ben", "hdr")
 STATE = (
     Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
     / "todo"
@@ -50,10 +50,11 @@ STATE = (
 )
 
 # ANSI colour codes, so the listing takes the terminal's own palette.
-ANSI = {"blue": 94, "green": 32, "yellow": 33, "magenta": 35, "cyan": 36, "dim": 90}
+ANSI = {"red": 31, "blue": 94, "green": 32, "yellow": 33, "magenta": 35, "cyan": 36, "dim": 90}
 SECTIONS = {
     "anu": "blue",
     "ben": "green",
+    "hdr": "red",
     "blocked": "yellow",
     "bot": "magenta",
     "lx": "cyan",

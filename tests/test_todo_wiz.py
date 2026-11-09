@@ -56,13 +56,13 @@ class Vaults:
 
     def status(self) -> dict[str, str]:
         """Every task's status, by title (the duplicated bot task as one)."""
-        out = self.run("wiz", "query", "anu", "ben", "lx", "-json", 'type == "task"')
+        out = self.run("wiz", "query", "anu", "ben", "hdr", "lx", "-json", 'type == "task"')
         return {r["title"]: r["fields"].get("status", "") for r in json.loads(out)}
 
 
 @pytest.fixture
 def vaults(tmp_path: Path) -> Vaults:
-    """Fresh anu, ben and lx vaults, registered in a registry of their own."""
+    """Fresh anu, ben, hdr and lx vaults, registered in a registry of their own."""
     gitconfig = tmp_path / "gitconfig"
     gitconfig.write_text(
         "[user]\n\tname = Test\n\temail = test@example.com\n"
@@ -81,7 +81,7 @@ def vaults(tmp_path: Path) -> Vaults:
         },
     )
     registry = ["[vaults]"]
-    for name in ("anu", "ben", "lx"):
+    for name in ("anu", "ben", "hdr", "lx"):
         vault, remote = tmp_path / name, tmp_path / f"{name}.git"
         shutil.copytree(FIXTURES / name, vault)
         v.run("git", "init", "-q", "--bare", str(remote))
@@ -103,15 +103,18 @@ ben
       2  Book dentist
       3  Renew passport  due 2026-12-01
 
+hdr
+      4  Rank applicants
+
 blocked
-      4  Waiting on reviewer
-      5  Waiting on visa
+      5  Waiting on reviewer
+      6  Waiting on visa
 
 bot
-      6  backup failed  ×2
+      7  backup failed  ×2
 
 lx
-      7  Send quote
+      8  Send quote
 
 """
 
@@ -122,7 +125,7 @@ def test_lists_open_tasks_by_section(vaults: Vaults) -> None:
 
 def test_do_closes_a_whole_bot_row_and_shares_lx_at_once(vaults: Vaults) -> None:
     vaults.todo()
-    vaults.todo("do", "6", "7")
+    vaults.todo("do", "7", "8")
     status = vaults.status()
     assert status["backup failed"] == "done"
     assert status["Send quote"] == "done"
@@ -163,8 +166,8 @@ def test_block_and_unblock_move_a_task_between_sections(vaults: Vaults) -> None:
     vaults.todo()
     vaults.todo("block", "2")
     assert vaults.status()["Book dentist"] == "blocked"
-    assert "      5  Book dentist\n\nbot" in vaults.todo()
-    vaults.todo("unblock", "5")
+    assert "      6  Book dentist\n\nbot" in vaults.todo()
+    vaults.todo("unblock", "6")
     assert vaults.status()["Book dentist"] == "open"
 
 
@@ -175,7 +178,7 @@ def test_e_opens_every_file_of_the_rows_in_the_editor(vaults: Vaults) -> None:
     editor.chmod(0o755)
     vaults.todo()
     subprocess.run(
-        [str(SCRIPT), "e", "6", "2"],
+        [str(SCRIPT), "e", "7", "2"],
         env={**vaults.env, "VISUAL": "", "EDITOR": f"{editor} --vsplit"},
         check=True,
     )

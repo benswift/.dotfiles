@@ -1,0 +1,6 @@
+# Like the hdr vault: one person's, writes uncommitted until wiz sync.
+format: 1
+name: hdr
+sync:
+  commit: deferred
+default_role: anyone
