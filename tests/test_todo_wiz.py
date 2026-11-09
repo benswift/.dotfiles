@@ -96,8 +96,10 @@ def vaults(tmp_path: Path) -> Vaults:
 
 
 LISTING = """
-todos
+anu
       1  Mark assignments
+
+ben
       2  Book dentist
       3  Renew passport  due 2026-12-01
 

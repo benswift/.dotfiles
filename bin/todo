@@ -5,7 +5,7 @@
 # ///
 """todo: Ben's open tasks, the quick edits to them, and a way into an editor.
 
-  todo                  list open tasks: todos, blocked, bot, then lx
+  todo                  list open tasks: anu, ben, blocked, bot, then lx
   todo do <n>...        mark done
   todo undo <n>...      reopen
   todo block <n>...     mark blocked; `unblock` reopens
@@ -17,11 +17,11 @@ The numbers are the rows of the last listing, remembered in
 `todo e 3` opens it (every file of a collapsed bot row). `todo e`/`edit`
 followed by anything but numbers files a task, as any other words do. A
 task is "bot" when tagged bot (unit-oncall files job failures so); "blocked"
-is status blocked. The first three sections hold every open task in the anu and
-ben vaults (both Ben's own). Bot tasks with the same title (a job that keeps failing
-past unit-oncall's 24h re-arm) collapse to one row, and `do` on it closes
-them all. The lx section lists that vault's open tasks whose agent is Ben;
-closing one shares it with the team at once.
+is status blocked. The anu and ben sections hold each vault's other open
+tasks; blocked and bot hold both vaults' (all are Ben's own). Bot tasks with the
+same title (a job that keeps failing past unit-oncall's 24h re-arm) collapse to
+one row, and `do` on it closes them all. The lx section lists that vault's open
+tasks whose agent is Ben; closing one shares it with the team at once.
 
 Everything goes through the wiz CLI. Every command but the listing and `e`
 commits what it changes; the anu and ben vaults' commits are shared by their
@@ -50,8 +50,14 @@ STATE = (
 )
 
 # ANSI colour codes, so the listing takes the terminal's own palette.
-ANSI = {"blue": 94, "yellow": 33, "magenta": 35, "cyan": 36, "dim": 90}
-SECTION_STYLE = {"todos": "blue", "blocked": "yellow", "bot": "magenta", "lx": "cyan"}
+ANSI = {"blue": 94, "green": 32, "yellow": 33, "magenta": 35, "cyan": 36, "dim": 90}
+SECTIONS = {
+    "anu": "blue",
+    "ben": "green",
+    "blocked": "yellow",
+    "bot": "magenta",
+    "lx": "cyan",
+}
 # Each status verb: the status it sets, and how its commit message names it.
 VERBS = {
     "do": ("done", "close"),
@@ -77,10 +83,10 @@ class Task:
     @property
     def section(self) -> str:
         if self.vault not in MINE:
-            return "lx"
+            return self.vault
         if "bot" in self.tags:
             return "bot"
-        return "blocked" if self.status == "blocked" else "todos"
+        return "blocked" if self.status == "blocked" else self.vault
 
 
 def wiz(*args: str, capture: bool = True, ok: tuple[int, ...] = (0,)) -> str:
@@ -117,7 +123,7 @@ def rows(tasks: list[Task]) -> list[tuple[str, list[Task]]]:
     """(section, tasks) per row, in listing order, bot tasks with the same
     title collapsed into one row."""
     out: list[tuple[str, list[Task]]] = []
-    for section in ("todos", "blocked", "bot", "lx"):
+    for section in SECTIONS:
         seen: dict[str, list[Task]] = {}
         for t in tasks:
             if t.section != section:
@@ -148,7 +154,7 @@ def render(listing: list[tuple[str, list[Task]]]) -> str:
     for n, (sec, group) in enumerate(listing, start=1):
         if sec != section:
             section = sec
-            out += ["", paint(SECTION_STYLE[sec], sec, bold=True)]
+            out += ["", paint(SECTIONS[sec], sec, bold=True)]
         t = group[0]
         number = paint("dim", f"{n:>5}")
         due = paint("dim", f"  due {t.due}") if t.due else ""
