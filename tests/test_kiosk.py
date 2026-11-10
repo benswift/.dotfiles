@@ -240,6 +240,23 @@ def test_rejects_invalid_system_names(
     assert "invalid" in result.stderr
 
 
+@pytest.mark.parametrize("target", ["pi", "wyse"])
+def test_output_mode_is_pinned_only_when_asked(
+    tmp_path: Path, public_key: Path, target: str
+) -> None:
+    key = ["--ssh-key", str(public_key)]
+    data = config(generate(tmp_path, *key, target=target))
+    assert "/etc/kiosk-output-mode.txt" not in {e["path"] for e in data["write_files"]}
+    data = config(
+        generate(tmp_path, *key, "--output-mode", "3840x2160@30Hz", target=target)
+    )
+    files = {entry["path"]: entry["content"] for entry in data["write_files"]}
+    assert files["/etc/kiosk-output-mode.txt"] == "3840x2160@30Hz\n"
+    result = generate(tmp_path, *key, "--output-mode", "4k; reboot", target=target)
+    assert result.returncode != 0
+    assert "--output-mode" in result.stderr
+
+
 def test_target_options_do_not_cross(tmp_path: Path, public_key: Path) -> None:
     key = ["--ssh-key", str(public_key)]
     result = generate(tmp_path, *key, "--interface", "eno1", target="pi")

@@ -43,6 +43,7 @@ FIELDS = [
     "wifi_ca",
     "wifi_domain",
     "tailscale_key",
+    "output_mode",
 ]
 
 
@@ -68,6 +69,7 @@ WYSE_PACKAGES = [
     "rfkill",
     "greetd",
     "labwc",
+    "wlr-randr",
     "chromium",
     "fonts-noto-core",
     "fonts-noto-color-emoji",
@@ -122,6 +124,11 @@ def render(values: dict[str, str], output: Path) -> None:
         ("wifi-country", country, r"[A-Z]{2}"),
         ("timezone", values["timezone"], r"[A-Za-z0-9_+-]+(?:/[A-Za-z0-9_+-]+)*"),
         ("server", values["server"], r"(?:[0-9]{1,3}\.){3}[0-9]{1,3}:[0-9]{1,5}|"),
+        (
+            "output-mode",
+            values["output_mode"],
+            r"(?:[0-9]+x[0-9]+(?:@[0-9]+(?:\.[0-9]+)?Hz)?)?",
+        ),
     ):
         if re.fullmatch(pattern, value) is None:
             raise SystemExit(f"invalid --{label}")
@@ -169,6 +176,8 @@ def render(values: dict[str, str], output: Path) -> None:
     for asset in ("kiosk-netwatch.service", "kiosk-netwatch.timer"):
         write_file(f"/etc/systemd/system/{asset}", (ASSETS / asset).read_text())
     write_file("/etc/kiosk-url.txt", values["url"] + "\n")
+    if values["output_mode"]:
+        write_file("/etc/kiosk-output-mode.txt", values["output_mode"] + "\n")
     if wyse:
         # Wifi country is a kernel option on this target (see preseed.cfg).
         write_file(

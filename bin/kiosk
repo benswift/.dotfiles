@@ -52,6 +52,9 @@
 #     Tagged nodes never expire, so the kiosk stays on the tailnet.
 #   - A watchdog timer restarts Chromium when it is showing an error page or
 #     a crashed renderer rather than the kiosk URL's site.
+#   - --output-mode pins every display to one mode (for a screen whose
+#     preferred mode is wrong or that won't take it); it lives in
+#     /etc/kiosk-output-mode.txt and is applied each time Chromium starts.
 
 set -euo pipefail
 
@@ -98,6 +101,10 @@ Network:
     --tailscale-authkey <key>    Tailscale auth key for automatic join
     --tailscale-tag <tag[,tag]>  Mint a single-use key with these tags via the
                                  OAuth client (instead of --tailscale-authkey)
+
+Display:
+    --output-mode <WxH[@RHz]>    Pin every output to this mode, e.g.
+                                 3840x2160@30Hz (default: the screen's preferred)
 
 Target:
     --device <dev>               pi: SD card device (default: auto-detect)
@@ -282,7 +289,7 @@ generate_config() {
     printf '%s\0' "$target" "$server" "$hostname" "$username" "$passwd_hash" "$lock_passwd" \
         "$timezone" "$ssh_public_key" "$url" "$wifi_ssid" "$wifi_password" \
         "$wifi_enterprise_user" "$wifi_enterprise_pass" "$wifi_country" \
-        "$wifi_ca_cert" "$wifi_domain_suffix" "$tailscale_authkey" |
+        "$wifi_ca_cert" "$wifi_domain_suffix" "$tailscale_authkey" "$output_mode" |
         uv run --locked --script "$(dirname "$0")/../lib/kiosk/render.py" "$1"
 }
 
@@ -349,6 +356,7 @@ main() {
     local wifi_ssid="" wifi_password="" wifi_enterprise_user="" wifi_enterprise_pass=""
     local wifi_ca_cert="" wifi_domain_suffix=""
     local wifi_country="AU" tailscale_authkey="" tailscale_tag="" ssh_key_file="" device="" test_mode=false
+    local output_mode=""
 
     (($# > 0)) || usage 0
     while (($# > 0)); do
@@ -367,6 +375,7 @@ main() {
         --wifi-country) wifi_country="$2"; shift 2 ;;
         --tailscale-authkey) tailscale_authkey="$2"; shift 2 ;;
         --tailscale-tag) tailscale_tag="$2"; shift 2 ;;
+        --output-mode) output_mode="$2"; shift 2 ;;
         --target) target="$2"; shift 2 ;;
         --device) device="$2"; shift 2 ;;
         --interface) interface="$2"; shift 2 ;;
@@ -395,6 +404,8 @@ main() {
     esac
     [[ -n "$url" ]] || die "--url is required"
     [[ "$url" =~ ^https?:// ]] || die "invalid URL: $url"
+    [[ -z "$output_mode" || "$output_mode" =~ ^[0-9]+x[0-9]+(@[0-9]+(\.[0-9]+)?Hz)?$ ]] ||
+        die "--output-mode must look like 3840x2160 or 3840x2160@30Hz"
     if [[ -n "$wifi_ssid" ]]; then
         if [[ -n "$wifi_enterprise_user" || -n "$wifi_enterprise_pass" ]]; then
             [[ -n "$wifi_enterprise_user" && -n "$wifi_enterprise_pass" ]] ||
@@ -443,6 +454,7 @@ main() {
     echo "  Hostname:  $hostname"
     echo "  User:      $username"
     echo "  Timezone:  $timezone"
+    echo "  Display:   ${output_mode:-preferred mode}"
     if [[ -n "$wifi_ssid" ]]; then
         echo "  WiFi:      $wifi_ssid ($([[ -n "$wifi_enterprise_user" ]] && echo "802.1X as $wifi_enterprise_user" || echo WPA2-PSK), country $wifi_country)"
     else

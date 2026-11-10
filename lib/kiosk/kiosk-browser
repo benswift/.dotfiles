@@ -3,6 +3,14 @@ set -euo pipefail
 url_file=/boot/firmware/kiosk-url.txt
 [[ -r "$url_file" ]] || url_file=/etc/kiosk-url.txt
 url=$(cat "$url_file")
+# kiosk --output-mode: pin every output to one mode before the browser sizes
+# itself to the screen. Best effort: a mode the screen lacks leaves it as is.
+if [[ -s /etc/kiosk-output-mode.txt ]]; then
+    mode=$(cat /etc/kiosk-output-mode.txt)
+    for output in $(wlr-randr | awk '/^[^ ]/ { print $1 }'); do
+        wlr-randr --output "$output" --mode "$mode" || true
+    done
+fi
 browser=$(command -v chromium || command -v chromium-browser)
 exec "$browser" --kiosk --password-store=basic \
     --user-data-dir="$HOME/.cache/chromium-kiosk" --remote-debugging-port=9222 \
