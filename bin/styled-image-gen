@@ -9,9 +9,10 @@ Environment:
     REPLICATE_API_TOKEN: Your Replicate API token (required)
 
 Supported models:
-    banana    - Google Nano Banana Pro (default): style transfer, up to 14 ref images, 4K
-    banana-2  - Google Nano Banana 2: the Flash-tier sibling, faster and cheaper
-    banana-2.1 - Google Nano Banana 2.1: a third of Pro's price, holds a reference style as well
+    banana-2.1 - Google Nano Banana 2.1 (default): style transfer, up to 14 ref images,
+                 4K, a third of Pro's price
+    banana    - Google Nano Banana Pro: the premium tier
+    banana-2  - Google Nano Banana 2: the previous Flash tier, the fallback for both
     seedream  - ByteDance Seedream 5 Pro: cinematic aesthetics, up to 10 ref images, 1K/2K
     gpt       - OpenAI GPT Image 2.5 Sunburst: all-round text-to-image + editing
     recraft   - Recraft v4 Pro SVG: text-to-SVG vector graphics (no ref images)
@@ -284,8 +285,8 @@ def _main_impl(
     prompt: Annotated[str, typer.Argument(help="Image prompt")],
     model: Annotated[
         str,
-        typer.Option(help="Model to use: banana, banana-2, banana-2.1, seedream, gpt, recraft"),
-    ] = "banana",
+        typer.Option(help="Model to use: banana-2.1, banana, banana-2, seedream, gpt, recraft"),
+    ] = "banana-2.1",
     output_dir: Annotated[Path, typer.Option(help="Output directory")] = Path(
         "styled_image_gen_output"
     ),
