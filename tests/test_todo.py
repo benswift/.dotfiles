@@ -33,11 +33,15 @@ def calls(tmp_path: Path) -> Path:
     return log
 
 
-def todo(calls: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def todo(
+    calls: Path, *args: str, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
     env = {
         **os.environ,
         "PATH": f"{calls.parent / 'bin'}{os.pathsep}{os.environ['PATH']}",
         "XDG_STATE_HOME": str(calls.parent / "state"),
+        "VISUAL": "echo",
+        **(env or {}),
     }
     return subprocess.run(
         [str(SCRIPT), *args], capture_output=True, text=True, env=env, check=False
@@ -73,3 +77,27 @@ def test_edit_with_words_files_a_task(calls: Path, verb: str) -> None:
     result = todo(calls, verb, "the", "slides")
     assert result.returncode == 0
     assert calls.read_text().startswith(f"add anu task -title {verb} the slides")
+
+
+def test_triage_opens_the_newest_briefing_by_its_timestamp(
+    calls: Path, tmp_path: Path
+) -> None:
+    briefings = tmp_path / "cache" / "todo-triage"
+    briefings.mkdir(parents=True)
+    newest = briefings / "2026-11-12-0900.md"
+    newest.write_text("")
+    # Edited later, so newer by mtime, but its name says it's older.
+    (briefings / "2026-11-05-1400.md").write_text("")
+    result = todo(calls, "triage", env={"XDG_CACHE_HOME": str(tmp_path / "cache")})
+    assert result.returncode == 0
+    assert result.stdout.strip() == str(newest)
+    assert not calls.exists()
+
+
+def test_triage_without_a_briefing_fails_and_files_nothing(
+    calls: Path, tmp_path: Path
+) -> None:
+    result = todo(calls, "triage", env={"XDG_CACHE_HOME": str(tmp_path / "cache")})
+    assert result.returncode != 0
+    assert "no triage briefing" in result.stderr
+    assert not calls.exists()

@@ -10,6 +10,7 @@
   todo undo <n>...      reopen
   todo block <n>...     mark blocked; `unblock` reopens
   todo e <n>...         open in $VISUAL, else $EDITOR, else hx (or `todo edit`)
+  todo triage [file]    open the newest triage briefing (or file) the same way
   todo <words...>       a new anu task titled from the words, no quoting
 
 The numbers are the rows of the last listing, remembered in
@@ -22,6 +23,11 @@ tasks; blocked and bot hold all three vaults' (all are Ben's own). Bot tasks wit
 same title (a job that keeps failing past unit-oncall's 24h re-arm) collapse to
 one row, and `do` on it closes them all. The lx section lists that vault's open
 tasks whose agent is Ben; closing one shares it with the team at once.
+
+A triage briefing is the vault skill's proposal for every open task, written
+to ~/.cache/todo-triage/<YYYY-MM-DD-HHMM>.md for Ben to edit before Claude acts
+on it; the newest is found by that timestamp, not by mtime, which editing an
+old one would change.
 
 Everything goes through the wiz CLI. Every command but the listing and `e`
 commits what it changes; Ben's own vaults' commits are shared by their
@@ -48,6 +54,7 @@ STATE = (
     / "todo"
     / "last.json"
 )
+TRIAGE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "todo-triage"
 
 # ANSI colour codes, so the listing takes the terminal's own palette.
 ANSI = {"red": 31, "blue": 94, "green": 32, "yellow": 33, "magenta": 35, "cyan": 36, "dim": 90}
@@ -218,10 +225,23 @@ def set_status(verb: str, numbers: list[str]) -> int:
     return 0
 
 
-def edit(numbers: list[str]) -> NoReturn:
-    paths = [wiz("path", ref).strip() for group in remembered(numbers) for ref in group]
+def open_in_editor(paths: list[str]) -> NoReturn:
     editor = shlex.split(os.environ.get("VISUAL") or os.environ.get("EDITOR") or "hx")
     os.execvp(editor[0], [*editor, *paths])
+
+
+def edit(numbers: list[str]) -> NoReturn:
+    open_in_editor(
+        [wiz("path", ref).strip() for group in remembered(numbers) for ref in group]
+    )
+
+
+def triage(file: str | None) -> NoReturn:
+    stamped = sorted(TRIAGE.glob("????-??-??-????.md"))
+    path = Path(file) if file else (stamped[-1] if stamped else None)
+    if path is None or not path.exists():
+        sys.exit(f"todo: no triage briefing in {TRIAGE}")
+    open_in_editor([str(path)])
 
 
 def add_task(words: list[str]) -> int:
@@ -245,6 +265,10 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         case ["e" | "edit", *numbers] if numbers and all(n.isdigit() for n in numbers):
             edit(numbers)
+        case ["triage"]:
+            triage(None)
+        case ["triage", file] if file.endswith(".md"):
+            triage(file)
         case ["-h" | "--help"]:
             print(__doc__)
             return 0
