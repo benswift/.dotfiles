@@ -4,13 +4,29 @@
 # works both locally and over remote SSH connections in any terminal that
 # supports it (e.g. ghostty).
 #
-# Falls back to native clipboard tools (pbcopy/xclip/wl-copy) when there is no
-# controlling terminal to receive the escape sequence (e.g. a pipe in a cron
-# job).
+# With no controlling terminal (e.g. an agent's shell subprocess), the sequence
+# goes to the nearest ancestor process's terminal instead. Falls back to native
+# clipboard tools (pbcopy/xclip/wl-copy) when no ancestor has one either (e.g. a
+# cron job).
 #
 set -euo pipefail
 
 data="$(cat)"
+
+# Print the first writable terminal device among this process's ancestors.
+ancestor_tty() {
+    local pid=$$ tty
+    while [[ "$pid" -gt 1 ]]; do
+        tty="$(ps -o tty= -p "$pid" | tr -d ' ')"
+        if [[ -n "$tty" && "$tty" != "?" && "$tty" != "??" ]] &&
+            { : >"/dev/$tty"; } 2>/dev/null; then
+            printf '/dev/%s' "$tty"
+            return 0
+        fi
+        pid="$(ps -o ppid= -p "$pid" | tr -d ' ')"
+    done
+    return 1
+}
 
 emit_osc52() {
     local b64 seq
@@ -23,11 +39,13 @@ emit_osc52() {
     elif [[ "${TERM:-}" == screen* ]]; then
         seq="\033P${seq}\033\\"
     fi
-    printf '%b' "$seq" >/dev/tty
+    printf '%b' "$seq" >"$1"
 }
 
 if { : >/dev/tty; } 2>/dev/null; then
-    emit_osc52
+    emit_osc52 /dev/tty
+elif target="$(ancestor_tty)"; then
+    emit_osc52 "$target"
 elif command -v pbcopy &>/dev/null; then
     printf '%s' "$data" | pbcopy
 elif command -v xclip &>/dev/null; then
