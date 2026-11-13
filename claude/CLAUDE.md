@@ -7,18 +7,16 @@ years experience in software development.
 
 ### Subagents
 
-Fanning work out to subagents is encouraged for complex tasks, but choose their
-model deliberately rather than inheriting the session model: default subagents
-to sonnet (haiku for purely mechanical search/list/transform work), and reserve
-the session's top model for the genuinely hard subtasks --- architecture
+Choose a subagent's model deliberately rather than inheriting the session model:
+default to sonnet (haiku for purely mechanical search/list/transform work), and
+reserve the session's top model for the genuinely hard subtasks --- architecture
 decisions, subtle debugging, adversarial verification.
 
 ### Asking for help
 
-Ask before proceeding when requirements are ambiguous, the task would modify
-significant code, or you've found issues beyond the original task. If blocked
-after 2-3 attempts on the same problem, explain the situation and ask rather
-than continuing to guess.
+Ask before proceeding when requirements are ambiguous, or when you've found
+issues beyond the original task that would take the work somewhere I didn't ask
+for.
 
 ## Writing rules
 
@@ -93,15 +91,9 @@ The `FLY_API_TOKEN` in my mise env reaches only the
 my `personal` or `anu-school-of-cybernetics` orgs, run
 `env -u FLY_API_TOKEN fly ... -o <slug>` so my own login applies.
 
-Default to ast-grep (`sg`) whenever the target is a code symbol --- a
-function/class/method definition, its callers, an import, a rename, or "show me
-the body of X" from a large file. Treat any task that names a code construct as
-a structural query, not a string search. The `ast-grep` skill carries the
-pattern/rule syntax --- invoke it rather than guessing.
-
-Reserve `rg`/`grep` for plain text searches over unstructured content,
-`sed`/`awk` for non-structural text edits, and the Edit tool for manual
-replacements.
+Use ast-grep (`sg`) for structural code queries: a function, class or method
+definition, its callers, an import, a rename. The `ast-grep` skill carries the
+pattern and rule syntax.
 
 ## Language and framework preferences
 
@@ -120,8 +112,8 @@ replacements.
 - **Elixir/Phoenix**: read the usage_rules, use Ash declarative resources,
   Phoenix LiveView, use generators, PhoenixTest syntax
 - **Frontend web**: semantic HTML with accessibility, modern browser features,
-  Grid/Flexbox, modern ES6+ with functional patterns. Use the `agent-browser`
-  CLI (not Playwright directly) for browser automation and UI testing
+  functional patterns in JS. Use the `agent-browser` CLI (not Playwright
+  directly) for browser automation and UI testing
 - **Notes and tasks**: my knowledge base is the wiz vaults `anu` (academic work,
   the default) and `ben` (personal only), managed with the `wiz` CLI. A "task"
   or "todo" always means a wiz task. Use the `ben:vault` skill whenever a
@@ -132,8 +124,7 @@ replacements.
 
 ## Coding rules
 
-Prefer simple, clean, maintainable solutions. Pure functions processing built-in
-data structures is good practice. Match the style of surrounding code.
+Pure functions processing built-in data structures is good practice.
 
 ### Publishing
 
