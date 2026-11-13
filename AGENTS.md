@@ -2,7 +2,8 @@
 
 The (public) config files I use on my machines.
 
-**DO NOT EVER ADD RAW CREDENTIALS/PASSWORDS TO THIS REPO.**
+No raw credentials or passwords in this repo: it is public, and secrets live in
+the untracked mise env ("Tool management" below).
 
 Most `bin/` scripts carry a header comment explaining their own mechanism. This
 file says where things live and which rules must not be broken; it does not
@@ -19,12 +20,9 @@ repeat what the scripts already document.
 
 ## Key commands
 
-- `dotfiles doctor` --- check if everything is set up correctly
-- `dotfiles update` --- pull latest and re-run symlinks
-- `dotfiles settings` --- list keys a machine's merged agent settings hold
-  beyond the repo's layers, to promote into one
-- `dotfiles edit` --- open dotfiles in editor
-- `dotfiles cd` --- print the dotfiles directory (for `cd "$(dotfiles cd)"`)
+- `dotfiles` --- `doctor`, `update` and the rest (`dotfiles --help`).
+  `dotfiles settings` lists keys a machine's merged agent settings hold beyond
+  the repo's layers, to promote into one
 - `./install.sh` --- bootstrap a new machine (also works via curl)
 - `./create_symlinks.sh` --- create/update symlinks only
 
@@ -88,8 +86,7 @@ tests call must be installed there too; the helix and todo-wiz suites stay local
 
 ## Version control
 
-Plain git. Use `gh` for GitHub API operations, `glab` for GitLab. Two GitLab
-instances are configured:
+Two GitLab instances are configured for `glab`:
 
 - `gitlab.comp.anu.edu.au` --- teaching repos (comp2300, comp1720, lucy, etc.)
 - `gitlab.anu.edu.au` --- jekyll-anu websites and other ANU projects
@@ -105,8 +102,8 @@ used when a project has no `mise.toml` of its own.
 
 `~/.config/mise/config.local.toml` is machine-local, untracked, and auto-merged;
 its `[env]` table is **the sole home for secrets** (`PUSHOVER_TOKEN`,
-`PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`). Nothing here calls 1Password. The
-private overlay's mail scripts have their own backend (its `AGENTS.md`).
+`PUSHOVER_USER_KEY`, `REPLICATE_API_TOKEN`). The private overlay's mail scripts
+have their own backend (its `AGENTS.md`).
 
 ### Package installation hierarchy
 
@@ -144,37 +141,13 @@ Helix runs on save (dispatch table in the script; mirrors
 
 ## Utilities (`bin/`)
 
-Each script's header has the detail. Notable ones:
+Each script's header says what it does and how; read it before using or changing
+one.
 
-- `dotfiles` --- doctor, update, edit
-- `wiz-build` --- builds the wiz engine's main (`u2548636/wiz-engine`) into
-  `~/.local/bin`
-- `mise-bump` --- moves every project's committed `mise.lock` to the newest
-  versions its `mise.toml` allows, checks each still installs, and leaves the
-  changes uncommitted
-- `agent-run` --- headless agent dispatcher (see below)
-- `hx-ghostty` --- open files in helix in a Ghostty tab; `--register` (once per
-  Mac) makes it macOS's default for text and source files
-- `claude-git-guard` --- PreToolUse hook blocking bulk staging and bare
-  force-pushes
-- `claude-turn-tracker`, `codex-turn-notify` --- Pushover notification when a
-  long agent turn ends
-- `wiz-due` units (`systemd/user/wiz-due.service`, its launchd twin) --- run
-  every registered vault's due workflows on this host, then `wiz sync -all`;
-  anu's are in the vault's `workflows/`, among them `health` (the job health
-  check, `bin/pkb-health`). `todo` lists and edits Ben's open tasks across
-  vaults; `unit-oncall` and `launchd-run` file failures as anu tasks
-- `pangram` --- check a draft against Pangram's paid AI-text detector API.
-  Billed per word, so `--dry-run` costs the estimate first; `PANGRAM_API_KEY`
-  goes in the untracked mise env block
-- `ts-cat`, `lumis-parsers` --- tree-sitter highlighting for yazi previews, via
-  lumis. Add a language to `PARSERS` in `lumis-parsers` if it's previewed often;
-  add a `case` override in `ts-cat` if the extension doesn't map to a parser (as
-  with `.mdx`)
-- `kiosk` --- provision a fullscreen Chromium kiosk with wifi and Tailscale
-  baked in (cloud-init): `--target pi` flashes an SD card, `--target wyse`
-  network-installs a Dell Wyse thin client cabled to a spare NIC (Debian
-  netboot, on weddle's `eno1`)
+The `wiz-due` units (`systemd/user/wiz-due.service`, its launchd twin) run every
+registered vault's due workflows on this host, then `wiz sync -all`; anu's are
+in the vault's `workflows/`, among them `health` (the job health check,
+`bin/pkb-health`). `unit-oncall` and `launchd-run` file failures as anu tasks.
 
 yazi's plugin dir is owned by `ya pkg`, which is why `yazi/` configs are
 symlinked file-by-file rather than as a directory.
@@ -219,12 +192,6 @@ changes. Options are namespaced per runner (`--claude-*`, `--codex-*`) and a
 mismatched one is refused, not dropped. `--bypass-permissions` is the deliberate
 exception --- runner-agnostic, so an unattended caller need not know its runner.
 
-```sh
-agent-run --profile claude-sub --model sonnet \
-  --claude-dangerously-skip-permissions "/find-gigs"
-agent-run --profile openrouter --model "provider/model:free" "prompt"
-```
-
 ### Session log analytics
 
 `bin/ship-claude-logs` sends each host's Claude and Codex session logs to weddle
@@ -238,9 +205,8 @@ have the detail.
 
 - **Claude Code** --- `.claude/` (with dot) is machine-local and gitignored;
   this repo tracks only `.claude/settings.json`, which disables the `impeccable`
-  plugin (its `PostToolUse` hook fires on every edit and drops
-  `.impeccable/hook.cache.json` into whatever it thinks the project root is,
-  including a package's `src/`, from where it shipped in the built wheel).
+  plugin (its `PostToolUse` hook drops `.impeccable/hook.cache.json` into
+  whatever it thinks the project root is, a package's `src/` included).
 - **Codex** --- `~/.codex/config.toml` is entirely machine-local and
   deliberately untracked; set `project_doc_fallback_filenames = ["CLAUDE.md"]`
   there on each machine, for repos without an `AGENTS.md`. There is no shared
