@@ -78,6 +78,7 @@ sync_claude_plugins() {
         # Every installed plugin, enabled or not. A disabled one is still
         # installed, and pinning it to an old version just hides the skew
         # until the day it's enabled; updating it changes no session.
+        # shellcheck disable=SC2016  # $1 and $2 are sh -c's, not ours
         claude plugin list --json 2>/dev/null |
             jq -r '.[] | "\(.id) \(.scope)"' |
             xargs -P 8 -L 1 sh -c 'claude plugin update --scope "$2" "$1" >/dev/null 2>&1' _ || true
