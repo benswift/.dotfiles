@@ -53,7 +53,7 @@ fmt_rust() {
     dir="$(dirname "$f")"
     while [[ "$dir" != "/" ]]; do
         if [[ -f "$dir/Cargo.toml" ]]; then
-            found="$(grep -oP '^\s*edition\s*=\s*"\K[0-9]+' "$dir/Cargo.toml" | head -1 || true)"
+            found="$(sed -n 's/^[[:space:]]*edition[[:space:]]*=[[:space:]]*"\([0-9]*\)".*/\1/p' "$dir/Cargo.toml" | head -1 || true)"
             [[ -n "$found" ]] && ed="$found"
             break
         fi
