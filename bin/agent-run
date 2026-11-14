@@ -302,7 +302,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             return 1
         return returncode
-    except (OSError, ValueError, tomllib.TOMLDecodeError) as error:
+    except (
+        OSError,
+        ValueError,
+        tomllib.TOMLDecodeError,
+        subprocess.CalledProcessError,
+    ) as error:
         print(f"agent-run: {error}", file=sys.stderr)
         return 2
 
