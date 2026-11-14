@@ -174,7 +174,7 @@ check_tools() {
 
     # Likewise the wiz engine, built by bin/wiz-build from its main. watson
     # knows only the lx vault, whose automation it runs.
-    local wiz_status vaults=(ben hdr lx)
+    local wiz_status vaults=(anu ben hdr lx)
     [[ "$(hostname -s)" == watson ]] && vaults=(lx)
     if wiz_status=$("$DOTFILES_DIR/bin/wiz-build" --check 2>&1); then
         check_pass "wiz (source build of main)"
