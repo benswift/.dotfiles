@@ -12,7 +12,7 @@
 #
 #   private/manifest.sh    appends to SYMLINK_MANIFEST (lib/symlink-manifest.sh)
 #   private/setup          installs what it needs (install.sh, dotfiles update)
-#   private/lib/doctor.sh  defines check_private (dotfiles doctor)
+#   private/lib/doctor.sh  defines private_doctor (called by dotfiles doctor)
 #   private/bin/           on PATH (zshenv, bin/launchd-run, wiz-due.service)
 #   private/ssh_config     Included by ssh_config
 
