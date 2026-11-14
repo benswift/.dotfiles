@@ -49,7 +49,7 @@ install_mise() {
     fi
 
     info "Installing mise..."
-    curl https://mise.run | sh
+    curl -fsSL https://mise.run | sh
 
     # Add mise to path for this session
     export PATH="$HOME/.local/bin:$PATH"
@@ -94,7 +94,8 @@ clone_dotfiles() {
 
 setup_symlinks() {
     info "Setting up symlinks..."
-    "$DOTFILES_DIR/create_symlinks.sh"
+    "$DOTFILES_DIR/create_symlinks.sh" ||
+        warn "some links failed --- clear the conflicts above, then rerun create_symlinks.sh"
 }
 
 install_mise_tools() {

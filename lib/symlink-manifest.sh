@@ -103,6 +103,7 @@ settings_merge() {
     local seed_args=(--argjson seed '[]')
     [[ -f "$seed" ]] && seed_args=(--slurpfile seed "$seed")
     [[ -f "$target" && ! -L "$target" ]] && live="$(<"$target")"
+    [[ -n "${live//[[:space:]]/}" ]] || live='{}'
     jq -f "$DOTFILES_DIR/lib/settings-merge.jq" \
         --slurpfile enforced "$source_path" "${seed_args[@]}" <<<"$live"
 }

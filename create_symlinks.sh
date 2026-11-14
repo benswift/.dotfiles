@@ -88,7 +88,11 @@ merge_json() {
 
     mkdir -p "$(dirname "$target")"
     tmp="$(mktemp "$target.XXXXXX")"
-    settings_merge "$source_path" "$target" >"$tmp"
+    settings_merge "$source_path" "$target" >"$tmp" || {
+        rm -f "$tmp"
+        echo -e "${RED}✗ Merge failed: $target${NC}"
+        return 1
+    }
     chmod 600 "$tmp"
     if [[ -f "$target" && ! -L "$target" ]] && cmp -s "$tmp" "$target"; then
         rm "$tmp"
@@ -134,23 +138,30 @@ main() {
     local entry
 
     echo -e "\nLinking manifest entries..."
+    # A conflicting target is reported and skipped rather than aborting the
+    # run, so one stray file doesn't leave every later link unmade.
+    local failed=0
     for entry in "${SYMLINK_MANIFEST[@]}"; do
-        create_symlink "$(manifest_source "$entry")" "$(manifest_target "$entry")"
+        create_symlink "$(manifest_source "$entry")" "$(manifest_target "$entry")" || failed=$((failed + 1))
     done
 
     echo -e "\nLinking tool-rewritten configs (with backup)..."
     for entry in "${SYMLINK_MANIFEST_WITH_BACKUP[@]}"; do
-        create_symlink_with_backup "$(manifest_source "$entry")" "$(manifest_target "$entry")"
+        create_symlink_with_backup "$(manifest_source "$entry")" "$(manifest_target "$entry")" || failed=$((failed + 1))
     done
 
     echo -e "\nMerging tool-rewritten settings..."
     for entry in "${JSON_MERGE_MANIFEST[@]}"; do
-        merge_json "$(manifest_source "$entry")" "$(manifest_target "$entry")"
+        merge_json "$(manifest_source "$entry")" "$(manifest_target "$entry")" || failed=$((failed + 1))
     done
 
     echo -e "\nPruning stale systemd links..."
     prune_systemd_links
 
+    if ((failed)); then
+        echo -e "\n${RED}✗ $failed entries failed (see above)${NC}"
+        return 1
+    fi
     echo -e "\n${GREEN}Done!${NC}"
 }
 
