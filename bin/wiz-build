@@ -57,7 +57,7 @@ installed_rev() {
 
 ensure_checkout() {
     if [[ ! -d "$WIZ_SRC/.git" ]]; then
-        info "Cloning the wiz engine into $WIZ_SRC"
+        info "Cloning the wiz engine into $WIZ_SRC" >&2
         git clone -q "$REPO_URL" "$WIZ_SRC"
     fi
     mise trust -q "$WIZ_SRC/mise.toml" >/dev/null 2>&1 || true
