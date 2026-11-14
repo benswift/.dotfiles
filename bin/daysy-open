@@ -31,7 +31,12 @@ fi
 dest="/tmp/from-$(hostname -s)"
 ssh "$DAYSY" mkdir -p "$dest"
 # scp's SFTP mode takes the remote path literally, so spaces need no quoting.
-scp -q -r "$@" "$DAYSY:$dest/"
+# A relative local path gets ./ so scp can't read "a:b.pdf" as host a.
+local_paths=()
+for f in "$@"; do
+    if [[ "$f" == /* ]]; then local_paths+=("$f"); else local_paths+=("./$f"); fi
+done
+scp -q -r "${local_paths[@]}" "$DAYSY:$dest/"
 
 remote=()
 for f in "$@"; do
