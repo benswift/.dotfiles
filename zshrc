@@ -64,8 +64,8 @@ note() {
   [[ -n "$body" ]] && echo "$added" || "${EDITOR:-hx}" "$(wiz path "anu:$added")"
 }
 alias latest='wiz query anu "path.startsWith(\"notes/\")" | tail -10'
-# Copy a vault file's full path: `cpath ben:notes/2026-10-29-x.md`.
-cpath() { wiz path "$1" | tr -d '\n' | clipboard-copy && echo "copied $(wiz path "$1")"; }
+# Copy a vault file's full path: `vpath ben:notes/2026-10-29-x.md`.
+vpath() { local p; p="$(wiz path "$1")" || return; printf '%s' "$p" | clipboard-copy && echo "copied $p"; }
 # alias sc='screencapture -i -t jpg screencap.jpg'
 alias update-usage-rules='mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
 # git shortcuts
