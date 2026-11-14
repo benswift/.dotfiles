@@ -13,8 +13,8 @@
 # doesn't pick out the Python ones --- it drags in all the bash and swift
 # scripts alongside them and reports several thousand syntax errors.
 #
-# Adding a `uv run --script` tool to bin/ means adding it here too, or it is
-# silently never linted. Regenerate the list with:
+# Adding a `uv run --script` tool to bin/ means adding it here too
+# (tests/test_uv_scripts.py fails until it is). Regenerate the list with:
 #   grep -rl '^#!/usr/bin/env -S uv run' bin | sort
 extend-include = [
   "bin/agent-run",
