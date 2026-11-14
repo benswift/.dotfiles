@@ -305,7 +305,7 @@ provision_pi() {
     lsblk -d -o NAME,SIZE,MODEL "$device"
     local confirm
     read -r -p "Continue? (yes/no): " confirm
-    [[ "$confirm" == yes ]] || { echo "Aborted."; rm -rf "$work"; exit 0; }
+    [[ "$confirm" == yes ]] || { echo "Aborted."; exit 0; }
 
     # Mint before erasing anything, so an API failure leaves the card as it was.
     mint_tailscale_key
@@ -319,6 +319,8 @@ provision_pi() {
     local part mnt
     part=$(boot_partition "$device")
     mnt=$(mktemp -d -t kiosk-boot-XXXXX)
+    # shellcheck disable=SC2064  # expand the locals now
+    trap "sudo umount '$mnt' 2>/dev/null; rmdir '$mnt' 2>/dev/null; rm -rf '$work'" EXIT
     sudo mount "$part" "$mnt"
     sudo cp "$work/user-data" "$mnt/user-data"
     [[ -f "$work/network-config" ]] && sudo cp "$work/network-config" "$mnt/network-config"
@@ -470,8 +472,14 @@ main() {
 
     local work
     work=$(mktemp -d -t kiosk-XXXXX)
+    # $work ends up holding the wifi and Tailscale secrets, so remove it however
+    # the run ends. The wyse target replaces this trap with wyse_teardown, which
+    # removes it too.
+    # shellcheck disable=SC2064  # expand $work now: it's main's local
+    trap "rm -rf '$work'" EXIT
 
     if [[ "$test_mode" == true ]]; then
+        trap - EXIT
         [[ -z "$tailscale_tag" ]] || tailscale_authkey="tskey-auth-TEST-PLACEHOLDER"
         generate_config "$work"
         warn "TEST MODE: config generated in $work (not flashing)"
