@@ -87,13 +87,16 @@ cpath() { realpath "${1:-.}" | clipboard && echo "Copied to clipboard: $(realpat
 
 # Initialize completions. The full compinit audits every completion file,
 # which is the slowest part of startup --- only do that when the dump is
-# more than a day old, otherwise trust it with -C.
+# more than a day old, otherwise trust it with -C. A full run that finds
+# nothing new leaves the dump untouched, hence the touch.
 autoload -Uz compinit
-if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
-  compinit
+_zcompdump_stale=(~/.zcompdump(N.mh+24))
+if (( $#_zcompdump_stale )); then
+  compinit && touch ~/.zcompdump
 else
   compinit -C
 fi
+unset _zcompdump_stale
 
 eval "$(mise activate zsh)"
 eval "$(zoxide init zsh)"
