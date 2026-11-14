@@ -177,14 +177,18 @@ def evaluate_unit(
 
 
 def run_ssh(host: str, command: str) -> tuple[int, str]:
-    result = subprocess.run(
-        ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", host, command],
-        capture_output=True,
-        text=True,
-        stdin=subprocess.DEVNULL,
-        timeout=60,
-        check=False,
-    )
+    """Exit 124 (timeout(1)'s code) when the command outlives 60s."""
+    try:
+        result = subprocess.run(
+            ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", host, command],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            timeout=60,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return 124, ""
     return result.returncode, result.stdout
 
 
@@ -227,24 +231,36 @@ def render(problems: list[Problem], n_units: int, n_checks: int) -> str:
     )
 
 
-def page_new_problems(problems: list[Problem]) -> None:
-    """Page once per newly-seen problem key; state lives in the state dir."""
+def page_new_problems(problems: list[Problem]) -> bool:
+    """Page once per newly-seen problem key; state lives in the state dir.
+
+    A key is only recorded once its page has gone out, so a failed page is
+    retried on the next run. Returns False when the page failed.
+    """
     path = state_dir() / "health.json"
     previous = set(json.loads(path.read_text())) if path.exists() else set()
     current = {p.key for p in problems}
     new = [p for p in problems if p.key not in previous]
+    sent = True
+    if new:
+        body = "\n".join(re.sub(r"\*\*", "", p.message) for p in new)
+        result = subprocess.run(
+            ["mise", "exec", "--", "notify-pushover", "--title", "pkb-health"],
+            input=body,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            sent = False
+            current -= {p.key for p in new}
+            print(
+                f"pkb-health: page failed (exit {result.returncode}): {result.stderr.strip()}",
+                file=sys.stderr,
+            )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(sorted(current)))
-    if not new:
-        return
-    body = "\n".join(re.sub(r"\*\*", "", p.message) for p in new)
-    subprocess.run(
-        ["mise", "exec", "--", "notify-pushover", "--title", "pkb-health"],
-        input=body,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    return sent
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -260,9 +276,9 @@ def main(argv: list[str] | None = None) -> int:
     for host, checks in config.hosts.items():
         problems += check_host(host, checks)
     n_checks = sum(len(c) for c in config.hosts.values())
-    page_new_problems(problems)
+    paged = page_new_problems(problems)
     print(re.sub(r"\*\*", "", render(problems, len(config.units), n_checks)))
-    return 0
+    return 0 if paged else 1
 
 
 if __name__ == "__main__":

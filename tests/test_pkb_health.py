@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib.machinery
 import importlib.util
+import subprocess
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -116,15 +117,45 @@ def test_paging_only_for_new_keys(
 ) -> None:
     monkeypatch.setenv("PKB_HEALTH_STATE", str(tmp_path / "state"))
     sent: list[str] = []
-    monkeypatch.setattr(
-        health.subprocess, "run", lambda *_a, **k: sent.append(str(k.get("input")))
-    )
+
+    def fake_run(*_a: object, **k: object) -> subprocess.CompletedProcess[str]:
+        sent.append(str(k.get("input")))
+        return subprocess.CompletedProcess([], 0, "", "")
+
+    monkeypatch.setattr(health.subprocess, "run", fake_run)
     health.page_new_problems([health.Problem("a:stale", "**a**: stale")])
     health.page_new_problems([health.Problem("a:stale", "**a**: stale")])
     health.page_new_problems(
         [health.Problem("a:stale", "x"), health.Problem("b:failed", "**b**: failed")]
     )
     assert len(sent) == 2 and "b: failed" in sent[1]
+
+
+def test_failed_page_is_retried_next_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("PKB_HEALTH_STATE", str(tmp_path / "state"))
+    codes = iter([1, 0])
+    sent: list[str] = []
+
+    def fake_run(*_a: object, **k: object) -> subprocess.CompletedProcess[str]:
+        sent.append(str(k.get("input")))
+        return subprocess.CompletedProcess([], next(codes), "", "offline")
+
+    monkeypatch.setattr(health.subprocess, "run", fake_run)
+    problem = health.Problem("a:stale", "**a**: stale")
+    assert health.page_new_problems([problem]) is False
+    assert health.page_new_problems([problem]) is True
+    assert len(sent) == 2
+
+
+def test_ssh_timeout_is_a_problem_not_a_crash(monkeypatch: pytest.MonkeyPatch) -> None:
+    def hang(*a: object, **k: object) -> None:
+        raise subprocess.TimeoutExpired(cmd="ssh", timeout=60)
+
+    monkeypatch.setattr(health.subprocess, "run", hang)
+    [problem] = health.check_host("strproxy", ())
+    assert problem.key == "strproxy:ssh" and "124" in problem.message
 
 
 def test_render_all_ok_is_one_line() -> None:
