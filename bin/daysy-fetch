@@ -59,7 +59,10 @@ if [[ ${#names[@]} -eq 0 ]]; then
         echo "daysy-fetch: -n wants a positive number, not $count" >&2
         exit 1
     }
-    mapfile -t names < <(newest "$count")
+    # Captured first, so an unreachable daysy fails here under set -e rather
+    # than looking like an empty Downloads.
+    listing="$(newest "$count")"
+    [[ -z "$listing" ]] || mapfile -t names <<<"$listing"
 fi
 [[ ${#names[@]} -gt 0 ]] || {
     echo "daysy-fetch: nothing in $DAYSY:~/Downloads" >&2
