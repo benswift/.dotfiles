@@ -133,7 +133,7 @@ EOF
 
 check_required_tools() {
     local missing=() cmd
-    for cmd in curl xz dd lsblk openssl mktemp ssh-keygen uv; do
+    for cmd in curl xz dd lsblk openssl mktemp sha256sum ssh-keygen uv; do
         command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
     done
     ((${#missing[@]} == 0)) || die "missing required tools: ${missing[*]}"
@@ -186,30 +186,18 @@ find_sd_card() {
 # Image download. IMAGE_URL is Raspberry Pi's "latest" redirect; resolve it so
 # the cache is keyed by the real release filename and a new release triggers a
 # fresh download. Only the .xz is cached --- flashing decompresses on the fly.
+# The cached or downloaded image is checked against the SHA-256 Raspberry Pi
+# publishes beside it.
 fetch_image() {
-    local resolved filename cached
+    local resolved filename sha
     resolved=$(curl -fsSIL -o /dev/null -w '%{url_effective}' "$IMAGE_URL") ||
         die "could not resolve image URL: $IMAGE_URL"
     filename=$(basename "$resolved")
-    cached="$CACHE_DIR/$filename"
-
-    if [[ -f "$cached" ]]; then
-        warn "Using cached image: $filename" >&2
-    else
-        warn "Downloading $filename ..." >&2
-        mkdir -p "$CACHE_DIR"
-        curl -fL -o "$cached.partial" "$resolved" >&2 || {
-            rm -f "$cached.partial"
-            die "download failed: $resolved"
-        }
-        mv "$cached.partial" "$cached"
-    fi
-
-    xz -t "$cached" 2>/dev/null || {
-        rm -f "$cached"
-        die "cached image is not valid xz (removed; re-run to re-download)"
-    }
-    echo "$cached"
+    sha=$(curl -fsS "$resolved.sha256" | awk -v f="$filename" '$2 == f {print $1}')
+    [[ -n "$sha" ]] || die "could not read the image's SHA-256: $resolved.sha256"
+    mkdir -p "$CACHE_DIR"
+    fetch_verified "$resolved" "$CACHE_DIR/$filename" "$sha"
+    echo "$CACHE_DIR/$filename"
 }
 
 flash_image() {
