@@ -13,8 +13,8 @@
 # The Wyse UEFI-PXE-boots Debian's signed netboot shim and GRUB; grub.cfg
 # starts an unattended install (preseed.cfg, served over HTTP by
 # lib/kiosk/serve.py with this box's user-data). late.sh seeds cloud-init and
-# calls back, at which point grub.cfg becomes installed.cfg so a box that still
-# boots the network first boots its disk. First boot phones home,
+# calls back, at which point serve.py swaps grub.cfg for installed.cfg before
+# replying, so a box that still boots the network first boots its disk. First boot phones home,
 # reboots into the kiosk, and this checks over SSH that Chromium is up.
 # Chromium loads no page until a display is connected, so without one the
 # check stops at "running" (it loads once a display is plugged in). The box
@@ -253,7 +253,7 @@ provision_wyse() {
     wyse_network_up
     wyse_start_dnsmasq
     python3 -I "$WYSE_ASSETS/../serve.py" "$WYSE_SERVER_IP" "$WYSE_HTTP_PORT" \
-        "$work/http" "$work/events" &
+        "$work/http" "$work/events" "$grub_cfg" "$WYSE_ASSETS/installed.cfg" &
     wyse_serve_pid=$!
 
     info "Ready on $interface. Power on the Wyse cabled to it. If it boots its"
@@ -264,8 +264,6 @@ provision_wyse() {
     info "✓ Installer booted on $ip --- installing Debian (10--20 minutes)"
     ip=$(wyse_wait_event installed 3600) ||
         die "no install after an hour --- watch the Wyse's screen (dnsmasq log: $pxe/dnsmasq.log)"
-    cp "$WYSE_ASSETS/installed.cfg" "$grub_cfg"
-    chmod a+r "$grub_cfg"
     info "✓ Installed --- rebooting into first boot (cloud-init, Tailscale)"
     ip=$(wyse_wait_event phone-home 2700) ||
         die "first boot didn't finish in 45 minutes --- ssh $username@$ip and check 'cloud-init status --long'"

@@ -11,8 +11,11 @@ import ast
 import base64
 import os
 import re
+import socket
 import subprocess
 import sys
+import time
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -383,6 +386,49 @@ def test_explicit_device_refuses_this_machines_disk(
     assert result.returncode != 0
     assert "refusing to erase it" in result.stderr
     assert "ERASE" not in result.stdout
+
+
+def test_serve_boots_the_disk_before_the_installer_reboots(tmp_path: Path) -> None:
+    serve = SCRIPT.parents[1] / "lib" / "kiosk" / "serve.py"
+    grub, installed, events = (
+        tmp_path / "grub.cfg",
+        tmp_path / "installed.cfg",
+        tmp_path / "events",
+    )
+    grub.write_text("install\n")
+    installed.write_text("boot the disk\n")
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    server = subprocess.Popen(
+        [
+            sys.executable,
+            "-I",
+            str(serve),
+            "127.0.0.1",
+            str(port),
+            str(tmp_path),
+            str(events),
+            str(grub),
+            str(installed),
+        ]
+    )
+    try:
+        deadline = time.monotonic() + 10
+        while True:
+            try:
+                with urllib.request.urlopen(f"http://127.0.0.1:{port}/installed") as r:
+                    assert r.status == 204
+                break
+            except OSError:
+                if time.monotonic() > deadline:
+                    raise
+                time.sleep(0.1)
+        assert grub.read_text() == "boot the disk\n"
+        assert events.read_text() == "installed 127.0.0.1\n"
+    finally:
+        server.terminate()
+        server.wait()
 
 
 if __name__ == "__main__":

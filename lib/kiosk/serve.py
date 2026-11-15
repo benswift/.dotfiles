@@ -1,13 +1,15 @@
 """Serve one kiosk's install files and record its progress callbacks.
 
-    serve.py <address> <port> <directory> <events-file>
+    serve.py <address> <port> <directory> <events-file> [<grub.cfg> <installed.cfg>]
 
 GETs of files in <directory> are served as-is. Three paths are progress
 signals rather than files, each appended to <events-file> as "<name> <ip>"
 for bin/kiosk to wait on:
 
     preseed.cfg   (also served) the installer has booted and fetched its answers
-    /installed    the installer's late_command ran; it is rebooting
+    /installed    the installer's late_command ran; it is rebooting. Given the
+                  two GRUB paths, installed.cfg replaces grub.cfg before the
+                  reply, so the reboot can't PXE-boot a second install
     /phone-home   cloud-init's phone_home (POST): first boot configured the kiosk
 
 Standard library only, so it runs under any python3 without a venv.
@@ -15,6 +17,8 @@ Standard library only, so it runs under any python3 without a venv.
 
 from __future__ import annotations
 
+import os
+import shutil
 import sys
 from contextlib import suppress
 from functools import partial
@@ -23,9 +27,19 @@ from pathlib import Path
 
 
 class Handler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, events: Path, **kwargs) -> None:
+    def __init__(
+        self, *args, events: Path, grub: tuple[Path, Path] | None, **kwargs
+    ) -> None:
         self.events = events
+        self.grub = grub
         super().__init__(*args, **kwargs)
+
+    def boot_disk_next(self) -> None:
+        live, installed = self.grub
+        tmp = live.with_name(live.name + ".tmp")
+        shutil.copyfile(installed, tmp)
+        tmp.chmod(0o644)
+        os.replace(tmp, live)
 
     def record(self, name: str) -> None:
         with self.events.open("a") as log:
@@ -33,6 +47,8 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path == "/installed":
+            if self.grub:
+                self.boot_disk_next()
             self.record("installed")
             self.send_response(204)
             self.end_headers()
@@ -55,8 +71,13 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def main() -> None:
-    address, port, directory, events = sys.argv[1:]
-    handler = partial(Handler, directory=directory, events=Path(events))
+    address, port, directory, events, *grub = sys.argv[1:]
+    handler = partial(
+        Handler,
+        directory=directory,
+        events=Path(events),
+        grub=(Path(grub[0]), Path(grub[1])) if grub else None,
+    )
     # Ctrl-C at bin/kiosk reaches this process too; teardown is bin/kiosk's job.
     with suppress(KeyboardInterrupt):
         ThreadingHTTPServer((address, int(port)), handler).serve_forever()
