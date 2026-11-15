@@ -4,14 +4,15 @@
 # error page up until someone power-cycles the device. Offline for 10 minutes:
 # restart NetworkManager. Still offline at 20: reboot, at most once an hour so
 # a site-wide outage can't turn into a reboot loop. Any HTTP answer from the
-# kiosk URL's host counts as online, so a server-side error never triggers it.
+# kiosk URL's host counts as online, even over an expired or wrong certificate
+# (-k), so a server-side fault never triggers it.
 set -euo pipefail
 
 state=/run/kiosk-netwatch
 url=$(cat /boot/firmware/kiosk-url.txt 2>/dev/null || cat /etc/kiosk-url.txt)
 mkdir -p "$state"
 
-if curl -sS -o /dev/null --max-time 20 "$url"; then
+if curl -sSk -o /dev/null --max-time 20 "$url"; then
     touch "$state/online"
     rm -f "$state/nudged"
     exit 0
