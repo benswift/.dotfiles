@@ -334,5 +334,56 @@ def test_wyse_psk_wifi_is_an_unpinned_keyfile(tmp_path: Path, public_key: Path) 
     assert "psk=pass\\sword\\\\\\s$(id)\n" in profile["content"]
 
 
+def root_disk() -> str | None:
+    source = subprocess.run(
+        ["findmnt", "-n", "-o", "SOURCE", "/"],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.strip()
+    ancestors = subprocess.run(
+        ["lsblk", "-n", "-s", "-p", "-o", "NAME,TYPE", source],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.split("\n")
+    disks = [
+        line.split()[0].lstrip("└─├│ ")
+        for line in ancestors
+        if line.split()[-1:] == ["disk"]
+    ]
+    return disks[0] if disks else None
+
+
+def test_explicit_device_refuses_this_machines_disk(
+    tmp_path: Path, public_key: Path
+) -> None:
+    disk = root_disk()
+    if disk is None:
+        pytest.skip("/ isn't on a block device here")
+    result = subprocess.run(
+        [
+            "bash",
+            str(SCRIPT),
+            "--target",
+            "pi",
+            "--url",
+            "https://example.com/",
+            "--ssh-key",
+            str(public_key),
+            "--device",
+            disk,
+        ],
+        env={**os.environ, "TMPDIR": str(tmp_path)},
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "refusing to erase it" in result.stderr
+    assert "ERASE" not in result.stdout
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v", "-n", "auto"]))

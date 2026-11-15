@@ -200,6 +200,19 @@ fetch_image() {
     echo "$CACHE_DIR/$filename"
 }
 
+# An explicit --device skips find_sd_card's removable and size checks, so
+# refuse anything that isn't a whole disk or that this machine is running from.
+check_target_device() {
+    local device="$1" type in_use
+    type=$(lsblk -d -n -o TYPE "$device" 2>/dev/null) || die "lsblk can't read $device"
+    [[ "$type" == disk ]] || die "$device is a $type, not a whole disk"
+    in_use=$(lsblk -n -o MOUNTPOINTS "$device" |
+        grep -E '^(/|/boot(/.*)?|/home|/usr|/var|\[SWAP\])$' | paste -sd ' ' || true)
+    [[ -z "$in_use" ]] || die "$device holds this machine's $in_use --- refusing to erase it"
+    ! lsblk -n -o TYPE "$device" | grep -qE '^(lvm|crypt|raid[0-9]*|md)$' ||
+        die "$device holds LVM, encrypted or RAID volumes --- refusing to erase it"
+}
+
 flash_image() {
     local image="$1" device="$2" part
 
@@ -288,6 +301,7 @@ generate_config() {
 provision_pi() {
     [[ -n "$device" ]] || device=$(find_sd_card)
     [[ -b "$device" ]] || die "not a block device: $device"
+    check_target_device "$device"
 
     warn "WARNING: this will ERASE all data on $device"
     lsblk -d -o NAME,SIZE,MODEL "$device"
