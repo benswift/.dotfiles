@@ -338,7 +338,8 @@ provision_pi() {
     echo
     echo "First boot takes a few minutes (cloud-init + Tailscale install)."
     if [[ -n "$tailscale_authkey" ]]; then
-        echo "Then: tailscale ssh $username@$hostname"
+        echo "It joins Tailscale on first boot, which can't be checked from here: once"
+        echo "$hostname shows in 'tailscale status', reach it with: tailscale ssh $username@$hostname"
     fi
     echo "Change the URL later with: sudo kiosk-set-url <url>  (or edit kiosk-url.txt on the card)"
 }

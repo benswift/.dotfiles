@@ -78,6 +78,7 @@ wyse_addr_added=false
 wyse_nft_added=false
 wyse_dnsmasq_pid=""
 wyse_serve_pid=""
+wyse_tailnet=""
 
 wyse_network_up() {
     local interface="$wyse_iface"
@@ -172,12 +173,14 @@ wyse_verify() {
     local ssh_opts=(-o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no
         -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR)
     [[ -f "$key" ]] && ssh_opts+=(-i "$key")
-    # Line 1: wifi device or not; line 2: display connected or not; then
-    # Chromium's DevTools page list, which stays closed until a display is.
+    # Line 1: wifi device or not; line 2: display connected or not; line 3:
+    # on the tailnet or not; then Chromium's DevTools page list, which stays
+    # closed until a display is.
     # shellcheck disable=SC2016  # expanded on the kiosk
     local probe='systemctl --user is-active chromium-kiosk.service >/dev/null || exit 1
 nmcli -t -f TYPE device | grep -qx wifi && echo wifi || echo nowifi
 grep -qx connected /sys/class/drm/card*-*/status 2>/dev/null && echo display || echo nodisplay
+tailscale status --peers=false >/dev/null 2>&1 && echo tailnet || echo notailnet
 curl -fsS http://127.0.0.1:9222/json/list 2>/dev/null || true'
     local result=1 wifi="" display="" shown=""
     while ((SECONDS < deadline)); do
@@ -185,7 +188,8 @@ curl -fsS http://127.0.0.1:9222/json/list 2>/dev/null || true'
         if out=$(ssh "${ssh_opts[@]}" "$username@$ip" "$probe" 2>/dev/null); then
             wifi=$(sed -n 1p <<<"$out")
             display=$(sed -n 2p <<<"$out")
-            shown=$(sed -n '3,$p' <<<"$out" | python3 -c 'import json, sys
+            wyse_tailnet=$(sed -n 3p <<<"$out")
+            shown=$(sed -n '4,$p' <<<"$out" | python3 -c 'import json, sys
 pages = [p for p in json.load(sys.stdin) if p["type"] == "page"]
 print(pages[0]["url"] if pages else "")' 2>/dev/null || true)
         fi
@@ -207,6 +211,10 @@ print(pages[0]["url"] if pages else "")' 2>/dev/null || true)
     if [[ -n "$wifi_ssid" && "$wifi" == nowifi ]]; then
         warn "This box has no wifi device, so $wifi_ssid can't be used: it needs"
         warn "ethernet where it's deployed, or a USB wifi adapter Debian supports."
+    fi
+    if [[ -n "$tailscale_authkey" && "$wyse_tailnet" == notailnet ]]; then
+        warn "Tailscale isn't up on the kiosk: ssh $username@$ip and check"
+        warn "'sudo tailscale status' and 'sudo journalctl -u cloud-final'."
     fi
     return "$result"
 }
@@ -275,8 +283,11 @@ provision_wyse() {
     echo "Until it's on a real network it shows Chromium's error page and is off the"
     echo "tailnet: this machine has stopped routing for it."
     echo "In its BIOS: AC Recovery to Power On, and the eMMC ahead of network boot."
-    if [[ -n "$tailscale_authkey" ]]; then
-        echo "Then: tailscale ssh $username@$hostname"
-    fi
+    case "${tailscale_authkey:+${wyse_tailnet:-unknown}}" in
+    "") ;;
+    tailnet) echo "Then: tailscale ssh $username@$hostname" ;;
+    notailnet) warn "It isn't on the tailnet (see above), so tailscale ssh won't reach it." ;;
+    *) warn "Its Tailscale join is unconfirmed (SSH didn't answer): check 'tailscale status'." ;;
+    esac
     echo "Change the URL later with: sudo kiosk-set-url <url>"
 }

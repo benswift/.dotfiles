@@ -9,5 +9,9 @@ for _ in $(seq 1 30); do
     fi
     sleep 10
 done
+command -v tailscale >/dev/null || {
+    echo "kiosk-tailscale: Tailscale didn't install after 30 tries" >&2
+    exit 1
+}
 tailscale up --auth-key=file:/etc/kiosk-tailscale-authkey --ssh --hostname="$(hostname)" --accept-dns=false
 rm -f /etc/kiosk-tailscale-authkey
