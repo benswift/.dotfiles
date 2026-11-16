@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12,<3.14"
-# dependencies = ["replicate", "httpx", "typer"]
+# dependencies = ["httpx", "typer", "pillow>=11.2"]
 # ///
 """Generate styled images using various models via Replicate API.
 
@@ -27,21 +27,21 @@ Generated images will be saved to:
     <output-dir>/<iso-timestamp>/<slugified-image-prompt>.avif
 """
 
+import base64
 import datetime
+import io
 import os
 import re
 import subprocess
 import sys
 import time
-from contextlib import ExitStack
 from pathlib import Path
 from typing import Annotated, Any, NoReturn
 from urllib.parse import urlparse
 
 import httpx
-import replicate
 import typer
-from replicate.exceptions import ReplicateException
+from PIL import Image
 
 MODELS: dict[str, str] = {
     "banana": "google/nano-banana-pro",
@@ -80,11 +80,53 @@ def slugify(text: str, max_words: int = 6) -> str:
     return slug if slug else "untitled"
 
 
-# Generous read timeout: the Replicate client's sync run holds one long-lived
-# request open until the prediction finishes. Slow models outlast a short
-# timeout, and a busy model can sit queued for many minutes before it even
-# starts --- waiting is cheaper than timing out and resubmitting.
-HTTP_TIMEOUT = httpx.Timeout(600.0, connect=10.0)
+API_BASE = "https://api.replicate.com/v1"
+# Each request is short (the create call waits at most PREFER_WAIT seconds, then
+# the prediction is polled), so this only has to outlast that wait.
+HTTP_TIMEOUT = httpx.Timeout(120.0, connect=10.0)
+PREFER_WAIT = 60
+POLL_INTERVAL = 3
+# A busy model can sit queued for many minutes before it starts; waiting is
+# cheaper than resubmitting, but a prediction still running after this long has
+# stalled, and is cancelled so it stops billing.
+PREDICTION_DEADLINE = 15 * 60
+
+
+class ReplicateError(Exception):
+    """A prediction that failed, was cancelled or stalled."""
+
+
+def run_prediction(
+    http: httpx.Client, model_ref: str, model_input: dict[str, Any]
+) -> Any:
+    """Create a prediction on an official model and poll it to completion.
+
+    Raw HTTP rather than the replicate package: its Prediction model requires a
+    version string, and official-model predictions now come back with none.
+    """
+    response = http.post(
+        f"/models/{model_ref}/predictions",
+        json={"input": model_input},
+        headers={"Prefer": f"wait={PREFER_WAIT}"},
+    )
+    response.raise_for_status()
+    prediction = response.json()
+    deadline = time.monotonic() + PREDICTION_DEADLINE
+    while prediction["status"] not in ("succeeded", "failed", "canceled"):
+        if time.monotonic() > deadline:
+            http.post(prediction["urls"]["cancel"])
+            raise ReplicateError(
+                f"prediction {prediction['id']} timed out after {PREDICTION_DEADLINE}s"
+            )
+        time.sleep(POLL_INTERVAL)
+        response = http.get(prediction["urls"]["get"])
+        response.raise_for_status()
+        prediction = response.json()
+    if prediction["status"] != "succeeded":
+        raise ReplicateError(
+            f"prediction {prediction['id']} {prediction['status']}: {prediction.get('error')}"
+        )
+    return prediction["output"]
 
 
 def download_image(url: str, target_dir: Path, base_name: str) -> Path:
@@ -114,6 +156,26 @@ def warn(message: str) -> None:
     print(f"Warning: {message}", file=sys.stderr)
 
 
+# Longest side of a reference image as sent. Style transfer needs the look, not
+# the pixels, and this keeps three references under about 1 MB of request.
+REF_MAX_SIDE = 1536
+
+
+def reference_uri(path: Path) -> str:
+    """A reference image as a data URI, shrunk and re-encoded as JPEG.
+
+    Embedded rather than uploaded: predictions reading references through
+    Replicate's files API hung in "processing" while embedded ones ran
+    normally.
+    """
+    with Image.open(path) as im:
+        im = im.convert("RGB")
+        im.thumbnail((REF_MAX_SIDE, REF_MAX_SIDE))
+        buf = io.BytesIO()
+        im.save(buf, "JPEG", quality=90)
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
 def build_model_input(
     model: str,
     prompt: str,
@@ -122,7 +184,6 @@ def build_model_input(
     output_format: str,
     safety_filter_level: str,
     image_paths: list[Path],
-    stack: ExitStack,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {
         "prompt": prompt,
@@ -138,17 +199,13 @@ def build_model_input(
         # fallback model's price, and skipped for 4K or 4:5/5:4 aspect ratios.
         params["allow_fallback_model"] = True
         if image_paths:
-            params["image_input"] = [
-                stack.enter_context(open(p, "rb")) for p in image_paths
-            ]
+            params["image_input"] = [reference_uri(p) for p in image_paths]
 
     elif model in ("banana-2", "banana-2.1"):
         # Same family as banana, but the Flash tier: no safety knob, no fallback.
         params["resolution"] = resolution
         if image_paths:
-            params["image_input"] = [
-                stack.enter_context(open(p, "rb")) for p in image_paths
-            ]
+            params["image_input"] = [reference_uri(p) for p in image_paths]
 
     elif model == "seedream":
         # Seedream 5 Pro renders at 1K or 2K, takes up to 10 refs, and exposes no
@@ -167,9 +224,7 @@ def build_model_input(
             if len(image_paths) > 10:
                 warn("seedream supports up to 10 input images; using first 10")
                 image_paths = image_paths[:10]
-            params["image_input"] = [
-                stack.enter_context(open(p, "rb")) for p in image_paths
-            ]
+            params["image_input"] = [reference_uri(p) for p in image_paths]
 
     elif model == "recraft":
         params.pop("output_format", None)
@@ -189,9 +244,7 @@ def build_model_input(
             "low" if safety_filter_level == "block_only_high" else "auto"
         )
         if image_paths:
-            params["input_images"] = [
-                stack.enter_context(open(p, "rb")) for p in image_paths
-            ]
+            params["input_images"] = [reference_uri(p) for p in image_paths]
 
     return params
 
@@ -240,7 +293,7 @@ def generate_image(
     prompt: str,
     target_dir: Path,
     base_name: str,
-    client: replicate.Client,
+    http: httpx.Client,
     aspect_ratio: str,
     resolution: str,
     output_format: str,
@@ -248,25 +301,20 @@ def generate_image(
     input_image_paths: list[Path] | None = None,
     retries: int = 2,
 ) -> Path:
-    image_paths = input_image_paths or []
+    model_input = build_model_input(
+        model,
+        prompt,
+        aspect_ratio,
+        resolution,
+        output_format,
+        safety_filter_level,
+        input_image_paths or [],
+    )
     for attempt in range(retries + 1):
-        # Rebuild the input each attempt: the file handles are consumed by the
-        # upload, so a retry needs fresh ones.
         try:
-            with ExitStack() as stack:
-                model_input = build_model_input(
-                    model,
-                    prompt,
-                    aspect_ratio,
-                    resolution,
-                    output_format,
-                    safety_filter_level,
-                    image_paths,
-                    stack,
-                )
-                output = client.run(MODELS[model], input=model_input)
+            output = run_prediction(http, MODELS[model], model_input)
             break
-        except (ReplicateException, httpx.HTTPError) as e:
+        except (ReplicateError, httpx.HTTPError) as e:
             if attempt == retries or not is_transient(e):
                 raise
             delay = RETRY_BASE_DELAY * 2**attempt
@@ -285,7 +333,9 @@ def _main_impl(
     prompt: Annotated[str, typer.Argument(help="Image prompt")],
     model: Annotated[
         str,
-        typer.Option(help="Model to use: banana-2.1, banana, banana-2, seedream, gpt, recraft"),
+        typer.Option(
+            help="Model to use: banana-2.1, banana, banana-2, seedream, gpt, recraft"
+        ),
     ] = "banana-2.1",
     output_dir: Annotated[Path, typer.Option(help="Output directory")] = Path(
         "styled_image_gen_output"
@@ -367,7 +417,11 @@ def _main_impl(
         target_dir = output_dir / timestamp
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    client = replicate.Client(api_token=api_token, timeout=HTTP_TIMEOUT)
+    http = httpx.Client(
+        base_url=API_BASE,
+        headers={"Authorization": f"Bearer {api_token}"},
+        timeout=HTTP_TIMEOUT,
+    )
 
     if model == "recraft":
         output_format = "svg"
@@ -394,7 +448,7 @@ def _main_impl(
             prompt,
             target_dir,
             filename,
-            client,
+            http,
             aspect_ratio,
             resolution,
             "jpg",
@@ -402,7 +456,7 @@ def _main_impl(
             all_input_images if all_input_images else None,
             retries,
         )
-    except (ReplicateException, httpx.HTTPError) as e:
+    except (ReplicateError, httpx.HTTPError) as e:
         if not fallback_model or not is_transient(e):
             raise
         warn(f"{e}\n{model} is unavailable; falling back to {fallback_model}")
@@ -413,7 +467,7 @@ def _main_impl(
             prompt,
             target_dir,
             filename,
-            client,
+            http,
             aspect_ratio,
             resolution,
             "jpg",
@@ -457,5 +511,5 @@ if __name__ == "__main__":
         error_exit(f"File operation failed: {e}")
     except httpx.HTTPError as e:
         error_exit(f"HTTP request failed: {e}")
-    except ReplicateException as e:
+    except ReplicateError as e:
         error_exit(f"Replicate API error: {e}")
