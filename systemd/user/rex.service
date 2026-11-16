@@ -10,7 +10,8 @@ Documentation=https://www.superlogical.com/rex/docs/linux/remote-access.md
 # Binary from bin/rex-install. Enable with
 # `systemctl --user daemon-reload && systemctl --user enable --now rex`.
 # Five failed starts within ten minutes stops the retries and pages via
-# unit-oncall.
+# unit-oncall. OOMPolicy=continue: when the kernel OOM-kills a process in a
+# pane, the default (stop) would take down the server and every session too.
 StartLimitIntervalSec=10min
 StartLimitBurst=5
 OnFailure=unit-oncall@%n.service
@@ -20,6 +21,7 @@ ExecStartPre=/home/ben/.dotfiles/bin/wait-for-network
 ExecStart=/home/ben/.local/bin/rex server run --tailscale
 Restart=on-failure
 RestartSec=10
+OOMPolicy=continue
 
 [Install]
 WantedBy=default.target
