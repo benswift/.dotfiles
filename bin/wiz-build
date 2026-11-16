@@ -19,7 +19,7 @@
 #   wiz-build              build and install the engine's main (no-op if current)
 #   wiz-build --force      rebuild even when main is installed
 #   wiz-build --check      report status only; non-zero if not on main as last fetched
-#   wiz-build --no-test    skip the engine's tests, and tests/test_todo_wiz.py after
+#   wiz-build --no-test    skip the engine's tests, and tests/test_*_wiz.py after
 set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
@@ -95,16 +95,19 @@ build() {
     mv -f "$WIZ.new" "$WIZ"
 }
 
-# bin/todo drives the wiz CLI, so a new engine has to pass its suite too.
+# bin/todo, unit-oncall and launchd-run drive the wiz CLI, so a new engine has
+# to pass their suites too.
 run_tests() {
     [[ "$RUN_TESTS" == true ]] || return 0
-    local suite="$DOTFILES_DIR/tests/test_todo_wiz.py"
-    [[ -x "$suite" ]] || return 0
-    info "Running the todo integration tests"
-    if ! WIZ="$WIZ" "$suite"; then
-        error "bin/todo fails against this wiz; fix bin/todo or the engine"
-        return 1
-    fi
+    local suite
+    for suite in "$DOTFILES_DIR"/tests/test_{todo,oncall}_wiz.py; do
+        [[ -x "$suite" ]] || continue
+        info "Running $(basename "$suite")"
+        if ! WIZ="$WIZ" "$suite"; then
+            error "$(basename "$suite") fails against this wiz; fix the script it tests or the engine"
+            return 1
+        fi
+    done
 }
 
 check_shadowing() {
