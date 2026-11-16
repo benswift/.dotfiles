@@ -214,6 +214,35 @@ def test_rm_deletes_a_whole_bot_row_and_shares_lx_at_once(vaults: Vaults) -> Non
     vaults.run("wiz", "validate", "anu", "lx")
 
 
+def test_rm_deletes_nothing_while_another_record_links_to_a_task(
+    vaults: Vaults,
+) -> None:
+    anu = vaults.root / "anu"
+    (anu / "tasks" / "2026-01-09-follow-up.md").write_text(
+        "---\ntitle: Follow up\nstatus: done\n---\n\n"
+        "After [[tasks/2026-01-07-mark-assignments]].\n"
+    )
+    vaults.git("anu", "add", ".")
+    vaults.git("anu", "commit", "-q", "-m", "link")
+    vaults.todo()
+    result = subprocess.run(
+        [str(SCRIPT), "rm", "1", "2"],
+        env=vaults.env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert (
+        "anu:tasks/2026-01-09-follow-up.md links to"
+        " [[tasks/2026-01-07-mark-assignments]]" in result.stderr
+    )
+    assert "Mark assignments" in vaults.status()
+    assert "Book dentist" in vaults.status()
+    assert vaults.git("anu", "status", "--porcelain") == ""
+    assert vaults.git("anu", "log", "-1", "--format=%s") == "link"
+
+
 def test_e_opens_a_record_named_by_vault_and_path(vaults: Vaults) -> None:
     log = vaults.root / "editor-args"
     editor = vaults.root / "editor"

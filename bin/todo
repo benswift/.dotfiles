@@ -236,17 +236,21 @@ def set_status(verb: str, numbers: list[str]) -> int:
 
 def commit_each(touched: dict[str, list[str]], label: str) -> None:
     for vault, paths in touched.items():
-        what = Path(paths[0]).stem if len(paths) == 1 else f"{len(paths)} tasks"
-        commit(vault, paths, f"todo: {label} {what}")
+        commit(vault, paths, f"todo: {label} {what(paths)}")
+
+
+def what(paths: list[str]) -> str:
+    """How a commit message names the tasks at paths."""
+    return Path(paths[0]).stem if len(paths) == 1 else f"{len(paths)} tasks"
 
 
 def remove(numbers: list[str]) -> int:
-    # Resolve every row before deleting anything, as set_status does.
+    """Delete the rows' tasks with one wiz remove, which deletes none of them
+    while anything links to one."""
     refs = [ref for group in remembered(numbers) for ref in group]
-    files = [Path(wiz("path", ref).strip()) for ref in refs]
+    wiz("remove", "-m", f"todo: delete {what(refs)}", *refs)
     touched: dict[str, list[str]] = {}
-    for ref, file in zip(refs, files):
-        file.unlink()
+    for ref in refs:
         print(f"deleted: {ref}")
         vault, path = ref.split(":", 1)
         touched.setdefault(vault, []).append(path)
