@@ -80,10 +80,12 @@ tests call must be installed there too; the helix and todo-wiz suites stay local
 - `bin/` tools are `uv run --script` with PEP 723 metadata and a committed
   `bin/<name>.lock`. After editing a dependency block, run
   `uv lock --script bin/<name>` and commit the lock.
-- **Adding a `bin/` tool means adding it to `extend-include` in `ruff.toml`**
-  (a glob can't work --- it would drag the bash and swift scripts through the
-  Python parser). `tests/test_uv_scripts.py` fails until it's listed and
-  locked.
+- **Adding a `bin/` tool means adding it to `extend-include` in `ruff.toml`** (a
+  glob can't work --- it would drag the bash and swift scripts through the
+  Python parser). `tests/test_uv_scripts.py` fails until it's listed and locked.
+- Tests see only the environment variables `tests/conftest.py` keeps, so no
+  secret reaches a traceback. A test that needs another adds its name to `KEPT`
+  there, never a secret's.
 
 ## Version control
 

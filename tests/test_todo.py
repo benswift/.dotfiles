@@ -13,19 +13,6 @@ import pytest
 
 SCRIPT = Path(__file__).parent.parent / "bin" / "todo"
 
-# What todo, uv, git and wiz need from the caller's environment, and nothing
-# else: a failing test's traceback prints a subprocess's env, which must not
-# carry the secrets the caller's mise env holds.
-PASSED = ("PATH", "HOME", "USER", "LANG", "LANGUAGE", "TMPDIR", "TERM")
-
-
-def passed_env() -> dict[str, str]:
-    return {
-        k: v
-        for k, v in os.environ.items()
-        if k in PASSED or k.startswith(("LC_", "XDG_", "UV_"))
-    }
-
 
 @pytest.fixture
 def calls(tmp_path: Path) -> Path:
@@ -50,7 +37,7 @@ def todo(
     calls: Path, *args: str, env: dict[str, str] | None = None
 ) -> subprocess.CompletedProcess[str]:
     env = {
-        **passed_env(),
+        **os.environ,
         "PATH": f"{calls.parent / 'bin'}{os.pathsep}{os.environ['PATH']}",
         "XDG_STATE_HOME": str(calls.parent / "state"),
         "VISUAL": "echo",
@@ -145,3 +132,7 @@ def test_triage_without_a_briefing_fails_and_files_nothing(
     assert result.returncode != 0
     assert "no triage briefing" in result.stderr
     assert not calls.exists()
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-q", "-n", "auto"]))
