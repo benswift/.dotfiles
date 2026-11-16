@@ -56,7 +56,9 @@ class Vaults:
 
     def status(self) -> dict[str, str]:
         """Every task's status, by title (the duplicated bot task as one)."""
-        out = self.run("wiz", "query", "anu", "ben", "hdr", "lx", "-json", 'type == "task"')
+        out = self.run(
+            "wiz", "query", "anu", "ben", "hdr", "lx", "-json", 'type == "task"'
+        )
         return {r["title"]: r["fields"].get("status", "") for r in json.loads(out)}
 
 

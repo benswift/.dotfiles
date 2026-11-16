@@ -57,7 +57,15 @@ STATE = (
 TRIAGE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "todo-triage"
 
 # ANSI colour codes, so the listing takes the terminal's own palette.
-ANSI = {"red": 31, "blue": 94, "green": 32, "yellow": 33, "magenta": 35, "cyan": 36, "dim": 90}
+ANSI = {
+    "red": 31,
+    "blue": 94,
+    "green": 32,
+    "yellow": 33,
+    "magenta": 35,
+    "cyan": 36,
+    "dim": 90,
+}
 SECTIONS = {
     "anu": "blue",
     "ben": "green",
