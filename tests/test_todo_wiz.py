@@ -20,7 +20,7 @@ import json
 import os
 import shutil
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -33,15 +33,26 @@ WIZ = os.environ.get("WIZ") or shutil.which("wiz")
 
 pytestmark = pytest.mark.skipif(WIZ is None, reason="no wiz on PATH")
 
+# What todo, uv, git and wiz need from the caller's environment, and nothing
+# else: a failing test's traceback prints a subprocess's env, which must not
+# carry the secrets the caller's mise env holds.
+PASSED = ("PATH", "HOME", "USER", "LANG", "LANGUAGE", "TMPDIR", "TERM")
+
+
+def passed_env() -> dict[str, str]:
+    return {
+        k: v
+        for k, v in os.environ.items()
+        if k in PASSED or k.startswith(("LC_", "XDG_", "UV_"))
+    }
+
 
 @dataclass(frozen=True)
 class Vaults:
-    """The fixture vaults and the environment that reaches them. The
-    environment stays out of the repr, because pytest prints a failing test's
-    arguments and this one carries every secret in the caller's."""
+    """The fixture vaults and the environment that reaches them."""
 
     root: Path
-    env: dict[str, str] = field(repr=False)
+    env: dict[str, str]
 
     def todo(self, *args: str) -> str:
         return self.run(str(SCRIPT), *args)
@@ -74,7 +85,7 @@ def vaults(tmp_path: Path) -> Vaults:
     v = Vaults(
         tmp_path,
         {
-            **os.environ,
+            **passed_env(),
             "PATH": f"{Path(str(WIZ)).parent}{os.pathsep}{os.environ['PATH']}",
             "GIT_CONFIG_GLOBAL": str(gitconfig),
             "GIT_CONFIG_NOSYSTEM": "1",
