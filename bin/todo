@@ -9,20 +9,23 @@
   todo do <n>...        mark done
   todo undo <n>...      reopen
   todo block <n>...     mark blocked; `unblock` reopens
-  todo e <n>...         open in $VISUAL, else $EDITOR, else hx (or `todo edit`)
+  todo rm <n>...        delete
+  todo e <n|ref>...     open in $VISUAL, else $EDITOR, else hx (or `todo edit`)
   todo triage [file]    open the newest triage briefing (or file) the same way
   todo <words...>       a new anu task titled from the words, no quoting
 
 The numbers are the rows of the last listing, remembered in
 ~/.local/state/todo/last.json, so `todo do 3` closes the third row shown and
-`todo e 3` opens it (every file of a collapsed bot row). `todo e`/`edit`
-followed by anything but numbers files a task, as any other words do. A
-task is "bot" when tagged bot (unit-oncall files job failures so); "blocked"
-is status blocked. The anu, ben and hdr sections hold each vault's other open
+`todo e 3` opens it (every file of a collapsed bot row); `todo e` also takes
+a record as vault:path. `todo e`/`edit` followed by plain words files a task,
+as any other words do, but words mixed with numbers or vault:path refs are
+refused, so a mistyped edit files nothing. A task is "bot" when tagged bot
+(unit-oncall files job failures so); "blocked" is status blocked. The anu, ben and hdr sections hold each vault's other open
 tasks; blocked and bot hold all three vaults' (all are Ben's own). Bot tasks with the
 same title (a job that keeps failing past unit-oncall's 24h re-arm) collapse to
-one row, and `do` on it closes them all. The lx section lists that vault's open
-tasks whose agent is Ben; closing one shares it with the team at once.
+one row, and `do` or `rm` on it acts on them all. The lx section lists that
+vault's open tasks whose agent is Ben; closing or deleting one shares it with
+the team at once.
 
 A triage briefing is the vault skill's proposal for every open task, written
 to ~/.cache/todo-triage/<YYYY-MM-DD-HHMM>.md for Ben to edit before Claude acts
@@ -227,9 +230,27 @@ def set_status(verb: str, numbers: list[str]) -> int:
             print(f"{status}: {ref}")
             vault, path = ref.split(":", 1)
             touched.setdefault(vault, []).append(path)
+    commit_each(touched, label)
+    return 0
+
+
+def commit_each(touched: dict[str, list[str]], label: str) -> None:
     for vault, paths in touched.items():
         what = Path(paths[0]).stem if len(paths) == 1 else f"{len(paths)} tasks"
         commit(vault, paths, f"todo: {label} {what}")
+
+
+def remove(numbers: list[str]) -> int:
+    # Resolve every row before deleting anything, as set_status does.
+    refs = [ref for group in remembered(numbers) for ref in group]
+    files = [Path(wiz("path", ref).strip()) for ref in refs]
+    touched: dict[str, list[str]] = {}
+    for ref, file in zip(refs, files):
+        file.unlink()
+        print(f"deleted: {ref}")
+        vault, path = ref.split(":", 1)
+        touched.setdefault(vault, []).append(path)
+    commit_each(touched, "delete")
     return 0
 
 
@@ -238,10 +259,21 @@ def open_in_editor(paths: list[str]) -> NoReturn:
     os.execvp(editor[0], [*editor, *paths])
 
 
-def edit(numbers: list[str]) -> NoReturn:
-    open_in_editor(
-        [wiz("path", ref).strip() for group in remembered(numbers) for ref in group]
-    )
+def is_ref(word: str) -> bool:
+    """Whether a word names a record, as vault:path or a path to a .md file."""
+    return ":" in word or word.endswith(".md")
+
+
+def edit(targets: list[str]) -> NoReturn:
+    """Open each target, a row number of the last listing or a record."""
+    refs = [
+        ref for t in targets for ref in (remembered([t])[0] if t.isdigit() else [t])
+    ]
+    paths = [wiz("path", ref).strip() for ref in refs]
+    for ref, path in zip(refs, paths):
+        if not Path(path).is_file():
+            sys.exit(f"todo: no record at {ref}")
+    open_in_editor(paths)
 
 
 def triage(file: str | None) -> NoReturn:
@@ -271,8 +303,27 @@ def main(argv: list[str] | None = None) -> int:
         case [verb] if verb in VERBS:
             print(__doc__, file=sys.stderr)
             return 2
-        case ["e" | "edit", *numbers] if numbers and all(n.isdigit() for n in numbers):
-            edit(numbers)
+        case ["rm", *numbers] if numbers and all(n.isdigit() for n in numbers):
+            return remove(numbers)
+        case ["rm", *_]:
+            print(
+                f"todo: rm takes row numbers of the last listing\n{__doc__}",
+                file=sys.stderr,
+            )
+            return 2
+        case ["e" | "edit", *targets] if targets and all(
+            t.isdigit() or is_ref(t) for t in targets
+        ):
+            edit(targets)
+        case ["e" | "edit" as verb, *words] if any(
+            w.isdigit() or is_ref(w) for w in words
+        ):
+            print(
+                f"todo: {verb} takes row numbers of the last listing or records as"
+                " vault:path; to file a task, start its title with another word",
+                file=sys.stderr,
+            )
+            return 2
         case ["triage"]:
             triage(None)
         case ["triage", file] if file.endswith(".md"):

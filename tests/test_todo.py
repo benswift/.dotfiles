@@ -79,6 +79,37 @@ def test_edit_with_words_files_a_task(calls: Path, verb: str) -> None:
     assert calls.read_text().startswith(f"add anu task -title {verb} the slides")
 
 
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["e", "anu:tasks/2026-11-16-notes.md", "please"],
+        ["e", "3", "slides"],
+        ["edit", "tasks/notes.md", "now"],
+    ],
+)
+def test_edit_with_words_and_targets_is_refused_not_filed(
+    calls: Path, args: list[str]
+) -> None:
+    result = todo(calls, *args)
+    assert result.returncode == 2
+    assert "takes row numbers" in result.stderr
+    assert not calls.exists()
+
+
+@pytest.mark.parametrize("args", [["rm"], ["rm", "1"], ["rm", "the", "drafts"]])
+def test_rm_without_row_numbers_is_refused_not_filed(
+    calls: Path, args: list[str]
+) -> None:
+    result = todo(calls, *args)
+    if args == ["rm", "1"]:
+        # Numbers with no listing to resolve them against.
+        assert "run todo first" in result.stderr
+    else:
+        assert result.returncode == 2
+        assert "rm takes row numbers" in result.stderr
+    assert not calls.exists()
+
+
 def test_triage_opens_the_newest_briefing_by_its_timestamp(
     calls: Path, tmp_path: Path
 ) -> None:

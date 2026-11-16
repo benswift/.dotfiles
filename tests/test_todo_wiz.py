@@ -196,6 +196,51 @@ def test_e_opens_every_file_of_the_rows_in_the_editor(vaults: Vaults) -> None:
     assert "Book dentist" in opened[-1].read_text()
 
 
+def test_rm_deletes_a_whole_bot_row_and_shares_lx_at_once(vaults: Vaults) -> None:
+    vaults.todo()
+    out = vaults.todo("rm", "7", "8")
+    assert out.count("deleted: ") == 3
+    status = vaults.status()
+    assert "backup failed" not in status
+    assert "Send quote" not in status
+    assert not list((vaults.root / "anu" / "tasks").glob("*-backup-failed.md"))
+    assert vaults.git("anu", "status", "--porcelain") == ""
+    assert vaults.git("anu", "log", "-1", "--format=%s") == "todo: delete 2 tasks"
+    assert vaults.git("anu", "rev-list", "--count", "origin/main..HEAD") == "1"
+    assert vaults.git("lx", "status", "--porcelain") == ""
+    assert vaults.git("lx", "rev-parse", "HEAD") == vaults.git(
+        "lx", "rev-parse", "origin/main"
+    )
+    vaults.run("wiz", "validate", "anu", "lx")
+
+
+def test_e_opens_a_record_named_by_vault_and_path(vaults: Vaults) -> None:
+    log = vaults.root / "editor-args"
+    editor = vaults.root / "editor"
+    editor.write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" > {log}\n')
+    editor.chmod(0o755)
+    subprocess.run(
+        [str(SCRIPT), "e", "ben:tasks/2026-01-02-book-dentist.md"],
+        env={**vaults.env, "VISUAL": str(editor)},
+        check=True,
+    )
+    dentist = vaults.root / "ben" / "tasks" / "2026-01-02-book-dentist.md"
+    assert log.read_text() == f"{dentist}\n"
+
+
+def test_e_refuses_a_record_that_does_not_exist(vaults: Vaults) -> None:
+    result = subprocess.run(
+        [str(SCRIPT), "e", "anu:tasks/nope.md"],
+        env={**vaults.env, "VISUAL": "true"},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "no record at anu:tasks/nope.md" in result.stderr
+    assert not (vaults.root / "anu" / "tasks" / "nope.md").exists()
+
+
 def test_words_file_a_valid_anu_task(vaults: Vaults) -> None:
     vaults.todo("pay", "henry")
     assert vaults.status()["pay henry"] == "open"
