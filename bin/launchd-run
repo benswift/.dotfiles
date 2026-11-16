@@ -98,13 +98,19 @@ if ((status == 0)); then
 		say "recovered; marker cleared"
 		# Delete the tasks a failure filed, found by their unit field, so a
 		# task Ben wrote himself is never touched; wiz due's next sync commits
-		# it. Best effort, like filing.
+		# it. Best effort, like filing. A read loop, not mapfile: launchd
+		# starts this under macOS's bash 3.2.
+		tasks=()
 		while IFS= read -r task; do
-			[[ -n "$task" ]] || continue
-			if rm -- "$(wiz path "anu:$task")" 2>>"$LOG"; then
-				say "deleted $task"
-			fi
+			[[ -n "$task" ]] && tasks+=("anu:$task")
 		done < <(wiz query anu -json "type == \"task\" && unit == \"$job\" && status == \"open\"" 2>>"$LOG" | jq -r '.[].path' 2>>"$LOG")
+		if ((${#tasks[@]})); then
+			if wiz remove "${tasks[@]}" >/dev/null 2>>"$LOG"; then
+				say "deleted ${tasks[*]}"
+			else
+				say "FAILED to delete ${tasks[*]}"
+			fi
+		fi
 	fi
 	exit 0
 fi

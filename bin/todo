@@ -200,12 +200,11 @@ def commit(vault: str, paths: list[str], message: str) -> None:
     """Commit the vault's new or changed task files. Ben's own vaults defer their
     commits and keep them local, for their scheduled sync to share; any other
     vault's change is shared at once."""
-    root = Path(wiz("path", vault).strip())
-    files = [str(root / p) for p in paths]
+    refs = [f"{vault}:{p}" for p in paths]
     if vault not in MINE:
-        wiz("sync", vault, "-m", message, *files, capture=False, ok=(0, 1))
+        wiz("sync", vault, "-m", message, *refs, capture=False, ok=(0, 1))
         return
-    out = wiz("sync", vault, "-local", "-m", message, *files, ok=(0, 1))
+    out = wiz("sync", vault, "-local", "-m", message, *refs, ok=(0, 1))
     if out.rstrip().rsplit("\n", 1)[-1] != "Saved locally; not shared":
         sys.exit(f"todo: couldn't commit to {vault}:\n{out.rstrip()}")
 

@@ -42,6 +42,7 @@ jobs:
           uv run --no-project --with pytest --with pytest-xdist --with lxml
           --with typer --with pyyaml python -m pytest tests -n 2 -q
           --ignore=tests/test_helix.py --ignore=tests/test_todo_wiz.py
+          --ignore=tests/test_oncall_wiz.py
   dependencies:
     runs-on: ubuntu-26.04
     timeout-minutes: 15

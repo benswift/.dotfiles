@@ -116,14 +116,14 @@ clear)
 		| jq -r '.[].path' 2>>"$LOG" || true)
 	((${#open[@]})) || exit 0
 
-	for task in "${open[@]}"; do
-		if rm -- "$(wiz path "anu:$task")" 2>>"$LOG"; then
-			say "$unit: recovered; deleted $task"
-		else
-			say "$unit: recovered, but FAILED to delete $task"
-		fi
-	done
-	if wiz sync anu -m "oncall: $unit recovered" "${open[@]/#/$(wiz path anu)/}" >/dev/null 2>>"$LOG"; then
+	# wiz remove deletes none of them while anything links to one.
+	if wiz remove "${open[@]/#/anu:}" >/dev/null 2>>"$LOG"; then
+		say "$unit: recovered; deleted ${open[*]}"
+	else
+		say "$unit: recovered, but FAILED to delete ${open[*]}"
+		exit 0
+	fi
+	if wiz sync anu -m "oncall: $unit recovered" "${open[@]/#/anu:}" >/dev/null 2>>"$LOG"; then
 		say "$unit: shared"
 	else
 		say "$unit: sync failed --- the deletions are local until the next sync"
@@ -276,7 +276,7 @@ fi
 
 # Best effort: the task is already on disk, and wiz due's next sync of the
 # vault will carry it if this one cannot (offline, remote unreachable).
-if wiz sync anu -m "oncall: $unit failed" "$(wiz path anu)/$task" >/dev/null 2>>"$LOG"; then
+if wiz sync anu -m "oncall: $unit failed" "anu:$task" >/dev/null 2>>"$LOG"; then
 	say "$unit: shared"
 else
 	say "$unit: sync failed --- the task is local until the next sync"

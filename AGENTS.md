@@ -72,7 +72,7 @@ overlay hasn't pushed breaks `dotfiles update` on every other machine.
 
 `.github/workflows/security.yml` runs ruff, shellcheck, the portable test suite,
 a lock audit (`scripts/audit-locks.py`) and gitleaks on every push. A tool the
-tests call must be installed there too; the helix and todo-wiz suites stay local
+tests call must be installed there too; the helix and `*_wiz` suites stay local
 (see the workflow).
 
 ## Python
