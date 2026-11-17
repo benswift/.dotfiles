@@ -113,7 +113,11 @@ pattern and rule syntax.
   Phoenix LiveView, use generators, PhoenixTest syntax
 - **Frontend web**: semantic HTML with accessibility, modern browser features,
   functional patterns in JS. Use the `agent-browser` CLI (not Playwright
-  directly) for browser automation and UI testing
+  directly) for browser automation and UI testing. Browser support: the Baseline
+  target is the previous calendar year (`Baseline YYYY` with YYYY the current
+  year minus one) unless the project's `AGENTS.md` sets one. Use newer features
+  only as progressive enhancement, where the page still works without them; no
+  polyfills
 - **Notes and tasks**: my knowledge base is the wiz vaults `anu` (academic work,
   the default) and `ben` (personal only), managed with the `wiz` CLI. A "task"
   or "todo" always means a wiz task. Use the `ben:vault` skill whenever a
