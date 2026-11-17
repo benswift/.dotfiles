@@ -110,6 +110,14 @@ def test_rm_without_row_numbers_is_refused_not_filed(
     assert not calls.exists()
 
 
+@pytest.mark.parametrize("verb", ["prio", "unprio"])
+def test_prio_without_row_numbers_prints_usage(calls: Path, verb: str) -> None:
+    result = todo(calls, verb)
+    assert result.returncode == 2
+    assert "todo prio <n>" in result.stderr
+    assert not calls.exists()
+
+
 def test_triage_opens_the_newest_briefing_by_its_timestamp(
     calls: Path, tmp_path: Path
 ) -> None:

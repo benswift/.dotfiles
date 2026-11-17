@@ -171,6 +171,37 @@ def test_block_and_unblock_move_a_task_between_sections(vaults: Vaults) -> None:
     assert vaults.status()["Book dentist"] == "open"
 
 
+def test_prio_lists_tasks_last_and_unprio_restores_them(vaults: Vaults) -> None:
+    vaults.todo()
+    vaults.todo("prio", "2", "7", "8")
+    assert vaults.todo().endswith(
+        "\npriority\n      6  backup failed  ×2\n      7  Book dentist\n"
+        "      8  Send quote\n\n"
+    )
+    bot = sorted((vaults.root / "anu" / "tasks").glob("*-backup-failed.md"))
+    assert all("tags: [bot, oncall, priority]" in p.read_text() for p in bot)
+    assert vaults.git("anu", "log", "-1", "--format=%s") == "todo: prioritise 2 tasks"
+    assert vaults.git("ben", "status", "--porcelain") == ""
+    assert vaults.git("lx", "rev-parse", "HEAD") == vaults.git(
+        "lx", "rev-parse", "origin/main"
+    )
+    vaults.todo("unprio", "6", "7", "8")
+    assert vaults.todo() == LISTING
+    assert all("tags: [bot, oncall]" in p.read_text() for p in bot)
+    dentist = vaults.root / "ben" / "tasks" / "2026-01-02-book-dentist.md"
+    assert "tags" not in dentist.read_text()
+    vaults.run("wiz", "validate", "anu", "ben", "lx")
+
+
+def test_prio_on_a_tagged_task_changes_and_commits_nothing(vaults: Vaults) -> None:
+    vaults.todo()
+    vaults.todo("prio", "1")
+    head = vaults.git("anu", "rev-parse", "HEAD")
+    vaults.todo()
+    assert vaults.todo("prio", "8") == ""
+    assert vaults.git("anu", "rev-parse", "HEAD") == head
+
+
 def test_e_opens_every_file_of_the_rows_in_the_editor(vaults: Vaults) -> None:
     log = vaults.root / "editor-args"
     editor = vaults.root / "editor"

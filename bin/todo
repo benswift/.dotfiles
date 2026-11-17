@@ -5,10 +5,11 @@
 # ///
 """todo: Ben's open tasks, the quick edits to them, and a way into an editor.
 
-  todo                  list open tasks: anu, ben, hdr, blocked, bot, then lx
+  todo                  list open tasks by section, priority last
   todo do <n>...        mark done
   todo undo <n>...      reopen
   todo block <n>...     mark blocked; `unblock` reopens
+  todo prio <n>...      tag priority; `unprio` untags
   todo rm <n>...        delete
   todo e <n|ref>...     open in $VISUAL, else $EDITOR, else hx (or `todo edit`)
   todo triage [file]    open the newest triage briefing (or file) the same way
@@ -20,12 +21,15 @@ The numbers are the rows of the last listing, remembered in
 a record as vault:path. `todo e`/`edit` followed by plain words files a task,
 as any other words do, but words mixed with numbers or vault:path refs are
 refused, so a mistyped edit files nothing. A task is "bot" when tagged bot
-(unit-oncall files job failures so); "blocked" is status blocked. The anu, ben and hdr sections hold each vault's other open
-tasks; blocked and bot hold all three vaults' (all are Ben's own). Bot tasks with the
-same title (a job that keeps failing past unit-oncall's 24h re-arm) collapse to
-one row, and `do` or `rm` on it acts on them all. The lx section lists that
-vault's open tasks whose agent is Ben; closing or deleting one shares it with
-the team at once.
+(unit-oncall files job failures so); "blocked" is status blocked. The anu, ben
+and hdr sections hold each vault's other open tasks; blocked and bot hold all
+three vaults' (all are Ben's own). Bot tasks with the same title (a job that
+keeps failing past unit-oncall's 24h re-arm) collapse to one row, and `do`,
+`rm` or `prio` on it acts on them all. The lx section lists that vault's open
+tasks whose agent is Ben; closing, deleting or tagging one shares it with the
+team at once. A task tagged priority, from any vault, is listed under priority
+whatever else it is; that section comes last so it stays on screen when the
+top of a long listing has scrolled away.
 
 A triage briefing is the vault skill's proposal for every open task, written
 to ~/.cache/todo-triage/<YYYY-MM-DD-HHMM>.md for Ben to edit before Claude acts
@@ -68,6 +72,7 @@ ANSI = {
     "magenta": 35,
     "cyan": 36,
     "dim": 90,
+    "bright-red": 91,
 }
 SECTIONS = {
     "anu": "blue",
@@ -76,6 +81,7 @@ SECTIONS = {
     "blocked": "yellow",
     "bot": "magenta",
     "lx": "cyan",
+    "priority": "bright-red",
 }
 # Each status verb: the status it sets, and how its commit message names it.
 VERBS = {
@@ -83,6 +89,13 @@ VERBS = {
     "undo": ("open", "reopen"),
     "block": ("blocked", "block"),
     "unblock": ("open", "unblock"),
+}
+PRIORITY = "priority"
+# Each tag verb: whether it adds the priority tag, and how its commit message
+# names it.
+TAG_VERBS = {
+    "prio": (True, "prioritise"),
+    "unprio": (False, "deprioritise"),
 }
 
 
@@ -101,6 +114,8 @@ class Task:
 
     @property
     def section(self) -> str:
+        if PRIORITY in self.tags:
+            return PRIORITY
         if self.vault not in MINE:
             return self.vault
         if "bot" in self.tags:
@@ -147,7 +162,7 @@ def rows(tasks: list[Task]) -> list[tuple[str, list[Task]]]:
         for t in tasks:
             if t.section != section:
                 continue
-            if section == "bot" and t.title in seen:
+            if "bot" in t.tags and t.title in seen:
                 seen[t.title].append(t)
                 continue
             group = [t]
@@ -233,6 +248,31 @@ def set_status(verb: str, numbers: list[str]) -> int:
     return 0
 
 
+def set_priority(verb: str, numbers: list[str]) -> int:
+    """Tag or untag every task of the rows, so a collapsed bot row moves as one,
+    keeping their other tags."""
+    add, label = TAG_VERBS[verb]
+    groups = remembered(numbers)
+    touched: dict[str, list[str]] = {}
+    for group in groups:
+        for ref in group:
+            fields = json.loads(wiz("show", ref, "-json"))["fields"]
+            tags: list[str] = fields.get("tags") or []
+            if (PRIORITY in tags) == add:
+                continue
+            new = [*tags, PRIORITY] if add else [t for t in tags if t != PRIORITY]
+            if new:
+                # wiz writes the value as given, so keep the vaults' flow style.
+                wiz("update", ref, "-set", f"tags=[{', '.join(new)}]")
+            else:
+                wiz("update", ref, "-unset", "tags")
+            print(f"{label}: {ref}")
+            vault, path = ref.split(":", 1)
+            touched.setdefault(vault, []).append(path)
+    commit_each(touched, label)
+    return 0
+
+
 def commit_each(touched: dict[str, list[str]], label: str) -> None:
     for vault, paths in touched.items():
         commit(vault, paths, f"todo: {label} {what(paths)}")
@@ -303,7 +343,9 @@ def main(argv: list[str] | None = None) -> int:
             return list_tasks()
         case [verb, *numbers] if verb in VERBS and numbers:
             return set_status(verb, numbers)
-        case [verb] if verb in VERBS:
+        case [verb, *numbers] if verb in TAG_VERBS and numbers:
+            return set_priority(verb, numbers)
+        case [verb] if verb in VERBS or verb in TAG_VERBS:
             print(__doc__, file=sys.stderr)
             return 2
         case ["rm", *numbers] if numbers and all(n.isdigit() for n in numbers):
