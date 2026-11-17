@@ -67,7 +67,7 @@ def test_words_still_file_a_task(calls: Path) -> None:
     result = todo(calls, "pay", "henry")
     assert result.returncode == 0
     assert calls.read_text().startswith("add anu task -title pay henry")
-    assert "sync anu -local -m todo: add pay henry anu:tasks/new.md" in (
+    assert "sync anu -local -m task: add pay henry anu:tasks/new.md" in (
         calls.read_text()
     )
 

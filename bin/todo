@@ -83,19 +83,23 @@ SECTIONS = {
     "lx": "cyan",
     "priority": "bright-red",
 }
-# Each status verb: the status it sets, and how its commit message names it.
-VERBS = {
-    "do": ("done", "close"),
-    "undo": ("open", "reopen"),
-    "block": ("blocked", "block"),
-    "unblock": ("open", "unblock"),
-}
+# Each status verb and the status it sets.
+VERBS = {"do": "done", "undo": "open", "block": "blocked", "unblock": "open"}
 PRIORITY = "priority"
-# Each tag verb: whether it adds the priority tag, and how its commit message
-# names it.
-TAG_VERBS = {
-    "prio": (True, "prioritise"),
-    "unprio": (False, "deprioritise"),
+# Each tag verb: whether it adds the priority tag.
+TAG_VERBS = {"prio": True, "unprio": False}
+# How each verb's commit message says what happened, to one task and to several.
+# The lx team's Claude reads these to them, so they name tasks by title in
+# plain words.
+SAYS = {
+    "add": ("add {}", "add {}"),
+    "do": ("{} is done", "{} are done"),
+    "undo": ("{} is open again", "{} are open again"),
+    "block": ("{} is blocked", "{} are blocked"),
+    "unblock": ("{} is unblocked", "{} are unblocked"),
+    "prio": ("{} is a priority", "{} are priorities"),
+    "unprio": ("{} is no longer a priority", "{} are no longer priorities"),
+    "rm": ("delete {}", "delete {}"),
 }
 
 
@@ -217,11 +221,47 @@ def commit(vault: str, paths: list[str], message: str) -> None:
     vault's change is shared at once."""
     refs = [f"{vault}:{p}" for p in paths]
     if vault not in MINE:
-        wiz("sync", vault, "-m", message, *refs, capture=False, ok=(0, 1))
+        # The writes are already committed, so print only the status line,
+        # not sync's note that it found nothing left to commit.
+        out = wiz("sync", vault, "-m", message, *refs, ok=(0, 1))
+        print(out.rstrip().rsplit("\n", 1)[-1])
         return
     out = wiz("sync", vault, "-local", "-m", message, *refs, ok=(0, 1))
     if out.rstrip().rsplit("\n", 1)[-1] != "Saved locally; not shared":
         sys.exit(f"todo: couldn't commit to {vault}:\n{out.rstrip()}")
+
+
+def message(verb: str, titles: list[str]) -> str:
+    """The commit message for verb acting on the tasks with these titles (a
+    collapsed bot row's repeat as one)."""
+    names = list(dict.fromkeys(titles))
+    one, several = SAYS[verb]
+    if len(names) == 1:
+        return f"task: {one.format(names[0])}"
+    listed = (
+        str(len(names))
+        if len(names) > 3
+        else f"{', '.join(names[:-1])} and {names[-1]}"
+    )
+    return f"tasks: {several.format(listed)}"
+
+
+def show(ref: str) -> dict:
+    return json.loads(wiz("show", ref, "-json"))
+
+
+def update(ref: str, verb: str, title: str, *changes: str) -> None:
+    """Change a task's fields, with todo's message where its vault commits on
+    write (lx); a deferred vault ignores it."""
+    wiz("update", ref, *changes, "-m", message(verb, [title]))
+
+
+Touched = dict[str, list[tuple[str, str]]]
+
+
+def touch(touched: Touched, ref: str, title: str) -> None:
+    vault, path = ref.split(":", 1)
+    touched.setdefault(vault, []).append((path, title))
 
 
 def list_tasks() -> int:
@@ -233,67 +273,63 @@ def list_tasks() -> int:
 
 
 def set_status(verb: str, numbers: list[str]) -> int:
-    status, label = VERBS[verb]
+    status = VERBS[verb]
     # Resolve every number before touching anything, so a typo in the second
     # does not leave the first half-applied.
     groups = remembered(numbers)
-    touched: dict[str, list[str]] = {}
+    touched: Touched = {}
     for group in groups:
         for ref in group if verb == "do" else group[:1]:
-            wiz("update", ref, "-set", f"status={status}")
+            title = show(ref)["title"]
+            update(ref, verb, title, "-set", f"status={status}")
             print(f"{status}: {ref}")
-            vault, path = ref.split(":", 1)
-            touched.setdefault(vault, []).append(path)
-    commit_each(touched, label)
+            touch(touched, ref, title)
+    commit_each(touched, verb)
     return 0
 
 
 def set_priority(verb: str, numbers: list[str]) -> int:
     """Tag or untag every task of the rows, so a collapsed bot row moves as one,
     keeping their other tags."""
-    add, label = TAG_VERBS[verb]
+    add = TAG_VERBS[verb]
     groups = remembered(numbers)
-    touched: dict[str, list[str]] = {}
+    touched: Touched = {}
     for group in groups:
         for ref in group:
-            fields = json.loads(wiz("show", ref, "-json"))["fields"]
-            tags: list[str] = fields.get("tags") or []
+            record = show(ref)
+            title = record["title"]
+            tags: list[str] = record["fields"].get("tags") or []
             if (PRIORITY in tags) == add:
                 continue
             new = [*tags, PRIORITY] if add else [t for t in tags if t != PRIORITY]
             if new:
                 # wiz writes the value as given, so keep the vaults' flow style.
-                wiz("update", ref, "-set", f"tags=[{', '.join(new)}]")
+                update(ref, verb, title, "-set", f"tags=[{', '.join(new)}]")
             else:
-                wiz("update", ref, "-unset", "tags")
-            print(f"{label}: {ref}")
-            vault, path = ref.split(":", 1)
-            touched.setdefault(vault, []).append(path)
-    commit_each(touched, label)
+                update(ref, verb, title, "-unset", "tags")
+            print(f"{'priority' if add else 'not priority'}: {ref}")
+            touch(touched, ref, title)
+    commit_each(touched, verb)
     return 0
 
 
-def commit_each(touched: dict[str, list[str]], label: str) -> None:
-    for vault, paths in touched.items():
-        commit(vault, paths, f"todo: {label} {what(paths)}")
-
-
-def what(paths: list[str]) -> str:
-    """How a commit message names the tasks at paths."""
-    return Path(paths[0]).stem if len(paths) == 1 else f"{len(paths)} tasks"
+def commit_each(touched: Touched, verb: str) -> None:
+    for vault, changed in touched.items():
+        paths = [path for path, _ in changed]
+        commit(vault, paths, message(verb, [title for _, title in changed]))
 
 
 def remove(numbers: list[str]) -> int:
     """Delete the rows' tasks with one wiz remove, which deletes none of them
     while anything links to one."""
     refs = [ref for group in remembered(numbers) for ref in group]
-    wiz("remove", "-m", f"todo: delete {what(refs)}", *refs)
-    touched: dict[str, list[str]] = {}
-    for ref in refs:
+    titles = [show(ref)["title"] for ref in refs]
+    wiz("remove", "-m", message("rm", titles), *refs)
+    touched: Touched = {}
+    for ref, title in zip(refs, titles):
         print(f"deleted: {ref}")
-        vault, path = ref.split(":", 1)
-        touched.setdefault(vault, []).append(path)
-    commit_each(touched, "delete")
+        touch(touched, ref, title)
+    commit_each(touched, "rm")
     return 0
 
 
@@ -332,7 +368,7 @@ def add_task(words: list[str]) -> int:
     added = json.loads(
         wiz("add", "anu", "task", "-title", title, "-set", "status=open", "-json")
     )
-    commit("anu", added["paths"], f"todo: add {title}")
+    commit("anu", added["paths"], message("add", [title]))
     print(f"added {', '.join('anu:' + p for p in added['paths'])}")
     return 0
 

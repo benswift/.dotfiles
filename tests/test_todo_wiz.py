@@ -133,11 +133,14 @@ def test_do_closes_a_whole_bot_row_and_shares_lx_at_once(vaults: Vaults) -> None
     assert len(bot) == 2
     assert all("status: done" in path.read_text() for path in bot)
     assert vaults.git("anu", "status", "--porcelain") == ""
-    assert vaults.git("anu", "log", "-1", "--format=%s") == "todo: close 2 tasks"
+    assert (
+        vaults.git("anu", "log", "-1", "--format=%s") == "task: backup failed is done"
+    )
     assert vaults.git("lx", "status", "--porcelain") == ""
     assert vaults.git("lx", "rev-parse", "HEAD") == vaults.git(
         "lx", "rev-parse", "origin/main"
     )
+    assert vaults.git("lx", "log", "-1", "--format=%s") == ("task: Send quote is done")
 
 
 def test_do_and_undo_commit_a_ben_task_without_sharing(vaults: Vaults) -> None:
@@ -145,20 +148,24 @@ def test_do_and_undo_commit_a_ben_task_without_sharing(vaults: Vaults) -> None:
     assert vaults.todo("do", "2") == "done: ben:tasks/2026-01-02-book-dentist.md\n"
     assert vaults.status()["Book dentist"] == "done"
     assert vaults.git("ben", "status", "--porcelain") == ""
-    assert vaults.git("ben", "log", "-1", "--format=%s").startswith("todo: close ")
+    assert vaults.git("ben", "log", "-1", "--format=%s") == "task: Book dentist is done"
     assert vaults.git("ben", "rev-list", "--count", "origin/main..HEAD") == "1"
     vaults.todo("undo", "2")
     assert vaults.status()["Book dentist"] == "open"
     assert vaults.git("ben", "status", "--porcelain") == ""
-    assert vaults.git("ben", "log", "-1", "--format=%s").startswith("todo: reopen ")
+    assert vaults.git("ben", "log", "-1", "--format=%s") == (
+        "task: Book dentist is open again"
+    )
     assert vaults.git("ben", "rev-list", "--count", "origin/main..HEAD") == "2"
 
 
 def test_do_commits_only_the_task_it_closed(vaults: Vaults) -> None:
     (vaults.root / "anu" / "scratch.md").write_text("half-written\n")
     vaults.todo()
-    vaults.todo("do", "1")
-    assert vaults.git("anu", "log", "-1", "--format=%s").startswith("todo: close ")
+    vaults.todo("do", "1", "5")
+    assert vaults.git("anu", "log", "-1", "--format=%s") == (
+        "tasks: Mark assignments and Waiting on reviewer are done"
+    )
     assert vaults.git("anu", "status", "--porcelain") == "?? scratch.md"
 
 
@@ -180,10 +187,15 @@ def test_prio_lists_tasks_last_and_unprio_restores_them(vaults: Vaults) -> None:
     )
     bot = sorted((vaults.root / "anu" / "tasks").glob("*-backup-failed.md"))
     assert all("tags: [bot, oncall, priority]" in p.read_text() for p in bot)
-    assert vaults.git("anu", "log", "-1", "--format=%s") == "todo: prioritise 2 tasks"
+    assert vaults.git("anu", "log", "-1", "--format=%s") == (
+        "task: backup failed is a priority"
+    )
     assert vaults.git("ben", "status", "--porcelain") == ""
     assert vaults.git("lx", "rev-parse", "HEAD") == vaults.git(
         "lx", "rev-parse", "origin/main"
+    )
+    assert vaults.git("lx", "log", "-1", "--format=%s") == (
+        "task: Send quote is a priority"
     )
     vaults.todo("unprio", "6", "7", "8")
     assert vaults.todo() == LISTING
@@ -234,7 +246,7 @@ def test_rm_deletes_a_whole_bot_row_and_shares_lx_at_once(vaults: Vaults) -> Non
     assert "Send quote" not in status
     assert not list((vaults.root / "anu" / "tasks").glob("*-backup-failed.md"))
     assert vaults.git("anu", "status", "--porcelain") == ""
-    assert vaults.git("anu", "log", "-1", "--format=%s") == "todo: delete 2 tasks"
+    assert vaults.git("anu", "log", "-1", "--format=%s") == "task: delete backup failed"
     assert vaults.git("anu", "rev-list", "--count", "origin/main..HEAD") == "1"
     assert vaults.git("lx", "status", "--porcelain") == ""
     assert vaults.git("lx", "rev-parse", "HEAD") == vaults.git(
@@ -305,7 +317,7 @@ def test_words_file_a_valid_anu_task(vaults: Vaults) -> None:
     assert list((vaults.root / "anu" / "tasks").glob("*-pay-henry.md"))
     vaults.run("wiz", "validate", "anu")
     assert vaults.git("anu", "status", "--porcelain") == ""
-    assert vaults.git("anu", "log", "-1", "--format=%s") == "todo: add pay henry"
+    assert vaults.git("anu", "log", "-1", "--format=%s") == "task: add pay henry"
     assert vaults.git("anu", "rev-list", "--count", "origin/main..HEAD") == "1"
 
 
