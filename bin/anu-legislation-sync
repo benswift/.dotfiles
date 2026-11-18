@@ -334,7 +334,7 @@ def resolve(fetch: Fetcher, t: Title) -> None:
         if found:
             break
     else:
-        raise RuntimeError(f"{t.name}: not on the Federal Register of Legislation")
+        raise SystemExit(f"{t.name}: not on the Federal Register of Legislation")
     in_force = [f for f in found if f.get("isInForce")] or found
     record = in_force[0]
     t.identifier = str(record["id"])

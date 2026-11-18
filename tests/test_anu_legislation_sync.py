@@ -138,7 +138,13 @@ def setup(tmp_path: Path) -> dict[str, Path]:
 
 
 def sync(setup: dict[str, Path], *extra: str) -> subprocess.CompletedProcess[str]:
-    env = {**os.environ, "PATH": f"{setup['stub']}:{os.environ['PATH']}"}
+    env = {
+        **os.environ,
+        "PATH": f"{setup['stub']}:{os.environ['PATH']}",
+        # CI forces colour, which would split the messages the tests look for.
+        "NO_COLOR": "1",
+        "FORCE_COLOR": "",
+    }
     return subprocess.run(
         [str(SCRIPT), "--vault", str(setup["vault"]), "--cache", str(setup["cache"])]
         + ["--delay", "0", "--min-titles", "1", *extra],
