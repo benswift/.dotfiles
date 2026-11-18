@@ -118,7 +118,8 @@ def write_library(cache: Path, policy_title: str, with_form: bool) -> None:
             "ANUP_000002",
             "Procedure",
             "Staff leave",
-            '<h1>Procedure: x</h1><p>See the <a href="/ppl/document/ANUP_000001">policy</a>'
+            "<h1>Procedure: x</h1><p>Note: This Procedure has been repealed.</p>"
+            '<p>See the <a href="/ppl/document/ANUP_000001">policy</a>'
             ' and <a href="https://aus01.safelinks.protection.outlook.com/?url='
             'https%3A%2F%2Fexample.org%2Fleave&amp;data=x">this page</a>.</p>'
             "<table><tr><td>Kind</td>"
@@ -166,6 +167,7 @@ def test_first_sync_writes_records_links_and_originals(
 
     policy = (vault / "policies" / "staff-leave.md").read_text()
     assert "status: under-review" in policy
+    assert "status: repealed" in (vault / "procedures" / "staff-leave.md").read_text()
     assert "title: Staff leave\n" in policy
     assert "valid_from: '2026-10-01'" in policy
     assert "- Fair Work Act 2009" in policy

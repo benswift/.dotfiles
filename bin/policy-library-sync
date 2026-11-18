@@ -103,6 +103,9 @@ CLAUSE_HREF = re.compile(
     re.IGNORECASE,
 )
 UNDER_REVIEW = re.compile(r"\s*\(\s*under review\s*\)\s*$", re.IGNORECASE)
+# A repealed document the library keeps for transitional cases says so in its
+# text ("Note: This Procedure has been repealed"); its title doesn't.
+REPEALED = re.compile(r"\bThis \w+ has been repealed\b", re.IGNORECASE)
 KEEP_ATTRS = {"href", "src", "alt", "start", "type", "colspan", "rowspan"}
 
 
@@ -336,7 +339,6 @@ def parse_page(identifier: str, html: str) -> Page:
     if kind not in KINDS:
         raise ValueError(f"unknown document type {kind!r}")
     raw_title = text("Title")
-    status = "under-review" if UNDER_REVIEW.search(raw_title) else "current"
     title = UNDER_REVIEW.sub("", raw_title)
 
     meta = soup.find("meta", attrs={"name": "keywords"})
@@ -377,6 +379,12 @@ def parse_page(identifier: str, html: str) -> Page:
     body = soup.find(id="convertedcontent")
     if not isinstance(body, Tag) or not clean(body.get_text()):
         body = None
+    if body is not None and REPEALED.search(clean(body.get_text())):
+        status = "repealed"
+    elif UNDER_REVIEW.search(raw_title):
+        status = "under-review"
+    else:
+        status = "current"
     return Page(
         identifier=identifier,
         kind=kind,
