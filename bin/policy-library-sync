@@ -28,7 +28,8 @@ URL. Outlook safelinks are unwrapped and links within a page dropped.
 
 It also links into the vault's other mirrors as they stand (Mirrors). A link
 to a Register title, an agreement clause (by its unnumbered slug, which
-survives renumbering) or a mirrored PDF becomes a wiki link to its record.
+survives renumbering) or the page or file another mirror's record names as its
+`source` becomes a wiki link to that record.
 `is_based_on` links a cited title to its legislation record, or the agreement
 to its first clause, ignoring case, punctuation and a statute's "Australian
 National University (...)"; a title that matches only under an earlier year
@@ -213,8 +214,14 @@ class Mirrors:
             # The agreement is cited by name; its first clause says what it is.
             if str(fm["identifier"]) == "1":
                 m.titles[norm_title(str(fm["is_part_of"]))] = path
-        for path, fm in records("publications"):
-            m.urls[url_key(str(fm["source"]))] = path
+        # Any other mirror's record stands in for the page or file it was made
+        # from, so a link to its `source` links to it.
+        for folder in sorted(p.name for p in vault.iterdir() if p.is_dir()):
+            if folder in [*FOLDERS, "files", "workflows"] or folder[0] in "._":
+                continue
+            for path, fm in records(folder):
+                if isinstance(source := fm.get("source"), str):
+                    m.urls.setdefault(url_key(source), path)
         for path, fm in records("delegations"):
             m.delegations[str(fm["identifier"])] = path
         return m
