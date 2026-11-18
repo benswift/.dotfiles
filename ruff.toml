@@ -18,6 +18,7 @@
 #   grep -rl '^#!/usr/bin/env -S uv run' bin | sort
 extend-include = [
   "bin/agent-run",
+  "bin/anu-delegations-sync",
   "bin/anu-enterprise-agreement-sync",
   "bin/anu-legislation-sync",
   "bin/anu-publications-sync",

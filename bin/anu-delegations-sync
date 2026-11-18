@@ -1,0 +1,871 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["beautifulsoup4", "httpx", "lxml", "pdfplumber", "pyyaml", "typer"]
+# ///
+"""Mirror ANU's delegations register into the anu-policy vault's delegations/.
+
+    anu-delegations-sync [--vault DIR] [--cache DIR] [--delay SECONDS]
+
+ANU's delegations framework page (PAGE_URL) links the register as one PDF,
+"Delegations by Category", found by its link text because its URL changes
+with each upload. The PDF is a spreadsheet printed landscape, a block of
+pages per category (named above each page's header row), laid out like a
+pivot table: heading rows for each sub-category and, in some categories,
+section; a row per delegation, with its Del ID; under it, a row per cluster,
+with its number and condition ("For Doctor of Medicine"); and under any of
+those, unnumbered rows for further delegates of the same condition. Each row
+names one delegate (profile) and may carry sources, a reference and its URL.
+Each delegation becomes one `delegation` record, delegations/<Del ID>.md.
+
+pdfplumber reads the PDF as characters, since cells wrap, neighbouring cells
+run together and column positions differ between pages:
+
+- columns: each page's header row gives the left edges, where each header
+  phrase starts (narrow columns' headers are printed vertically); a word
+  belongs to the column it starts in, split from its neighbours at spaces,
+  gaps and changes of font
+- rows: a row starts at each line in a column that never wraps (Del ID,
+  cluster, transferable, type, date, profile type), or at a profile ID that
+  doesn't continue the one above (a committee's, which has no type); every
+  other line belongs to the row it starts in
+- headings: a sub-category or section cell that starts with no row heads the
+  rows below it, across pages until the category changes; one that starts
+  with a row is a note on it ("Delegation removed 1/01/2021")
+- wraps: a cell's lines join with spaces, except after a hyphen or where a
+  word too long for a narrow column (profile ID, sub-category, section) was
+  broken ("DFStudent" over "s"); a new reference starts at each
+  URL or blank line, and a URL's lines join without spaces
+- clipping: a cell too short for its text is clipped, its last line lost or
+  in fragments; a profile ID's description is the one most rows give it
+
+A source whose URL holds a Register ID becomes a link in `is_based_on` to the
+legislation/ record it stands for, aliased with the source's text: the record
+whose identifier or register_id it is, or else, by the name the Register's
+API gives the ID's title, the record matched as policy-library-sync's
+Mirrors.authority matches a cited title (the same name, or the one record
+whose name differs only by a later year, so a superseded instrument links to
+its successor). An ID the API doesn't know, and a name that matches nothing,
+stay as the source's text; the body gives every source's URL.
+
+Like the vault's other syncs, the output depends only on what the source says:
+it writes only files whose bytes changed and deletes records the register no
+longer lists. It aborts before writing anything if a fetch fails (except a
+title lookup the Register doesn't know), the PDF doesn't parse as described
+above, a Del ID appears twice, or the register holds fewer than
+--min-delegations. --cache DIR keeps every response there and reuses it, an
+unknown title as `null`. It doesn't run `wiz validate`; the caller validates
+once after every sync.
+"""
+
+import json
+import re
+import time
+from bisect import bisect_right
+from collections import Counter
+from dataclasses import dataclass, field
+from datetime import datetime
+from io import BytesIO
+from pathlib import Path
+from typing import Any
+from urllib.parse import urljoin, urlparse
+
+import httpx
+import pdfplumber
+import typer
+import yaml
+from bs4 import BeautifulSoup, Tag
+from pdfplumber.page import Page
+
+PAGE_URL = (
+    "https://www.anu.edu.au/about/governance/frameworks-disclosures/"
+    "delegations-framework"
+)
+FOLDER = "delegations"
+LEGISLATION = "legislation"
+
+LINK_TEXT = re.compile(r"^\s*Delegations by Category\b", re.IGNORECASE)
+REGISTER_ID = re.compile(r"[CF]\d{4}[A-Z]\d{5}")
+YEARED = re.compile(r"(.*\D) (\d{4})")
+API = "https://api.prod.legislation.gov.au/v1"
+KINDS = {"DB": "banded", "DS": "specialist", "DL": "legislative"}
+
+# The columns, left to right; some categories add a section level.
+COLUMNS = [
+    "subcategory_id",
+    "subcategory",
+    "transferable",
+    "del_id",
+    "cluster",
+    "description",
+    "type",
+    "date",
+    "profile_id",
+    "profile",
+    "profile_type",
+    "profile_type_description",
+    "reference",
+    "url",
+]
+SECTION_COLUMNS = [*COLUMNS[:2], "section_id", "section", *COLUMNS[2:]]
+HEADING_COLUMNS = ["subcategory_id", "subcategory", "section_id", "section"]
+# Columns whose cells never wrap, so each line in one starts a row.
+ROW_STARTS = {"del_id", "cluster", "transferable", "type", "date", "profile_type"}
+# Narrow columns, where a word too long for the column is broken over lines.
+BREAKS_WORDS = {"profile_id", "subcategory", "section"}
+# How far (pt) a cell's first line may sit from its row's start, and how far
+# a column's text may start left of its header.
+ROW_SLACK = 1.5
+COLUMN_SLACK = 2.0
+
+
+class SourceError(Exception):
+    """The register isn't shaped as this parser expects."""
+
+
+@dataclass
+class Word:
+    x0: float
+    x1: float
+    top: float
+    size: float
+    font: str
+    text: str
+
+
+@dataclass
+class Line:
+    column: str
+    top: float
+    x1: float
+    right: float  # the column's right edge
+    size: float
+    font: str
+    text: str
+
+
+@dataclass
+class Reference:
+    description: str
+    url: str
+
+
+@dataclass
+class Delegate:
+    cluster: str
+    condition: str
+    kind: str
+    profile_id: str
+    profile: str
+    profile_type: str
+    references: list[Reference]
+
+
+@dataclass
+class Delegation:
+    identifier: str
+    category: str
+    topic: str
+    transferable: bool
+    kind: str
+    valid_from: str
+    description: str
+    note: str
+    references: list[Reference] = field(default_factory=list)
+    delegates: list[Delegate] = field(default_factory=list)
+
+
+# Fetching --------------------------------------------------------------------
+
+
+class Fetcher:
+    def __init__(self, cache: Path | None, delay: float) -> None:
+        self.cache = cache
+        self.delay = delay
+        self.client = httpx.Client(
+            headers={"User-Agent": "anu-delegations-sync"},
+            follow_redirects=True,
+            timeout=120,
+            transport=httpx.HTTPTransport(retries=3),
+        )
+
+    def get(self, url: str, key: str) -> bytes:
+        cached = self.cache / key if self.cache else None
+        if cached and cached.exists():
+            return cached.read_bytes()
+        time.sleep(self.delay)
+        response = self.client.get(url)
+        response.raise_for_status()
+        if cached:
+            cached.parent.mkdir(parents=True, exist_ok=True)
+            cached.write_bytes(response.content)
+        return response.content
+
+    def title(self, ident: str) -> str | None:
+        """A Register title ID's name, or None where the Register doesn't know
+        the ID (a 404, or the 400 it gives an ID that names nothing)."""
+        cached = self.cache / "titles" / f"{ident}.json" if self.cache else None
+        if cached and cached.exists():
+            data = json.loads(cached.read_bytes())
+        else:
+            time.sleep(self.delay)
+            response = self.client.get(f"{API}/titles('{ident}')")
+            unknown = response.status_code == 404 or (
+                response.status_code == 400 and b"null 'Resource'" in response.content
+            )
+            if not unknown:
+                response.raise_for_status()
+            data = None if unknown else response.json()
+            if cached:
+                cached.parent.mkdir(parents=True, exist_ok=True)
+                cached.write_text(json.dumps(data))
+        return str(data["name"]) if data else None
+
+
+def register_link(page: str) -> str:
+    """The URL of the "Delegations by Category" PDF on the framework page."""
+    soup = BeautifulSoup(page, "lxml")
+    for a in soup.find_all("a", href=True):
+        assert isinstance(a, Tag)
+        if LINK_TEXT.match(a.get_text()) and ".pdf" in str(a["href"]).lower():
+            return urljoin(PAGE_URL, str(a["href"]))
+    raise SourceError("the framework page links no Delegations by Category PDF")
+
+
+def cache_key(url: str) -> str:
+    """The cached PDF's name: its URL's path, which changes with each upload."""
+    path = urlparse(url).path.strip("/")
+    return "pdf/" + re.sub(r"[^A-Za-z0-9._-]+", "-", path)
+
+
+# Reading a page --------------------------------------------------------------
+
+
+def words(chars: list[dict[str, Any]]) -> list[list[Word]]:
+    """Characters as words, in lines down the page.
+
+    A word ends at a space, a gap, a step back (a cell's text running into
+    the next cell's) or a change of font, so text from neighbouring cells
+    never joins, though often nothing but position separates it.
+    """
+    lines: list[list[dict[str, Any]]] = []
+    for c in sorted(chars, key=lambda c: c["top"]):
+        if lines and c["top"] - lines[-1][0]["top"] < 1.5:
+            lines[-1].append(c)
+        else:
+            lines.append([c])
+    found: list[list[Word]] = []
+    for line in lines:
+        row: list[Word] = []
+        prev: dict[str, Any] | None = None
+        for c in sorted(line, key=lambda c: c["x0"]):
+            if not c["text"].strip():
+                prev = None
+                continue
+            if (
+                prev is None
+                or abs(c["x0"] - prev["x1"]) > c["size"] * 0.2
+                or c["fontname"] != prev["fontname"]
+            ):
+                row.append(
+                    Word(
+                        c["x0"], c["x1"], c["top"], c["size"], c["fontname"], c["text"]
+                    )
+                )
+            else:
+                row[-1].x1 = c["x1"]
+                row[-1].text += c["text"]
+            prev = c
+        if row:
+            found.append(row)
+    return found
+
+
+def page_category(page: Page, header_top: float) -> tuple[str, str]:
+    """The category ID and description printed above the header row."""
+    above = [w["text"] for w in page.extract_words() if w["bottom"] < header_top]
+    text = " ".join(above)
+    ident = re.search(r"Category ID:\s*(\S+)", text)
+    desc = re.search(r"Category Description:\s*(.+?)\s*$", text)
+    if not ident or not desc:
+        raise SourceError("no category ID and description above the header")
+    return ident.group(1), desc.group(1)
+
+
+def header_columns(page: Page) -> tuple[list[str], list[float], float, float]:
+    """The page's columns, their left edges, and the header row's extent.
+
+    A header cell's text starts at its column's left edge, so the edges are
+    where each header phrase starts, less any phrase starting inside another
+    (the centred "le" of "Transferable"). Narrow columns' headers (Del ID,
+    Cluster) may be printed vertically, as characters that aren't upright.
+    """
+    words = page.extract_words()
+    urls = [w for w in words if w["text"] == "URL"]
+    trans = [w for w in words if w["text"].startswith("Tran")]
+    if not urls or not trans:
+        raise SourceError("no header row")
+    top = min(w["top"] for w in trans) - 6
+    bottom = urls[0]["bottom"] + 1
+    # Words on one header line less than 3pt apart make a phrase.
+    phrases: list[tuple[int, float, float]] = []
+    row = sorted(
+        (w for w in words if w["top"] >= top and w["bottom"] <= bottom),
+        key=lambda w: (round(w["top"]), w["x0"]),
+    )
+    for w in row:
+        line = round(w["top"])
+        if phrases and phrases[-1][0] == line and w["x0"] - phrases[-1][2] < 3:
+            phrases[-1] = (line, phrases[-1][1], w["x1"])
+        else:
+            phrases.append((line, w["x0"], w["x1"]))
+    starts = [
+        x0 for _, x0, _ in phrases if not any(a + 1 < x0 < b - 1 for _, a, b in phrases)
+    ]
+    starts += [c["x0"] for c in page.chars if not c["upright"] and c["top"] < bottom]
+    edges: list[float] = []
+    for x in sorted(starts):
+        if not edges or x - edges[-1] > 3:
+            edges.append(x)
+    if len(edges) == len(COLUMNS):
+        names = COLUMNS
+    elif len(edges) == len(SECTION_COLUMNS):
+        names = SECTION_COLUMNS
+    else:
+        raise SourceError(f"{len(edges)} header columns, not 14 or 16")
+    return names, edges, top, bottom
+
+
+def page_lines(page: Page) -> tuple[str, str, list[Line]]:
+    """The page's category and its body text, as lines within each column.
+
+    A word belongs to the column it starts in. A footnote ("* Position/
+    Committee does not have a delegations profile") runs across the columns
+    below a category's last row, and is dropped.
+    """
+    names, edges, header_top, header_bottom = header_columns(page)
+    category_id, category = page_category(page, header_top)
+    bounds = [e - COLUMN_SLACK for e in edges]
+    rights = [*bounds[1:], float(page.width)]
+    body = [c for c in page.chars if c["upright"] and c["top"] > header_bottom]
+    lines: list[Line] = []
+    for row in words(body):
+        if row[0].text.startswith("*") and row[0].x0 < bounds[1]:
+            continue
+        cells: dict[int, list[Word]] = {}
+        for w in row:
+            i = bisect_right(bounds, w.x0) - 1
+            if i < 0:
+                raise SourceError(f"{w.text!r} is left of the first column")
+            cells.setdefault(i, []).append(w)
+        for i, ws in sorted(cells.items()):
+            text = " ".join(w.text for w in ws)
+            first = ws[0]
+            lines.append(
+                Line(
+                    names[i],
+                    first.top,
+                    ws[-1].x1,
+                    rights[i],
+                    first.size,
+                    first.font,
+                    text,
+                )
+            )
+    return category_id, category, lines
+
+
+# Assembling rows -------------------------------------------------------------
+
+
+def broken(prev: Line, line: Line) -> bool:
+    """Whether a line continues a word too long for its narrow column.
+
+    A one-word line that fills its column may also be an ordinary wrap, so
+    this applies only to the columns where Excel breaks codes and long words.
+    """
+    return (
+        prev.column in BREAKS_WORDS
+        and " " not in prev.text
+        and prev.x1 > prev.right - prev.size
+        and prev.text[-1].isalnum()
+        and line.text[0].isalnum()
+    )
+
+
+def join(lines: list[Line]) -> str:
+    """A wrapped cell's text, rejoining words broken across lines."""
+    text = ""
+    prev: Line | None = None
+    for line in lines:
+        if prev is None:
+            text = line.text
+        elif re.search(r"\w-$", prev.text) or broken(prev, line):
+            text += line.text
+        else:
+            text += " " + line.text
+        prev = line
+    return text
+
+
+def references(lines: list[Line]) -> list[Reference]:
+    """A row's references, from its two source columns.
+
+    A reference starts where a URL does, or after a blank line; its
+    description starts level with its URL.
+    """
+    lines = sorted(lines, key=lambda line: line.top)
+    starts: list[float] = []
+    for prev, line in zip([None, *lines], lines, strict=False):
+        if (
+            prev is None
+            or line.top - prev.top > 1.8 * line.size
+            or (line.column == "url" and line.text.lower().startswith("http"))
+        ) and (not starts or line.top - starts[-1] > ROW_SLACK):
+            starts.append(line.top)
+    blocks: list[list[Line]] = [[] for _ in starts]
+    for line in lines:
+        blocks[bisect_right(starts, line.top + ROW_SLACK) - 1].append(line)
+    found = []
+    for block in blocks:
+        description = join([line for line in block if line.column == "reference"])
+        url = "".join(line.text for line in block if line.column == "url")
+        found.append(Reference(description, url.replace(" ", "")))
+    return found
+
+
+@dataclass
+class Row:
+    page: int
+    category: str
+    topic: str
+    cells: dict[str, list[Line]] = field(default_factory=dict)
+    note: str = ""
+
+    def text(self, column: str) -> str:
+        return join(self.cells.get(column, []))
+
+    def references(self) -> list[Reference]:
+        return references(self.cells.get("reference", []) + self.cells.get("url", []))
+
+
+def row_starts(lines: list[Line]) -> list[float]:
+    """Where the page's rows start.
+
+    A row starts wherever a column whose cells never wrap (Del ID, cluster,
+    transferable, type, date, profile type) has a line, or a profile ID
+    doesn't continue the one above it: two profile IDs in one row are two
+    rows, the second with no profile type (a committee's).
+    """
+    starts: list[float] = []
+    above: Line | None = None
+    for line in lines:
+        new = line.column in ROW_STARTS
+        if line.column == "profile_id":
+            new = above is None or not (
+                line.top - above.top < 1.6 * line.size
+                and line.font == above.font
+                and not above.text.endswith("*")
+            )
+            above = line
+        if new and (not starts or line.top - starts[-1] > ROW_SLACK):
+            starts.append(line.top)
+    return starts
+
+
+def cells_in(lines: list[Line], starts: list[float]) -> list[list[Line]]:
+    """A column's lines grouped into cells, each wrapped cell's lines together."""
+    cells: list[list[Line]] = []
+    for line in lines:
+        at_start = any(abs(s - line.top) <= ROW_SLACK for s in starts)
+        if cells and not at_start and line.top - cells[-1][-1].top < 1.6 * line.size:
+            cells[-1].append(line)
+        else:
+            cells.append([line])
+    return cells
+
+
+def rows(pages: list[tuple[str, str, list[Line]]]) -> list[Row]:
+    """The register's rows, each with its category and the headings above it.
+
+    Every line outside the sub-category and section columns belongs to the
+    row it starts within or below. A sub-category or section cell that
+    starts with no row heads the rows below it; one that starts with a row is
+    a note on that row ("Delegation removed 1/01/2021").
+    """
+    found: list[Row] = []
+    category_id = subcategory = section = ""
+    for number, (page_category_id, category, page_lines) in enumerate(pages, 1):
+        if page_category_id != category_id:
+            category_id, subcategory, section = page_category_id, "", ""
+        lines = sorted(page_lines, key=lambda line: line.top)
+        starts = row_starts(lines)
+        cells: list[dict[str, list[Line]]] = [{} for _ in starts]
+        notes: list[list[Line]] = [[] for _ in starts]
+        headings: list[dict[str, list[Line]]] = [{} for _ in range(len(starts) + 1)]
+        for column in HEADING_COLUMNS:
+            column_lines = [line for line in lines if line.column == column]
+            for cell in cells_in(column_lines, starts):
+                at = [
+                    i for i, s in enumerate(starts) if abs(s - cell[0].top) <= ROW_SLACK
+                ]
+                if at:
+                    notes[at[0]] += cell
+                else:
+                    i = bisect_right(starts, cell[0].top)
+                    headings[i].setdefault(column, []).extend(cell)
+        for line in lines:
+            if line.column in HEADING_COLUMNS:
+                continue
+            i = bisect_right(starts, line.top + ROW_SLACK) - 1
+            if i < 0:
+                raise SourceError(f"page {number}: {line.text!r} is in no row")
+            cells[i].setdefault(line.column, []).append(line)
+        for i, heading in enumerate(headings):
+            if "subcategory" in heading or "subcategory_id" in heading:
+                subcategory = join(heading.get("subcategory", [])) or join(
+                    heading["subcategory_id"]
+                )
+                section = ""
+            if "section" in heading or "section_id" in heading:
+                section = join(heading.get("section", [])) or join(
+                    heading["section_id"]
+                )
+            if i < len(starts):
+                topic = " - ".join(t for t in (subcategory, section) if t)
+                note = join(sorted(notes[i], key=lambda line: line.top))
+                found.append(Row(number, category, topic, cells[i], note))
+    return found
+
+
+def date(text: str, where: str) -> str:
+    try:
+        return datetime.strptime(text, "%d/%m/%Y").date().isoformat()
+    except ValueError:
+        raise SourceError(f"{where}: effective date {text!r}") from None
+
+
+def delegations(found: list[Row]) -> list[Delegation]:
+    """The delegations the rows describe.
+
+    The register reads like a pivot table: a row with a Del ID starts a
+    delegation, one with a cluster number a delegate under that cluster's
+    condition, and a row with neither another delegate for the row above.
+    """
+    result: list[Delegation] = []
+    current: Delegation | None = None
+    above: Delegate | None = None
+    for row in found:
+        where = f"page {row.page}"
+        profile = [
+            row.text(c) for c in ("profile_id", "profile", "profile_type_description")
+        ]
+        kind = row.text("type")
+        if kind and kind not in KINDS:
+            raise SourceError(f"{where}: delegation type {kind!r}")
+        if "del_id" in row.cells:
+            ident = row.text("del_id")
+            where = f"{where}, delegation {ident}"
+            transferable = row.text("transferable")
+            if not ident.isdigit() or transferable not in ("Y", "N"):
+                raise SourceError(f"{where}: transferable {transferable!r}")
+            current = Delegation(
+                identifier=ident,
+                category=row.category,
+                topic=row.topic,
+                transferable=transferable == "Y",
+                kind=KINDS.get(kind, ""),
+                valid_from=date(row.text("date"), where),
+                description=row.text("description"),
+                note=row.note,
+                references=row.references(),
+            )
+            result.append(current)
+            above = Delegate("", "", KINDS.get(kind, ""), *profile, [])
+            if any(profile):
+                current.delegates.append(above)
+            continue
+        if current is None or above is None:
+            raise SourceError(f"{where}: a row before the first delegation")
+        where = f"{where}, delegation {current.identifier}"
+        stray = [c for c in ("transferable", "date") if c in row.cells]
+        if stray or row.note:
+            raise SourceError(f"{where}: a cluster row with {stray or row.note}")
+        if "cluster" in row.cells:
+            cluster = row.text("cluster")
+            if not cluster.isdigit():
+                raise SourceError(f"{where}: cluster {cluster!r}")
+            above = Delegate(
+                cluster,
+                row.text("description"),
+                KINDS.get(kind, current.kind),
+                *profile,
+                row.references(),
+            )
+        else:
+            if "description" in row.cells:
+                raise SourceError(f"{where}: a description with no cluster")
+            above = Delegate(
+                above.cluster,
+                above.condition,
+                KINDS.get(kind, above.kind),
+                *profile,
+                row.references(),
+            )
+        current.delegates.append(above)
+    return result
+
+
+def parse_register(data: bytes) -> list[Delegation]:
+    """The register's delegations.
+
+    A profile's description is the one most rows give its ID: a cell too
+    short for its text is clipped in the PDF ("Chief Campus Environment").
+    """
+    with pdfplumber.open(BytesIO(data)) as pdf:
+        pages = [page_lines(page) for page in pdf.pages]
+    result = delegations(rows(pages))
+    seen: set[str] = set()
+    for d in result:
+        if d.identifier in seen:
+            raise SourceError(f"delegation {d.identifier} is listed twice")
+        seen.add(d.identifier)
+    names: dict[str, Counter[str]] = {}
+    for d in result:
+        for x in d.delegates:
+            names.setdefault(x.profile_id, Counter())[x.profile] += 1
+    for d in result:
+        for x in d.delegates:
+            x.profile = max(
+                names[x.profile_id].items(), key=lambda n: (n[1], len(n[0]))
+            )[0]
+    return result
+
+
+# Records ---------------------------------------------------------------------
+
+
+class Dumper(yaml.SafeDumper):
+    """Quotes digit strings, which YAML 1.2 reads as numbers."""
+
+
+def represent_str(dumper: yaml.SafeDumper, value: str) -> yaml.ScalarNode:
+    style = "'" if value.isdigit() else None
+    return dumper.represent_scalar("tag:yaml.org,2002:str", value, style=style)
+
+
+Dumper.add_representer(str, represent_str)
+
+
+def norm_title(title: str) -> str:
+    """A title, ignoring what policy-library-sync's norm_title ignores: case,
+    punctuation, "(Cth)", a leading "The" and the "Australian National
+    University (...)" around a statute's name."""
+    text = title.lower().replace("&", " and ").replace("’", "'")
+    text = re.sub(r"\(cth\)", "", text)
+    text = re.sub(r"^\s*the\s+", "", text)
+    text = re.sub(r"^australian national university \(([^)]*)\)", r"\1", text)
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", text).split())
+
+
+@dataclass
+class Legislation:
+    """The legislation/ records as they stand, by Register ID and by name."""
+
+    ids: dict[str, str] = field(default_factory=dict)
+    names: dict[str, str] = field(default_factory=dict)  # norm_title -> path
+
+    @classmethod
+    def load(cls, vault: Path) -> "Legislation":
+        found = cls()
+        for path in sorted((vault / LEGISLATION).glob("*.md")):
+            text = path.read_text(encoding="utf-8")
+            if not text.startswith("---\n"):
+                continue
+            fm = yaml.safe_load(text.split("---\n", 2)[1]) or {}
+            record = f"{LEGISLATION}/{path.stem}"
+            for key in ("identifier", "register_id"):
+                if fm.get(key):
+                    found.ids[str(fm[key])] = record
+            if fm.get("title"):
+                found.names[norm_title(str(fm["title"]))] = record
+        return found
+
+    def by_name(self, name: str) -> str | None:
+        """The record of a title's name, as policy-library-sync's
+        Mirrors.authority matches it: the same name, or else the one record
+        whose name differs only by a later year (its successor)."""
+        norm = norm_title(name)
+        if norm in self.names:
+            return self.names[norm]
+        if match := YEARED.fullmatch(norm):
+            later = [
+                path
+                for title, path in self.names.items()
+                if (other := YEARED.fullmatch(title))
+                and other.group(1) == match.group(1)
+                and other.group(2) > match.group(2)
+            ]
+            if len(later) == 1:
+                return later[0]
+        return None
+
+
+def cited_records(
+    fetch: Fetcher, found: list[Delegation], legislation: Legislation
+) -> dict[str, str]:
+    """The legislation record each cited Register ID stands for, where any.
+
+    An ID no record holds is looked up on the Register for its title's name,
+    so a superseded instrument links to the record of its successor.
+    """
+    ids = {
+        match.group(0)
+        for d in found
+        for r in d.references + [r for x in d.delegates for r in x.references]
+        if (match := REGISTER_ID.search(r.url))
+    }
+    records: dict[str, str] = {}
+    for ident in sorted(ids):
+        if ident in legislation.ids:
+            records[ident] = legislation.ids[ident]
+        elif (name := fetch.title(ident)) and (path := legislation.by_name(name)):
+            records[ident] = path
+    return records
+
+
+def based_on(ref: Reference, records: dict[str, str]) -> str:
+    """A reference as an is_based_on item: a link where it's on the Register."""
+    match = REGISTER_ID.search(ref.url)
+    target = records.get(match.group(0)) if match else None
+    if target and not re.search(r"[\[\]|]", ref.description):
+        return f"[[{target}|{ref.description}]]"
+    return ref.description
+
+
+def kinds(d: Delegation) -> list[str]:
+    return list(dict.fromkeys(k for k in [d.kind, *(x.kind for x in d.delegates)] if k))
+
+
+def frontmatter(
+    d: Delegation, source: str, records: dict[str, str]
+) -> dict[str, object]:
+    fm: dict[str, object] = {
+        "title": d.description.rstrip(" :;,"),
+        "identifier": d.identifier,
+        "category": d.category,
+    }
+    if d.topic:
+        fm["topic"] = d.topic
+    if kinds(d):
+        fm["kind"] = kinds(d)
+    fm["transferable"] = d.transferable
+    fm["valid_from"] = d.valid_from
+    refs = d.references + [r for x in d.delegates for r in x.references]
+    items = list(dict.fromkeys(based_on(r, records) for r in refs))
+    if items:
+        fm["is_based_on"] = items
+    fm["source"] = source
+    return fm
+
+
+def cite(refs: list[Reference]) -> str:
+    return "; ".join(
+        f"[{r.description}]({r.url})" if r.url else r.description for r in refs
+    )
+
+
+def delegate(x: Delegate, mixed: bool) -> str:
+    if x.profile:
+        details = [x.profile_id, x.profile_type] + (
+            [x.kind] if mixed and x.kind else []
+        )
+        text = f"{x.profile} ({', '.join(t for t in details if t)})"
+    elif x.profile_id.endswith("*"):
+        text = f"{x.profile_id.rstrip('*')} (no delegations profile)"
+    else:
+        text = x.profile_id
+    return text + (f"; source: {cite(x.references)}" if x.references else "")
+
+
+def body(d: Delegation) -> str:
+    parts = [d.description]
+    if d.note:
+        parts.append(f"Note: {d.note}.")
+    mixed = len(kinds(d)) > 1
+    lines: list[str] = []
+    cluster = None
+    for x in d.delegates:
+        if not x.cluster:
+            lines.append(f"- {delegate(x, mixed)}")
+            continue
+        if x.cluster != cluster:
+            cluster = x.cluster
+            lines.append(f"- ({x.cluster}) {x.condition.rstrip(' :;,')}")
+        lines.append(f"  - {delegate(x, mixed)}")
+    if lines:
+        parts.append("## Delegates\n\n" + "\n".join(lines))
+    if d.references:
+        sources = "\n".join(f"- {cite([r])}" for r in d.references)
+        parts.append("## Sources\n\n" + sources)
+    return "\n\n".join(parts) + "\n"
+
+
+def render(d: Delegation, source: str, records: dict[str, str]) -> str:
+    fm = yaml.dump(
+        frontmatter(d, source, records),
+        Dumper=Dumper,
+        sort_keys=False,
+        allow_unicode=True,
+        width=10**6,
+    )
+    return f"---\n{fm}---\n\n{body(d)}"
+
+
+def write_tree(vault: Path, files: dict[str, bytes]) -> tuple[int, int]:
+    """Make delegations/ hold exactly `files`; returns (written, removed)."""
+    written = removed = 0
+    for rel, data in files.items():
+        target = vault / rel
+        if target.exists() and target.read_bytes() == data:
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        written += 1
+    base = vault / FOLDER
+    if base.exists():
+        for existing in sorted(base.rglob("*"), reverse=True):
+            rel = existing.relative_to(vault).as_posix()
+            if existing.is_file() and rel not in files:
+                existing.unlink()
+                removed += 1
+    return written, removed
+
+
+def main(
+    vault: Path = typer.Option(Path(), help="the vault's root"),
+    cache: Path | None = typer.Option(None, help="keep and reuse responses here"),
+    delay: float = typer.Option(1.0, help="seconds between requests"),
+    min_delegations: int = typer.Option(250, help="abort if the register holds fewer"),
+) -> None:
+    fetch = Fetcher(cache, delay)
+    page = fetch.get(PAGE_URL, "page.html").decode(errors="replace")
+    try:
+        url = register_link(page)
+        found = parse_register(fetch.get(url, cache_key(url)))
+    except SourceError as e:
+        raise SystemExit(f"the delegations register: {e}") from e
+    if len(found) < min_delegations:
+        raise SystemExit(
+            f"the register holds only {len(found)} delegations; not syncing"
+        )
+    records = cited_records(fetch, found, Legislation.load(vault))
+    files = {
+        f"{FOLDER}/{d.identifier}.md": render(d, url, records).encode() for d in found
+    }
+    written, removed = write_tree(vault, files)
+    typer.echo(f"{len(found)} delegations: {written} files written, {removed} removed")
+
+
+if __name__ == "__main__":
+    typer.run(main)
