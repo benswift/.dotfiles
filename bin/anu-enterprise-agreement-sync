@@ -1,0 +1,389 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["beautifulsoup4", "httpx", "lxml", "pyyaml", "typer"]
+# ///
+"""Mirror the ANU Enterprise Agreement into the anu-policy vault's enterprise-agreement/.
+
+    anu-enterprise-agreement-sync [--vault DIR] [--cache DIR] [--delay SECONDS]
+
+The index is ANU Services' enterprise-agreement page
+(services.anu.edu.au/human-resources/enterprise-agreement), which links one
+page per clause ("64. Ill health assessment") and per schedule ("Schedule 1.
+Academic staff salary schedule"). Each becomes an `agreement-clause` record
+named by the page's slug (`64-ill-health-assessment.md`); anything else the
+index links (the Enterprise Bargaining page, which needs a sign-in) is
+skipped. The agreement's title, kept in `is_part_of` so policy documents can
+cite it, is read from clause 1 ("This Agreement will be known as ..."), with a
+year range written "2023-2026"; a successor agreement flows through.
+
+Like policy-library-sync, the body is the page's content element (the
+article's body field) converted to Markdown with pandoc, with the output
+depending only on what the site says: it writes only files whose bytes
+changed and deletes records the index no longer lists. Schedules' salary
+tables stay Markdown tables: a cell holding paragraphs becomes one paragraph
+with line breaks, and a row spanning the table (a level's name) is spread
+across the columns, since a pipe table has no colspan. `anu-policy-sync`
+runs it and validates the vault after. It aborts before writing anything
+if the index lists fewer than --min-clauses pages, clause 1 can't be read,
+any page's heading differs from its link, or any fetch fails. --cache DIR
+keeps every response there and reuses it.
+"""
+
+import re
+import shutil
+import subprocess
+import time
+from dataclasses import dataclass
+from pathlib import Path
+
+import httpx
+import typer
+import yaml
+from bs4 import BeautifulSoup, Tag
+
+SITE = "https://services.anu.edu.au"
+INDEX_URL = f"{SITE}/human-resources/enterprise-agreement"
+FOLDER = "enterprise-agreement"
+
+PAGE_HREF = re.compile(
+    r"^(?:https://services\.anu\.edu\.au)?"
+    r"/human-resources/enterprise-agreement/((?:schedule-)?\d+-[a-z0-9-]+)/?$"
+)
+# Stands for a line break inside a table cell: pandoc writes a table holding
+# a real break as HTML, so the break goes back in as <br> after conversion.
+BREAK = " \u2063 "
+LINK_TEXT = re.compile(r"^(Schedule\s+)?(\d+)\.\s*(.+)$", re.IGNORECASE)
+AGREEMENT_NAME = re.compile(r"known as\s+(.+?)(?:,|\s+and will)", re.DOTALL)
+YEAR_RANGE = re.compile(r"(\d{4})\s*[–—-]\s*(\d{4})")
+
+
+@dataclass
+class Page:
+    slug: str
+    kind: str  # clause | schedule
+    identifier: str  # "64" or "Schedule 1"
+    title: str
+    url: str
+
+
+def clean(text: str) -> str:
+    return re.sub(r"\s+", " ", text.replace("\xa0", " ")).strip()
+
+
+def parse_index(html: str) -> list[Page]:
+    soup = BeautifulSoup(html, "lxml")
+    pages: dict[str, Page] = {}
+    for a in soup.find_all("a", href=PAGE_HREF):
+        assert isinstance(a, Tag)
+        href = PAGE_HREF.match(str(a["href"]))
+        text = LINK_TEXT.match(clean(a.get_text()))
+        if href is None or text is None:
+            continue
+        slug = href.group(1)
+        if slug in pages:
+            continue
+        schedule = text.group(1) is not None
+        pages[slug] = Page(
+            slug=slug,
+            kind="schedule" if schedule else "clause",
+            identifier=f"Schedule {text.group(2)}" if schedule else text.group(2),
+            title=text.group(3).strip(),
+            url=f"{INDEX_URL}/{slug}",
+        )
+    return list(pages.values())
+
+
+# Converting ------------------------------------------------------------------
+
+
+def content(html: str) -> Tag:
+    """The page's own text: the body field inside its article."""
+    soup = BeautifulSoup(html, "lxml")
+    for field in soup.select("article .field--name-body"):
+        if clean(field.get_text()):
+            return field
+    raise ValueError("no body text")
+
+
+def heading(html: str) -> str:
+    h1 = BeautifulSoup(html, "lxml").find("h1")
+    return clean(h1.get_text()) if isinstance(h1, Tag) else ""
+
+
+def agreement_title(clause_one: str) -> str:
+    match = AGREEMENT_NAME.search(clean(content(clause_one).get_text()))
+    if match is None:
+        raise ValueError("clause 1 doesn't say what the agreement is known as")
+    return YEAR_RANGE.sub(r"\1-\2", clean(match.group(1)))
+
+
+def html_markdown(field: Tag) -> str:
+    soup = BeautifulSoup(str(field), "lxml")
+    for tag in soup.find_all(["script", "style", "img"]):
+        tag.decompose()
+    for tag in soup.find_all(["span", "font", "div", "u", "mark"]):
+        tag.unwrap()
+    for a in soup.find_all("a"):
+        href = str(a.get("href", "")).strip()
+        if not href or href.startswith(("#", "javascript:")):
+            a.unwrap()
+        elif href.startswith("/"):
+            a["href"] = SITE + href
+    mark_lists(soup)
+    # "**14.3. **text" would not render as bold: the space goes outside.
+    for tag in soup.find_all(["strong", "b"]):
+        text = tag.get_text()
+        if text != text.strip() and text.strip():
+            tag.insert_after(" ")
+            for node in tag.find_all(string=True):
+                node.replace_with(str(node).strip())
+    for tag in soup.find_all(True):
+        tag.attrs = {
+            k: v for k, v in tag.attrs.items() if k in {"href", "colspan", "start"}
+        }
+    for table in soup.find_all("table"):
+        spread_rows(soup, table)
+    # A cell holding paragraphs becomes one paragraph with line breaks, so
+    # pandoc keeps the table instead of dropping it as [TABLE].
+    for cell in soup.find_all(["td", "th"]):
+        flatten_lists(soup, cell)
+        for block in cell.find_all(["p", "h1", "h2", "h3", "h4", "h5", "h6"]):
+            if not clean(block.get_text()):
+                block.decompose()
+                continue
+            if block.find_next_sibling():
+                block.append(BREAK)
+            block.unwrap()
+        for br in cell.find_all("br"):
+            br.replace_with(BREAK)
+        for text in cell.find_all(string=True):
+            text.replace_with(re.sub(r"\s+", " ", str(text)))
+        if not clean(cell.get_text()):
+            cell.string = ""
+    for p in soup.find_all("p"):
+        if not clean(p.get_text()) and not p.find(True):
+            p.decompose()
+    body = soup.body
+    html = body.decode_contents() if body else ""
+    result = subprocess.run(
+        ["pandoc", "-f", "html", "-t", "gfm", "--wrap=none"],
+        input=html,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return tidy(result.stdout)
+
+
+def roman(n: int) -> str:
+    out = ""
+    for value, numeral in [(10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i")]:
+        while n >= value:
+            out += numeral
+            n -= value
+    return out
+
+
+def mark_lists(soup: BeautifulSoup) -> None:
+    """Write lettered and roman lists' markers as text, "(a)" and "(ii)".
+
+    Markdown can only number, and a clause is cited by its letter ("14.4(a)").
+    Such a list becomes a bullet list whose items start with their marker. A
+    numbered list keeps its numbering, with the start taken from an item's
+    `value` where the page restarts a count after a break.
+    """
+    for ol in soup.find_all("ol"):
+        assert isinstance(ol, Tag)
+        classes = ol.get("class") or []
+        kind = str(ol.get("type", ""))
+        if not kind and "list-lower-roman" in classes:
+            kind = "i"
+        items = ol.find_all("li", recursive=False)
+        first = str(ol.get("start") or (items[0].get("value") if items else "") or 1)
+        n = int(first) if first.isdigit() else 1
+        if kind not in {"a", "A", "i", "I"}:
+            ol["start"] = str(n)
+            continue
+        ol.name = "ul"
+        for li in items:
+            assert isinstance(li, Tag)
+            if str(li.get("value", "")).isdigit():
+                n = int(str(li["value"]))
+            if kind in {"a", "A"}:
+                text = chr(ord("a") + (n - 1) % 26)
+            else:
+                text = roman(n)
+            li.insert(0, f"({text.upper() if kind in {'A', 'I'} else text}) ")
+            n += 1
+
+
+def flatten_lists(soup: BeautifulSoup, cell: Tag) -> None:
+    """A list in a cell becomes lines, each led by its bullet or number."""
+    for items in cell.find_all(["ul", "ol"]):
+        assert isinstance(items, Tag)
+        for n, li in enumerate(items.find_all("li", recursive=False), 1):
+            li.insert(0, "\u2022 " if items.name == "ul" else f"{n}. ")
+            li.append(BREAK)
+            li.unwrap()
+        items.unwrap()
+
+
+def spread_rows(soup: BeautifulSoup, table: Tag) -> None:
+    """Make every row as wide as the widest, so the table is a pipe table.
+
+    A row of one cell spanning the table is a level's name: the name stays in
+    the first column and the rest are empty. The first row becomes the header.
+    """
+    rows = [r for r in table.find_all("tr") if isinstance(r, Tag)]
+    for row in rows:
+        for cell in row.find_all(["td", "th"]):
+            assert isinstance(cell, Tag)
+            span = int(str(cell.attrs.pop("colspan", 1)))
+            for _ in range(span - 1):
+                cell.insert_after(soup.new_tag(str(cell.name)))
+    width = max((len(r.find_all(["td", "th"])) for r in rows), default=0)
+    for row in rows:
+        for _ in range(width - len(row.find_all(["td", "th"]))):
+            row.append(soup.new_tag("td"))
+    if rows and table.find("thead") is None:
+        head = soup.new_tag("thead")
+        for cell in rows[0].find_all("td"):
+            cell.name = "th"
+        head.append(rows[0].extract())
+        table.insert(0, head)
+
+
+def tidy(markdown: str) -> str:
+    markdown = markdown.replace("\u00a0", " ").replace("\u200b", "")
+    # A break at the edge of a cell would be a stray <br>.
+    markdown = re.sub(
+        r"^\|.*$",
+        lambda m: re.sub(r"(?<=\|)[\s\u2063]+|[\s\u2063]+(?=\|)", " ", m.group(0)),
+        markdown,
+        flags=re.MULTILINE,
+    )
+    markdown = re.sub(r"[ ]*\u2063[ ]*", "<br>", markdown)
+    # mark_lists' markers need no escaping.
+    markdown = re.sub(
+        r"^(\s*- )\\\(([a-zA-Z]+)\\\)", r"\1(\2)", markdown, flags=re.MULTILINE
+    )
+    lines = [line.rstrip() for line in markdown.splitlines()]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip() + "\n"
+
+
+# Records ---------------------------------------------------------------------
+
+
+class Dumper(yaml.SafeDumper):
+    """Quotes digit strings, which YAML 1.2 reads as numbers."""
+
+
+def represent_str(dumper: yaml.SafeDumper, value: str) -> yaml.ScalarNode:
+    style = "'" if value.isdigit() else None
+    return dumper.represent_scalar("tag:yaml.org,2002:str", value, style=style)
+
+
+Dumper.add_representer(str, represent_str)
+
+
+def render(page: Page, agreement: str, body: str) -> str:
+    fm = yaml.dump(
+        {
+            "title": page.title,
+            "identifier": page.identifier,
+            "kind": page.kind,
+            "is_part_of": agreement,
+            "source": page.url,
+        },
+        Dumper=Dumper,
+        sort_keys=False,
+        allow_unicode=True,
+        width=10**6,
+    )
+    return f"---\n{fm}---\n\n{body}"
+
+
+def write_tree(vault: Path, files: dict[str, bytes]) -> tuple[int, int]:
+    """Make enterprise-agreement/ hold exactly `files`; returns (written, removed)."""
+    written = removed = 0
+    for rel, data in files.items():
+        target = vault / rel
+        if target.exists() and target.read_bytes() == data:
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        written += 1
+    base = vault / FOLDER
+    if base.exists():
+        for existing in sorted(base.rglob("*"), reverse=True):
+            rel = existing.relative_to(vault).as_posix()
+            if existing.is_file() and rel not in files:
+                existing.unlink()
+                removed += 1
+    return written, removed
+
+
+# Fetching --------------------------------------------------------------------
+
+
+class Fetcher:
+    def __init__(self, cache: Path | None, delay: float) -> None:
+        self.cache = cache
+        self.delay = delay
+        self.client = httpx.Client(
+            headers={"User-Agent": "anu-enterprise-agreement-sync"},
+            follow_redirects=True,
+            timeout=120,
+            transport=httpx.HTTPTransport(retries=3),
+        )
+
+    def get(self, url: str, key: str) -> str:
+        cached = self.cache / key if self.cache else None
+        if cached and cached.exists():
+            return cached.read_text(encoding="utf-8")
+        time.sleep(self.delay)
+        response = self.client.get(url)
+        response.raise_for_status()
+        if cached:
+            cached.parent.mkdir(parents=True, exist_ok=True)
+            cached.write_bytes(response.content)
+        return response.content.decode("utf-8", errors="replace")
+
+
+def main(
+    vault: Path = typer.Option(Path(), help="the vault's root"),
+    cache: Path | None = typer.Option(None, help="keep and reuse responses here"),
+    delay: float = typer.Option(1.0, help="seconds between requests"),
+    min_clauses: int = typer.Option(60, help="abort if the index lists fewer pages"),
+) -> None:
+    if not shutil.which("pandoc"):
+        raise SystemExit("pandoc is not on the PATH")
+    fetch = Fetcher(cache, delay)
+    pages = parse_index(fetch.get(INDEX_URL, "index.html"))
+    if len(pages) < min_clauses:
+        raise SystemExit(f"the index lists only {len(pages)} pages; not syncing")
+    html = {p.slug: fetch.get(p.url, f"pages/{p.slug}.html") for p in pages}
+    first = next((p for p in pages if p.kind == "clause" and p.identifier == "1"), None)
+    if first is None:
+        raise SystemExit("the index lists no clause 1; not syncing")
+    try:
+        agreement = agreement_title(html[first.slug])
+    except ValueError as e:
+        raise SystemExit(f"{first.url}: {e}") from e
+    files: dict[str, bytes] = {}
+    for p in pages:
+        try:
+            found = heading(html[p.slug])
+            if LINK_TEXT.sub(r"\3", found).strip() != p.title:
+                raise ValueError(f"heading is {found!r}, not the index's link text")
+            body = html_markdown(content(html[p.slug]))
+        except (ValueError, subprocess.CalledProcessError) as e:
+            raise SystemExit(f"{p.url}: {e}") from e
+        files[f"{FOLDER}/{p.slug}.md"] = render(p, agreement, body).encode()
+    written, removed = write_tree(vault, files)
+    typer.echo(f"{len(pages)} pages: {written} files written, {removed} removed")
+
+
+if __name__ == "__main__":
+    typer.run(main)
