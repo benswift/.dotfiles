@@ -10,8 +10,9 @@
 The anu-policy vault's legislation workflow runs it from the vault root.
 ANU's legislation page (anu.edu.au/about/governance/legislation) is the
 index: the ANU Act, statutes, rules and orders, and the Commonwealth acts and
-instruments the University works under. Each title is looked up by name in
-the Federal Register of Legislation's API, and its latest registered version
+instruments the University works under. Beside them it takes the Commonwealth
+law the Policy Library cites most and the index leaves out (CITED). Each title
+is looked up by name in the Federal Register of Legislation's API, and its latest registered version
 (the current compilation, for an amended act) is fetched as EPUB and
 converted to Markdown with pandoc, one `legislation` record per title, named
 by the kebab-case title. Section and part headings stay headings;
@@ -19,8 +20,9 @@ subsections, paragraphs and notes become plain paragraphs that keep their
 (1), (a), (i) markers; the table of contents is dropped.
 
 Like policy-library-sync, the output depends only on what the sources say: it
-writes only files whose text changed, deletes records the index no longer
-lists, then runs `wiz validate`. It aborts before writing anything if the
+writes only files whose text changed and deletes records the index no longer
+lists. It doesn't validate: `anu-policy-sync` runs it before the syncs that
+link to its records, then validates the vault once. It aborts before writing anything if the
 index lists fewer than --min-titles, a title isn't on the Register, or any
 fetch fails. --cache DIR keeps every response there and reuses it.
 """
@@ -53,6 +55,27 @@ API = "https://api.prod.legislation.gov.au/v1"
 REGISTER = "https://www.legislation.gov.au"
 FOLDER = "legislation"
 
+# Commonwealth law that five or more Policy Library documents name in
+# is_based_on, by its Register name, so policy-library-sync can link those
+# citations.
+CITED = [
+    "Australian Radiation Protection and Nuclear Safety Act 1998",
+    "Copyright Act 1968",
+    "Crimes Act 1914",
+    "Disability Discrimination Act 1992",
+    "Electronic Transactions Act 1999",
+    "Fair Work Act 2009",
+    "National Code of Practice for Providers of Education and Training to Overseas Students 2018",
+    "Privacy Act 1988",
+    "Racial Discrimination Act 1975",
+    "Safety, Rehabilitation and Compensation Act 1988",
+    "Sex Discrimination Act 1984",
+    "Telecommunications Act 1997",
+    "Telecommunications Regulations 2021",
+    "Work Health and Safety Act 2011",
+    "Work Health and Safety Regulations 2011",
+]
+
 INDEX_LINK = re.compile(r"^/about/governance/legislation/[a-z0-9-]+$")
 LATEST = re.compile(r"\s*\(latest version\)\s*$", re.IGNORECASE)
 # The last word of a title that names its kind; anything else is an instrument.
@@ -73,7 +96,7 @@ ACT_HEAD = re.compile(r"^ActHead([1-5])$")
 @dataclass
 class Title:
     name: str  # as ANU lists it, without "(Latest version)"
-    anu_page: str
+    anu_page: str  # empty for a CITED title
     identifier: str = ""
     register_name: str = ""
     collection: str = ""
@@ -245,7 +268,8 @@ def frontmatter(t: Title) -> dict[str, object]:
     if t.unincorporated:
         fm["has_unincorporated_amendments"] = True
     fm["source"] = f"{REGISTER}/{t.identifier}/latest/text"
-    fm["anu_page"] = t.anu_page
+    if t.anu_page:
+        fm["anu_page"] = t.anu_page
     return fm
 
 
@@ -364,14 +388,16 @@ def main(
     cache: Path | None = typer.Option(None, help="keep and reuse responses here"),
     delay: float = typer.Option(1.0, help="seconds between requests"),
     min_titles: int = typer.Option(30, help="abort if the index lists fewer"),
+    cited: list[str] = typer.Option(CITED, help="Register names to add to the index"),
 ) -> None:
-    for tool in ["pandoc", "wiz"]:
-        if not shutil.which(tool):
-            raise SystemExit(f"{tool} is not on the PATH")
+    if not shutil.which("pandoc"):
+        raise SystemExit("pandoc is not on the PATH")
     fetch = Fetcher(cache, delay)
     titles = parse_index(fetch.get(INDEX_URL, "index.html").decode(errors="replace"))
     if len(titles) < min_titles:
         raise SystemExit(f"the index lists only {len(titles)} titles; not syncing")
+    listed = {t.name for t in titles}
+    titles += [Title(name, "") for name in cited if name not in listed]
     for t in titles:
         resolve(fetch, t)
     assign_paths(titles)
@@ -385,7 +411,6 @@ def main(
         files[f"{t.path}.md"] = render(t, body).encode()
     written, removed = write_tree(vault, files)
     typer.echo(f"{len(titles)} titles: {written} files written, {removed} removed")
-    subprocess.run(["wiz", "validate"], cwd=vault, check=True)
 
 
 if __name__ == "__main__":

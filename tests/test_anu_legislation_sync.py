@@ -9,7 +9,7 @@ The cache stands in for ANU's legislation page, the Register's API and its
 EPUBs (the tool reads it instead of fetching), and a stub `wiz` stands in for
 validation, so these check what a sync writes: one record per title with the
 Register's details, headings and provisions converted, a title found under
-its "and" spelling, stale records removed, and a refusal to sync when a title
+its "and" spelling, a cited title the index doesn't list, stale records removed, and a refusal to sync when a title
 can't be found.
 """
 
@@ -128,26 +128,22 @@ def setup(tmp_path: Path) -> dict[str, Path]:
         json.dumps({"value": []})
     )
     register(cache, "Example and Things Act 1991", "C2004A04206", "Act", ACT_HTML, 15)
-    stub = tmp_path / "stub"
-    stub.mkdir()
-    (stub / "wiz").write_text("#!/bin/sh\nexit 0\n")
-    (stub / "wiz").chmod(0o755)
+    register(cache, "Privacy Act 1988", "C2004A03712", "Act", ACT_HTML)
     vault = tmp_path / "vault"
     vault.mkdir()
-    return {"cache": cache, "stub": stub, "vault": vault}
+    return {"cache": cache, "vault": vault}
 
 
 def sync(setup: dict[str, Path], *extra: str) -> subprocess.CompletedProcess[str]:
     env = {
         **os.environ,
-        "PATH": f"{setup['stub']}:{os.environ['PATH']}",
         # CI forces colour, which would split the messages the tests look for.
         "NO_COLOR": "1",
         "FORCE_COLOR": "",
     }
     return subprocess.run(
         [str(SCRIPT), "--vault", str(setup["vault"]), "--cache", str(setup["cache"])]
-        + ["--delay", "0", "--min-titles", "1", *extra],
+        + ["--delay", "0", "--min-titles", "1", "--cited", "Privacy Act 1988", *extra],
         check=False,
         env=env,
         capture_output=True,
@@ -161,6 +157,7 @@ def test_writes_a_record_per_title(setup: dict[str, Path]) -> None:
     leg = setup["vault"] / "legislation"
     assert sorted(p.name for p in leg.iterdir()) == [
         "example-and-things-act-1991.md",
+        "privacy-act-1988.md",
         "research-awards-rule-2021.md",
     ]
     rule = (leg / "research-awards-rule-2021.md").read_text()
@@ -174,6 +171,8 @@ def test_writes_a_record_per_title(setup: dict[str, Path]) -> None:
     act = (leg / "example-and-things-act-1991.md").read_text()
     assert "kind: act\n" in act and "compilation: 15\n" in act
     assert "has_unincorporated_amendments: true" in act
+    cited = (leg / "privacy-act-1988.md").read_text()
+    assert "identifier: C2004A03712\n" in cited and "anu_page" not in cited
 
 
 def test_headings_and_provisions(setup: dict[str, Path]) -> None:
