@@ -5,15 +5,14 @@
 # ///
 """Run bin/policy-library-sync over a cached copy of a tiny library.
 
-The cache stands in for the site (the tool reads it instead of fetching), and
-a stub `wiz` stands in for validation, so these check what a sync writes:
-records and originals, wiki links, relations stored once, and that a re-run
-changes only what the library changed.
+The cache stands in for the site (the tool reads it instead of fetching), so
+these check what a sync writes: records and originals, wiki links, relations
+stored once, links into the vault's other mirrors, and that a re-run changes
+only what the library changed.
 """
 
 from __future__ import annotations
 
-import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -35,12 +34,14 @@ def page(
     body: str = "",
     related: tuple[str, ...] = (),
     download: bool = False,
+    authority: tuple[str, ...] = ("Fair Work Act 2009",),
 ) -> str:
     def row(label: str, value: str) -> str:
         return f"<tr><td>{label}</td><td>{value}</td></tr>"
 
     rel = "".join(f'<a href="/ppl/document/{r}">{r}</a>' for r in related)
     dl = f'<a href="/ppl/download/{ident}">Click to download</a>' if download else ""
+    auth = "".join(f'<a href="https://legislation.gov.au/x">{a}</a>' for a in authority)
     return f"""<html><head><meta name="keywords" content="leave, staff"></head><body>
 {dl}<div class="doublewide" id="convertedcontent">{body}</div>
 <div id="info_block"><table>
@@ -53,8 +54,8 @@ def page(
 {row("Responsible Officer:", '<a href="mailto:a@b">Chief People Officer</a>')}
 {row("Approved By:", '<a href="mailto:a@b">Vice-Chancellor</a>')}
 {row("Contact Area", "People and Culture Division")}
-{row("Authority:", '<a href="https://legislation.gov.au/x">Fair Work Act 2009</a>')}
-{row("Delegations", '<a href="https://example.org/d.pdf">238, 239</a>')}
+{row("Authority:", auth)}
+{row("Delegations", '<a href="https://example.org/d.pdf">238, 239, 300-301</a>')}
 </table></div>
 <table><tr><td colspan="2"><h3>Related Content</h3></td></tr>
 <tr><td>Related</td><td>{rel}</td></tr></table>
@@ -85,13 +86,9 @@ def library(tmp_path: Path) -> dict[str, Path]:
         "content-type: application/octet-stream\n"
         "content-disposition: attachment; filename*=UTF-8''Leave%20form.docx\n"
     )
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    (bin_dir / "wiz").write_text("#!/bin/sh\nexit 0\n")
-    (bin_dir / "wiz").chmod(0o755)
     vault = tmp_path / "vault"
     vault.mkdir()
-    return {"cache": cache, "vault": vault, "bin": bin_dir}
+    return {"cache": cache, "vault": vault}
 
 
 def write_library(cache: Path, policy_title: str, with_form: bool) -> None:
@@ -143,7 +140,6 @@ def write_library(cache: Path, policy_title: str, with_form: bool) -> None:
 
 
 def sync(lib: dict[str, Path]) -> str:
-    env = {**os.environ, "PATH": f"{lib['bin']}{os.pathsep}{os.environ['PATH']}"}
     result = subprocess.run(
         [
             SCRIPT,
@@ -156,7 +152,6 @@ def sync(lib: dict[str, Path]) -> str:
         ],
         capture_output=True,
         text=True,
-        env=env,
         check=True,
     )
     return result.stdout
@@ -223,14 +218,95 @@ def test_retitled_and_dropped_documents_follow_the_library(
 
 def test_a_short_index_aborts_without_writing(library: dict[str, Path]) -> None:
     write_library(library["cache"], "Staff leave", with_form=True)
-    env = {**os.environ, "PATH": f"{library['bin']}{os.pathsep}{os.environ['PATH']}"}
     result = subprocess.run(
         [SCRIPT, "--vault", library["vault"], "--cache", library["cache"]],
         check=False,
         capture_output=True,
         text=True,
-        env=env,
     )
     assert result.returncode != 0
     assert "lists only 3 documents" in result.stderr
     assert not any(library["vault"].iterdir())
+
+
+def mirror(vault: Path, path: str, **fields: str) -> None:
+    lines = "".join(f"{k}: '{v}'\n" for k, v in fields.items())
+    (vault / path).parent.mkdir(parents=True, exist_ok=True)
+    (vault / path).write_text(f"---\n{lines}---\n\nText.\n")
+
+
+def test_links_into_the_other_mirrors(library: dict[str, Path]) -> None:
+    vault = library["vault"]
+    mirror(
+        vault,
+        "legislation/fair-work-act-2009.md",
+        title="Fair Work Act 2009",
+        identifier="C2009A00028",
+        register_id="C2009A00028C00100",
+    )
+    mirror(
+        vault,
+        "legislation/australian-national-university-governance-statute-2024.md",
+        title="Australian National University (Governance) Statute 2024",
+        identifier="F2024L00001",
+        register_id="F2024L00001",
+        anu_page="https://www.anu.edu.au/about/governance/legislation/governance-statute",
+    )
+    ea = "https://services.anu.edu.au/human-resources/enterprise-agreement"
+    mirror(
+        vault,
+        "enterprise-agreement/1-title-and-operation-of-the-agreement.md",
+        identifier="1",
+        is_part_of="The Australian National University Enterprise Agreement 2023-2026",
+        source=f"{ea}/1-title-and-operation-of-the-agreement",
+    )
+    mirror(
+        vault,
+        "enterprise-agreement/64-ill-health-assessment.md",
+        identifier="64",
+        is_part_of="The Australian National University Enterprise Agreement 2023-2026",
+        source=f"{ea}/64-ill-health-assessment",
+    )
+    for n in ["238", "300", "301"]:
+        mirror(vault, f"delegations/{n}.md", identifier=n)
+    write_library(library["cache"], "Staff leave", with_form=False)
+    (library["cache"] / "html" / "ANUP_000002.html").write_text(
+        page(
+            "ANUP_000002",
+            "Procedure",
+            "Staff leave",
+            "<p>Under <a href='https://www.legislation.gov.au/Details/C2009A00028'>"
+            "the Act</a>, <a href='https://www.legislation.gov.au/F2015L01799'>an old"
+            f" rule</a> and <a href='{ea}/55-ill-health-assessment'>clause 55</a>; "
+            "<a href='https://anu.edu.au/about/governance/legislation/governance-statute/'>"
+            "the statute</a>.</p>",
+            authority=(
+                "Fair Work Act 2009",
+                "Australian National University (Governance) Statute 2023",
+                "The Australian National University Enterprise Agreement 2023-2026",
+                "Privacy Act 1988",
+            ),
+        )
+    )
+    sync(library)
+    procedure = (vault / "procedures" / "staff-leave.md").read_text()
+    assert (
+        "is_based_on:\n"
+        "- '[[legislation/fair-work-act-2009]]'\n"
+        "- '[[legislation/australian-national-university-governance-statute-2024|"
+        "Australian National University (Governance) Statute 2023]]'\n"
+        "- '[[enterprise-agreement/1-title-and-operation-of-the-agreement|"
+        "The Australian National University Enterprise Agreement 2023-2026]]'\n"
+        "- Privacy Act 1988\n"
+    ) in procedure
+    assert (
+        "delegations:\n- '[[delegations/238]]'\n- '239'\n"
+        "- '[[delegations/300]]'\n- '[[delegations/301]]'\n"
+    ) in procedure
+    assert "[[legislation/fair-work-act-2009|the Act]]" in procedure
+    assert "[an old rule](https://www.legislation.gov.au/F2015L01799)" in procedure
+    assert "[[enterprise-agreement/64-ill-health-assessment|clause 55]]" in procedure
+    assert (
+        "[[legislation/australian-national-university-governance-statute-2024|"
+        "the statute]]"
+    ) in procedure

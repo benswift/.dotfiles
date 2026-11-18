@@ -14,8 +14,9 @@ guidelines/, standards/ or forms/, named by the kebab-case title (a title two
 documents of one kind share gets the document number appended). The output
 depends only on what the site says, so a run writes exactly what ANU changed:
 it writes only files whose text changed, deletes records and originals the
-index no longer lists, then runs `wiz validate`. Nobody edits these records by
-hand; the next run would overwrite the edit.
+index no longer lists. Nobody edits these records by hand; the next run would
+overwrite the edit. It doesn't validate: `anu-policy-sync` runs it after the
+syncs it links to, then validates the vault once.
 
 The body is the page's own text, converted to Markdown with pandoc. A form,
 or any document whose page carries no text, takes its body from the original
@@ -24,6 +25,16 @@ in files/<folder>/ beside the record, named after it. Links to another library
 document, its PDF or its download become wiki links to its record, with the
 link text as the alias; a link to a document the index doesn't list stays a
 URL. Outlook safelinks are unwrapped and links within a page dropped.
+
+It also links into the vault's other mirrors as they stand (Mirrors). A link
+to a Register title, an agreement clause (by its unnumbered slug, which
+survives renumbering) or a mirrored PDF becomes a wiki link to its record.
+`is_based_on` links a cited title to its legislation record, or the agreement
+to its first clause, ignoring case, punctuation and a statute's "Australian
+National University (...)"; a title that matches only under an earlier year
+cites the predecessor of the one record of that name, so links to that record
+with the cited title as its alias. `delegations` links each number to its
+delegation record. What matches nothing stays text.
 
 The page's Related Content is stored once per pair, in `is_related_to` on the
 more specific record (form, then guideline, procedure, standard, policy; the
@@ -43,7 +54,7 @@ import tempfile
 import time
 import unicodedata
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
@@ -78,6 +89,17 @@ PDF_HREF = re.compile(
 # A library URL written out in text, without trailing punctuation.
 LIBRARY_URL = re.compile(
     r"https?://policies\.anu\.edu\.au/ppl/[^\s<>()\[\]]*[^\s<>()\[\].,;:]"
+)
+# Links into the vault's other mirrors (Mirrors below).
+REGISTER_URL = re.compile(
+    r"^https?://(?:www\.)?(?:legislation|comlaw)\.gov\.au/", re.IGNORECASE
+)
+REGISTER_ID = re.compile(r"\b([CF]\d{4}[A-Z]\d{5})\b")
+# A clause's page, keyed without its number, which renumbering changes.
+CLAUSE_HREF = re.compile(
+    r"^https?://services\.anu\.edu\.au/human-resources/enterprise-agreement/"
+    r"(?:\d+-)?([a-z0-9-]+?)/?$",
+    re.IGNORECASE,
 )
 UNDER_REVIEW = re.compile(r"\s*\(\s*under review\s*\)\s*$", re.IGNORECASE)
 KEEP_ATTRS = {"href", "src", "alt", "start", "type", "colspan", "rowspan"}
@@ -128,6 +150,122 @@ def unwrap_safelink(href: str) -> str:
     if url.netloc.endswith("safelinks.protection.outlook.com"):
         return unquote(parse_qs(url.query)["url"][0])
     return href
+
+
+# The other mirrors ------------------------------------------------------------
+
+
+def norm_title(title: str) -> str:
+    """A cited title, ignoring case, punctuation, "(Cth)", a leading "The" and
+    the "Australian National University (...)" around a statute's name."""
+    text = title.lower().replace("&", " and ").replace("’", "'")
+    text = re.sub(r"\(cth\)", "", text)
+    text = re.sub(r"^\s*the\s+", "", text)
+    text = re.sub(r"^australian national university \(([^)]*)\)", r"\1", text)
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", text).split())
+
+
+def url_key(url: str) -> str:
+    url = re.sub(r"^https?://(www\.)?", "", url.strip().lower())
+    return re.split(r"[?#]", url)[0].rstrip("/")
+
+
+def read_frontmatter(path: Path) -> dict[str, object]:
+    text = path.read_text()
+    if not text.startswith("---\n"):
+        return {}
+    data = yaml.safe_load(text.split("---\n", 2)[1])
+    return data if isinstance(data, dict) else {}
+
+
+YEARED = re.compile(r"(.*\D) (\d{4})")
+
+
+@dataclass
+class Mirrors:
+    """The records other syncs keep in the vault, read as they stand, so a
+    document's citations and links can point at them."""
+
+    titles: dict[str, str] = field(default_factory=dict)  # norm_title -> path
+    title_of: dict[str, str] = field(default_factory=dict)  # path -> title
+    register: dict[str, str] = field(default_factory=dict)  # Register ID -> path
+    clauses: dict[str, str] = field(default_factory=dict)  # unnumbered slug -> path
+    urls: dict[str, str] = field(default_factory=dict)  # url_key -> path
+    delegations: dict[str, str] = field(default_factory=dict)  # number -> path
+
+    @classmethod
+    def load(cls, vault: Path) -> "Mirrors":
+        m = cls()
+
+        def records(folder: str) -> Iterable[tuple[str, dict[str, object]]]:
+            for p in sorted((vault / folder).glob("*.md")):
+                yield f"{folder}/{p.stem}", read_frontmatter(p)
+
+        for path, fm in records("legislation"):
+            m.add_title(str(fm["title"]), path)
+            for key in ["identifier", "register_id"]:
+                m.register[str(fm[key])] = path
+            if "anu_page" in fm:
+                m.urls[url_key(str(fm["anu_page"]))] = path
+        for path, fm in records("enterprise-agreement"):
+            if match := CLAUSE_HREF.match(str(fm["source"])):
+                m.clauses[match.group(1).lower()] = path
+            # The agreement is cited by name; its first clause says what it is.
+            if str(fm["identifier"]) == "1":
+                m.titles[norm_title(str(fm["is_part_of"]))] = path
+        for path, fm in records("publications"):
+            m.urls[url_key(str(fm["source"]))] = path
+        for path, fm in records("delegations"):
+            m.delegations[str(fm["identifier"])] = path
+        return m
+
+    def add_title(self, title: str, path: str) -> None:
+        self.titles[norm_title(title)] = path
+        self.title_of[path] = title
+
+    def link(self, path: str, cited: str) -> str:
+        if self.title_of.get(path) == cited:
+            return f"[[{path}]]"
+        return f"[[{path}|{cited}]]"
+
+    def authority(self, cited: str) -> str:
+        """A cited title as a link to its record, or as it was.
+
+        A title that matches no record except under an earlier year cites the
+        predecessor of the one record of that name, so links to it.
+        """
+        name = norm_title(cited)
+        if name in self.titles:
+            return self.link(self.titles[name], cited)
+        if match := YEARED.fullmatch(name):
+            later = [
+                path
+                for title, path in self.titles.items()
+                if (other := YEARED.fullmatch(title))
+                and other.group(1) == match.group(1)
+                and other.group(2) > match.group(2)
+            ]
+            if len(later) == 1:
+                return self.link(later[0], cited)
+        return cited
+
+    def delegation(self, numbers: str) -> list[str]:
+        """A delegation number or range ("448-455") as links, if all are held."""
+        if match := re.fullmatch(r"0*(\d+)-0*(\d+)", numbers):
+            each = [str(n) for n in range(int(match[1]), int(match[2]) + 1)]
+        else:
+            each = [numbers.lstrip("0") or numbers]
+        if not all(n in self.delegations for n in each):
+            return [numbers]
+        return [f"[[{self.delegations[n]}]]" for n in each]
+
+    def url(self, href: str) -> str | None:
+        """The record a URL's page or file is mirrored in, if any."""
+        if REGISTER_URL.match(href) and (match := REGISTER_ID.search(href)):
+            return self.register.get(match.group(1))
+        if match := CLAUSE_HREF.match(href):
+            return self.clauses.get(match.group(1).lower())
+        return self.urls.get(url_key(href))
 
 
 # Parsing ---------------------------------------------------------------------
@@ -268,8 +406,11 @@ def run(cmd: list[str], data: bytes) -> str:
     ).stdout.decode()
 
 
-def resolve(href: str, paths: dict[str, str], pdfs: dict[str, str]) -> str:
-    """A link's target: `wiz:<record path>` for a library document, else a URL."""
+def resolve(
+    href: str, paths: dict[str, str], pdfs: dict[str, str], mirrors: Mirrors
+) -> str:
+    """A link's target: `wiz:<record path>` for a library document or anything
+    another mirror holds, else a URL."""
     href = unwrap_safelink(href.strip())
     if match := DOC_HREF.match(href):
         ident = match.group(1).upper()
@@ -279,6 +420,8 @@ def resolve(href: str, paths: dict[str, str], pdfs: dict[str, str]) -> str:
     if match := PDF_HREF.match(href):
         pdf = match.group(1)
         return f"wiz:{pdfs[pdf]}" if pdf in pdfs else f"{BASE}/ppl/pdfdownload/{pdf}"
+    if target := mirrors.url(href):
+        return f"wiz:{target}"
     if href.startswith("/"):
         return BASE + href
     return href
@@ -321,7 +464,7 @@ def bare_links(text: str, paths: dict[str, str]) -> str:
     """Library URLs in plain text (a PDF's), as `<wiz:path>` links."""
 
     def sub(m: re.Match[str]) -> str:
-        target = resolve(m.group(0), paths, {})
+        target = resolve(m.group(0), paths, {}, Mirrors())
         return f"<{target}>" if target.startswith("wiz:") else m.group(0)
 
     return LIBRARY_URL.sub(sub, text)
@@ -398,7 +541,11 @@ def lettered_lists(soup: BeautifulSoup) -> None:
 
 
 def html_markdown(
-    html: str, paths: dict[str, str], pdfs: dict[str, str], drop_title: bool = True
+    html: str,
+    paths: dict[str, str],
+    pdfs: dict[str, str],
+    mirrors: Mirrors,
+    drop_title: bool = True,
 ) -> str:
     """Markdown from a page's (or a converted original's) HTML, stripped of
     Word's styling, with library links as `wiz:` targets for wiki_links."""
@@ -428,9 +575,9 @@ def html_markdown(
         if not href or href.startswith("#") or href.lower().startswith("javascript:"):
             a.unwrap()
         else:
-            a["href"] = resolve(href, paths, pdfs)
+            a["href"] = resolve(href, paths, pdfs, mirrors)
     for img in soup.find_all("img"):
-        src = resolve(str(img.get("src", "")), {}, {})
+        src = resolve(str(img.get("src", "")), {}, {}, Mirrors())
         if src.startswith("http"):
             img["src"] = src
         else:
@@ -460,7 +607,9 @@ PANDOC_FORMATS = {"docx", "odt", "rtf", "xlsx", "pptx"}
 LEGACY_FORMATS = {"doc": "docx", "xls": "xlsx", "ppt": "pptx"}
 
 
-def original_markdown(data: bytes, ext: str, paths: dict[str, str]) -> str:
+def original_markdown(
+    data: bytes, ext: str, paths: dict[str, str], mirrors: Mirrors
+) -> str:
     """An original file's text: a PDF's as laid out, an Office file's via pandoc.
 
     LibreOffice first converts a legacy Office file to its XML successor.
@@ -491,7 +640,7 @@ def original_markdown(data: bytes, ext: str, paths: dict[str, str]) -> str:
             )
             src = src.with_suffix(f".{ext}")
         html = run(["pandoc", "-f", ext, "-t", "html", str(src)], b"")
-    return html_markdown(html, paths, {}, drop_title=False)
+    return html_markdown(html, paths, {}, mirrors, drop_title=False)
 
 
 def tidy(markdown: str) -> str:
@@ -542,7 +691,7 @@ def relations(pages: list[Page]) -> dict[str, list[str]]:
 
 
 def frontmatter(
-    page: Page, related: list[str], by_id: dict[str, Page]
+    page: Page, related: list[str], by_id: dict[str, Page], mirrors: Mirrors
 ) -> dict[str, object]:
     fm: dict[str, object] = {
         "title": page.title,
@@ -553,6 +702,14 @@ def frontmatter(
     for key, value in page.fields.items():
         if value:
             fm[key] = value
+    cited = page.fields["is_based_on"]
+    if isinstance(cited, list) and cited:
+        fm["is_based_on"] = unique(mirrors.authority(str(c)) for c in cited)
+    numbers = page.fields["delegations"]
+    if isinstance(numbers, list) and numbers:
+        fm["delegations"] = unique(
+            item for n in numbers for item in mirrors.delegation(str(n))
+        )
     if related:
         fm["is_related_to"] = [f"[[{by_id[i].path}]]" for i in related]
     if page.original:
@@ -579,9 +736,15 @@ def represent_str(dumper: yaml.SafeDumper, value: str) -> yaml.ScalarNode:
 Dumper.add_representer(str, represent_str)
 
 
-def render(page: Page, related: list[str], by_id: dict[str, Page], body: str) -> str:
+def render(
+    page: Page,
+    related: list[str],
+    by_id: dict[str, Page],
+    mirrors: Mirrors,
+    body: str,
+) -> str:
     fm = yaml.dump(
-        frontmatter(page, related, by_id),
+        frontmatter(page, related, by_id, mirrors),
         Dumper=Dumper,
         sort_keys=False,
         allow_unicode=True,
@@ -698,7 +861,7 @@ def main(
     delay: float = typer.Option(1.0, help="seconds between requests"),
     min_documents: int = typer.Option(400, help="abort if the index lists fewer"),
 ) -> None:
-    for tool in ["pandoc", "pdftotext", "wiz"]:
+    for tool in ["pandoc", "pdftotext"]:
         if not shutil.which(tool):
             raise SystemExit(f"{tool} is not on the PATH")
     fetch = Fetcher(cache, delay)
@@ -734,12 +897,13 @@ def main(
     paths = {p.identifier: p.path for p in pages}
     pdfs = {p.pdf_id: p.path for p in pages if p.pdf_id}
     by_id = {p.identifier: p for p in pages}
+    mirrors = Mirrors.load(vault)
 
     files: dict[str, bytes] = {}
     bodies: dict[str, str] = {}
     for page in pages:
         if page.body is not None:
-            body = html_markdown(str(page.body), paths, pdfs)
+            body = html_markdown(str(page.body), paths, pdfs, mirrors)
         else:
             if page.download:
                 url, key = f"{BASE}/ppl/download/{page.identifier}", page.identifier
@@ -749,17 +913,16 @@ def main(
                 raise RuntimeError(f"{page.identifier}: no text and no original")
             data, meta = fetch.get(url, f"originals/{key}")
             page.original = (data, extension(meta))
-            body = original_markdown(data, page.original[1], paths)
+            body = original_markdown(data, page.original[1], paths, mirrors)
             files[media_path(page)] = data
         bodies[page.identifier] = tidy(wiki_links(body))
     rel = relations(pages)
     for page in pages:
         files[f"{page.path}.md"] = render(
-            page, rel.get(page.identifier, []), by_id, bodies[page.identifier]
+            page, rel.get(page.identifier, []), by_id, mirrors, bodies[page.identifier]
         ).encode()
     written, removed = write_tree(vault, files)
     typer.echo(f"{len(pages)} documents: {written} files written, {removed} removed")
-    subprocess.run(["wiz", "validate"], cwd=vault, check=True)
 
 
 if __name__ == "__main__":
