@@ -35,6 +35,9 @@ jobs:
           git ls-files -z |
             xargs -0 awk 'FNR == 1 && /^#!.*(\/(ba)?sh|env (ba)?sh)( |$)/ { print FILENAME } { nextfile }' |
             xargs -d '\n' shellcheck -x
+      - name: Install converters
+        # policy-library-sync's tests run pandoc and pdftotext.
+        run: sudo apt-get update && sudo apt-get install -y pandoc poppler-utils
       - name: Test portable tools
         # Helix needs the locally built editor/grammars/formatters, and wiz
         # comes from a private repo, so their integration suites stay local.

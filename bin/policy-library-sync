@@ -1,0 +1,766 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["beautifulsoup4", "httpx", "lxml", "pyyaml", "typer"]
+# ///
+"""Mirror the ANU Policy Library (policies.anu.edu.au/ppl) into a wiz vault.
+
+    policy-library-sync [--vault DIR] [--cache DIR] [--delay SECONDS]
+
+The anu-policy vault's sync workflow runs it from the vault root. It reads the
+library's by-title index, fetches every document page listed there, and
+rebuilds one `document` record per page in policies/, procedures/,
+guidelines/, standards/ or forms/, named by the kebab-case title (a title two
+documents of one kind share gets the document number appended). The output
+depends only on what the site says, so a run writes exactly what ANU changed:
+it writes only files whose text changed, deletes records and originals the
+index no longer lists, then runs `wiz validate`. Nobody edits these records by
+hand; the next run would overwrite the edit.
+
+The body is the page's own text, converted to Markdown with pandoc. A form,
+or any document whose page carries no text, takes its body from the original
+file (`pdftotext -layout` for a PDF, pandoc for Word), and keeps that original
+in files/<folder>/ beside the record, named after it. Links to another library
+document, its PDF or its download become wiki links to its record, with the
+link text as the alias; a link to a document the index doesn't list stays a
+URL. Outlook safelinks are unwrapped and links within a page dropped.
+
+The page's Related Content is stored once per pair, in `is_related_to` on the
+more specific record (form, then guideline, procedure, standard, policy; the
+higher document number between two of a kind); `wiz show` gives the other
+side as backlinks.
+
+It aborts before writing anything if the index lists fewer than
+--min-documents (a broken index would otherwise delete the vault), or if any
+fetch fails or a page doesn't parse. --cache DIR keeps every response there
+and reuses it, for developing the converter without refetching.
+"""
+
+import re
+import shutil
+import subprocess
+import tempfile
+import time
+import unicodedata
+from collections.abc import Iterable
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from urllib.parse import parse_qs, unquote, urlparse
+
+import httpx
+import typer
+import yaml
+from bs4 import BeautifulSoup, Tag
+
+BASE = "https://policies.anu.edu.au"
+INDEX_URL = f"{BASE}/ppl/title/index.htm"
+
+# Each library document type's kind, folder, and specificity rank for storing
+# a relation once.
+KINDS = {
+    "Policy": ("policy", "policies", 1),
+    "Standard": ("standard", "standards", 2),
+    "Procedure": ("procedure", "procedures", 3),
+    "Guideline": ("guideline", "guidelines", 4),
+    "Form": ("form", "forms", 5),
+    "SupportingDocuments": ("supporting-document", "supporting-documents", 5),
+}
+FOLDERS = [folder for _, folder, _ in KINDS.values()]
+
+DOC_HREF = re.compile(
+    r"^(?:https?://policies\.anu\.edu\.au)?/ppl/(?:document|download)/(ANUP_\d+)",
+    re.IGNORECASE,
+)
+PDF_HREF = re.compile(
+    r"^(?:https?://policies\.anu\.edu\.au)?/ppl/pdfdownload/(\d+)", re.IGNORECASE
+)
+# A library URL written out in text, without trailing punctuation.
+LIBRARY_URL = re.compile(
+    r"https?://policies\.anu\.edu\.au/ppl/[^\s<>()\[\]]*[^\s<>()\[\].,;:]"
+)
+UNDER_REVIEW = re.compile(r"\s*\(\s*under review\s*\)\s*$", re.IGNORECASE)
+KEEP_ATTRS = {"href", "src", "alt", "start", "type", "colspan", "rowspan"}
+
+
+@dataclass
+class Page:
+    identifier: str
+    kind: str
+    title: str
+    status: str
+    fields: dict[str, object]
+    related: list[str]
+    linked: list[str]  # every library document it links to
+    body: Tag | None
+    pdf_id: str | None
+    download: bool
+    original: tuple[bytes, str] | None = None  # bytes, extension
+    path: str = ""
+
+
+def clean(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def unique(items: Iterable[str]) -> list[str]:
+    return list(dict.fromkeys(i for i in items if i))
+
+
+def slugify(title: str) -> str:
+    text = unicodedata.normalize("NFKD", title.replace("&", " and "))
+    text = text.encode("ascii", "ignore").decode().lower()
+    slug = re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+    if len(slug) > 80:
+        slug = slug[:80].rsplit("-", 1)[0]
+    return slug
+
+
+def iso_date(text: str) -> str | None:
+    text = clean(text)
+    if not text:
+        return None
+    return datetime.strptime(text, "%d %b %Y").date().isoformat()
+
+
+def unwrap_safelink(href: str) -> str:
+    url = urlparse(href)
+    if url.netloc.endswith("safelinks.protection.outlook.com"):
+        return unquote(parse_qs(url.query)["url"][0])
+    return href
+
+
+# Parsing ---------------------------------------------------------------------
+
+
+def parse_index(html: str) -> dict[str, str]:
+    """The index's documents, as identifier -> kind."""
+    soup = BeautifulSoup(html, "lxml")
+    out: dict[str, str] = {}
+    for a in soup.find_all("a", href=DOC_HREF):
+        tr = a.find_parent("tr")
+        tds = tr.find_all("td", recursive=False) if tr else []
+        if len(tds) == 2:
+            match = DOC_HREF.match(str(a["href"]))
+            assert match
+            out[match.group(1).upper()] = clean(tds[1].get_text())
+    return out
+
+
+def info_rows(soup: BeautifulSoup) -> dict[str, Tag]:
+    block = soup.select_one("#info_block")
+    if block is None:
+        raise ValueError("no information block")
+    rows = {}
+    for tr in block.find_all("tr"):
+        tds = tr.find_all("td", recursive=False)
+        if len(tds) == 2:
+            rows[clean(tds[0].get_text()).rstrip(":").strip()] = tds[1]
+    return rows
+
+
+def link_texts(td: Tag) -> list[str]:
+    links = [clean(a.get_text()) for a in td.find_all("a")]
+    return unique(links) if links else unique([clean(td.get_text())])
+
+
+def related_ids(soup: BeautifulSoup) -> list[str]:
+    """The library documents in the page's Related Content."""
+    ids = []
+    for h3 in soup.find_all("h3"):
+        if clean(h3.get_text()) == "Related Content":
+            table = h3.find_parent("table")
+            assert isinstance(table, Tag)
+            for a in table.find_all("a"):
+                href = unwrap_safelink(str(a.get("href", "")).strip())
+                if match := DOC_HREF.match(href):
+                    ids.append(match.group(1).upper())
+    return unique(ids)
+
+
+def parse_page(identifier: str, html: str) -> Page:
+    soup = BeautifulSoup(html, "lxml")
+    rows = info_rows(soup)
+
+    def text(label: str) -> str:
+        return clean(rows[label].get_text()) if label in rows else ""
+
+    if text("Document Number").upper() != identifier:
+        raise ValueError(f"page says it is {text('Document Number')!r}")
+    kind = text("Document Type")
+    if kind not in KINDS:
+        raise ValueError(f"unknown document type {kind!r}")
+    raw_title = text("Title")
+    status = "under-review" if UNDER_REVIEW.search(raw_title) else "current"
+    title = UNDER_REVIEW.sub("", raw_title)
+
+    meta = soup.find("meta", attrs={"name": "keywords"})
+    keywords = (
+        unique(clean(k) for k in str(meta.get("content", "")).split(","))
+        if isinstance(meta, Tag)
+        else []
+    )
+    delegations = unique(
+        clean(d)
+        for a in (rows["Delegations"].find_all("a") if "Delegations" in rows else [])
+        for d in a.get_text().split(",")
+        if clean(d).strip("0")  # 0 means none
+    )
+    fields: dict[str, object] = {
+        "description": text("Purpose"),
+        "category": text("Category"),
+        "topic": text("Topic/ SubTopic"),
+        "audience": unique(clean(a) for a in text("Audience").split(",")),
+        "keywords": keywords,
+        "valid_from": iso_date(text("Effective Date")),
+        "review_date": iso_date(text("Next Review Date")),
+        "accountable_person": link_texts(rows["Responsible Officer"])
+        if "Responsible Officer" in rows
+        else [],
+        "approved_by": link_texts(rows["Approved By"]) if "Approved By" in rows else [],
+        "contact_point": "" if text("Contact Area").isdigit() else text("Contact Area"),
+        "is_based_on": link_texts(rows["Authority"]) if "Authority" in rows else [],
+        "delegations": delegations,
+    }
+
+    related = related_ids(soup)
+    pdf = soup.find("a", href=PDF_HREF)
+    pdf_match = PDF_HREF.match(str(pdf["href"])) if isinstance(pdf, Tag) else None
+    pdf_id = pdf_match.group(1) if pdf_match else None
+    download = soup.find("a", href=re.compile(r"/ppl/download/", re.IGNORECASE))
+
+    body = soup.find(id="convertedcontent")
+    if not isinstance(body, Tag) or not clean(body.get_text()):
+        body = None
+    return Page(
+        identifier=identifier,
+        kind=kind,
+        title=title,
+        status=status,
+        fields=fields,
+        related=related,
+        linked=unique(
+            [
+                *related,
+                *(
+                    m.group(1).upper()
+                    for a in (body.find_all("a") if body is not None else [])
+                    if (
+                        m := DOC_HREF.match(
+                            unwrap_safelink(str(a.get("href", "")).strip())
+                        )
+                    )
+                ),
+            ]
+        ),
+        body=body,
+        pdf_id=pdf_id,
+        download=download is not None,
+    )
+
+
+# Conversion ------------------------------------------------------------------
+
+
+def run(cmd: list[str], data: bytes) -> str:
+    return subprocess.run(
+        cmd, input=data, capture_output=True, check=True
+    ).stdout.decode()
+
+
+def resolve(href: str, paths: dict[str, str], pdfs: dict[str, str]) -> str:
+    """A link's target: `wiz:<record path>` for a library document, else a URL."""
+    href = unwrap_safelink(href.strip())
+    if match := DOC_HREF.match(href):
+        ident = match.group(1).upper()
+        return (
+            f"wiz:{paths[ident]}" if ident in paths else f"{BASE}/ppl/document/{ident}"
+        )
+    if match := PDF_HREF.match(href):
+        pdf = match.group(1)
+        return f"wiz:{pdfs[pdf]}" if pdf in pdfs else f"{BASE}/ppl/pdfdownload/{pdf}"
+    if href.startswith("/"):
+        return BASE + href
+    return href
+
+
+def wiki_links(markdown: str) -> str:
+    """Turn `[text](wiz:path)`, `<wiz:path>` and HTML links into wiki links.
+
+    A link in a pipe-table row loses its alias, whose `|` would split the cell.
+    """
+
+    def link(path: str, text: str, in_table: bool) -> str:
+        text = clean(text.replace("\\", "").replace("|", "/").replace("]", ")"))
+        if not text or in_table or re.match(r"https?://", text):
+            return f"[[{path}]]"
+        return f"[[{path}|{text}]]"
+
+    def line_links(line: str) -> str:
+        in_table = line.lstrip().startswith("|")
+        line = re.sub(
+            r"\[((?:[^\[\]]|\[[^\]]*\])*)\]\(wiz:([^)\s]+)\)",
+            lambda m: link(m.group(2), m.group(1), in_table),
+            line,
+        )
+        line = re.sub(
+            r'<a href="wiz:([^"]+)">(.*?)</a>',
+            lambda m: link(
+                m.group(1), re.sub(r"<[^>]+>", "", m.group(2)), in_table=False
+            ),
+            line,
+        )
+        return re.sub(
+            r"<wiz:([^>\s]+)>", lambda m: link(m.group(1), "", in_table), line
+        )
+
+    return "\n".join(line_links(line) for line in markdown.split("\n"))
+
+
+def bare_links(text: str, paths: dict[str, str]) -> str:
+    """Library URLs in plain text (a PDF's), as `<wiz:path>` links."""
+
+    def sub(m: re.Match[str]) -> str:
+        target = resolve(m.group(0), paths, {})
+        return f"<{target}>" if target.startswith("wiz:") else m.group(0)
+
+    return LIBRARY_URL.sub(sub, text)
+
+
+def roman(n: int) -> str:
+    out = ""
+    for value, numeral in [(10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i")]:
+        while n >= value:
+            out += numeral
+            n -= value
+    return out
+
+
+def marker(kind: str, n: int) -> str:
+    if kind == "a":
+        return chr(ord("a") + n - 1) if n <= 26 else str(n)
+    if kind == "A":
+        return chr(ord("A") + n - 1) if n <= 26 else str(n)
+    return roman(n).upper() if kind == "I" else roman(n)
+
+
+LEVELS = {"a": 1, "A": 1, "i": 2, "I": 2}
+
+
+def level(tag: Tag) -> int:
+    """A list's depth: numbered 0, lettered 1, roman 2."""
+    return LEVELS.get(str(tag.get("data-kind", "")), 0)
+
+
+def lettered_lists(soup: BeautifulSoup) -> None:
+    """Write lettered and roman lists' markers as text, nested under their clause.
+
+    Word's export puts a clause's sub-clauses in a sibling `<ol type="a">`
+    rather than inside it, and Markdown can only number. Each such list moves
+    into the last item of the list before it (or joins a list of its own type
+    there), and becomes a bullet list whose items start "a." or "ii.".
+    """
+    sub = [ol for ol in soup.find_all("ol") if ol.get("type") in {"a", "A", "i", "I"}]
+    for ol in sub:
+        kind = str(ol["type"])
+        start = str(ol.get("start", "1"))
+        for n, li in enumerate(
+            ol.find_all("li", recursive=False), int(start) if start.isdigit() else 1
+        ):
+            li["data-marker"] = f"{marker(kind, n)}. "
+        ol["data-kind"] = kind
+        ol.name = "ul"
+        prev = ol.find_previous_sibling()
+        if prev is None or prev.name not in {"ol", "ul"}:
+            continue
+        target: Tag = prev
+        while True:
+            if target.get("data-kind") == kind:  # a continuation: join it
+                for li in ol.find_all("li", recursive=False):
+                    target.append(li.extract())
+                ol.decompose()
+                break
+            items = target.find_all("li", recursive=False)
+            if not items:
+                break
+            inner = [
+                c
+                for c in items[-1].find_all("ul", recursive=False)
+                if c.get("data-kind")
+            ]
+            if inner and level(inner[-1]) <= LEVELS[kind]:
+                target = inner[-1]
+            else:
+                items[-1].append(ol.extract())
+                break
+    for li in soup.find_all("li", attrs={"data-marker": True}):
+        li.insert(0, str(li["data-marker"]))
+
+
+def html_markdown(
+    html: str, paths: dict[str, str], pdfs: dict[str, str], drop_title: bool = True
+) -> str:
+    """Markdown from a page's (or a converted original's) HTML, stripped of
+    Word's styling, with library links as `wiz:` targets for wiki_links."""
+    soup = BeautifulSoup(html, "lxml")
+    first_h1 = soup.find("h1")
+    if drop_title and isinstance(first_h1, Tag):
+        first_h1.decompose()
+    for tag in soup.find_all(["script", "style"]):
+        tag.decompose()
+    for tag in soup.find_all(["span", "font", "div", "o:p", "u", "mark"]):
+        tag.unwrap()
+    lettered_lists(soup)
+    for text in soup.find_all(string=LIBRARY_URL):
+        if text.find_parent("a") is None:
+            parts = LIBRARY_URL.split(str(text))
+            urls = LIBRARY_URL.findall(str(text))
+            nodes: list[Tag | str] = []
+            for i, part in enumerate(parts):
+                nodes.append(part)
+                if i < len(urls):
+                    a = soup.new_tag("a", href=urls[i])
+                    a.string = urls[i]
+                    nodes.append(a)
+            text.replace_with(*nodes)
+    for a in soup.find_all("a"):
+        href = str(a.get("href", "")).strip()
+        if not href or href.startswith("#") or href.lower().startswith("javascript:"):
+            a.unwrap()
+        else:
+            a["href"] = resolve(href, paths, pdfs)
+    for img in soup.find_all("img"):
+        src = resolve(str(img.get("src", "")), {}, {})
+        if src.startswith("http"):
+            img["src"] = src
+        else:
+            img.decompose()  # an embedded image, not kept
+    for tag in soup.find_all(True):
+        tag.attrs = {k: v for k, v in tag.attrs.items() if k in KEEP_ATTRS}
+    # A cell holding paragraphs becomes one paragraph with line breaks, so
+    # pandoc keeps the table instead of dropping it as [TABLE].
+    for cell in soup.find_all(["td", "th"]):
+        for block in cell.find_all(
+            ["p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"]
+        ):
+            if not clean(block.get_text()):
+                block.decompose()
+                continue
+            if block.find_next_sibling():
+                block.append(soup.new_tag("br"))
+            block.unwrap()
+    for p in soup.find_all("p"):
+        if not clean(p.get_text()) and not p.find(True):
+            p.decompose()
+    md = run(["pandoc", "-f", "html", "-t", "gfm", "--wrap=none"], str(soup).encode())
+    return md
+
+
+PANDOC_FORMATS = {"docx", "odt", "rtf", "xlsx", "pptx"}
+LEGACY_FORMATS = {"doc": "docx", "xls": "xlsx", "ppt": "pptx"}
+
+
+def original_markdown(data: bytes, ext: str, paths: dict[str, str]) -> str:
+    """An original file's text: a PDF's as laid out, an Office file's via pandoc.
+
+    LibreOffice first converts a legacy Office file to its XML successor.
+    """
+    if ext == "pdf":
+        text = run(["pdftotext", "-layout", "-", "-"], data).replace("\f", "\n")
+        return bare_links("\n".join(line.strip() for line in text.splitlines()), paths)
+    if ext not in PANDOC_FORMATS | LEGACY_FORMATS.keys():
+        raise ValueError(f"no converter for .{ext}")
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp) / f"original.{ext}"
+        src.write_bytes(data)
+        if ext in LEGACY_FORMATS:
+            ext = LEGACY_FORMATS[ext]
+            subprocess.run(
+                [
+                    "soffice",
+                    f"-env:UserInstallation=file://{tmp}/profile",
+                    "--headless",
+                    "--convert-to",
+                    ext,
+                    "--outdir",
+                    tmp,
+                    str(src),
+                ],
+                capture_output=True,
+                check=True,
+            )
+            src = src.with_suffix(f".{ext}")
+        html = run(["pandoc", "-f", ext, "-t", "html", str(src)], b"")
+    return html_markdown(html, paths, {}, drop_title=False)
+
+
+def tidy(markdown: str) -> str:
+    markdown = re.sub(r"<colgroup>.*?</colgroup>\n?", "", markdown, flags=re.DOTALL)
+    markdown = re.sub(r'<table style="[^"]*">', "<table>", markdown)
+    # lettered_lists' markers need no escaping, and pandoc's list separators
+    # only stop two numbered lists rendering as one.
+    markdown = re.sub(
+        r"^(\s*- [A-Za-z]{1,4})\\\.(?= |$)", r"\1.", markdown, flags=re.MULTILINE
+    )
+    markdown = re.sub(r"^<!-- -->$", "", markdown, flags=re.MULTILINE)
+    # A literal bracket before a link would read as an unfinished wiki link.
+    markdown = markdown.replace("\\[[", "\\[ [")
+    lines = [line.rstrip() for line in markdown.replace("\u00a0", " ").splitlines()]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip() + "\n"
+
+
+# Records ---------------------------------------------------------------------
+
+
+def assign_paths(pages: list[Page]) -> None:
+    by_name: dict[str, list[Page]] = {}
+    for page in pages:
+        folder = KINDS[page.kind][1]
+        by_name.setdefault(f"{folder}/{slugify(page.title)}", []).append(page)
+    for name, group in by_name.items():
+        for page in group:
+            suffix = f"-{page.identifier.split('_')[1]}" if len(group) > 1 else ""
+            page.path = name + suffix
+
+
+def relations(pages: list[Page]) -> dict[str, list[str]]:
+    """Each related pair once, on the more specific record: id -> [ids]."""
+    by_id = {p.identifier: p for p in pages}
+
+    def rank(p: Page) -> tuple[int, int]:
+        return KINDS[p.kind][2], int(p.identifier.split("_")[1])
+
+    out: dict[str, set[str]] = {}
+    for page in pages:
+        for other_id in page.related:
+            other = by_id.get(other_id)
+            if other is None or other is page:
+                continue
+            owner, target = (page, other) if rank(page) > rank(other) else (other, page)
+            out.setdefault(owner.identifier, set()).add(target.identifier)
+    return {k: sorted(v, key=lambda i: by_id[i].path) for k, v in out.items()}
+
+
+def frontmatter(
+    page: Page, related: list[str], by_id: dict[str, Page]
+) -> dict[str, object]:
+    fm: dict[str, object] = {
+        "title": page.title,
+        "kind": KINDS[page.kind][0],
+        "identifier": page.identifier,
+        "status": page.status,
+    }
+    for key, value in page.fields.items():
+        if value:
+            fm[key] = value
+    if related:
+        fm["is_related_to"] = [f"[[{by_id[i].path}]]" for i in related]
+    if page.original:
+        fm["associated_media"] = f"[[{media_path(page)}]]"
+        fm["encoding_format"] = page.original[1]
+    fm["source"] = f"{BASE}/ppl/document/{page.identifier}"
+    return fm
+
+
+def media_path(page: Page) -> str:
+    assert page.original
+    return f"files/{page.path}.{page.original[1]}"
+
+
+class Dumper(yaml.SafeDumper):
+    """Quotes digit strings such as 000159, which YAML 1.2 reads as numbers."""
+
+
+def represent_str(dumper: yaml.SafeDumper, value: str) -> yaml.ScalarNode:
+    style = "'" if value.isdigit() else None
+    return dumper.represent_scalar("tag:yaml.org,2002:str", value, style=style)
+
+
+Dumper.add_representer(str, represent_str)
+
+
+def render(page: Page, related: list[str], by_id: dict[str, Page], body: str) -> str:
+    fm = yaml.dump(
+        frontmatter(page, related, by_id),
+        Dumper=Dumper,
+        sort_keys=False,
+        allow_unicode=True,
+        width=10**6,
+    )
+    return f"---\n{fm}---\n\n{body}"
+
+
+# Fetching --------------------------------------------------------------------
+
+
+class Fetcher:
+    def __init__(self, cache: Path | None, delay: float) -> None:
+        self.cache = cache
+        self.delay = delay
+        self.client = httpx.Client(
+            headers={"User-Agent": "policy-library-sync"},
+            follow_redirects=True,
+            timeout=60,
+            transport=httpx.HTTPTransport(retries=3),
+        )
+
+    def get(self, url: str, key: str) -> tuple[bytes, dict[str, str]]:
+        found = self.find(url, key)
+        if found is None:
+            raise RuntimeError(f"{url}: not found")
+        return found
+
+    def find(self, url: str, key: str) -> tuple[bytes, dict[str, str]] | None:
+        """The response, or None for a 404."""
+        cached = self.cache / key if self.cache else None
+        if cached and cached.with_suffix(cached.suffix + ".404").exists():
+            return None
+        if cached and cached.exists():
+            headers = cached.with_suffix(cached.suffix + ".headers")
+            meta = (
+                dict(
+                    line.split(": ", 1)
+                    for line in headers.read_text().splitlines()
+                    if ": " in line
+                )
+                if headers.exists()
+                else {}
+            )
+            return cached.read_bytes(), meta
+        time.sleep(self.delay)
+        response = self.client.get(url)
+        if response.status_code == 404:
+            if cached:
+                cached.parent.mkdir(parents=True, exist_ok=True)
+                cached.with_suffix(cached.suffix + ".404").touch()
+            return None
+        response.raise_for_status()
+        meta = {
+            "content-type": response.headers.get("content-type", ""),
+            "content-disposition": response.headers.get("content-disposition", ""),
+        }
+        if cached:
+            cached.parent.mkdir(parents=True, exist_ok=True)
+            cached.write_bytes(response.content)
+            cached.with_suffix(cached.suffix + ".headers").write_text(
+                "".join(f"{k}: {v}\n" for k, v in meta.items())
+            )
+        return response.content, meta
+
+
+def extension(meta: dict[str, str]) -> str:
+    disposition = unquote(meta.get("content-disposition", ""))
+    if match := re.search(r"filename\*?=(?:UTF-8'')?\"?([^\";]+)", disposition):
+        return match.group(1).rsplit(".", 1)[-1].lower().strip()
+    types = {
+        "application/pdf": "pdf",
+        "application/msword": "doc",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    }
+    ctype = meta.get("content-type", "").split(";")[0].strip()
+    if ctype in types:
+        return types[ctype]
+    raise ValueError(f"unknown download type {meta}")
+
+
+# Writing ---------------------------------------------------------------------
+
+
+def write_tree(vault: Path, files: dict[str, bytes]) -> tuple[int, int]:
+    """Make the managed folders hold exactly `files`; returns (written, removed)."""
+    written = removed = 0
+    for rel, data in files.items():
+        target = vault / rel
+        if target.exists() and target.read_bytes() == data:
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        written += 1
+    for root in [*FOLDERS, "files"]:
+        base = vault / root
+        if not base.exists():
+            continue
+        for existing in sorted(base.rglob("*"), reverse=True):
+            rel = existing.relative_to(vault).as_posix()
+            if existing.is_file() and rel not in files:
+                existing.unlink()
+                removed += 1
+            elif existing.is_dir() and not any(existing.iterdir()):
+                existing.rmdir()
+        if not any(base.iterdir()):
+            base.rmdir()
+    return written, removed
+
+
+def main(
+    vault: Path = typer.Option(Path(), help="the vault's root"),
+    cache: Path | None = typer.Option(None, help="keep and reuse responses here"),
+    delay: float = typer.Option(1.0, help="seconds between requests"),
+    min_documents: int = typer.Option(400, help="abort if the index lists fewer"),
+) -> None:
+    for tool in ["pandoc", "pdftotext", "wiz"]:
+        if not shutil.which(tool):
+            raise SystemExit(f"{tool} is not on the PATH")
+    fetch = Fetcher(cache, delay)
+    index = parse_index(fetch.get(INDEX_URL, "index.html")[0].decode(errors="replace"))
+    if len(index) < min_documents:
+        raise SystemExit(f"the index lists only {len(index)} documents; not syncing")
+
+    # The index's documents, then any live document they link to that it
+    # doesn't list (supporting documents such as checklists); a link to a
+    # retired one is a 404 and stays a URL.
+    pages: list[Page] = []
+    seen = set(index)
+    queue = sorted(index)
+    while queue:
+        identifier = queue.pop(0)
+        found = fetch.find(
+            f"{BASE}/ppl/document/{identifier}", f"html/{identifier}.html"
+        )
+        if found is None or b'id="info_block"' not in found[0]:
+            if identifier in index:
+                raise RuntimeError(f"{identifier}: listed, but has no page")
+            continue
+        try:
+            page = parse_page(identifier, found[0].decode(errors="replace"))
+        except Exception as e:
+            raise RuntimeError(f"{identifier}: {e}") from e
+        pages.append(page)
+        for linked in page.linked:
+            if linked not in seen:
+                seen.add(linked)
+                queue.append(linked)
+    assign_paths(pages)
+    paths = {p.identifier: p.path for p in pages}
+    pdfs = {p.pdf_id: p.path for p in pages if p.pdf_id}
+    by_id = {p.identifier: p for p in pages}
+
+    files: dict[str, bytes] = {}
+    bodies: dict[str, str] = {}
+    for page in pages:
+        if page.body is not None:
+            body = html_markdown(str(page.body), paths, pdfs)
+        else:
+            if page.download:
+                url, key = f"{BASE}/ppl/download/{page.identifier}", page.identifier
+            elif page.pdf_id:
+                url, key = f"{BASE}/ppl/pdfdownload/{page.pdf_id}", f"pdf-{page.pdf_id}"
+            else:
+                raise RuntimeError(f"{page.identifier}: no text and no original")
+            data, meta = fetch.get(url, f"originals/{key}")
+            page.original = (data, extension(meta))
+            body = original_markdown(data, page.original[1], paths)
+            files[media_path(page)] = data
+        bodies[page.identifier] = tidy(wiki_links(body))
+    rel = relations(pages)
+    for page in pages:
+        files[f"{page.path}.md"] = render(
+            page, rel.get(page.identifier, []), by_id, bodies[page.identifier]
+        ).encode()
+    written, removed = write_tree(vault, files)
+    typer.echo(f"{len(pages)} documents: {written} files written, {removed} removed")
+    subprocess.run(["wiz", "validate"], cwd=vault, check=True)
+
+
+if __name__ == "__main__":
+    typer.run(main)

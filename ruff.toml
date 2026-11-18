@@ -24,6 +24,7 @@ extend-include = [
   "bin/ingest-claude-logs",
   "bin/pangram",
   "bin/pkb-health",
+  "bin/policy-library-sync",
   "bin/s2",
   "bin/styled-image-gen",
   "bin/svg-validate",
