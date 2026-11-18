@@ -1,0 +1,392 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["beautifulsoup4", "httpx", "lxml", "pyyaml", "typer"]
+# ///
+"""Mirror the legislation ANU lists into the anu-policy vault's legislation/.
+
+    anu-legislation-sync [--vault DIR] [--cache DIR] [--delay SECONDS]
+
+The anu-policy vault's legislation workflow runs it from the vault root.
+ANU's legislation page (anu.edu.au/about/governance/legislation) is the
+index: the ANU Act, statutes, rules and orders, and the Commonwealth acts and
+instruments the University works under. Each title is looked up by name in
+the Federal Register of Legislation's API, and its latest registered version
+(the current compilation, for an amended act) is fetched as EPUB and
+converted to Markdown with pandoc, one `legislation` record per title, named
+by the kebab-case title. Section and part headings stay headings;
+subsections, paragraphs and notes become plain paragraphs that keep their
+(1), (a), (i) markers; the table of contents is dropped.
+
+Like policy-library-sync, the output depends only on what the sources say: it
+writes only files whose text changed, deletes records the index no longer
+lists, then runs `wiz validate`. It aborts before writing anything if the
+index lists fewer than --min-titles, a title isn't on the Register, or any
+fetch fails. --cache DIR keeps every response there and reuses it.
+"""
+
+import hashlib
+import json
+import re
+import shutil
+import subprocess
+import tempfile
+import time
+import unicodedata
+import warnings
+import zipfile
+from dataclasses import dataclass
+from io import BytesIO
+from pathlib import Path, PurePosixPath
+from urllib.parse import quote
+
+import httpx
+import typer
+import yaml
+from bs4 import BeautifulSoup, Tag, XMLParsedAsHTMLWarning
+
+# The Register's EPUB pages are XHTML; lxml's HTML parser reads them fine.
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+
+INDEX_URL = "https://www.anu.edu.au/about/governance/legislation"
+API = "https://api.prod.legislation.gov.au/v1"
+REGISTER = "https://www.legislation.gov.au"
+FOLDER = "legislation"
+
+INDEX_LINK = re.compile(r"^/about/governance/legislation/[a-z0-9-]+$")
+LATEST = re.compile(r"\s*\(latest version\)\s*$", re.IGNORECASE)
+# The last word of a title that names its kind; anything else is an instrument.
+KIND_WORDS = {
+    "act": "act",
+    "statute": "statute",
+    "rule": "rule",
+    "rules": "rule",
+    "regulation": "regulation",
+    "regulations": "regulation",
+    "order": "order",
+}
+# A provision's marker: (1), (2A), (a), (iv), (A).
+MARKER = re.compile(r"^\(([0-9]+[A-Z]*|[a-z]{1,5}|[A-Z]{1,4})\)$")
+ACT_HEAD = re.compile(r"^ActHead([1-5])$")
+
+
+@dataclass
+class Title:
+    name: str  # as ANU lists it, without "(Latest version)"
+    anu_page: str
+    identifier: str = ""
+    register_name: str = ""
+    collection: str = ""
+    making_date: str = ""
+    register_id: str = ""
+    compilation: int = 0
+    valid_from: str = ""
+    unincorporated: bool = False
+    epub_url: str = ""
+    path: str = ""
+
+
+def clean(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def slugify(title: str) -> str:
+    text = unicodedata.normalize("NFKD", title.replace("&", " and "))
+    text = text.encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+
+
+def kind_of(name: str) -> str:
+    words = re.sub(r"\s*\d{4}(\s*\(No\.\s*\d+\))?\s*$", "", name).split()
+    return KIND_WORDS.get(words[-1].lower(), "instrument") if words else "instrument"
+
+
+def parse_index(page: str) -> list[Title]:
+    soup = BeautifulSoup(page, "lxml")
+    titles: dict[str, Title] = {}
+    for a in soup.find_all("a", href=INDEX_LINK):
+        assert isinstance(a, Tag)
+        name = LATEST.sub("", clean(a.get_text()))
+        href = str(a["href"])
+        if name and name not in titles:
+            titles[name] = Title(name, f"https://www.anu.edu.au{href}")
+    return list(titles.values())
+
+
+# Converting ------------------------------------------------------------------
+
+
+def spine(epub: zipfile.ZipFile) -> list[str]:
+    """The EPUB's content documents in reading order."""
+    container = BeautifulSoup(epub.read("META-INF/container.xml"), "xml")
+    rootfile = container.find("rootfile")
+    assert isinstance(rootfile, Tag)
+    opf_path = PurePosixPath(str(rootfile["full-path"]))
+    opf = BeautifulSoup(epub.read(str(opf_path)), "xml")
+    items = {
+        str(i["id"]): str(i["href"]) for i in opf.find_all("item") if isinstance(i, Tag)
+    }
+    order = [
+        items[str(r["idref"])] for r in opf.find_all("itemref") if isinstance(r, Tag)
+    ]
+    return [str(opf_path.parent / href) for href in order if href.endswith("html")]
+
+
+def classes(tag: Tag) -> list[str]:
+    value = tag.get("class") or []
+    return value if isinstance(value, list) else [value]
+
+
+def restructure(soup: BeautifulSoup) -> None:
+    """Make the Register's markup say what's a heading and what's a provision.
+
+    Instruments mark every level with h1-h6 (h1 Part, h2 Division, h3 section,
+    h4-h6 the provisions under it); acts use p elements with Word style
+    classes (ActHead1-5 for Chapter down to section). Both become h1-h5
+    headings and p provisions.
+    """
+    for tag in soup.find_all(["img", "style", "script"]):
+        tag.decompose()
+    for p in soup.find_all("p"):
+        assert isinstance(p, Tag)
+        if any(c.startswith("TOC") for c in classes(p)):
+            p.decompose()
+    # Fixed-width spacer spans stand in for tabs between a marker and its text.
+    for span in soup.find_all("span", style=True):
+        assert isinstance(span, Tag)
+        style = str(span["style"])
+        if ("width:" in style or "font:7pt" in style) and not clean(
+            span.get_text().replace("\xa0", " ")
+        ):
+            span.replace_with(" ")
+    for tag in soup.find_all(["h4", "h5", "h6"]):
+        assert isinstance(tag, Tag)
+        tag.name = "p"
+    for p in soup.find_all("p"):
+        assert isinstance(p, Tag)
+        for c in classes(p):
+            if match := ACT_HEAD.match(c):
+                p.name = f"h{match.group(1)}"
+    for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "p"]):
+        assert isinstance(tag, Tag)
+        for a in tag.find_all("a"):
+            assert isinstance(a, Tag)
+            a.unwrap()
+        tag.attrs = {}
+        text = clean(tag.get_text().replace("\xa0", " "))
+        if not text:
+            tag.decompose()
+            continue
+        # One space between a marker or section number and its text.
+        first = tag.find(string=True)
+        if first is not None and (
+            MARKER.match(clean(first)) or re.fullmatch(r"\d+[A-Z]*", clean(first))
+        ):
+            first.replace_with(clean(first) + " ")
+
+
+def epub_markdown(data: bytes) -> str:
+    with zipfile.ZipFile(BytesIO(data)) as epub:
+        parts = [epub.read(name).decode("utf-8") for name in spine(epub)]
+    bodies = []
+    for part in parts:
+        soup = BeautifulSoup(part, "lxml")
+        restructure(soup)
+        body = soup.body
+        bodies.append(body.decode_contents() if body else "")
+    with tempfile.NamedTemporaryFile("w", suffix=".html", encoding="utf-8") as f:
+        f.write(f"<html><body>{''.join(bodies)}</body></html>")
+        f.flush()
+        markdown = subprocess.run(
+            ["pandoc", "-f", "html", "-t", "gfm-raw_html", "--wrap=none", f.name],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    return tidy(markdown)
+
+
+def tidy(markdown: str) -> str:
+    # pandoc escapes a leading "(1)" or "1." as if it could start a list.
+    markdown = re.sub(r"^(\d+)\\\.", r"\1.", markdown, flags=re.MULTILINE)
+    lines = [
+        re.sub(r"(?<=\S) {2,}", " ", line.replace(" ", " ")).rstrip()
+        for line in markdown.splitlines()
+    ]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip() + "\n"
+
+
+# Records ---------------------------------------------------------------------
+
+
+class Dumper(yaml.SafeDumper):
+    """Quotes digit strings, which YAML 1.2 reads as numbers."""
+
+
+def represent_str(dumper: yaml.SafeDumper, value: str) -> yaml.ScalarNode:
+    style = "'" if value.isdigit() else None
+    return dumper.represent_scalar("tag:yaml.org,2002:str", value, style=style)
+
+
+Dumper.add_representer(str, represent_str)
+
+
+def frontmatter(t: Title) -> dict[str, object]:
+    fm: dict[str, object] = {
+        "title": t.register_name,
+        "kind": kind_of(t.register_name),
+        "identifier": t.identifier,
+        "register_id": t.register_id,
+        "compilation": t.compilation,
+        "collection": t.collection,
+        "date_created": t.making_date,
+        "valid_from": t.valid_from,
+    }
+    if t.unincorporated:
+        fm["has_unincorporated_amendments"] = True
+    fm["source"] = f"{REGISTER}/{t.identifier}/latest/text"
+    fm["anu_page"] = t.anu_page
+    return fm
+
+
+def render(t: Title, body: str) -> str:
+    fm = yaml.dump(
+        frontmatter(t),
+        Dumper=Dumper,
+        sort_keys=False,
+        allow_unicode=True,
+        width=10**6,
+    )
+    return f"---\n{fm}---\n\n{body}"
+
+
+def assign_paths(titles: list[Title]) -> None:
+    by_name: dict[str, list[Title]] = {}
+    for t in titles:
+        by_name.setdefault(f"{FOLDER}/{slugify(t.register_name)}", []).append(t)
+    for name, group in by_name.items():
+        for t in group:
+            t.path = name + (f"-{t.identifier.lower()}" if len(group) > 1 else "")
+
+
+def write_tree(vault: Path, files: dict[str, bytes]) -> tuple[int, int]:
+    """Make legislation/ hold exactly `files`; returns (written, removed)."""
+    written = removed = 0
+    for rel, data in files.items():
+        target = vault / rel
+        if target.exists() and target.read_bytes() == data:
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        written += 1
+    base = vault / FOLDER
+    if base.exists():
+        for existing in sorted(base.rglob("*"), reverse=True):
+            rel = existing.relative_to(vault).as_posix()
+            if existing.is_file() and rel not in files:
+                existing.unlink()
+                removed += 1
+    return written, removed
+
+
+# Fetching --------------------------------------------------------------------
+
+
+class Fetcher:
+    def __init__(self, cache: Path | None, delay: float) -> None:
+        self.cache = cache
+        self.delay = delay
+        self.client = httpx.Client(
+            headers={"User-Agent": "anu-legislation-sync"},
+            follow_redirects=True,
+            timeout=120,
+            transport=httpx.HTTPTransport(retries=3),
+        )
+
+    def get(self, url: str, key: str) -> bytes:
+        cached = self.cache / key if self.cache else None
+        if cached and cached.exists():
+            return cached.read_bytes()
+        time.sleep(self.delay)
+        response = self.client.get(url)
+        response.raise_for_status()
+        if cached:
+            cached.parent.mkdir(parents=True, exist_ok=True)
+            cached.write_bytes(response.content)
+        return response.content
+
+    def json(self, url: str, key: str) -> dict[str, object]:
+        return json.loads(self.get(url, key))
+
+
+def odata_string(value: str) -> str:
+    return quote("'" + value.replace("'", "''") + "'", safe="'")
+
+
+def resolve(fetch: Fetcher, t: Title) -> None:
+    """Fill in a title's Register details, looking it up by name."""
+    candidates = unique([t.name, t.name.replace("&", "and")])
+    for name in candidates:
+        url = f"{API}/titles?$filter=name%20eq%20{odata_string(name)}"
+        key = hashlib.sha1(name.encode()).hexdigest()[:12]
+        found = fetch.json(url, f"titles/{key}.json").get("value")
+        assert isinstance(found, list)
+        if found:
+            break
+    else:
+        raise RuntimeError(f"{t.name}: not on the Federal Register of Legislation")
+    in_force = [f for f in found if f.get("isInForce")] or found
+    record = in_force[0]
+    t.identifier = str(record["id"])
+    t.register_name = str(record["name"])
+    t.collection = str(record["collection"])
+    t.making_date = str(record["makingDate"])[:10]
+    version = fetch.json(
+        f"{API}/versions/find(titleId='{t.identifier}',asAtSpecification='Latest')",
+        f"versions/{t.identifier}.json",
+    )
+    t.register_id = str(version["registerId"])
+    t.compilation = int(str(version["compilationNumber"]))
+    t.valid_from = str(version["start"])[:10]
+    t.unincorporated = bool(version.get("hasUnincorporatedAmendments"))
+    retrospective = str(version["retrospectiveStart"])[:10]
+    t.epub_url = (
+        f"{REGISTER}/{t.identifier}/{t.valid_from}/{retrospective}/text/original/epub"
+    )
+
+
+def unique(items: list[str]) -> list[str]:
+    return list(dict.fromkeys(items))
+
+
+def main(
+    vault: Path = typer.Option(Path(), help="the vault's root"),
+    cache: Path | None = typer.Option(None, help="keep and reuse responses here"),
+    delay: float = typer.Option(1.0, help="seconds between requests"),
+    min_titles: int = typer.Option(30, help="abort if the index lists fewer"),
+) -> None:
+    for tool in ["pandoc", "wiz"]:
+        if not shutil.which(tool):
+            raise SystemExit(f"{tool} is not on the PATH")
+    fetch = Fetcher(cache, delay)
+    titles = parse_index(fetch.get(INDEX_URL, "index.html").decode(errors="replace"))
+    if len(titles) < min_titles:
+        raise SystemExit(f"the index lists only {len(titles)} titles; not syncing")
+    for t in titles:
+        resolve(fetch, t)
+    assign_paths(titles)
+    files: dict[str, bytes] = {}
+    for t in titles:
+        data = fetch.get(t.epub_url, f"epub/{t.register_id}-{t.valid_from}.epub")
+        try:
+            body = epub_markdown(data)
+        except Exception as e:
+            raise RuntimeError(f"{t.name}: {e}") from e
+        files[f"{t.path}.md"] = render(t, body).encode()
+    written, removed = write_tree(vault, files)
+    typer.echo(f"{len(titles)} titles: {written} files written, {removed} removed")
+    subprocess.run(["wiz", "validate"], cwd=vault, check=True)
+
+
+if __name__ == "__main__":
+    typer.run(main)
