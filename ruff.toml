@@ -20,6 +20,7 @@ extend-include = [
   "bin/agent-run",
   "bin/anu-enterprise-agreement-sync",
   "bin/anu-legislation-sync",
+  "bin/anu-publications-sync",
   "bin/check-skill-yaml",
   "bin/claude-find-session",
   "bin/hud",

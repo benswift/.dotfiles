@@ -1,0 +1,368 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["beautifulsoup4", "httpx", "lxml", "pyyaml", "typer"]
+# ///
+"""Mirror the binding ANU documents published only as PDFs into publications/.
+
+    anu-publications-sync [--vault DIR] [--cache DIR] [--delay SECONDS]
+
+Some documents the University works under sit outside the Policy Library and
+the legislation index: the policy handbooks, the tuition fee schedules and the
+governing bodies' charters. SOURCES lists the public index page for each and
+what to take from it: the Academic Accreditation Handbook's sections, the
+Travel Handbook, every Schedule of Tuition Fees the page lists, the Council
+Charter and Standing Orders, and the Academic Board Charter. The PDFs' upload
+paths change with every upload, so each page is read at run time and its PDF
+links picked by their text (a page's other PDFs, such as minutes, are left
+alone); no PDF URL is written down here. Outlook safelinks are unwrapped.
+
+Each PDF becomes one `publication` record, named by the kebab-case title. The
+body is `pdftotext -layout` of the PDF, never plain `pdftotext`: plain mode
+detaches a clause's number from its text and breaks tables into one cell a
+line. Layout mode keeps a clause with its number and a table's rows intact.
+Prose has its indentation stripped; a fee schedule's body sits in a fenced
+block, because its columns only line up in the original spacing. The PDFs
+themselves are not kept. `date_modified` is the PDF's Last-Modified header,
+when the server sends one.
+
+Like the other syncs, the output depends only on what the sources say: it
+writes only files whose bytes changed and deletes records in publications/
+that the pages no longer list. `anu-policy-sync` runs it and validates the
+vault after. It aborts before writing anything if a page yields fewer documents than
+its source expects (a changed page would otherwise delete the records), a
+title repeats, or any fetch or conversion fails. --cache DIR keeps every
+response there and reuses it.
+"""
+
+import hashlib
+import re
+import shutil
+import subprocess
+import time
+import unicodedata
+from collections.abc import Callable
+from dataclasses import dataclass
+from email.utils import parsedate_to_datetime
+from pathlib import Path
+from urllib.parse import parse_qs, unquote, urljoin, urlparse
+
+import httpx
+import typer
+import yaml
+from bs4 import BeautifulSoup, Tag
+
+FOLDER = "publications"
+GOVERNANCE = "https://www.anu.edu.au/about/governance"
+HANDBOOKS = f"{GOVERNANCE}/frameworks-disclosures/anu-policy-handbooks"
+HANDBOOK_INDEX = "https://www.anu.edu.au/anu-policy-handbooks/"
+
+# A PDF link's text ends "(PDF, 152.52 KB)" on the pages that list downloads.
+SIZE = re.compile(r"\s*\(PDF,\s*[^)]*\)\s*$", re.IGNORECASE)
+
+
+@dataclass
+class Doc:
+    title: str
+    kind: str
+    source: str
+    anu_page: str
+    is_part_of: str = ""
+    path: str = ""
+
+
+@dataclass
+class Link:
+    text: str  # without the "(PDF, size)" suffix or a ".pdf" ending
+    href: str  # absolute, safelink unwrapped
+    sized: bool  # whether the text carried the "(PDF, size)" suffix
+
+
+@dataclass
+class Source:
+    page: str
+    minimum: int  # documents the page must yield, or the sync aborts
+    pick: Callable[[str, list[Link], BeautifulSoup], list[Doc]]
+
+
+def clean(text: str) -> str:
+    return re.sub(r"\s+", " ", text.replace("\xa0", " ")).strip()
+
+
+def slugify(title: str) -> str:
+    text = unicodedata.normalize("NFKD", title.replace("&", " and "))
+    text = text.encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+
+
+def unwrap_safelink(href: str) -> str:
+    if "safelinks.protection.outlook.com" in href:
+        target = parse_qs(urlparse(href).query).get("url")
+        if target:
+            return unquote(target[0])
+    return href
+
+
+def pdf_links(page: str, html: str) -> tuple[list[Link], BeautifulSoup]:
+    soup = BeautifulSoup(html, "lxml")
+    links: dict[str, Link] = {}
+    for a in soup.find_all("a", href=True):
+        assert isinstance(a, Tag)
+        href = urljoin(page, unwrap_safelink(str(a["href"]).strip()))
+        if not urlparse(href).path.lower().endswith(".pdf"):
+            continue
+        text = clean(a.get_text())
+        sized = bool(SIZE.search(text))
+        text = re.sub(r"\.pdf$", "", SIZE.sub("", text), flags=re.IGNORECASE)
+        if href not in links or (sized and not links[href].sized):
+            links[href] = Link(text, href, sized)
+    return list(links.values()), soup
+
+
+# What to take from each page ----------------------------------------------------
+
+
+def accreditation(page: str, links: list[Link], soup: BeautifulSoup) -> list[Doc]:
+    """Sections 2-8; each PDF is paired with its section's title by number."""
+    handbook = "Academic Accreditation Handbook"
+    sections: dict[str, str] = {}
+    for a in soup.find_all(
+        "a", href=re.compile(rf"{re.escape(urlparse(page).path)}/\d")
+    ):
+        assert isinstance(a, Tag)
+        number = re.match(r"(\d+)\.\s", clean(a.get_text()))
+        if number:
+            sections.setdefault(number.group(1), clean(a.get_text()))
+    docs = []
+    for link in links:
+        name = unquote(urlparse(link.href).path.rsplit("/", 1)[-1])
+        number = re.search(r"\b(\d+)\.\s", name)
+        if not number or number.group(1) not in sections:
+            continue
+        docs.append(
+            Doc(
+                f"{handbook} {sections[number.group(1)]}",
+                "handbook",
+                link.href,
+                page,
+                is_part_of=handbook,
+            )
+        )
+    return docs
+
+
+def matching(
+    rules: list[tuple[str, str, str]],
+) -> Callable[[str, list[Link], BeautifulSoup], list[Doc]]:
+    """Take the downloads whose text matches a (pattern, kind, title) rule.
+
+    A page lists a document's current PDF among its downloads (text with a
+    size suffix) and may mention a stale one in running text, so unsized links
+    are ignored. A title of "" keeps the link's own text.
+    """
+
+    def pick(page: str, links: list[Link], soup: BeautifulSoup) -> list[Doc]:
+        docs = []
+        for link in links:
+            for pattern, kind, title in rules:
+                if link.sized and re.search(pattern, link.text, re.IGNORECASE):
+                    docs.append(Doc(title or link.text, kind, link.href, page))
+                    break
+        return docs
+
+    return pick
+
+
+SOURCES = [
+    Source(f"{HANDBOOKS}/academic-accreditation-handbook", 7, accreditation),
+    Source(
+        f"{HANDBOOKS}/travel-policy-handbook",
+        1,
+        matching([(r"^ANU Travel Handbook", "handbook", "")]),
+    ),
+    Source(
+        "https://www.anu.edu.au/students/program-administration/fees-payments/fees-schedules",
+        1,
+        matching([(r"^Schedule of Tuition Fees \d{4}$", "fee-schedule", "")]),
+    ),
+    Source(
+        f"{GOVERNANCE}/committees/council",
+        2,
+        matching(
+            [
+                (r"^Council Charter\b", "charter", "Council Charter"),
+                (r"^Standing Orders of the ANU Council", "standing-orders", ""),
+            ]
+        ),
+    ),
+    Source(
+        f"{GOVERNANCE}/committees/academic-board",
+        1,
+        matching([(r"Academic Board Charter", "charter", "Academic Board Charter")]),
+    ),
+]
+
+
+# Converting ------------------------------------------------------------------
+
+
+def convert(data: bytes, kind: str) -> str:
+    text = subprocess.run(
+        ["pdftotext", "-layout", "-", "-"],
+        input=data,
+        check=True,
+        capture_output=True,
+    ).stdout.decode("utf-8", errors="replace")
+    lines = [line.rstrip() for line in text.replace("\f", "\n").splitlines()]
+    if kind != "fee-schedule":
+        lines = [line.strip() for line in lines]
+    body = re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
+    if not body:
+        raise ValueError("the PDF has no text")
+    if kind == "fee-schedule":
+        body = f"```text\n{body}\n```"
+    return body + "\n"
+
+
+# Records ---------------------------------------------------------------------
+
+
+class Dumper(yaml.SafeDumper):
+    """Quotes digit strings, which YAML 1.2 reads as numbers."""
+
+
+def represent_str(dumper: yaml.SafeDumper, value: str) -> yaml.ScalarNode:
+    style = "'" if value.isdigit() else None
+    return dumper.represent_scalar("tag:yaml.org,2002:str", value, style=style)
+
+
+Dumper.add_representer(str, represent_str)
+
+
+def render(doc: Doc, modified: str, body: str) -> str:
+    fm: dict[str, object] = {"title": doc.title, "kind": doc.kind}
+    fm["source"] = doc.source
+    fm["anu_page"] = doc.anu_page
+    if doc.is_part_of:
+        fm["is_part_of"] = doc.is_part_of
+    if modified:
+        fm["date_modified"] = modified
+    fm["encoding_format"] = "pdf"
+    text = yaml.dump(
+        fm, Dumper=Dumper, sort_keys=False, allow_unicode=True, width=10**6
+    )
+    return f"---\n{text}---\n\n{body}"
+
+
+def write_tree(vault: Path, files: dict[str, bytes]) -> tuple[int, int]:
+    """Make publications/ hold exactly `files`; returns (written, removed)."""
+    written = removed = 0
+    for rel, data in files.items():
+        target = vault / rel
+        if target.exists() and target.read_bytes() == data:
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        written += 1
+    base = vault / FOLDER
+    if base.exists():
+        for existing in sorted(base.rglob("*"), reverse=True):
+            rel = existing.relative_to(vault).as_posix()
+            if existing.is_file() and rel not in files:
+                existing.unlink()
+                removed += 1
+    return written, removed
+
+
+# Fetching --------------------------------------------------------------------
+
+
+class Fetcher:
+    def __init__(self, cache: Path | None, delay: float) -> None:
+        self.cache = cache
+        self.delay = delay
+        self.client = httpx.Client(
+            headers={"User-Agent": "anu-publications-sync"},
+            follow_redirects=True,
+            timeout=120,
+            transport=httpx.HTTPTransport(retries=3),
+        )
+
+    def get(self, url: str, suffix: str) -> tuple[bytes, str]:
+        """The body and its Last-Modified date (YYYY-MM-DD, or "")."""
+        key = hashlib.sha1(url.encode()).hexdigest()[:16] + suffix
+        cached = self.cache / key if self.cache else None
+        stamp = self.cache / f"{key}.modified" if self.cache else None
+        if cached and stamp and cached.exists():
+            return cached.read_bytes(), stamp.read_text().strip()
+        time.sleep(self.delay)
+        response = self.client.get(url)
+        response.raise_for_status()
+        modified = ""
+        if header := response.headers.get("last-modified"):
+            modified = parsedate_to_datetime(header).date().isoformat()
+        if cached and stamp:
+            cached.parent.mkdir(parents=True, exist_ok=True)
+            cached.write_bytes(response.content)
+            stamp.write_text(modified + "\n")
+        return response.content, modified
+
+
+def other_handbooks(html: str) -> list[str]:
+    """Handbook pages the index lists beyond the ones SOURCES reads."""
+    known = {s.page for s in SOURCES}
+    soup = BeautifulSoup(html, "lxml")
+    found = {
+        urljoin(HANDBOOK_INDEX, str(a["href"]))
+        for a in soup.find_all("a", href=re.compile(r"/anu-policy-handbooks/[^/]+/?$"))
+        if isinstance(a, Tag)
+    }
+    return sorted(found - known)
+
+
+def main(
+    vault: Path = typer.Option(Path(), help="the vault's root"),
+    cache: Path | None = typer.Option(None, help="keep and reuse responses here"),
+    delay: float = typer.Option(1.0, help="seconds between requests"),
+) -> None:
+    for tool in ["pdftotext"]:
+        if not shutil.which(tool):
+            raise SystemExit(f"{tool} is not on the PATH")
+    fetch = Fetcher(cache, delay)
+    docs: list[Doc] = []
+    for source in SOURCES:
+        html = fetch.get(source.page, ".html")[0].decode(errors="replace")
+        links, soup = pdf_links(source.page, html)
+        picked = source.pick(source.page, links, soup)
+        if len(picked) < source.minimum:
+            raise SystemExit(
+                f"{source.page} yields {len(picked)} documents, expected at "
+                f"least {source.minimum}; not syncing"
+            )
+        docs.extend(picked)
+    titles: dict[str, Doc] = {}
+    for doc in docs:
+        if doc.title in titles:
+            raise SystemExit(f"two documents titled {doc.title!r}; not syncing")
+        titles[doc.title] = doc
+        doc.path = f"{FOLDER}/{slugify(doc.title)}.md"
+    files: dict[str, bytes] = {}
+    for doc in docs:
+        data, modified = fetch.get(doc.source, ".pdf")
+        try:
+            body = convert(data, doc.kind)
+        except Exception as e:
+            raise RuntimeError(f"{doc.title}: {e}") from e
+        files[doc.path] = render(doc, modified, body).encode()
+    written, removed = write_tree(vault, files)
+    typer.echo(f"{len(docs)} documents: {written} files written, {removed} removed")
+    try:
+        index = fetch.get(HANDBOOK_INDEX, ".html")[0].decode(errors="replace")
+    except httpx.HTTPError:
+        return
+    for page in other_handbooks(index):
+        typer.echo(f"handbook not mirrored: {page}")
+
+
+if __name__ == "__main__":
+    typer.run(main)
