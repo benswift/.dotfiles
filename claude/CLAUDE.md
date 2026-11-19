@@ -20,32 +20,48 @@ for.
 
 ## Writing rules
 
-Use clear, concise language with Australian English spelling. Don't overuse
-lists or exclamation marks.
+Use clear, concise language with Australian English spelling. State findings and
+facts directly rather than staging a reveal. Don't overuse lists or exclamation
+marks.
 
 I sometimes dictate, so spoken punctuation ("full stop", "comma", "smiley face")
 is punctuation, never literal text.
 
-When drafting text I'll send elsewhere (email, Ed, Teams), show it as plain
-text, not a blockquote, and pipe it to `clipboard-copy` (works over ssh). Don't
-write drafts into a repo. Never send anything until I've seen the draft, unless
-I say "send it". Messages to people outside the project carry only what the
-recipient needs for the ask: no other projects, internal plans or who leads
-what.
+When drafting text I'll send elsewhere (email, Ed, Teams), keep it casual and
+brief: a greeting line, a few plain sentences that say what the recipient needs,
+and stop. Show it as plain text, not a blockquote, and pipe it to
+`clipboard-copy` (works over ssh). Don't write drafts into a repo. Never send
+anything until I've seen the draft, unless I say "send it". Messages to people
+outside the project carry only what the recipient needs for the ask: no other
+projects, internal plans or who leads what.
 
 My terminal renders Markdown links: give URLs as `[text](url)`, not bare.
 
-For prose work, use benswift-writer: voice, sentence habits and the AI-trope
-pass. Run jamesian only when I ask for it.
+Skills for writing tasks:
+
+- `ben:benswift-writer` --- drafting prose in my voice across registers
+  (messages/forums, technical posts/docs, op-eds/essays, scholarly papers, slide
+  decks)
+- `ben:deslop` --- repo-wide or file-level copyedit to strip AI tropes,
+  Claudisms, and instruction-file bloat
+- `ben:jamesian` --- Christensen generative rhetoric revision (only when I ask
+  for it)
 
 ### Pet hates
 
-- emails open with the substance: no "quick question:", "just a quick one" or
-  similar preamble
-- no AI-writing tells (taxonomy in benswift-writer's `ai-tropes.md`). The worst:
-  anthropomorphising code and tools ("the script is happy", "the hook wants
-  to"), and unearned sermons, a closing moral or "this is a reminder that" the
-  facts haven't earned
+- preambles and throat-clearing: open emails and messages with the substance (no
+  "quick question:", "just a quick one", recapping their message, or announcing
+  "a few updates:")
+- AI-writing tells and Claudisms (full taxonomy in benswift-writer's
+  `ai-tropes.md`):
+  - anthropomorphising code, tools or data ("the script is happy", "the hook
+    wants to", "this asymmetry bites", "the docstring promises")
+  - unearned sermons and aphoristic closers (a closing moral, maxim, or "this is
+    a reminder that..." the facts haven't earned --- stop on the last fact)
+  - negative-first framing by reflex ("It's not X --- it's Y", or stacked "X,
+    not Y" / "X rather than Y" contrasts where a plain positive statement works)
+  - flat-certainty padding ("quietly", "plainly", "seamlessly", figurative
+    "load-bearing", or juridical code talk like "refuses" and "carve-out")
 
 ### Harness instruction files
 
