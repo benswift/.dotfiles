@@ -21,12 +21,14 @@ Sections, each capped at CAP lines:
 
 - near-copies: `wiz search -like` neighbours of the same type scoring at least
   LIKE_MIN (a share of the record's own score; a copy is near 1), leaving out
-  notes in a series (titles alike once digits are dropped)
+  notes in a series (titles alike once digits are dropped) and stubs under
+  STUB_WORDS words
 - repeated bot tasks: tasks tagged bot sharing a title once digits are dropped,
   more than one open, or filed within a week of each other in the last month
 - unlinked names: a person, project or org record's name in the body (or a
   task's title) of a record that doesn't link it and may (its vault's
-  links_out); a one-word name must match case and be at least 5 letters
+  links_out), most mentioned first; an org only within its own vault, and
+  never the owner; a one-word name must match case and be at least 5 letters
 - people out of step: one filename in several vaults whose title, names or
   email disagree
 - stale claims: lines dated before today that still speak of the future or of
@@ -54,6 +56,11 @@ from typing import Any
 
 VAULTS = ["anu", "ben", "hdr", "lx"]
 BULK_TYPES = {"event", "archive", "mail", "workflow", "request"}
+# The vaults' owner, named everywhere, linked from nowhere that matters.
+OWNER = "ben-swift.md"
+# A record with fewer words than this is a stub: its few terms make anything
+# sharing them look like a copy. Repeated bot tasks covers those that are.
+STUB_WORDS = 20
 CAP = 40
 LIKE_MIN = 0.8
 LINK = re.compile(r"\[\[(?:([a-z0-9-]+):)?([^\]|#]+)")
@@ -194,6 +201,7 @@ def near_copies(focus: list[Record]) -> list[str]:
         )
 
     lines = []
+    focus = [r for r in focus if len(r.body.split()) >= STUB_WORDS]
     # Each search reads its whole vault, so a few at a time fill the cores.
     with ThreadPoolExecutor(max_workers=6) as pool:
         found = list(pool.map(like, focus))
@@ -243,7 +251,11 @@ def names_of(r: Record) -> list[str]:
 def unlinked_names(
     records: list[Record], focus: list[Record], reach: dict[str, set[str]]
 ) -> list[str]:
-    entities = [r for r in records if r.type in {"person", "project", "org"}]
+    entities = [
+        r
+        for r in records
+        if r.type in {"person", "project", "org"} and Path(r.path).name != OWNER
+    ]
     patterns = []
     for e in entities:
         for n in names_of(e):
@@ -254,7 +266,7 @@ def unlinked_names(
     slugs: dict[str, set[str]] = defaultdict(set)
     for e in entities:
         slugs[Path(e.path).name].add(e.vault)
-    lines = []
+    lines: list[tuple[int, str]] = []
     for r in focus:
         text = LINK.sub(" ", re.sub(r"\[\[[^\]]*\]\]", " ", r.body))
         if r.type == "task":
@@ -270,15 +282,17 @@ def unlinked_names(
                 or e.vault not in reach[r.vault]
             ):
                 continue
-            # The record's own vault holds the person, when both do.
-            if e.vault != r.vault and r.vault in slugs[name]:
+            # The record's own vault holds the person, when both do; and an
+            # org is linked only within its own vault, where it is a client
+            # rather than a passing name.
+            if e.vault != r.vault and (r.vault in slugs[name] or e.type == "org"):
                 continue
             if n := len(pat.findall(text)):
                 seen.add(name)
                 lines.append(
-                    f"`{r.ref}` names {e.title} ({n}x) without linking `{e.ref}`"
+                    (n, f"`{r.ref}` names {e.title} ({n}x) without linking `{e.ref}`")
                 )
-    return lines
+    return [line for _, line in sorted(lines, key=lambda x: -x[0])]
 
 
 def people_out_of_step(records: list[Record]) -> list[str]:

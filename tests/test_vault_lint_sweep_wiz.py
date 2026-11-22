@@ -60,7 +60,9 @@ A person.
 """
 
 COPY = (
-    "The budget covers salaries, travel, equipment and the milestones for the grant.\n"
+    "The budget covers salaries, travel, equipment and the milestones for the "
+    "grant, with the panel's questions on the second year and a contingency for "
+    "the field trip to Darwin.\n"
 )
 
 OLD = {
