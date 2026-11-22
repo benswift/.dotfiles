@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+# oncall: file, add to and clear the anu vault's tasks for something that needs
+# Ben: a failed job or a sweep's finding. Every job that reaches Ben through
+# the vault goes through here (unit-oncall, launchd-run, the comp4020 sweeps),
+# so they share one dedup and one pager.
+#
+#   oncall file [-t tag]... [-p page] [-q] [-n] <key> <title>   # body on stdin
+#   oncall clear [-n] <key>
+#
+# KEY is the task's `unit` field: a systemd unit, a launchd job or a sweep. While
+# a task with the key is open, `file` appends the body to it (`wiz add -once`)
+# instead of filing another, from any host: the vault, not a per-host marker,
+# says what is open. Callers keep their own debounce (whether a repeat is worth
+# writing at all); this owns what a write does. It prints the task's path.
+#
+# PAGE: a new task pages (notify-pushover, under `mise exec` for the credentials
+# in the untracked mise env), with -p's text or the body's last three lines. An
+# append pages only once the key's last page is REARM_HOURS old, so a failure
+# that persists re-pages daily onto one task. -q never pages. Pages are capped
+# across keys, PUSH_CAP per PUSH_WINDOW_MIN, then one page saying so and silence
+# for the window, since whole families of units fail together; the cap needs
+# flock, so on macOS every page goes. A page is best effort: the task is the
+# record, the page only the nudge towards it.
+#
+# TAGS: always bot, plus each -t.
+#
+# SYNC: each write is shared with `wiz sync`, best effort, unless -n leaves it
+# for the vault's scheduled sync (launchd jobs, which may have no ssh agent).
+#
+# `clear` deletes every open task with the key (wiz remove refuses, deleting
+# none, while anything links to one), so a task Ben wrote himself is never
+# touched, and forgets the key's last page.
+#
+# Bash 3.2 and BSD date: launchd-run calls this on macOS.
+
+set -uo pipefail
+
+export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$PATH"
+
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/oncall"
+LOG="$STATE/oncall.log"
+REARM_HOURS="${REARM_HOURS:-24}"
+PUSH_CAP="${PUSH_CAP:-3}"
+PUSH_WINDOW_MIN="${PUSH_WINDOW_MIN:-15}"
+
+mkdir -p "$STATE"
+
+say() { printf '[%s] %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$*" >>"$LOG"; }
+
+usage() {
+	echo "usage: oncall file [-t tag]... [-p page] [-q] [-n] <key> <title> < body" >&2
+	echo "       oncall clear [-n] <key>" >&2
+	exit 2
+}
+
+# The open tasks with the key, one path per line.
+open_tasks() {
+	wiz query anu -json "type == \"task\" && unit == \"$1\" && status == \"open\"" 2>>"$LOG" |
+		jq -r '.[].path' 2>>"$LOG"
+}
+
+share() { # <message> <path>...
+	local message="$1"
+	shift
+	if wiz sync anu -m "$message" "${@/#/anu:}" >/dev/null 2>>"$LOG"; then
+		say "shared: $message"
+	else
+		say "sync failed --- '$message' is local until the next sync"
+	fi
+}
+
+# This page's number in the current window, starting a new window when the
+# last is over. Run under the lock, so two pagers can't take the same number.
+push_seq() {
+	local now start=0 count=0 window="$STATE/push-window"
+	now="$(date +%s)"
+	if [[ -f "$window" ]]; then
+		read -r start count <"$window" || true
+		[[ "$start" =~ ^[0-9]+$ ]] || start=0
+		[[ "$count" =~ ^[0-9]+$ ]] || count=0
+	fi
+	if ((now - start >= PUSH_WINDOW_MIN * 60)); then
+		start="$now"
+		count=0
+	fi
+	count=$((count + 1))
+	printf '%s %s\n' "$start" "$count" >"$window"
+	printf '%s' "$count"
+}
+
+page() { # <title> <text>
+	local n=1
+	if command -v flock >/dev/null; then
+		exec 9>"$STATE/push-window.lock"
+		flock 9
+		n="$(push_seq)"
+		flock -u 9
+	fi
+	local title="$1" text="$2"
+	if ((n == PUSH_CAP + 1)); then
+		title="oncall: burst on $(hostname -s)"
+		text="More than $PUSH_CAP pages within ${PUSH_WINDOW_MIN}m; the rest of the window's are suppressed. Tasks are still being filed: see the bot section of \`todo\`."
+	elif ((n > PUSH_CAP + 1)); then
+		say "page '$1' suppressed (page $n this ${PUSH_WINDOW_MIN}m window)"
+		return 0
+	fi
+	if printf '%s' "$text" | mise exec -- notify-pushover --title "$title" >/dev/null 2>>"$LOG"; then
+		say "paged '$title'"
+	else
+		say "pushover failed for '$title' --- the task is still filed"
+	fi
+}
+
+[[ $# -ge 1 ]] || usage
+action="$1"
+shift
+tags="bot"
+page_text=""
+quiet=""
+local_only=""
+while getopts "t:p:qn" opt; do
+	case "$opt" in
+	t) tags="$tags,$OPTARG" ;;
+	p) page_text="$OPTARG" ;;
+	q) quiet=1 ;;
+	n) local_only=1 ;;
+	*) usage ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+key="${1:-}"
+[[ -n "$key" && "$key" != *[\\\"]* ]] || usage
+paged="$STATE/$(printf '%s' "$key" | tr '/' '_').paged"
+
+case "$action" in
+clear)
+	[[ $# -eq 1 ]] || usage
+	rm -f "$paged"
+	tasks=()
+	while IFS= read -r task; do
+		[[ -n "$task" ]] && tasks+=("$task")
+	done < <(open_tasks "$key")
+	((${#tasks[@]})) || exit 0
+	if ! wiz remove "${tasks[@]/#/anu:}" >/dev/null 2>>"$LOG"; then
+		say "$key: recovered, but FAILED to delete ${tasks[*]}"
+		exit 0
+	fi
+	say "$key: recovered; deleted ${tasks[*]}"
+	[[ -n "$local_only" ]] || share "oncall: $key recovered" "${tasks[@]}"
+	exit 0
+	;;
+file) [[ $# -eq 2 ]] || usage ;;
+*) usage ;;
+esac
+
+title="$2"
+body="$(cat)"
+was_open="$(open_tasks "$key" | head -1)"
+if ! task="$(printf '%s\n' "$body" | wiz add anu task -json \
+	-once "unit == \"$key\" && status == \"open\"" \
+	-title "$title" -set status=open -set "tags=[$tags]" -set "unit=$key" 2>>"$LOG" |
+	jq -r '.paths[0]')" || [[ -z "$task" || "$task" == null ]]; then
+	say "$key: FAILED to file a task --- the caller's log is the only record"
+	exit 1
+fi
+if [[ -n "$was_open" ]]; then
+	say "$key: added to $task"
+else
+	say "$key: filed $task"
+fi
+printf '%s\n' "$task"
+
+# Page before sharing, which reaches the network and can be slow.
+now="$(date +%s)"
+last="$(cat "$paged" 2>/dev/null || echo 0)"
+[[ "$last" =~ ^[0-9]+$ ]] || last=0
+if [[ -z "$quiet" ]] && { [[ -z "$was_open" ]] || ((now - last >= REARM_HOURS * 3600)); }; then
+	echo "$now" >"$paged"
+	page "oncall: $key" "${page_text:-$(printf '%s\n' "$body" | tail -3)}"
+fi
+
+[[ -n "$local_only" ]] || share "oncall: $title" "$task"
+exit 0

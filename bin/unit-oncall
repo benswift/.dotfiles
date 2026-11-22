@@ -16,80 +16,27 @@
 # Usage: unit-oncall fail  <unit>   # file a task (deduped, see below)
 #        unit-oncall clear <unit>   # the unit succeeded; re-arm and delete its tasks
 #
-# DEDUP: a unit that fails every 15 minutes must not file 96 tasks a day. The
-# first failure files one and drops a marker; later failures append to the
-# marker instead. A success clears it and deletes the task(s): a recovered
-# failure is machine output, which belongs in the journal and git history, not
-# among Ben's tasks. A marker older than REARM_HOURS
-# files a fresh task anyway, so a failure that persists past a closed task does
-# not go quiet.
+# DEDUP: a unit that fails every 15 minutes must not write 96 times a day. The
+# first failure files a task and drops a marker; later failures append to the
+# marker instead. A marker older than REARM_HOURS writes again, so a failure
+# that outlives a day re-pages rather than going quiet. A success clears it and
+# deletes the open task: a recovered failure is machine output, which belongs
+# in the journal and git history, not among Ben's tasks.
 #
-# A task also sends a Pushover page, so a failure reaches a phone rather than
-# waiting for the vault to be opened. The page sits inside the dedup above, so
-# it inherits it: one page per task, not one per failure.
-#
-# BURST: that marker only debounces a single unit, and whole families fail
-# together --- one crit sweep per group, six at a time. So the pages are capped
-# across units as well: PUSH_CAP per PUSH_WINDOW_MIN, then one page saying how
-# many more are failing, then silence for the rest of the window. Every failure
-# still files its own task; only the paging is capped, so nothing is lost --- the
-# vault stays the record and the page is only the nudge towards it.
+# Filing, paging and deleting are bin/oncall's, shared with launchd-run and the
+# comp4020 sweeps: it appends to the unit's open task rather than filing a
+# second, and caps pages across units. This script finds the failed run.
 
 set -euo pipefail
 
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/unit-oncall"
 LOG="$STATE/unit-oncall.log"
-LOCK="$STATE/push-window.lock"
-WINDOW="$STATE/push-window"
 JOURNAL_LINES="${JOURNAL_LINES:-40}"
 REARM_HOURS="${REARM_HOURS:-24}"
-PUSH_CAP="${PUSH_CAP:-3}"
-PUSH_WINDOW_MIN="${PUSH_WINDOW_MIN:-15}"
 
 mkdir -p "$STATE"
 
 say() { printf '[%s] %s\n' "$(date -Is)" "$*" >>"$LOG"; }
-
-# This page's number within the current burst window, resetting a stale one.
-# Called under $LOCK, so concurrent handlers cannot both read the same count.
-# A malformed or missing file starts a fresh window rather than failing: losing
-# a window is a worse outcome than losing the cap for one burst.
-push_seq() {
-	local now start count
-	now="$(date +%s)"
-	start=0
-	count=0
-	if [[ -f "$WINDOW" ]]; then
-		read -r start count <"$WINDOW" || true
-		[[ "$start" =~ ^[0-9]+$ ]] || start=0
-		[[ "$count" =~ ^[0-9]+$ ]] || count=0
-	fi
-	if ((now - start >= PUSH_WINDOW_MIN * 60)); then
-		start="$now"
-		count=0
-	fi
-	count=$((count + 1))
-	printf '%s %s\n' "$start" "$count" >"$WINDOW"
-	printf '%s' "$count"
-}
-
-# Best effort by construction: a Pushover outage must not turn a job's failure
-# into a failed OnFailure= handler, so every path here logs and returns 0. The
-# task is already on disk by the time this runs.
-#
-# `mise exec` supplies PUSHOVER_TOKEN/PUSHOVER_USER_KEY from the untracked
-# [env] block in ~/.config/mise/config.local.toml --- the unit gives this script
-# an explicit PATH and no other environment, and the credentials must not be
-# written into a unit file to get here.
-page() {
-	local title="$1" body="$2"
-	if printf '%s' "$body" \
-		| mise exec -- notify-pushover --title "$title" >/dev/null 2>>"$LOG"; then
-		return 0
-	fi
-	say "pushover failed for '$title' --- the task is still filed"
-	return 0
-}
 
 usage() {
 	echo "usage: unit-oncall (fail|clear) <unit>" >&2
@@ -108,26 +55,7 @@ clear)
 		say "$unit: recovered; marker cleared"
 	fi
 
-	# Delete every open task this script filed for the unit (a re-armed failure
-	# leaves more than one), found by its unit field, so a task Ben wrote
-	# himself is never touched. This runs on every success, so it writes and
-	# shares only when something matches.
-	mapfile -t open < <(wiz query anu -json "type == \"task\" && unit == \"$unit\" && status == \"open\"" 2>>"$LOG" \
-		| jq -r '.[].path' 2>>"$LOG" || true)
-	((${#open[@]})) || exit 0
-
-	# wiz remove deletes none of them while anything links to one.
-	if wiz remove "${open[@]/#/anu:}" >/dev/null 2>>"$LOG"; then
-		say "$unit: recovered; deleted ${open[*]}"
-	else
-		say "$unit: recovered, but FAILED to delete ${open[*]}"
-		exit 0
-	fi
-	if wiz sync anu -m "oncall: $unit recovered" "${open[@]/#/anu:}" >/dev/null 2>>"$LOG"; then
-		say "$unit: shared"
-	else
-		say "$unit: sync failed --- the deletions are local until the next sync"
-	fi
+	oncall clear "$unit"
 	exit 0
 	;;
 fail) ;;
@@ -235,49 +163,25 @@ $tail_out
 EOF
 )"
 
-if task="$(printf '%s\n' "$description" | wiz add anu task -json -title "$title" \
-	-set status=open -set "tags=[bot,oncall]" -set "unit=$unit" 2>>"$LOG" | jq -r '.paths[0]')" \
-	&& [[ -n "$task" && "$task" != null ]]; then
-	printf 'first failure %s\n' "$(date -Is)" >"$marker"
-	say "$unit: filed $task"
-else
-	say "$unit: FAILED to file a task --- the journal is the only record"
-	exit 1
-fi
-
-# Page before syncing, which reaches the network and can be slow: the phone
-# should buzz as soon as the task is on disk, not after a remote round trip.
-#
-# Lead with what the job itself printed --- for the course heartbeat that is the
-# STALE line naming the dead timer --- since systemd's own "Failed with result"
-# gives nothing to act on from a phone. Drop systemd's own lines and journalctl's
-# `-- Boot ... --` separators, then strip the `<ts> <host> <ident>[<pid>]: `
-# prefix, which is three space-free fields and only eats width on a phone.
+# Lead the page with what the job itself printed --- for the course heartbeat
+# that is the STALE line naming the dead timer --- since systemd's own "Failed
+# with result" gives nothing to act on from a phone. Drop systemd's own lines and
+# journalctl's `-- Boot ... --` separators, then strip the `<ts> <host>
+# <ident>[<pid>]: ` prefix, which is three space-free fields and only eats width
+# on a phone.
 own_output="$(
 	printf '%s\n' "$tail_out" \
 		| grep -vE 'systemd\[[0-9]+\]:|^-- ' \
 		| sed 's/^[^ ]* [^ ]* [^ ]*: //' \
 		| tail -3 || true
 )"
-exec 9>"$LOCK"
-flock 9
-page_n="$(push_seq)"
-flock -u 9
-if ((page_n <= PUSH_CAP)); then
-	page "oncall: $unit" "$(printf 'result=%s exit=%s\n%s' "$result" "$status" "$own_output")"
-	say "$unit: paged ($page_n/$PUSH_CAP this ${PUSH_WINDOW_MIN}m window)"
-elif ((page_n == PUSH_CAP + 1)); then
-	page "oncall: burst on weddle" \
-		"More than $PUSH_CAP units failing within ${PUSH_WINDOW_MIN}m; pages suppressed for the rest of the window. Tasks are still being filed --- see the bot section of \`todo\`"
-	say "$unit: paged the burst summary; further pages suppressed this window"
-else
-	say "$unit: page suppressed (burst, page $page_n this ${PUSH_WINDOW_MIN}m window)"
-fi
 
-# Best effort: the task is already on disk, and wiz due's next sync of the
-# vault will carry it if this one cannot (offline, remote unreachable).
-if wiz sync anu -m "oncall: $unit failed" "anu:$task" >/dev/null 2>>"$LOG"; then
-	say "$unit: shared"
+if printf '%s\n' "$description" | oncall file -t oncall \
+	-p "$(printf 'result=%s exit=%s\n%s' "$result" "$status" "$own_output")" \
+	"$unit" "$title" >/dev/null; then
+	printf 'first failure %s\n' "$(date -Is)" >"$marker"
+	say "$unit: filed (see oncall.log)"
 else
-	say "$unit: sync failed --- the task is local until the next sync"
+	say "$unit: FAILED to file a task --- the journal is the only record"
+	exit 1
 fi

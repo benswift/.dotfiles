@@ -19,10 +19,10 @@
 # Failures  launchd has no OnFailure equivalent, so it lives here: -n
 #           consecutive non-zero exits (default 3, so a transient blip stays
 #           quiet) file a task in the anu vault and send a Pushover page, once per
-#           breakage.
+#           breakage, through bin/oncall (shared with weddle's unit-oncall).
 #           Repeats while still broken stay quiet, a success re-arms, and a
-#           breakage older than REARM_HOURS pages again so a persistent one
-#           cannot go silent. Offline or metered is not a failure --- the job
+#           breakage older than REARM_HOURS adds to its open task and pages
+#           again, so a persistent one cannot go silent. Offline or metered is not a failure --- the job
 #           itself exits 0 for those (bin/mailsync-scheduled, bin/push-to-weddle)
 #           --- and nor is a failed run the machine slept through.
 #
@@ -96,21 +96,9 @@ if ((status == 0)); then
 		rm -f "$marker"
 		echo "launchd-run: $job recovered"
 		say "recovered; marker cleared"
-		# Delete the tasks a failure filed, found by their unit field, so a
-		# task Ben wrote himself is never touched; wiz due's next sync commits
-		# it. Best effort, like filing. A read loop, not mapfile: launchd
-		# starts this under macOS's bash 3.2.
-		tasks=()
-		while IFS= read -r task; do
-			[[ -n "$task" ]] && tasks+=("anu:$task")
-		done < <(wiz query anu -json "type == \"task\" && unit == \"$job\" && status == \"open\"" 2>>"$LOG" | jq -r '.[].path' 2>>"$LOG")
-		if ((${#tasks[@]})); then
-			if wiz remove "${tasks[@]}" >/dev/null 2>>"$LOG"; then
-				say "deleted ${tasks[*]}"
-			else
-				say "FAILED to delete ${tasks[*]}"
-			fi
-		fi
+		# Delete the open task a failure filed (bin/oncall); wiz due's next sync
+		# commits it.
+		oncall clear -n "$job"
 	fi
 	exit 0
 fi
@@ -164,23 +152,12 @@ $tail_out
 EOT
 )"
 
-# The task is the record; the page is the nudge towards it. Both best effort:
-# neither a vault nor a Pushover outage must mask the log, which already has
-# the full story. The vault's scheduled sync shares the task.
-if printf '%s\n' "$description" | wiz add anu task -title "$title" \
-	-set status=open -set "tags=[bot,oncall]" -set "unit=$job" >/dev/null 2>>"$LOG"; then
-	say "filed a task"
-else
-	say "FAILED to file a task --- the log is the only record"
-fi
+# bin/oncall files the task, or adds to the job's open one, and pages; both
+# best effort, since the log already has the full story. -n leaves the write
+# for wiz due's next sync: a launchd job may have no ssh agent to share with.
+printf '%s\n' "$description" | oncall file -n -t oncall \
+	-p "$(printf 'exit=%s\n%s\n' "$status" "$(printf '%s\n' "$tail_out" | tail -3)")" \
+	"$job" "$title" >/dev/null 2>>"$LOG" || say "FAILED to file a task --- the log is the only record"
 printf 'first failure %s %s\n' "$(date +%s)" "$(date -Iseconds)" >"$marker"
 
-# mise exec supplies PUSHOVER_TOKEN/PUSHOVER_USER_KEY from the untracked [env]
-# block in ~/.config/mise/config.local.toml.
-if printf 'exit=%s\n%s\n' "$status" "$(printf '%s\n' "$tail_out" | tail -3)" |
-	mise exec -- notify-pushover --title "oncall: $job on $host" >/dev/null 2>>"$LOG"; then
-	say "paged"
-else
-	say "pushover failed --- the task is still filed"
-fi
 exit "$status"

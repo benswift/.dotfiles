@@ -150,7 +150,9 @@ one.
 The `wiz-due` units (`systemd/user/wiz-due.service`, its launchd twin) run every
 registered vault's due workflows on this host, then `wiz sync -all`; anu's are
 in the vault's `workflows/`, among them `health` (the job health check,
-`bin/pkb-health`). `unit-oncall` and `launchd-run` file failures as anu tasks.
+`bin/pkb-health`). `unit-oncall` (systemd) and `launchd-run` (launchd) file
+failures as anu tasks through `bin/oncall`, which the comp4020 sweeps share; it
+needs the engine's `wiz add -once`.
 
 yazi's plugin dir is owned by `ya pkg`, which is why `yazi/` configs are
 symlinked file-by-file rather than as a directory.
