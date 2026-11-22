@@ -4,7 +4,7 @@
 # the vault goes through here (unit-oncall, launchd-run, the comp4020 sweeps),
 # so they share one dedup and one pager.
 #
-#   oncall file [-t tag]... [-p page] [-q] [-n] <key> <title>   # body on stdin
+#   oncall file [-t tag]... [-p page] [-q|-a] [-n] <key> <title>   # body on stdin
 #   oncall clear [-n] <key>
 #
 # KEY is the task's `unit` field: a systemd unit, a launchd job or a sweep. While
@@ -16,7 +16,8 @@
 # PAGE: a new task pages (notify-pushover, under `mise exec` for the credentials
 # in the untracked mise env), with -p's text or the body's last three lines. An
 # append pages only once the key's last page is REARM_HOURS old, so a failure
-# that persists re-pages daily onto one task. -q never pages. Pages are capped
+# that persists re-pages daily onto one task. -a pages every append (a sweep
+# whose every write is a new finding); -q never pages. Pages are capped
 # across keys, PUSH_CAP per PUSH_WINDOW_MIN, then one page saying so and silence
 # for the window, since whole families of units fail together; the cap needs
 # flock, so on macOS every page goes. A page is best effort: the task is the
@@ -48,7 +49,7 @@ mkdir -p "$STATE"
 say() { printf '[%s] %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$*" >>"$LOG"; }
 
 usage() {
-	echo "usage: oncall file [-t tag]... [-p page] [-q] [-n] <key> <title> < body" >&2
+	echo "usage: oncall file [-t tag]... [-p page] [-q|-a] [-n] <key> <title> < body" >&2
 	echo "       oncall clear [-n] <key>" >&2
 	exit 2
 }
@@ -117,12 +118,14 @@ shift
 tags="bot"
 page_text=""
 quiet=""
+always=""
 local_only=""
-while getopts "t:p:qn" opt; do
+while getopts "t:p:qan" opt; do
 	case "$opt" in
 	t) tags="$tags,$OPTARG" ;;
 	p) page_text="$OPTARG" ;;
 	q) quiet=1 ;;
+	a) always=1 ;;
 	n) local_only=1 ;;
 	*) usage ;;
 	esac
@@ -175,7 +178,7 @@ printf '%s\n' "$task"
 now="$(date +%s)"
 last="$(cat "$paged" 2>/dev/null || echo 0)"
 [[ "$last" =~ ^[0-9]+$ ]] || last=0
-if [[ -z "$quiet" ]] && { [[ -z "$was_open" ]] || ((now - last >= REARM_HOURS * 3600)); }; then
+if [[ -z "$quiet" ]] && { [[ -z "$was_open" || -n "$always" ]] || ((now - last >= REARM_HOURS * 3600)); }; then
 	echo "$now" >"$paged"
 	page "oncall: $key" "${page_text:-$(printf '%s\n' "$body" | tail -3)}"
 fi

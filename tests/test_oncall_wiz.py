@@ -236,6 +236,16 @@ def test_oncall_quiet_files_without_paging(
     assert pages(tmp_path) == []
 
 
+def test_oncall_always_pages_each_finding_onto_one_task(
+    anu: tuple[Path, dict[str, str]], home: Path, tmp_path: Path
+) -> None:
+    _, env = anu
+    args = ("-a", "-n", "comp4020-fly-sweep", "fly-sweep findings")
+    first = oncall_file(env, home, "One app.", *args)
+    assert oncall_file(env, home, "Another app.", *args) == first
+    assert len(pages(tmp_path)) == 2
+
+
 def test_unit_oncall_rearm_adds_to_the_open_task(
     anu: tuple[Path, dict[str, str]], home: Path, tmp_path: Path
 ) -> None:
