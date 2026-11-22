@@ -419,13 +419,12 @@ def main() -> None:
         f"{len(focus)} of {len(curated)} curated records in {', '.join(vaults)}: those changed in the "
         f"last {a.days} days and slice {week % a.slices} of {a.slices}.\n"
     )
-    print(
-        section(
-            "Near-copies",
-            near_copies(focus),
-            f"Same type, `wiz search -like` share at least {LIKE_MIN}.",
-        )
-    )
+    # A wiz older than -like's shares gives raw scores, which no threshold fits.
+    if "share of the record's own score" in wiz("help"):
+        note = f"Same type, `wiz search -like` share at least {LIKE_MIN}."
+        print(section("Near-copies", near_copies(focus), note))
+    else:
+        print("## Near-copies\n\nSkipped: this wiz predates -like's shares.\n")
     print(section("Repeated bot tasks", repeated_bot_tasks(records, today)))
     print(section("Unlinked names", unlinked_names(records, focus, reach)))
     print(section("People out of step across vaults", people_out_of_step(records)))
