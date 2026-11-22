@@ -1,0 +1,453 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""vault-lint-sweep: the deterministic half of the weekly vault lint.
+
+  vault-lint-sweep [--vault NAME]... [--days N] [--slices N] [--week N]
+
+Reads Ben's vaults through wiz and prints, as Markdown, the candidates the lint
+agent (the anu vault's `lint` workflow) then reads, judges and fixes. Every
+section is a candidate list, not a verdict: a name in prose may be a passing
+mention, a near-copy may be a legitimate repeat.
+
+Which records: those changed in the last --days (git), plus a rotating slice of
+the rest, so every curated record is read once every --slices weeks (a record's
+slice is a hash of its vault:path; this week's is the ISO week, or --week).
+Curated means every type but the bulk ones automation writes (BULK_TYPES).
+
+Sections, each capped at CAP lines:
+
+- near-copies: `wiz search -like` neighbours of the same type scoring at least
+  LIKE_MIN (a share of the record's own score; a copy is near 1), leaving out
+  notes in a series (titles alike once digits are dropped)
+- repeated bot tasks: tasks tagged bot sharing a title once digits are dropped,
+  more than one open, or filed within a week of each other in the last month
+- unlinked names: a person, project or org record's name in the body (or a
+  task's title) of a record that doesn't link it and may (its vault's
+  links_out); a one-word name must match case and be at least 5 letters
+- people out of step: one filename in several vaults whose title, names or
+  email disagree
+- stale claims: lines dated before today that still speak of the future or of
+  waiting, in records not changed for 30 days
+- empty open tasks: open, no body, made more than 30 days ago
+- new orphans: records made in the window that link nothing and nothing links
+- fill rates: optional fields filled on at least 90% or at most 5% of a type's
+  records (types with at least 10), for the Ontology principles
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import itertools
+import json
+import re
+import subprocess
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
+from datetime import date, timedelta
+from pathlib import Path
+from typing import Any
+
+VAULTS = ["anu", "ben", "hdr", "lx"]
+BULK_TYPES = {"event", "archive", "mail", "workflow", "request"}
+CAP = 40
+LIKE_MIN = 0.8
+LINK = re.compile(r"\[\[(?:([a-z0-9-]+):)?([^\]|#]+)")
+DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})-")
+MONTHS = [
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+]
+DATE_IN_TEXT = re.compile(
+    r"\b(\d{4})-(\d{2})-(\d{2})\b|\b(\d{1,2}) ("
+    + "|".join(m[:3] for m in MONTHS)
+    + r")[a-z]* (\d{4})\b",
+    re.IGNORECASE,
+)
+PENDING = re.compile(
+    r"\b(will|planned|plan to|due|deadline|upcoming|awaiting|waiting|pending|not yet|being prepared|next week|currently|as of|as at)\b",
+    re.IGNORECASE,
+)
+
+
+@dataclass
+class Record:
+    vault: str
+    path: str
+    type: str
+    title: str
+    fields: dict[str, Any]
+    body: str
+    links: set[tuple[str, str]] = field(default_factory=set)
+
+    @property
+    def ref(self) -> str:
+        return f"{self.vault}:{self.path}"
+
+    @property
+    def stem(self) -> str:
+        return self.path.removesuffix(".md")
+
+
+def wiz(*args: str) -> str:
+    proc = subprocess.run(["wiz", *args], capture_output=True, text=True, check=False)
+    if proc.returncode:
+        raise SystemExit(f"wiz {' '.join(args)}: {proc.stderr.strip()}")
+    return proc.stdout
+
+
+def git(root: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(root), *args], capture_output=True, text=True, check=True
+    ).stdout
+
+
+def links_of(r: Record) -> set[tuple[str, str]]:
+    """Every (vault, path-without-.md) the record's fields and body link."""
+    text = json.dumps(r.fields) + "\n" + r.body
+    return {
+        (v or r.vault, p.strip().removesuffix(".md")) for v, p in LINK.findall(text)
+    }
+
+
+def load(vaults: list[str]) -> list[Record]:
+    out = []
+    for v in vaults:
+        for d in json.loads(wiz("query", v, "-json", "-body")):
+            r = Record(
+                v,
+                d["path"],
+                d["type"],
+                d.get("title") or "",
+                d.get("fields") or {},
+                d.get("body") or "",
+            )
+            r.links = links_of(r)
+            out.append(r)
+    return out
+
+
+def links_out(vault: str) -> set[str]:
+    text = (Path(wiz("path", vault).strip()) / "mdbase.yaml").read_text()
+    m = re.search(r"^links_out:\s*\[([^\]]*)\]", text, re.MULTILINE)
+    return {vault} | ({s.strip() for s in m.group(1).split(",")} if m else set())
+
+
+def changed(vault: str, days: int) -> tuple[set[str], set[str]]:
+    """Paths changed, and paths added, in the last days."""
+    root = Path(wiz("path", vault).strip())
+    since = f"--since={days}.days"
+    touched = {
+        p for p in git(root, "log", since, "--name-only", "--format=").splitlines() if p
+    }
+    added = {
+        p
+        for p in git(
+            root, "log", since, "--diff-filter=A", "--name-only", "--format="
+        ).splitlines()
+        if p
+    }
+    return touched, added
+
+
+def in_slice(r: Record, slices: int, week: int) -> bool:
+    return int(hashlib.sha1(r.ref.encode()).hexdigest(), 16) % slices == week % slices
+
+
+def series(title: str) -> str:
+    return re.sub(r"[\d\W_]+", " ", title.lower()).strip()
+
+
+def made(r: Record) -> date | None:
+    m = DATED.match(Path(r.path).name)
+    return date.fromisoformat(m.group(1)) if m else None
+
+
+def section(title: str, lines: list[str], note: str = "") -> str:
+    head = f"## {title} ({len(lines)})\n\n" + (f"{note}\n\n" if note else "")
+    shown = lines[:CAP]
+    more = f"\n- ... and {len(lines) - CAP} more\n" if len(lines) > CAP else "\n"
+    return (
+        head + ("\n".join(f"- {line}" for line in shown) if shown else "None.") + more
+    )
+
+
+def near_copies(focus: list[Record]) -> list[str]:
+    def like(r: Record) -> list[dict]:
+        where = f'type == "{r.type}"'
+        return json.loads(
+            wiz("search", r.vault, "-like", r.ref, "-where", where, "-n", "3", "-json")
+        )
+
+    lines = []
+    # Each search reads its whole vault, so a few at a time fill the cores.
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        found = list(pool.map(like, focus))
+    for r, hits in zip(focus, found, strict=True):
+        for h in hits:
+            if h["score"] < LIKE_MIN:
+                continue
+            if r.type == "note" and series(h["title"]) == series(r.title):
+                continue
+            pair = sorted([r.ref, f"{h['vault']}:{h['path']}"])
+            lines.append(f"{h['score']:.2f} `{pair[0]}` and `{pair[1]}`")
+    return sorted(set(lines), reverse=True)
+
+
+def repeated_bot_tasks(records: list[Record], today: date) -> list[str]:
+    groups: dict[tuple[str, str], list[Record]] = defaultdict(list)
+    for r in records:
+        if r.type == "task" and "bot" in (r.fields.get("tags") or []):
+            groups[(r.vault, series(r.title))].append(r)
+    lines = []
+    for (vault, _), rs in groups.items():
+        dates = sorted(d for d in (made(r) for r in rs) if d)
+        recent = [d for d in dates if d >= today - timedelta(days=30)]
+        close = any(b - a <= timedelta(days=7) for a, b in itertools.pairwise(recent))
+        open_ = [r for r in rs if r.fields.get("status") == "open"]
+        if len(open_) > 1 or close:
+            refs = ", ".join(
+                f"`{r.path}` ({r.fields.get('status')})"
+                for r in sorted(rs, key=lambda r: r.path)[-6:]
+            )
+            lines.append(
+                f'{vault}, {len(rs)} tasks titled like "{rs[0].title[:70]}": {refs}'
+            )
+    return sorted(lines)
+
+
+def names_of(r: Record) -> list[str]:
+    names = {r.title}
+    names.update(str(a) for a in r.fields.get("aliases") or [])
+    if (pref := r.fields.get("preferred_name")) and (
+        fam := r.fields.get("family_name")
+    ):
+        names.add(f"{pref} {fam}")
+    return [n for n in names if n and (" " in n or (len(n) >= 5 and not n.islower()))]
+
+
+def unlinked_names(
+    records: list[Record], focus: list[Record], reach: dict[str, set[str]]
+) -> list[str]:
+    entities = [r for r in records if r.type in {"person", "project", "org"}]
+    patterns = []
+    for e in entities:
+        for n in names_of(e):
+            flags = re.IGNORECASE if " " in n else 0
+            patterns.append(
+                (e, re.compile(r"(?<![\w/-])" + re.escape(n) + r"(?![\w-])", flags))
+            )
+    slugs: dict[str, set[str]] = defaultdict(set)
+    for e in entities:
+        slugs[Path(e.path).name].add(e.vault)
+    lines = []
+    for r in focus:
+        text = LINK.sub(" ", re.sub(r"\[\[[^\]]*\]\]", " ", r.body))
+        if r.type == "task":
+            text = r.title + "\n" + text
+        linked = {Path(p).name + ".md" for _, p in r.links}
+        seen = set()
+        for e, pat in patterns:
+            name = Path(e.path).name
+            if (
+                e is r
+                or name in linked
+                or name in seen
+                or e.vault not in reach[r.vault]
+            ):
+                continue
+            # The record's own vault holds the person, when both do.
+            if e.vault != r.vault and r.vault in slugs[name]:
+                continue
+            if n := len(pat.findall(text)):
+                seen.add(name)
+                lines.append(
+                    f"`{r.ref}` names {e.title} ({n}x) without linking `{e.ref}`"
+                )
+    return lines
+
+
+def people_out_of_step(records: list[Record]) -> list[str]:
+    by_name: dict[str, list[Record]] = defaultdict(list)
+    for r in records:
+        if r.type == "person":
+            by_name[Path(r.path).name].append(r)
+    lines = []
+    for name, rs in sorted(by_name.items()):
+        if len(rs) < 2:
+            continue
+        for f in ["title", "given_name", "family_name", "preferred_name", "email"]:
+            vals = {r.vault: (r.title if f == "title" else r.fields.get(f)) for r in rs}
+            present = {v: x for v, x in vals.items() if x}
+            if len({str(x).lower() for x in present.values()}) > 1:
+                lines.append(
+                    f"{name}: {f} "
+                    + "; ".join(f"{v} {x!r}" for v, x in sorted(present.items()))
+                )
+    return lines
+
+
+def stale_claims(focus: list[Record], quiet: set[str], today: date) -> list[str]:
+    lines = []
+    for r in focus:
+        if (
+            r.type not in {"doc", "person", "project", "org", "note"}
+            or r.ref not in quiet
+        ):
+            continue
+        for line in r.body.splitlines():
+            if not PENDING.search(line):
+                continue
+            for m in DATE_IN_TEXT.finditer(line):
+                if m.group(1):
+                    d = date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                else:
+                    d = date(
+                        int(m.group(6)),
+                        [x[:3] for x in MONTHS].index(m.group(5).lower()[:3]) + 1,
+                        int(m.group(4)),
+                    )
+                if d < today:
+                    lines.append(f"`{r.ref}`: {line.strip()[:160]}")
+                    break
+    return lines
+
+
+def empty_open_tasks(records: list[Record], today: date) -> list[str]:
+    return [
+        f"`{r.ref}` {r.title}"
+        for r in records
+        if r.type == "task"
+        and r.fields.get("status") == "open"
+        and not r.body.strip()
+        and (d := made(r))
+        and d < today - timedelta(days=30)
+    ]
+
+
+def new_orphans(records: list[Record], added: set[str]) -> list[str]:
+    targets = {(v, p) for r in records for v, p in r.links}
+    return [
+        f"`{r.ref}` {r.title}"
+        for r in records
+        if r.ref in added
+        and r.type not in BULK_TYPES
+        and not r.links
+        and (r.vault, r.stem) not in targets
+    ]
+
+
+def fill_rates(vaults: list[str], records: list[Record]) -> list[str]:
+    lines = []
+    for v in vaults:
+        for t in json.loads(wiz("types", v, "-json"))[0]["types"]:
+            rs = [r for r in records if r.vault == v and r.type == t["name"]]
+            if len(rs) < 10:
+                continue
+            for f in t.get("fields") or []:
+                if f.get("required"):
+                    continue
+                n = sum(1 for r in rs if r.fields.get(f["name"]) not in (None, "", []))
+                share = n / len(rs)
+                if share >= 0.9 or share <= 0.05:
+                    lines.append(f"{v} {t['name']}.{f['name']}: {n}/{len(rs)}")
+    return lines
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--vault",
+        action="append",
+        help="a vault to sweep (repeatable; default: anu ben hdr lx)",
+    )
+    ap.add_argument(
+        "--days",
+        type=int,
+        default=7,
+        help="records changed within this many days are read",
+    )
+    ap.add_argument(
+        "--slices",
+        type=int,
+        default=8,
+        help="the rest are read once every this many weeks",
+    )
+    ap.add_argument(
+        "--week", type=int, help="the slice to read (default: the ISO week)"
+    )
+    a = ap.parse_args()
+    vaults = a.vault or VAULTS
+    today = date.today()
+    week = a.week if a.week is not None else today.isocalendar().week
+
+    records = load(vaults)
+    reach = {v: links_out(v) for v in vaults}
+    touched: set[str] = set()
+    added: set[str] = set()
+    quiet: set[str] = set()
+    for v in vaults:
+        t, n = changed(v, a.days)
+        touched |= {f"{v}:{p}" for p in t}
+        added |= {f"{v}:{p}" for p in n}
+        quiet |= {
+            f"{v}:{p}"
+            for p in git(Path(wiz("path", v).strip()), "ls-files").splitlines()
+        }
+        quiet -= {f"{v}:{p}" for p in changed(v, 30)[0]}
+    curated = [r for r in records if r.type not in BULK_TYPES]
+    focus = [r for r in curated if r.ref in touched or in_slice(r, a.slices, week)]
+
+    print(f"# Vault lint sweep, {today}\n")
+    print(
+        f"{len(focus)} of {len(curated)} curated records in {', '.join(vaults)}: those changed in the "
+        f"last {a.days} days and slice {week % a.slices} of {a.slices}.\n"
+    )
+    print(
+        section(
+            "Near-copies",
+            near_copies(focus),
+            f"Same type, `wiz search -like` share at least {LIKE_MIN}.",
+        )
+    )
+    print(section("Repeated bot tasks", repeated_bot_tasks(records, today)))
+    print(section("Unlinked names", unlinked_names(records, focus, reach)))
+    print(section("People out of step across vaults", people_out_of_step(records)))
+    print(
+        section(
+            "Stale claims",
+            stale_claims(focus, quiet, today),
+            "Not changed for 30 days.",
+        )
+    )
+    print(
+        section("Empty open tasks over 30 days old", empty_open_tasks(records, today))
+    )
+    print(section("New orphans", new_orphans(records, added)))
+    print(
+        section(
+            "Fill rates",
+            fill_rates(vaults, records),
+            "Optional fields at 90% or more, or 5% or less.",
+        )
+    )
+
+
+if __name__ == "__main__":
+    main()

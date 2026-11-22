@@ -33,6 +33,7 @@ extend-include = [
   "bin/styled-image-gen",
   "bin/svg-validate",
   "bin/todo",
+  "bin/vault-lint-sweep",
   "bin/xtm-send",
 ]
 
