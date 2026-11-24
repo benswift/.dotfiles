@@ -127,7 +127,7 @@ _prompt_precmd() {
 
   local host="%B%K{${_prompt_host_color}}%F{black} %m %f%k%b "
 
-  PROMPT="${host}%B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{green}.%F{red})❯%f "
+  PROMPT="${host}%D{%H:%M} %B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{green}.%F{red})❯%f "
 }
 autoload -Uz add-zsh-hook
 add-zsh-hook precmd _prompt_precmd
