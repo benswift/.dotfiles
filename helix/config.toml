@@ -40,6 +40,10 @@ x = ":write-quit"
 # p = "paste_clipboard_after"
 # P = "paste_clipboard_before"
 
+# Evaluate the top-level form at the cursor in a running extempore (nREPL).
+[keys.normal.","]
+e = [":write", ":sh extempore-nrepl eval --editor --wait-for-save --file %{file_path_absolute} --line %{cursor_line} --column %{cursor_column}"]
+
 [keys.normal.g]
 o = "jump_forward"
 O = "jump_backward"
