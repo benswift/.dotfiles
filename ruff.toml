@@ -34,7 +34,6 @@ extend-include = [
   "bin/svg-validate",
   "bin/todo",
   "bin/vault-lint-sweep",
-  "bin/xtm-send",
 ]
 
 [lint.per-file-ignores]
