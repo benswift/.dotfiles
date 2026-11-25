@@ -208,7 +208,7 @@ language-servers = ["extempore"]
 
 [[grammar]]
 name = "extempore"
-source = { git = "https://github.com/extemporelang/tree-sitter-extempore", rev = "cd9f1b5771be070fb3d2e8e16971bb5f9c031b53" }
+source = { git = "https://github.com/extemporelang/tree-sitter-extempore", rev = "f7bf831f93e85e173cfc1e455e70922843f2afd9" }
 
 [[grammar]]
 name = "mutt-compose"
