@@ -1,4 +1,4 @@
 # The helix commit bin/helix-build compiles. Bump it with
 # `helix-build --update` and commit the result, so every machine builds the
 # same editor.
-92ba4c070e79e8c1cfaf609dc3588dac0ef187a6
+1a3fdfda6dfdda4567af6093a6249bb2bb422fc6
