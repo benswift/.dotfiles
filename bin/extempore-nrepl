@@ -1,4 +1,0 @@
-#!/bin/sh
-# The nREPL client lives in the extempore checkout (extras/nrepl); this puts it
-# on PATH for helix's , e binding.
-exec "$HOME/projects/extempore/extras/nrepl/extempore-nrepl" "$@"

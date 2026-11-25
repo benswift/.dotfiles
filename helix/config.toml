@@ -39,9 +39,12 @@ x = ":write-quit"
 # p = "paste_clipboard_after"
 # P = "paste_clipboard_before"
 
-# Evaluate the top-level form at the cursor in a running extempore (nREPL).
+# Evaluate in a running extempore through its language server (extempore lsp).
+# Helix counts lines from 1 and LSP from 0, hence the %sh arithmetic.
 [keys.normal.","]
-e = [":write", ":sh extempore-nrepl eval --editor --wait-for-save --file %{file_path_absolute} --line %{cursor_line} --column %{cursor_column}"]
+e = ':lsp-workspace-command extempore.eval {"uri":"file://%{file_path_absolute}","range":{"start":{"line":%sh{echo $((%{cursor_line}-1))},"character":0},"end":{"line":%sh{echo $((%{cursor_line}-1))},"character":0}}}'
+b = ':lsp-workspace-command extempore.evalBuffer {"uri":"file://%{file_path_absolute}"}'
+i = ':lsp-workspace-command extempore.interrupt'
 
 [keys.normal.g]
 o = "jump_forward"

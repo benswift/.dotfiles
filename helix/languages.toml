@@ -193,6 +193,10 @@ name = "muttrc"
 scope = "source.muttrc"
 file-types = ["muttrc", { glob = "*muttrc" }]
 
+[language-server.extempore]
+command = "extempore"
+args = ["lsp"]
+
 [[language]]
 name = "extempore"
 scope = "source.extempore"
@@ -200,6 +204,7 @@ file-types = ["xtm"]
 comment-token = ";"
 block-comment-tokens = { start = "#|", end = "|#" }
 indent = { tab-width = 2, unit = "  " }
+language-servers = ["extempore"]
 
 [[grammar]]
 name = "extempore"

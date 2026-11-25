@@ -1,0 +1,3 @@
+#!/bin/sh
+# Puts the extempore checkout's binary on PATH (helix runs extempore lsp).
+exec "$HOME/projects/extemporelang/extempore/build/extempore" "$@"
