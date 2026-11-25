@@ -54,6 +54,15 @@ HX="$HELIX_PREFIX/bin/hx"
 # shadowing the grammar this build produced. Regenerable and gitignored.
 LEGACY_GRAMMARS="$DOTFILES_DIR/helix/runtime/grammars"
 
+# tree-house-bindings 0.3.2 fails `#eq?` and `#any-of?` on a token that spans
+# two rope chunks, so a few keywords deep in a big file lose their highlight
+# and indent captures. tree-house fixed it in this commit, after the 0.3.2
+# release, so the build patches the bindings to it while Helix still locks
+# 0.3.2. A bindings release with the fix makes this unnecessary
+# (https://github.com/helix-editor/tree-house/issues/43): once Helix locks a
+# newer version the patch stops applying, and this block can go.
+BINDINGS_FIX_REV=27eb69f8e7bcaae4c53014e99512c47eab5652e0
+
 MODE=build
 RUN_TESTS=true
 
@@ -132,6 +141,19 @@ update_pin() {
     warn "commit helix/pinned-rev so the other machines follow"
 }
 
+# The bindings fix to build helix commit $1 with: BINDINGS_FIX_REV while that
+# commit locks tree-house-bindings 0.3.2, otherwise nothing.
+bindings_fix_for() {
+    local locked
+    locked="$(git -C "$HELIX_SRC" show "$1:Cargo.lock" 2>/dev/null |
+        grep -A1 '^name = "tree-house-bindings"$' | sed -n 's/^version = "\(.*\)"$/\1/p')"
+    if [[ "$locked" == "0.3.2" ]]; then
+        echo "$BINDINGS_FIX_REV"
+    elif [[ -n "$locked" ]]; then
+        warn "helix now locks tree-house-bindings $locked: drop BINDINGS_FIX_REV from helix-build"
+    fi
+}
+
 # Never delete the old grammars before a working build replaces them.
 prune_legacy_grammars() {
     [[ -d "$LEGACY_GRAMMARS" ]] || return 0
@@ -144,6 +166,9 @@ build() {
     previous="$(cat "$STATE_DIR/current-rev" 2>/dev/null || true)"
 
     ensure_checkout
+    # A patched build rewrites Cargo.lock, and a failed one can leave it so;
+    # restore it so the checkout below can't trip on it.
+    git -C "$HELIX_SRC" checkout --quiet -- Cargo.lock
     # Fetch only when the commit isn't already local, so an unchanged pin
     # rebuilds offline.
     if ! git -C "$HELIX_SRC" cat-file -e "${rev}^{commit}" 2>/dev/null; then
@@ -152,10 +177,24 @@ build() {
     fi
     git -C "$HELIX_SRC" -c advice.detachedHead=false checkout --quiet "$rev"
 
+    local fix patch=()
+    fix="$(bindings_fix_for "$rev")"
+    if [[ -n "$fix" ]]; then
+        info "Patching tree-house-bindings to tree-house ${fix:0:8}"
+        # git-fetch-with-cli: cargo's built-in git can't use the ssh rewrite
+        # of github URLs in the global gitconfig
+        patch=(--config net.git-fetch-with-cli=true
+            --config 'patch.crates-io.tree-house-bindings.git="https://github.com/helix-editor/tree-house"'
+            --config "patch.crates-io.tree-house-bindings.rev=\"$fix\"")
+        # --locked needs a lockfile that already records the patch
+        (cd "$HELIX_SRC" && cargo update --quiet "${patch[@]}" -p tree-house-bindings)
+    fi
+
     info "Building helix $rev --- a first run also compiles ~300 tree-sitter grammars"
     HELIX_DEFAULT_RUNTIME="$HELIX_SRC/runtime" \
-        cargo install --path "$HELIX_SRC/helix-term" \
+        cargo install --path "$HELIX_SRC/helix-term" "${patch[@]}" \
         --locked --force --root "$HELIX_PREFIX" --target-dir "$HELIX_SRC/target"
+    git -C "$HELIX_SRC" checkout --quiet -- Cargo.lock
 
     prune_legacy_grammars
 
@@ -164,6 +203,7 @@ build() {
         echo "$previous" >"$STATE_DIR/previous-rev"
     fi
     echo "$rev" >"$STATE_DIR/current-rev"
+    echo "$fix" >"$STATE_DIR/current-bindings-fix"
 }
 
 rollback() {
@@ -245,7 +285,9 @@ force)
 build)
     rev="$(pinned_rev)"
     installed="$(installed_rev || true)"
-    if [[ -n "$installed" && "$rev" == "$installed"* ]]; then
+    # the bindings fix counts too, so adding or dropping it forces a rebuild
+    if [[ -n "$installed" && "$rev" == "$installed"* &&
+        "$(cat "$STATE_DIR/current-bindings-fix" 2>/dev/null || true)" == "$(bindings_fix_for "$rev")" ]]; then
         info "helix ${rev:0:8} is already installed --- nothing to do"
         check_shadowing || true
         exit 0
