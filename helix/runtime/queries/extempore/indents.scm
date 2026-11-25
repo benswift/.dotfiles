@@ -15,8 +15,9 @@
 ;   2. every other form aligns its arguments under the column of the first
 ;      argument (operand alignment).
 ;
-; Helix's indent engine expresses operand alignment with `@align` + an `@anchor`
-; (scope "tail"); the fixed step with `@indent`. The structure here is adapted
+; Helix's indent engine expresses operand alignment with `@align` + an `@anchor`,
+; and the fixed step with `@indent`. This targets the engine on Helix master
+; (after 25.07.1), whose `@align` takes no "tail" scope. The structure here is adapted
 ; from Helix's bundled `scheme/indents.scm`, which cites the scmindent spec:
 ;   https://github.com/ds26gte/scmindent#how-subforms-are-indented
 ;
@@ -32,7 +33,6 @@
   .
   (_) @anchor
   (#same-line? @_first @anchor)
-  (#set! "scope" "tail")
   (#not-kind-eq? @_first "boolean")
   (#not-kind-eq? @_first "character")
   (#not-kind-eq? @_first "string")
@@ -44,17 +44,14 @@
 ; to it.
 (list
   .
-  (list) @anchor
-  .
-  (#set! "scope" "tail")) @align
+  (list) @anchor .) @align
 
 (list
   .
   (list) @anchor
   .
   (_) @_second
-  (#not-same-line? @anchor @_second)
-  (#set! "scope" "tail")) @align
+  (#not-same-line? @anchor @_second)) @align
 
 ; If the first element is not a list and sits on a line by itself, indent the
 ; outer list one step (this is scmindent's "+1 space" reduced to a fixed step,
@@ -91,8 +88,7 @@
     (character)
     (string)
     (number)
-  ] @anchor
-  (#set! "scope" "tail")) @align
+  ] @anchor) @align
 
 ; --- special forms: fixed-step body indent ---
 ; def-prefixed and the explicit keyword set indent their body one step.
