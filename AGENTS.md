@@ -70,11 +70,12 @@ the overlay itself (`git -C private add <file>`, `git -C private commit`,
 overlay's goes first when pushing: a public commit that expects a file the
 overlay hasn't pushed breaks `dotfiles update` on every other machine.
 
-`.github/workflows/security.yml` runs ruff, shellcheck, shfmt, the portable test
-suite, a lock audit (`scripts/audit-locks.py`) and gitleaks on every push. Its
-actions are pinned in `.github/workflows/actions.lock`: run `gh actions-lock`
-after changing any `uses:` line. A tool the tests call must be installed there
-too; the helix and `*_wiz` suites stay local (see the workflow).
+`.github/workflows/security.yml` runs ruff, ty, shellcheck, shfmt, the portable
+test suite, a lock audit (`scripts/audit-locks.py`) and gitleaks on every push.
+Its actions are pinned in `.github/workflows/actions.lock`: run
+`gh actions-lock` (`gh extension install github/gh-actions-lock`) after changing
+any `uses:` line. A tool the tests call must be installed there too; the helix
+and `*_wiz` suites stay local (see the workflow).
 
 ## Python
 
