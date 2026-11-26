@@ -103,6 +103,7 @@ FORMATTER_SAMPLES = {
     "javascript": "const x   =  1;\n",
     "jsx": "const x = () => <div />;\n",
     "bash": "#!/usr/bin/env bash\nif true; then\n  echo hi\nfi\n",
+    "extempore": "(bind-func f\n    (lambda (x)\n   (+ x\n 1)))\n",
 }
 
 # Extension to hand the formatter for the %{file_path_absolute} expansion,
@@ -110,6 +111,7 @@ FORMATTER_SAMPLES = {
 FORMATTER_EXTENSIONS = {
     "astromotion-deck": ".deck.mdx",
     "bash": ".sh",
+    "extempore": ".xtm",
     "javascript": ".js",
     "jsx": ".jsx",
     "markdown": ".md",
