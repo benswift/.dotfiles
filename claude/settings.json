@@ -81,8 +81,7 @@
     "ast-grep@ast-grep-marketplace": true,
     "modern-web-guidance@googlechrome": true,
     "ben@ben": true,
-    "image-preview@ben": true,
-    "comp4020@comp4020": false
+    "image-preview@ben": true
   },
   "extraKnownMarketplaces": {
     "ben": {
@@ -113,12 +112,6 @@
       "source": {
         "source": "github",
         "repo": "GoogleChrome/modern-web-guidance"
-      }
-    },
-    "comp4020": {
-      "source": {
-        "source": "github",
-        "repo": "comp4020-agentic-coding-studio/core"
       }
     },
     "claude-plugins-official": {
