@@ -62,22 +62,6 @@ _region_.tex
 *.fls
 *.xdv
 
-# emacs
-
-*~
-.\#*
-*.elc
-cscope.files
-cscope.out
-TAGS
-.dir-locals.el
-.projectile
-.yas-compiled-snippets.el
-scratch.el
-.pdf-view-restore
-.orgids
-flycheck_*
-
 # tooling
 
 .python-version
@@ -95,8 +79,6 @@ flycheck_*
 .elixir_ls/
 ## ElixirLS user settings
 .elixirls/
-
-.playwright-mcp/
 
 # backup files
 *.bak

@@ -41,9 +41,33 @@
 	changed = green
 	untracked = cyan
 
+[diff]
+	algorithm = histogram
+
 [merge]
 	# Include summaries of merged commits in newly created merge commit messages
 	log = true
+	# Conflict markers carry the common ancestor as well as both sides
+	conflictStyle = zdiff3
+
+[rerere]
+	# Replay a conflict resolution when the same conflict comes back, as it
+	# does on each rebase of a long-lived branch
+	enabled = true
+
+[rebase]
+	autoStash = true
+	# Move any branch that points into the rebased range along with it
+	updateRefs = true
+
+[push]
+	autoSetupRemote = true
+
+[fetch]
+	prune = true
+
+[branch]
+	sort = -committerdate
 
 [merge "mergiraf"]
     name = mergiraf
@@ -65,14 +89,6 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 
-[magit]
-	hideCampaign = true
-[magithub]
-	online = true
-[magithub "status"]
-	includeStatusHeader = true
-	includePullRequestsSection = true
-	includeIssuesSection = true
 [url "git@github.com:"]
 	insteadOf = https://github.com/
 
