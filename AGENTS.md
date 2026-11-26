@@ -112,11 +112,11 @@ have their own backend (its `AGENTS.md`).
 
 When a tool can be installed several ways, prefer in order:
 
-1. **mise** --- tools this repo's scripts need, plus development runtimes
-   (python, node, go, rust)
+1. **mise** --- tools this repo's scripts need, development runtimes (python,
+   node, go, rust) and Node CLIs (its `npm:` backend)
 2. **platform package manager** (brew on macOS, apt/dnf on Linux) --- system
    utilities (curl, git, jq) and tools needing OS integration
-3. **language package managers** (`uv tool`, `bun add -g`, `cargo install`) ---
+3. **language package managers** (`uv tool`, `cargo install`) ---
    only when the tool's docs say so, or mise doesn't support it
 
 Avoid `cargo install` for anything available via mise or brew --- it compiles

@@ -162,12 +162,12 @@ install_agent_skills() {
     mkdir -p "$HOME/.agents"
 
     info "Installing agent-browser skill..."
-    # mise exec rather than bare bunx: in this non-interactive shell mise's
-    # activation hook never fires, so mise-managed bun isn't on PATH yet
+    # mise exec rather than bare npx: in this non-interactive shell mise's
+    # activation hook never fires, so mise-managed node isn't on PATH yet
     # --global --agent --yes answer the three prompts (scope, agents, confirm):
     # without them the CLI refuses to run off a terminal, and installs nothing.
     # "universal" is ~/.agents/skills, the directory Codex reads.
-    mise exec -- bunx skills add vercel-labs/agent-browser \
+    mise exec -- npx --yes skills add vercel-labs/agent-browser \
         --global --agent universal --yes
 }
 

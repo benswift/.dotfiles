@@ -48,8 +48,6 @@ sysup() {
   mise plugin update
   mise upgrade -y
   uv tool upgrade --all
-  bun update -g --latest
-  cargo install-update -a
   dotfiles update
 }
 alias task="backlog task"
@@ -67,7 +65,6 @@ alias latest='wiz query anu "path.startsWith(\"notes/\")" | tail -10'
 # Copy a vault file's full path: `vpath ben:notes/2026-10-29-x.md`.
 vpath() { local p; p="$(wiz path "$1")" || return; printf '%s' "$p" | clipboard-copy && echo "copied $p"; }
 # alias sc='screencapture -i -t jpg screencap.jpg'
-alias update-usage-rules='mix usage_rules.sync AGENTS.md --all --inline usage_rules:all --link-to-folder deps --link-style at --remove-missing'
 # git shortcuts
 alias gst="git status"
 alias gd="git diff"

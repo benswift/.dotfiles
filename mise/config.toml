@@ -5,14 +5,12 @@ node = "lts"
 # For repos without a mise.toml. A project declares its own pnpm, and its
 # committed mise.lock decides the version.
 pnpm = "latest"
-bun = "latest"
-# Node CLIs via the npm backend rather than `bun install -g`. A bun-global
-# package lands in ~/.bun/bin, which only an interactive shell has on PATH (via
-# zshenv), so a systemd unit declaring an explicit PATH silently misses it ---
-# how a crit sweep recorded a whole group's screenshots as failed with no
-# browser ever launched. The npm backend shims these into mise's own bin dir,
-# which every unit already resolves first.
+# Node CLIs go through the npm backend, which shims them into mise's own bin
+# dir. Every systemd unit already resolves that first, where a global install
+# under a package manager's own prefix reaches only interactive shells.
 "npm:agent-browser" = "latest"
+# `wf`: Baseline status for a web feature.
+"npm:web-features-cli" = { version = "latest", allow_low_downloads = true }
 "npm:backlog.md" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 yazi = "latest"
@@ -56,6 +54,11 @@ git-lfs = "latest"
 ruff = "latest"
 ty = "latest"
 marksman = "latest"
+tinymist = "latest"
+tombi = "latest"
+"npm:yaml-language-server" = "latest"
+# JSON and CSS language servers (also ships HTML and ESLint ones).
+"npm:vscode-langservers-extracted" = "latest"
 # Elixir's language server. One bare release binary per platform, so aqua (the
 # registry default) covers both hosts.
 expert = "latest"
@@ -72,6 +75,7 @@ oxipng = "latest"
 flyctl = "latest"
 oxfmt = "latest"
 typstyle = "latest"
+shfmt = "latest"
 # headless-terminal MCP server (drives neomutt and other TUIs from Claude
 # Code). Release ships bare per-target binaries, so pin the exe name.
 "github:memextech/ht-mcp" = { version = "latest", exe = "ht-mcp" }
@@ -80,6 +84,7 @@ shellcheck = "latest"
 # bin/check-secrets' scanner
 gitleaks = "latest"
 gh = "latest"
+gitu = "latest"
 # Read and send iMessage/SMS from the CLI: reads ~/Library/Messages/chat.db
 # (so the host terminal needs Full Disk Access) and sends through Messages.app
 # automation. macOS only --- the Linux build just reads a copied chat.db.
@@ -88,7 +93,9 @@ gh = "latest"
 # typing, message edits): they inject a helper into Messages.app and need SIP
 # off.
 "github:openclaw/imsg" = { version = "0.15.10", os = ["macos"] }
-trufflehog = "3.97.9"
 
 [settings]
 idiomatic_version_file_enable_tools = []
+# A release must be this old before any machine installs it, so a compromised
+# one has time to be pulled. Exact pins above are unaffected once installed.
+minimum_release_age = "3d"
