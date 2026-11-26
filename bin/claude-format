@@ -126,6 +126,7 @@ case "$f" in
 *.py) fmt_ruff ;;
 *.ex | *.exs | *.heex) fmt_mix ;;
 *.rs) fmt_rust ;;
+*.xtm) fmt extempore fmt ;;
 *)
     # No extension this table knows. Python hides here; everything else
     # (bash, swift, plain text) falls through untouched, as before.
