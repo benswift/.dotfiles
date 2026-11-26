@@ -307,7 +307,10 @@ provision_pi() {
     lsblk -d -o NAME,SIZE,MODEL "$device"
     local confirm
     read -r -p "Continue? (yes/no): " confirm
-    [[ "$confirm" == yes ]] || { echo "Aborted."; exit 0; }
+    [[ "$confirm" == yes ]] || {
+        echo "Aborted."
+        exit 0
+    }
 
     # Mint before erasing anything, so an API failure leaves the card as it was.
     mint_tailscale_key
@@ -366,25 +369,82 @@ main() {
     (($# > 0)) || usage 0
     while (($# > 0)); do
         case "$1" in
-        --url) url="$2"; shift 2 ;;
-        --hostname) hostname="$2"; shift 2 ;;
-        --username) username="$2"; shift 2 ;;
-        --password) password="$2"; shift 2 ;;
-        --ssh-key) ssh_key_file="$2"; shift 2 ;;
-        --wifi-ssid) wifi_ssid="$2"; shift 2 ;;
-        --wifi-password) wifi_password="$2"; shift 2 ;;
-        --wifi-enterprise-user) wifi_enterprise_user="$2"; shift 2 ;;
-        --wifi-enterprise-pass) wifi_enterprise_pass="$2"; shift 2 ;;
-        --wifi-ca-cert) wifi_ca_cert="$2"; shift 2 ;;
-        --wifi-domain-suffix) wifi_domain_suffix="$2"; shift 2 ;;
-        --wifi-country) wifi_country="$2"; shift 2 ;;
-        --tailscale-authkey) tailscale_authkey="$2"; shift 2 ;;
-        --tailscale-tag) tailscale_tag="$2"; shift 2 ;;
-        --output-mode) output_mode="$2"; shift 2 ;;
-        --target) target="$2"; shift 2 ;;
-        --device) device="$2"; shift 2 ;;
-        --interface) interface="$2"; shift 2 ;;
-        --test) test_mode=true; shift ;;
+        --url)
+            url="$2"
+            shift 2
+            ;;
+        --hostname)
+            hostname="$2"
+            shift 2
+            ;;
+        --username)
+            username="$2"
+            shift 2
+            ;;
+        --password)
+            password="$2"
+            shift 2
+            ;;
+        --ssh-key)
+            ssh_key_file="$2"
+            shift 2
+            ;;
+        --wifi-ssid)
+            wifi_ssid="$2"
+            shift 2
+            ;;
+        --wifi-password)
+            wifi_password="$2"
+            shift 2
+            ;;
+        --wifi-enterprise-user)
+            wifi_enterprise_user="$2"
+            shift 2
+            ;;
+        --wifi-enterprise-pass)
+            wifi_enterprise_pass="$2"
+            shift 2
+            ;;
+        --wifi-ca-cert)
+            wifi_ca_cert="$2"
+            shift 2
+            ;;
+        --wifi-domain-suffix)
+            wifi_domain_suffix="$2"
+            shift 2
+            ;;
+        --wifi-country)
+            wifi_country="$2"
+            shift 2
+            ;;
+        --tailscale-authkey)
+            tailscale_authkey="$2"
+            shift 2
+            ;;
+        --tailscale-tag)
+            tailscale_tag="$2"
+            shift 2
+            ;;
+        --output-mode)
+            output_mode="$2"
+            shift 2
+            ;;
+        --target)
+            target="$2"
+            shift 2
+            ;;
+        --device)
+            device="$2"
+            shift 2
+            ;;
+        --interface)
+            interface="$2"
+            shift 2
+            ;;
+        --test)
+            test_mode=true
+            shift
+            ;;
         -h | --help) usage 0 ;;
         *) die "unknown option: $1 (see --help)" ;;
         esac

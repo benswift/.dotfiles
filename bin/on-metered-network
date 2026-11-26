@@ -26,11 +26,18 @@ set -uo pipefail
 
 verbose=false
 [[ "${1:-}" == "-v" ]] && verbose=true
-say() { [[ "$verbose" == true ]] && echo "on-metered-network: $*" >&2; return 0; }
+say() {
+    [[ "$verbose" == true ]] && echo "on-metered-network: $*" >&2
+    return 0
+}
 
-[[ "$OSTYPE" == darwin* ]] || { say "not macOS"; exit 1; }
+[[ "$OSTYPE" == darwin* ]] || {
+    say "not macOS"
+    exit 1
+}
 
-flags="$(/usr/bin/swift - 2>/dev/null <<'SWIFT' || echo unknown
+flags="$(
+    /usr/bin/swift - 2>/dev/null <<'SWIFT' || echo unknown
 import Network
 import Foundation
 let m = NWPathMonitor()

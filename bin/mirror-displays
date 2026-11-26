@@ -37,19 +37,19 @@
 set -euo pipefail
 
 if [[ "$(uname)" != "Darwin" ]]; then
-  echo "mirror-displays: macOS only" >&2
-  exit 1
+    echo "mirror-displays: macOS only" >&2
+    exit 1
 fi
 
 # Don't trust the caller's PATH (launchd and non-interactive ssh don't carry
 # /opt/homebrew/bin) --- the same trap that silently broke ship-claude-logs.
 displayplacer_bin="$(command -v displayplacer || true)"
 if [[ -z "$displayplacer_bin" && -x /opt/homebrew/bin/displayplacer ]]; then
-  displayplacer_bin=/opt/homebrew/bin/displayplacer
+    displayplacer_bin=/opt/homebrew/bin/displayplacer
 fi
 if [[ -z "$displayplacer_bin" ]]; then
-  echo "mirror-displays: displayplacer not found (brew install displayplacer)" >&2
-  exit 1
+    echo "mirror-displays: displayplacer not found (brew install displayplacer)" >&2
+    exit 1
 fi
 
 list_output="$("$displayplacer_bin" list)"
@@ -84,37 +84,37 @@ screens="$(awk '
 ' <<<"$list_output")"
 
 if [[ -z "$screens" ]]; then
-  echo "mirror-displays: couldn't parse 'displayplacer list' output; changing nothing" >&2
-  exit 1
+    echo "mirror-displays: couldn't parse 'displayplacer list' output; changing nothing" >&2
+    exit 1
 fi
 
 builtin_id=""
 external_ids=()
 external_res=()
 while IFS=$'\t' read -r id type enabled reslist; do
-  [[ "$enabled" == "true" ]] || continue
-  if [[ "$type" == *"built in"* ]]; then
-    builtin_id="$id"
-  else
-    external_ids+=("$id")
-    external_res+=("$reslist")
-  fi
+    [[ "$enabled" == "true" ]] || continue
+    if [[ "$type" == *"built in"* ]]; then
+        builtin_id="$id"
+    else
+        external_ids+=("$id")
+        external_res+=("$reslist")
+    fi
 done <<<"$screens"
 
 if [[ -z "$builtin_id" ]]; then
-  echo "built-in display not active (clamshell mode?); leaving arrangement untouched"
-  exit 0
+    echo "built-in display not active (clamshell mode?); leaving arrangement untouched"
+    exit 0
 fi
 
-if (( ${#external_ids[@]} == 0 )); then
-  echo "no external displays connected; nothing to mirror"
-  exit 0
+if ((${#external_ids[@]} == 0)); then
+    echo "no external displays connected; nothing to mirror"
+    exit 0
 fi
 
 # Prints "W H" for the largest mode by area in a "WxH/on,WxH/off,..." list
 # (the display's native resolution); prints nothing if the list is empty.
 native_res() {
-  tr ',' '\n' <<<"$1" | awk -F'[x/]' '
+    tr ',' '\n' <<<"$1" | awk -F'[x/]' '
     NF >= 2 && $1 * $2 > best { best = $1 * $2; w = $1; h = $2 }
     END { if (best) print w, h }
   '
@@ -125,18 +125,18 @@ native_res() {
 primary_idx=0
 primary_area=0
 for i in "${!external_ids[@]}"; do
-  read -r w h <<<"$(native_res "${external_res[$i]}")"
-  [[ -n "${w:-}" ]] || continue
-  if ((w * h > primary_area)); then
-    primary_area=$((w * h))
-    primary_idx=$i
-  fi
+    read -r w h <<<"$(native_res "${external_res[$i]}")"
+    [[ -n "${w:-}" ]] || continue
+    if ((w * h > primary_area)); then
+        primary_area=$((w * h))
+        primary_idx=$i
+    fi
 done
 
 chain="${external_ids[$primary_idx]}+$builtin_id"
 for i in "${!external_ids[@]}"; do
-  ((i == primary_idx)) && continue
-  chain+="+${external_ids[$i]}"
+    ((i == primary_idx)) && continue
+    chain+="+${external_ids[$i]}"
 done
 
 # Native mode by default; on 4K-class panels prefer the half-native HiDPI
@@ -145,24 +145,24 @@ done
 target=""
 read -r w h <<<"$(native_res "${external_res[$primary_idx]}")"
 if [[ -n "${w:-}" ]]; then
-  if ((w * h >= 3840 * 2160)) &&
-    [[ ",${external_res[$primary_idx]}," == *",$((w / 2))x$((h / 2))/on,"* ]]; then
-    target="res:$((w / 2))x$((h / 2)) scaling:on"
-  else
-    target="res:${w}x${h}"
-  fi
+    if ((w * h >= 3840 * 2160)) &&
+        [[ ",${external_res[$primary_idx]}," == *",$((w / 2))x$((h / 2))/on,"* ]]; then
+        target="res:$((w / 2))x$((h / 2)) scaling:on"
+    else
+        target="res:${w}x${h}"
+    fi
 fi
 
 if [[ -n "$target" ]]; then
-  echo "mirroring ${#external_ids[@]} external display(s), primary external at $target"
-  if "$displayplacer_bin" "id:$chain $target"; then
-    exit 0
-  fi
-  echo "mirror-displays: $target refused; retrying at current resolutions" >&2
+    echo "mirroring ${#external_ids[@]} external display(s), primary external at $target"
+    if "$displayplacer_bin" "id:$chain $target"; then
+        exit 0
+    fi
+    echo "mirror-displays: $target refused; retrying at current resolutions" >&2
 fi
 
 echo "mirroring ${#external_ids[@]} external display(s) at current resolutions"
 if ! "$displayplacer_bin" "id:$chain"; then
-  echo "mirror-displays: displayplacer failed; arrangement left as-is" >&2
-  exit 1
+    echo "mirror-displays: displayplacer failed; arrangement left as-is" >&2
+    exit 1
 fi

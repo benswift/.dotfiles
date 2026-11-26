@@ -11,6 +11,9 @@ for dev in /sys/block/sd* /sys/block/nvme*n* /sys/block/vd* /sys/block/mmcblk[0-
     disk="/dev/${dev##*/}"
     break
 done
-[ -n "$disk" ] || { echo "kiosk: no internal disk found" >&2; exit 1; }
+[ -n "$disk" ] || {
+    echo "kiosk: no internal disk found" >&2
+    exit 1
+}
 debconf-set partman-auto/disk "$disk"
 debconf-set grub-installer/bootdev "$disk"

@@ -31,9 +31,15 @@ set -uo pipefail
 
 verbose=false
 [[ "${1:-}" == "-v" ]] && verbose=true
-say() { [[ "$verbose" == true ]] && echo "in-darkwake: $*" >&2; return 0; }
+say() {
+    [[ "$verbose" == true ]] && echo "in-darkwake: $*" >&2
+    return 0
+}
 
-[[ "$OSTYPE" == darwin* ]] || { say "not macOS"; exit 1; }
+[[ "$OSTYPE" == darwin* ]] || {
+    say "not macOS"
+    exit 1
+}
 
 capabilities="$(/usr/bin/pmset -g systemstate 2>/dev/null |
     sed -n 's/.*System Capabilities are: *//p')"

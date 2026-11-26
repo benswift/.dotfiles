@@ -11,11 +11,11 @@ model=$(jq -r '.model.display_name // ""' <<<"$input")
 
 # Shorten cwd to "~" for $HOME or the basename otherwise (zsh's %1~).
 if [[ "$cwd" == "$HOME" ]]; then
-  short_cwd="~"
+    short_cwd="~"
 elif [[ -n "$cwd" ]]; then
-  short_cwd="${cwd##*/}"
+    short_cwd="${cwd##*/}"
 else
-  short_cwd=""
+    short_cwd=""
 fi
 
 branch=""
@@ -24,18 +24,18 @@ branch=""
 # Host badge, black on the host colour --- mirrors the case statement in zshrc.
 host=$(hostname -s)
 case "$host" in
-  daysy)       host_color=$'\e[1;30;43m' ;;   # yellow
-  weddle)      host_color=$'\e[1;30;42m' ;;   # green
-  cybersonic)  host_color=$'\e[1;30;45m' ;;   # magenta
-  jetson-orin) host_color=$'\e[1;30;46m' ;;   # cyan
-  strproxy)    host_color=$'\e[1;30;101m' ;;  # bright red
-  *)           host_color=$'\e[1;30;101m' ;;  # bright red
+daysy) host_color=$'\e[1;30;43m' ;;       # yellow
+weddle) host_color=$'\e[1;30;42m' ;;      # green
+cybersonic) host_color=$'\e[1;30;45m' ;;  # magenta
+jetson-orin) host_color=$'\e[1;30;46m' ;; # cyan
+strproxy) host_color=$'\e[1;30;101m' ;;   # bright red
+*) host_color=$'\e[1;30;101m' ;;          # bright red
 esac
 
 reset=$'\e[0m'
-dir_color=$'\e[1;34m'  # blue
-vcs_color=$'\e[1;35m'  # magenta
-model_color=$'\e[2m'   # dim
+dir_color=$'\e[1;34m' # blue
+vcs_color=$'\e[1;35m' # magenta
+model_color=$'\e[2m'  # dim
 
 out=""
 out+="${host_color} ${host} ${reset} "

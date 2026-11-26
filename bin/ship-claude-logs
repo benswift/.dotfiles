@@ -35,7 +35,7 @@ STAMP="${XDG_STATE_HOME:-$HOME/.local/state}/ship-claude-logs/last-success"
 METERED_GRACE_HOURS="${METERED_GRACE_HOURS:-24}"
 
 usage() {
-  cat <<EOF
+    cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
 Ship this host's Claude Code and Codex CLI session logs to weddle.
@@ -55,83 +55,102 @@ EOF
 }
 
 while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -n|--dry-run) DRY_RUN=true; shift ;;
-    -h|--help)    usage; exit 0 ;;
-    *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
-  esac
+    case "$1" in
+    -n | --dry-run)
+        DRY_RUN=true
+        shift
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        echo "Unknown option: $1" >&2
+        usage
+        exit 1
+        ;;
+    esac
 done
 
 # Hours since the last successful ship, or a large number if we have never
 # recorded one (so a fresh host ships on its first run regardless of network).
 hours_since_success() {
-  local last now
-  [[ -f "$STAMP" ]] || { echo 9999; return; }
-  last="$(cat "$STAMP" 2>/dev/null)" || { echo 9999; return; }
-  [[ "$last" =~ ^[0-9]+$ ]] || { echo 9999; return; }
-  now="$(date +%s)"
-  echo $(( (now - last) / 3600 ))
+    local last now
+    [[ -f "$STAMP" ]] || {
+        echo 9999
+        return
+    }
+    last="$(cat "$STAMP" 2>/dev/null)" || {
+        echo 9999
+        return
+    }
+    [[ "$last" =~ ^[0-9]+$ ]] || {
+        echo 9999
+        return
+    }
+    now="$(date +%s)"
+    echo $(((now - last) / 3600))
 }
 
 # The probe is bin/on-metered-network, shared with the other transfer jobs.
 if "$(dirname "$0")/on-metered-network"; then
-  stalled="$(hours_since_success)"
-  if (( stalled < METERED_GRACE_HOURS )); then
-    echo "On a metered network --- skipping ship (last success ${stalled}h ago)."
-    exit 0
-  fi
-  # Session logs are small text files, and a stale archive is worse than a
-  # few MB of hotspot data.
-  echo "On a metered network, but nothing has shipped for ${stalled}h --- shipping anyway."
+    stalled="$(hours_since_success)"
+    if ((stalled < METERED_GRACE_HOURS)); then
+        echo "On a metered network --- skipping ship (last success ${stalled}h ago)."
+        exit 0
+    fi
+    # Session logs are small text files, and a stale archive is worse than a
+    # few MB of hotspot data.
+    echo "On a metered network, but nothing has shipped for ${stalled}h --- shipping anyway."
 fi
 
 shipped=false
 
 for entry in "${SOURCES[@]}"; do
-  source_dir="${entry%%:*}"
-  tree="${entry##*:}"
+    source_dir="${entry%%:*}"
+    tree="${entry##*:}"
 
-  if [[ ! -d "$source_dir" ]]; then
-    echo "No $source_dir on this host --- skipping $tree."
-    continue
-  fi
-
-  # On weddle, skip the network hop --- rsync locally into the same layout.
-  if [[ "$HOST" == "weddle" ]]; then
-    dest="$HOME/$tree/$HOST"
-    mkdir -p "$dest"
-    rsync_args=(-a)
-    [[ "$DRY_RUN" == "true" ]] && rsync_args+=(--dry-run)
-    echo "Local copy: $source_dir/ -> $dest/"
-    rsync "${rsync_args[@]}" "$source_dir/" "$dest/"
-  else
-    # --progress redraws twice a second, which in a log file is thousands of
-    # lines a day. Off a terminal, log each transfer and one summary line.
-    rclone_args=(copy --no-update-dir-modtime)
-    if [[ -t 1 ]]; then
-      rclone_args+=(--progress)
-    else
-      rclone_args+=(-v --stats-one-line)
+    if [[ ! -d "$source_dir" ]]; then
+        echo "No $source_dir on this host --- skipping $tree."
+        continue
     fi
-    [[ "$DRY_RUN" == "true" ]] && rclone_args+=(--dry-run)
-    echo "Shipping: $source_dir -> $REMOTE:$tree/$HOST"
-    rclone "${rclone_args[@]}" "$source_dir" "$REMOTE:$tree/$HOST"
-  fi
 
-  shipped=true
+    # On weddle, skip the network hop --- rsync locally into the same layout.
+    if [[ "$HOST" == "weddle" ]]; then
+        dest="$HOME/$tree/$HOST"
+        mkdir -p "$dest"
+        rsync_args=(-a)
+        [[ "$DRY_RUN" == "true" ]] && rsync_args+=(--dry-run)
+        echo "Local copy: $source_dir/ -> $dest/"
+        rsync "${rsync_args[@]}" "$source_dir/" "$dest/"
+    else
+        # --progress redraws twice a second, which in a log file is thousands of
+        # lines a day. Off a terminal, log each transfer and one summary line.
+        rclone_args=(copy --no-update-dir-modtime)
+        if [[ -t 1 ]]; then
+            rclone_args+=(--progress)
+        else
+            rclone_args+=(-v --stats-one-line)
+        fi
+        [[ "$DRY_RUN" == "true" ]] && rclone_args+=(--dry-run)
+        echo "Shipping: $source_dir -> $REMOTE:$tree/$HOST"
+        rclone "${rclone_args[@]}" "$source_dir" "$REMOTE:$tree/$HOST"
+    fi
+
+    shipped=true
 done
 
 if [[ "$shipped" == "true" && "$DRY_RUN" != "true" ]]; then
-  mkdir -p "$(dirname "$STAMP")"
-  date +%s > "$STAMP"
+    mkdir -p "$(dirname "$STAMP")"
+    date +%s >"$STAMP"
 
-  # The heartbeat bin/ingest-claude-logs reads to tell a host that has stopped
-  # shipping from one that is merely idle --- a quiet host still beats. It goes
-  # in the claude-logs tree whichever agents this host runs.
-  if [[ "$HOST" == "weddle" ]]; then
-    mkdir -p "$HOME/claude-logs/$HOST"
-    date +%s > "$HOME/claude-logs/$HOST/.last-ship"
-  else
-    date +%s | rclone rcat "$REMOTE:claude-logs/$HOST/.last-ship"
-  fi
+    # The heartbeat bin/ingest-claude-logs reads to tell a host that has stopped
+    # shipping from one that is merely idle --- a quiet host still beats. It goes
+    # in the claude-logs tree whichever agents this host runs.
+    if [[ "$HOST" == "weddle" ]]; then
+        mkdir -p "$HOME/claude-logs/$HOST"
+        date +%s >"$HOME/claude-logs/$HOST/.last-ship"
+    else
+        date +%s | rclone rcat "$REMOTE:claude-logs/$HOST/.last-ship"
+    fi
 fi

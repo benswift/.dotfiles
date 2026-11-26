@@ -10,10 +10,10 @@ bindkey -M viins '^W' backward-kill-word
 bindkey -M viins '^U' backward-kill-line
 
 zle-keymap-select() {
-  case $KEYMAP in
+    case $KEYMAP in
     vicmd) printf '\e[2 q' ;;
-    viins|main) printf '\e[6 q' ;;
-  esac
+    viins | main) printf '\e[6 q' ;;
+    esac
 }
 zle -N zle-keymap-select
 
@@ -39,37 +39,44 @@ alias ayf="claude --setting-sources user,local --dangerously-skip-permissions --
 alias oy="command codex --dangerously-bypass-approvals-and-sandbox"
 alias gy="agy --dangerously-skip-permissions"
 sysup() {
-  if [[ "$OSTYPE" == darwin* ]]; then
-    HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS=1 brew upgrade --formula --yes
-  else
-    sudo apt update && sudo apt upgrade -y
-    mise self-update -y
-  fi
-  mise plugin update
-  mise upgrade -y
-  uv tool upgrade --all
-  dotfiles update
+    if [[ "$OSTYPE" == darwin* ]]; then
+        HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS=1 brew upgrade --formula --yes
+    else
+        sudo apt update && sudo apt upgrade -y
+        mise self-update -y
+    fi
+    mise plugin update
+    mise upgrade -y
+    uv tool upgrade --all
+    dotfiles update
 }
 alias task="backlog task"
 # todo (bin/todo): list / do / block, or bare words for a new task
 # A titled note in the anu vault, opened in the editor; with text on stdin,
 # that's its body instead: `note Call with Ann < minutes.md`.
 note() {
-  [[ $# -gt 0 ]] || { echo "usage: note <title words>" >&2; return 2; }
-  local body="" added
-  [[ -t 0 ]] || body="$(cat)"
-  added="$(printf '%s' "$body" | wiz add anu note -json -title "$*" | jq -r '.paths[0]')" || return
-  [[ -n "$body" ]] && echo "$added" || "${EDITOR:-hx}" "$(wiz path "anu:$added")"
+    [[ $# -gt 0 ]] || {
+        echo "usage: note <title words>" >&2
+        return 2
+    }
+    local body="" added
+    [[ -t 0 ]] || body="$(cat)"
+    added="$(printf '%s' "$body" | wiz add anu note -json -title "$*" | jq -r '.paths[0]')" || return
+    [[ -n "$body" ]] && echo "$added" || "${EDITOR:-hx}" "$(wiz path "anu:$added")"
 }
 alias latest='wiz query anu "path.startsWith(\"notes/\")" | tail -10'
 # Copy a vault file's full path: `vpath ben:notes/2026-10-29-x.md`.
-vpath() { local p; p="$(wiz path "$1")" || return; printf '%s' "$p" | clipboard-copy && echo "copied $p"; }
+vpath() {
+    local p
+    p="$(wiz path "$1")" || return
+    printf '%s' "$p" | clipboard-copy && echo "copied $p"
+}
 # alias sc='screencapture -i -t jpg screencap.jpg'
 # git shortcuts
 alias gst="git status"
 alias gd="git diff"
 alias gl="git log --oneline"
-alias gsy="git sync"  # bin/git-sync
+alias gsy="git sync" # bin/git-sync
 alias prettify-md='oxfmt -c ~/.dotfiles/oxfmtrc.json "**/*.md"'
 alias nm='neomutt'
 # Clipboard via OSC 52 (works locally and over SSH in ghostty); see
@@ -88,10 +95,10 @@ cpath() { realpath "${1:-.}" | clipboard && echo "Copied to clipboard: $(realpat
 # nothing new leaves the dump untouched, hence the touch.
 autoload -Uz compinit
 _zcompdump_stale=(~/.zcompdump(N.mh+24))
-if (( $#_zcompdump_stale )); then
-  compinit && touch ~/.zcompdump
+if (($#_zcompdump_stale)); then
+    compinit && touch ~/.zcompdump
 else
-  compinit -C
+    compinit -C
 fi
 unset _zcompdump_stale
 
@@ -99,12 +106,12 @@ eval "$(mise activate zsh)"
 eval "$(zoxide init zsh)"
 
 case "$(hostname -s)" in
-  daysy)       _prompt_host_color=yellow ;;
-  weddle)      _prompt_host_color=green ;;
-  cybersonic)  _prompt_host_color=magenta ;;
-  jetson-orin) _prompt_host_color=cyan ;;
-  strproxy)    _prompt_host_color=9 ;;
-  *)           _prompt_host_color=9 ;;
+daysy) _prompt_host_color=yellow ;;
+weddle) _prompt_host_color=green ;;
+cybersonic) _prompt_host_color=magenta ;;
+jetson-orin) _prompt_host_color=cyan ;;
+strproxy) _prompt_host_color=9 ;;
+*) _prompt_host_color=9 ;;
 esac
 
 # The host shows as a badge (black on the host colour) and tints the rule
@@ -112,19 +119,19 @@ esac
 # draws the same badge.
 
 _prompt_precmd() {
-  local exit_status=$?
-  local sep_color="%F{${_prompt_host_color}}"
-  local dir_color='%F{blue}'
-  local vcs_color='%F{magenta}'
+    local exit_status=$?
+    local sep_color="%F{${_prompt_host_color}}"
+    local dir_color='%F{blue}'
+    local vcs_color='%F{magenta}'
 
-  print -P "${sep_color}${(l:$COLUMNS::─:)}%f"
+    print -P "${sep_color}${(l:$COLUMNS::─:)}%f"
 
-  local vcs
-  vcs=$(git branch --show-current 2>/dev/null)
+    local vcs
+    vcs=$(git branch --show-current 2>/dev/null)
 
-  local host="%B%K{${_prompt_host_color}}%F{black} %m %f%k%b "
+    local host="%B%K{${_prompt_host_color}}%F{black} %m %f%k%b "
 
-  PROMPT="${host}%D{%H:%M} %B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{green}.%F{red})❯%f "
+    PROMPT="${host}%D{%H:%M} %B${dir_color}%1~%f%b${vcs:+ %B${vcs_color}${vcs}%b%f} %(?.%F{green}.%F{red})❯%f "
 }
 autoload -Uz add-zsh-hook
 add-zsh-hook precmd _prompt_precmd

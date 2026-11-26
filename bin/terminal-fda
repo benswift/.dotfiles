@@ -21,34 +21,34 @@ BUNDLE_ID="com.apple.Terminal"
 PROBE="$HOME/Library/Safari/History.db"
 
 usage() {
-  echo "Usage: $(basename "$0") {status|grant|revoke}" >&2
-  exit 1
+    echo "Usage: $(basename "$0") {status|grant|revoke}" >&2
+    exit 1
 }
 
 probe_fda() {
-  # A read attempt is the only reliable signal --- TCC.db itself is protected.
-  head -c 1 "$PROBE" >/dev/null 2>&1
+    # A read attempt is the only reliable signal --- TCC.db itself is protected.
+    head -c 1 "$PROBE" >/dev/null 2>&1
 }
 
 case "${1:-status}" in
-  status)
+status)
     if probe_fda; then
-      echo "FDA: granted (probe can read ~/Library/Safari/History.db)"
+        echo "FDA: granted (probe can read ~/Library/Safari/History.db)"
     else
-      echo "FDA: not granted (probe cannot read ~/Library/Safari/History.db)"
+        echo "FDA: not granted (probe cannot read ~/Library/Safari/History.db)"
     fi
     ;;
-  grant)
+grant)
     echo "Opening System Settings --- Privacy & Security --- Full Disk Access."
     echo "Toggle Terminal on (add via + if not listed), then restart Terminal."
     open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"
     ;;
-  revoke)
+revoke)
     echo "Revoking FDA for $BUNDLE_ID..."
     tccutil reset SystemPolicyAllFiles "$BUNDLE_ID"
     echo "Done. Restart Terminal so running shells pick up the change."
     ;;
-  *)
+*)
     usage
     ;;
 esac

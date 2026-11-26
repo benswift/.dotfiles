@@ -46,8 +46,8 @@ mkdir -p "$STATE"
 say() { printf '[%s] %s\n' "$(date -Is)" "$*" >>"$LOG"; }
 
 usage() {
-	echo "usage: unit-oncall (fail|clear) <unit>" >&2
-	exit 2
+    echo "usage: unit-oncall (fail|clear) <unit>" >&2
+    exit 2
 }
 
 [[ $# -eq 2 ]] || usage
@@ -57,14 +57,14 @@ marker="$STATE/${unit}.failed"
 
 case "$action" in
 clear)
-	if [[ -f "$marker" ]]; then
-		rm -f "$marker"
-		say "$unit: recovered; marker cleared"
-	fi
+    if [[ -f "$marker" ]]; then
+        rm -f "$marker"
+        say "$unit: recovered; marker cleared"
+    fi
 
-	oncall clear "$unit"
-	exit 0
-	;;
+    oncall clear "$unit"
+    exit 0
+    ;;
 fail) ;;
 *) usage ;;
 esac
@@ -79,29 +79,29 @@ esac
 # under a single todo from its first failure. Fall back to mtime if the line is
 # missing or unparseable: re-arming late beats dying in the OnFailure= handler.
 if [[ -f "$marker" ]]; then
-	first_ts="$(sed -n '1s/^first failure //p' "$marker")"
-	first_s=""
-	# Test for emptiness before parsing: `date -d ""` succeeds and yields
-	# midnight today, which would read as a fresh marker and suppress the
-	# re-arm --- the opposite of the fallback's intent.
-	if [[ -n "$first_ts" ]]; then
-		first_s="$(date -d "$first_ts" +%s 2>/dev/null || true)"
-	fi
-	if [[ -z "$first_s" ]]; then
-		first_s="$(stat -c %Y "$marker")"
-	fi
-	age_h=$((($(date +%s) - first_s) / 3600))
-	if [[ $age_h -lt $REARM_HOURS ]]; then
-		if [[ -z "$QUIET_FIRST" ]] || grep -q '^paged ' "$marker"; then
-			printf 'repeat failure %s\n' "$(date -Is)" >>"$marker"
-			say "$unit: repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new todo"
-			exit 0
-		fi
-		second=1
-		say "$unit: failed twice in a row; paging"
-	else
-		say "$unit: still failing ${age_h}h on; re-arming"
-	fi
+    first_ts="$(sed -n '1s/^first failure //p' "$marker")"
+    first_s=""
+    # Test for emptiness before parsing: `date -d ""` succeeds and yields
+    # midnight today, which would read as a fresh marker and suppress the
+    # re-arm --- the opposite of the fallback's intent.
+    if [[ -n "$first_ts" ]]; then
+        first_s="$(date -d "$first_ts" +%s 2>/dev/null || true)"
+    fi
+    if [[ -z "$first_s" ]]; then
+        first_s="$(stat -c %Y "$marker")"
+    fi
+    age_h=$((($(date +%s) - first_s) / 3600))
+    if [[ $age_h -lt $REARM_HOURS ]]; then
+        if [[ -z "$QUIET_FIRST" ]] || grep -q '^paged ' "$marker"; then
+            printf 'repeat failure %s\n' "$(date -Is)" >>"$marker"
+            say "$unit: repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new todo"
+            exit 0
+        fi
+        second=1
+        say "$unit: failed twice in a row; paging"
+    else
+        say "$unit: still failing ${age_h}h on; re-arming"
+    fi
 fi
 
 # Which run failed, and how. Neither `systemctl show` nor the MONITOR_* variables
@@ -120,25 +120,25 @@ MSG_UNIT_FAILED=d9b373ed55a64feb8242e02dbe79a49c
 MSG_PROCESS_EXIT=98e322203f7a4ed290d09fe03c09fe15
 
 journal_field() { # <field> <match>...
-	local field="$1"
-	shift
-	journalctl --user "$@" --since -10min -n 1 -o json --no-pager 2>/dev/null \
-		| jq -r --arg f "$field" '.[$f] // empty' 2>/dev/null || true
+    local field="$1"
+    shift
+    journalctl --user "$@" --since -10min -n 1 -o json --no-pager 2>/dev/null |
+        jq -r --arg f "$field" '.[$f] // empty' 2>/dev/null || true
 }
 
 failed_inv=""
 result=""
 status=""
 for _ in 1 2 3 4 5; do
-	failed_inv="$(journal_field USER_INVOCATION_ID "USER_UNIT=$unit" "MESSAGE_ID=$MSG_UNIT_FAILED")"
-	[[ -n "$failed_inv" ]] && break
-	sleep 1
+    failed_inv="$(journal_field USER_INVOCATION_ID "USER_UNIT=$unit" "MESSAGE_ID=$MSG_UNIT_FAILED")"
+    [[ -n "$failed_inv" ]] && break
+    sleep 1
 done
 if [[ -n "$failed_inv" ]]; then
-	result="$(journal_field UNIT_RESULT "USER_INVOCATION_ID=$failed_inv" "MESSAGE_ID=$MSG_UNIT_FAILED")"
-	status="$(journal_field EXIT_STATUS "USER_INVOCATION_ID=$failed_inv" "MESSAGE_ID=$MSG_PROCESS_EXIT")"
-	# A run killed by a timeout or signal has no exit status to report.
-	[[ -n "$status" ]] || status='?'
+    result="$(journal_field UNIT_RESULT "USER_INVOCATION_ID=$failed_inv" "MESSAGE_ID=$MSG_UNIT_FAILED")"
+    status="$(journal_field EXIT_STATUS "USER_INVOCATION_ID=$failed_inv" "MESSAGE_ID=$MSG_PROCESS_EXIT")"
+    # A run killed by a timeout or signal has no exit status to report.
+    [[ -n "$status" ]] || status='?'
 fi
 [[ -n "$result" ]] || result="$(systemctl --user show -p Result --value "$unit" 2>/dev/null || echo unknown)"
 [[ -n "$status" ]] || status="$(systemctl --user show -p ExecMainStatus --value "$unit" 2>/dev/null || echo '?')"
@@ -150,20 +150,20 @@ fi
 # it `USER_INVOCATION_ID`, and `+` is journalctl's OR between match groups.
 tail_out=""
 if [[ -n "$failed_inv" ]]; then
-	tail_out="$(journalctl --user \
-		"_SYSTEMD_INVOCATION_ID=$failed_inv" \
-		+ "USER_INVOCATION_ID=$failed_inv" \
-		-n "$JOURNAL_LINES" --no-pager -o short-iso 2>/dev/null || true)"
+    tail_out="$(journalctl --user \
+        "_SYSTEMD_INVOCATION_ID=$failed_inv" \
+        + "USER_INVOCATION_ID=$failed_inv" \
+        -n "$JOURNAL_LINES" --no-pager -o short-iso 2>/dev/null || true)"
 fi
 tail_label="failed run's journal"
 if [[ -z "$tail_out" ]]; then
-	tail_out="$(journalctl --user -u "$unit" -n "$JOURNAL_LINES" --no-pager -o short-iso 2>&1 || echo '(journal unavailable)')"
-	tail_label="last $JOURNAL_LINES journal lines"
+    tail_out="$(journalctl --user -u "$unit" -n "$JOURNAL_LINES" --no-pager -o short-iso 2>&1 || echo '(journal unavailable)')"
+    tail_label="last $JOURNAL_LINES journal lines"
 fi
 
 title="$unit failed on weddle (result=$result, exit=$status) --- check the journal"
 description="$(
-	cat <<EOF
+    cat <<EOF
 Filed automatically by unit-oncall at $(date -Is).
 
   systemctl --user status $unit
@@ -182,26 +182,26 @@ EOF
 # <ident>[<pid>]: ` prefix, which is three space-free fields and only eats width
 # on a phone.
 own_output="$(
-	printf '%s\n' "$tail_out" \
-		| grep -vE 'systemd\[[0-9]+\]:|^-- ' \
-		| sed 's/^[^ ]* [^ ]* [^ ]*: //' \
-		| tail -3 || true
+    printf '%s\n' "$tail_out" |
+        grep -vE 'systemd\[[0-9]+\]:|^-- ' |
+        sed 's/^[^ ]* [^ ]* [^ ]*: //' |
+        tail -3 || true
 )"
 
 quiet=()
 [[ -n "$QUIET_FIRST" && ! -f "$marker" ]] && quiet=(-q)
 
 if printf '%s\n' "$description" | oncall file -t oncall "${quiet[@]}" \
-	-p "$(printf 'result=%s exit=%s\n%s' "$result" "$status" "$own_output")" \
-	"$unit" "$title" >/dev/null; then
-	if [[ -z "$second" ]]; then
-		printf 'first failure %s\n' "$(date -Is)" >"$marker"
-	fi
-	if ((${#quiet[@]} == 0)); then
-		printf 'paged %s\n' "$(date -Is)" >>"$marker"
-	fi
-	say "$unit: filed (see oncall.log)"
+    -p "$(printf 'result=%s exit=%s\n%s' "$result" "$status" "$own_output")" \
+    "$unit" "$title" >/dev/null; then
+    if [[ -z "$second" ]]; then
+        printf 'first failure %s\n' "$(date -Is)" >"$marker"
+    fi
+    if ((${#quiet[@]} == 0)); then
+        printf 'paged %s\n' "$(date -Is)" >>"$marker"
+    fi
+    say "$unit: filed (see oncall.log)"
 else
-	say "$unit: FAILED to file a task --- the journal is the only record"
-	exit 1
+    say "$unit: FAILED to file a task --- the journal is the only record"
+    exit 1
 fi

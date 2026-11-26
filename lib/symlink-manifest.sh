@@ -93,7 +93,10 @@ JSON_MERGE_MANIFEST=(
 #   manifest_source "entry"  -> absolute path into the repo
 #   manifest_target "entry"  -> absolute path with ~ expanded
 manifest_source() { echo "$DOTFILES_DIR/${1%%:*}"; }
-manifest_target() { local t="${1##*:}"; echo "${t/#\~/$HOME}"; }
+manifest_target() {
+    local t="${1##*:}"
+    echo "${t/#\~/$HOME}"
+}
 
 # Print the result of merging a JSON_MERGE_MANIFEST source's layers into the
 # live file at target (absent or a symlink counts as empty). Needs jq.

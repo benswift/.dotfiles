@@ -14,8 +14,8 @@ typeset -U path
 # Static rather than `eval "$(brew shellenv)"`, which forks a bash script
 # on every zsh start. HOMEBREW_PREFIX is all zshrc needs (completions).
 if [[ -d /opt/homebrew ]]; then
-  export HOMEBREW_PREFIX=/opt/homebrew
-  path=(/opt/homebrew/bin /opt/homebrew/sbin $path)
+    export HOMEBREW_PREFIX=/opt/homebrew
+    path=(/opt/homebrew/bin /opt/homebrew/sbin $path)
 fi
 
 path=(~/.dotfiles/bin ~/.dotfiles/private/bin(N) ~/.local/bin ~/.cargo/bin $path ~/.orbstack/bin(N))

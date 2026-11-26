@@ -15,9 +15,18 @@ pass=0
 fail=0
 warn=0
 
-check_pass() { echo -e "  ${GREEN}✓${NC} $1"; ((pass++)) || true; }
-check_fail() { echo -e "  ${RED}✗${NC} $1"; ((fail++)) || true; }
-check_warn() { echo -e "  ${YELLOW}⚠${NC} $1 ${CYAN}(optional)${NC}"; ((warn++)) || true; }
+check_pass() {
+    echo -e "  ${GREEN}✓${NC} $1"
+    ((pass++)) || true
+}
+check_fail() {
+    echo -e "  ${RED}✗${NC} $1"
+    ((fail++)) || true
+}
+check_warn() {
+    echo -e "  ${YELLOW}⚠${NC} $1 ${CYAN}(optional)${NC}"
+    ((warn++)) || true
+}
 section() { echo -e "\n${CYAN}$1${NC}"; }
 
 command_exists() { command -v "$1" &>/dev/null; }
@@ -56,9 +65,9 @@ check_shell() {
     # Detect LDAP/SSSD account: present via NSS but absent from /etc/passwd.
     # In that case chsh fails with 'user does not exist' --- suggest the
     # exec workaround instead.
-    if command_exists getent \
-        && ! getent -s files passwd "$USER" >/dev/null 2>&1 \
-        && getent passwd "$USER" >/dev/null 2>&1; then
+    if command_exists getent &&
+        ! getent -s files passwd "$USER" >/dev/null 2>&1 &&
+        getent passwd "$USER" >/dev/null 2>&1; then
         cat <<EOF
     Account is in LDAP/NSS (not /etc/passwd) --- chsh will fail locally.
     Append to ~/.profile:
@@ -505,7 +514,7 @@ settings() {
             continue
         fi
         jq -r --slurpfile enforced "$source_path" \
-            --slurpfile seed "$( [[ -f "$seed" ]] && echo "$seed" || echo /dev/null)" '
+            --slurpfile seed "$([[ -f "$seed" ]] && echo "$seed" || echo /dev/null)" '
             ($enforced[0] // {}) as $e | ($seed[0] // {}) as $s
             | to_entries[]
             | .key as $k
@@ -530,10 +539,10 @@ usage() {
 }
 
 case "${1:-}" in
-    doctor) doctor ;;
-    update) update ;;
-    settings) settings ;;
-    edit)   "${EDITOR:-hx}" "$DOTFILES_DIR" ;;
-    cd)     echo "$DOTFILES_DIR" ;;
-    *)      usage ;;
+doctor) doctor ;;
+update) update ;;
+settings) settings ;;
+edit) "${EDITOR:-hx}" "$DOTFILES_DIR" ;;
+cd) echo "$DOTFILES_DIR" ;;
+*) usage ;;
 esac

@@ -22,30 +22,30 @@ sid=$(echo "$input" | jq -r '.session_id // empty')
 stamp_file="$stamp_dir/claude-turn-$sid"
 
 case "$cmd" in
-    start)
-        date +%s > "$stamp_file"
-        ;;
-    stop)
-        [[ -f "$stamp_file" ]] || exit 0
-        start=$(cat "$stamp_file")
-        rm -f "$stamp_file"
-        elapsed=$(( $(date +%s) - start ))
-        (( elapsed >= threshold_seconds )) || exit 0
-        cwd=$(echo "$input" | jq -r '.cwd // empty')
-        proj="${cwd##*/}"
-        [[ -n "$proj" ]] || proj="?"
-        minutes=$((elapsed / 60))
-        seconds=$((elapsed % 60))
-        msg=$(printf 'Turn finished in %dm %02ds' "$minutes" "$seconds")
-        transcript=$(echo "$input" | jq -r '.transcript_path // empty')
-        if [[ -n "$transcript" && -f "$transcript" ]]; then
-            title=$(jq -r 'select(.type=="ai-title") | .aiTitle' "$transcript" 2>/dev/null | tail -n1)
-            [[ -n "$title" ]] && msg="${msg}"$'\n'"${title}"
-        fi
-        echo "$msg" | notify-pushover --title "Claude done: $(hostname -s):$proj" || true
-        ;;
-    *)
-        echo "Usage: $(basename "$0") {start|stop}" >&2
-        exit 1
-        ;;
+start)
+    date +%s >"$stamp_file"
+    ;;
+stop)
+    [[ -f "$stamp_file" ]] || exit 0
+    start=$(cat "$stamp_file")
+    rm -f "$stamp_file"
+    elapsed=$(($(date +%s) - start))
+    ((elapsed >= threshold_seconds)) || exit 0
+    cwd=$(echo "$input" | jq -r '.cwd // empty')
+    proj="${cwd##*/}"
+    [[ -n "$proj" ]] || proj="?"
+    minutes=$((elapsed / 60))
+    seconds=$((elapsed % 60))
+    msg=$(printf 'Turn finished in %dm %02ds' "$minutes" "$seconds")
+    transcript=$(echo "$input" | jq -r '.transcript_path // empty')
+    if [[ -n "$transcript" && -f "$transcript" ]]; then
+        title=$(jq -r 'select(.type=="ai-title") | .aiTitle' "$transcript" 2>/dev/null | tail -n1)
+        [[ -n "$title" ]] && msg="${msg}"$'\n'"${title}"
+    fi
+    echo "$msg" | notify-pushover --title "Claude done: $(hostname -s):$proj" || true
+    ;;
+*)
+    echo "Usage: $(basename "$0") {start|stop}" >&2
+    exit 1
+    ;;
 esac

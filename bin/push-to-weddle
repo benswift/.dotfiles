@@ -18,15 +18,15 @@
 set -uo pipefail
 
 if ! nc -z -w 5 weddle 22 2>/dev/null; then
-	echo "push-to-weddle: weddle unreachable; skipping"
-	exit 0
+    echo "push-to-weddle: weddle unreachable; skipping"
+    exit 0
 fi
 
 status=0
 # watson keeps nothing that isn't stored elsewhere (wiz lives on GitLab, and
 # it pulls its own mail copy), so it ships only its agent logs.
 if [[ "$(hostname -s)" != "watson" ]] && command -v backup >/dev/null; then
-	backup || status=1
+    backup || status=1
 fi
 ship-claude-logs || status=1
 exit "$status"

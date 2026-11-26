@@ -49,67 +49,67 @@ mkdir -p "$STATE"
 say() { printf '[%s] %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$*" >>"$LOG"; }
 
 usage() {
-	echo "usage: oncall file [-t tag]... [-p page] [-q|-a] [-n] <key> <title> < body" >&2
-	echo "       oncall clear [-n] <key>" >&2
-	exit 2
+    echo "usage: oncall file [-t tag]... [-p page] [-q|-a] [-n] <key> <title> < body" >&2
+    echo "       oncall clear [-n] <key>" >&2
+    exit 2
 }
 
 # The open tasks with the key, one path per line.
 open_tasks() {
-	wiz query anu -json "type == \"task\" && unit == \"$1\" && status == \"open\"" 2>>"$LOG" |
-		jq -r '.[].path' 2>>"$LOG"
+    wiz query anu -json "type == \"task\" && unit == \"$1\" && status == \"open\"" 2>>"$LOG" |
+        jq -r '.[].path' 2>>"$LOG"
 }
 
 share() { # <message> <path>...
-	local message="$1"
-	shift
-	if wiz sync anu -m "$message" "${@/#/anu:}" >/dev/null 2>>"$LOG"; then
-		say "shared: $message"
-	else
-		say "sync failed --- '$message' is local until the next sync"
-	fi
+    local message="$1"
+    shift
+    if wiz sync anu -m "$message" "${@/#/anu:}" >/dev/null 2>>"$LOG"; then
+        say "shared: $message"
+    else
+        say "sync failed --- '$message' is local until the next sync"
+    fi
 }
 
 # This page's number in the current window, starting a new window when the
 # last is over. Run under the lock, so two pagers can't take the same number.
 push_seq() {
-	local now start=0 count=0 window="$STATE/push-window"
-	now="$(date +%s)"
-	if [[ -f "$window" ]]; then
-		read -r start count <"$window" || true
-		[[ "$start" =~ ^[0-9]+$ ]] || start=0
-		[[ "$count" =~ ^[0-9]+$ ]] || count=0
-	fi
-	if ((now - start >= PUSH_WINDOW_MIN * 60)); then
-		start="$now"
-		count=0
-	fi
-	count=$((count + 1))
-	printf '%s %s\n' "$start" "$count" >"$window"
-	printf '%s' "$count"
+    local now start=0 count=0 window="$STATE/push-window"
+    now="$(date +%s)"
+    if [[ -f "$window" ]]; then
+        read -r start count <"$window" || true
+        [[ "$start" =~ ^[0-9]+$ ]] || start=0
+        [[ "$count" =~ ^[0-9]+$ ]] || count=0
+    fi
+    if ((now - start >= PUSH_WINDOW_MIN * 60)); then
+        start="$now"
+        count=0
+    fi
+    count=$((count + 1))
+    printf '%s %s\n' "$start" "$count" >"$window"
+    printf '%s' "$count"
 }
 
 page() { # <title> <text>
-	local n=1
-	if command -v flock >/dev/null; then
-		exec 9>"$STATE/push-window.lock"
-		flock 9
-		n="$(push_seq)"
-		flock -u 9
-	fi
-	local title="$1" text="$2"
-	if ((n == PUSH_CAP + 1)); then
-		title="oncall: burst on $(hostname -s)"
-		text="More than $PUSH_CAP pages within ${PUSH_WINDOW_MIN}m; the rest of the window's are suppressed. Tasks are still being filed: see the bot section of \`todo\`."
-	elif ((n > PUSH_CAP + 1)); then
-		say "page '$1' suppressed (page $n this ${PUSH_WINDOW_MIN}m window)"
-		return 0
-	fi
-	if printf '%s' "$text" | mise exec -- notify-pushover --title "$title" >/dev/null 2>>"$LOG"; then
-		say "paged '$title'"
-	else
-		say "pushover failed for '$title' --- the task is still filed"
-	fi
+    local n=1
+    if command -v flock >/dev/null; then
+        exec 9>"$STATE/push-window.lock"
+        flock 9
+        n="$(push_seq)"
+        flock -u 9
+    fi
+    local title="$1" text="$2"
+    if ((n == PUSH_CAP + 1)); then
+        title="oncall: burst on $(hostname -s)"
+        text="More than $PUSH_CAP pages within ${PUSH_WINDOW_MIN}m; the rest of the window's are suppressed. Tasks are still being filed: see the bot section of \`todo\`."
+    elif ((n > PUSH_CAP + 1)); then
+        say "page '$1' suppressed (page $n this ${PUSH_WINDOW_MIN}m window)"
+        return 0
+    fi
+    if printf '%s' "$text" | mise exec -- notify-pushover --title "$title" >/dev/null 2>>"$LOG"; then
+        say "paged '$title'"
+    else
+        say "pushover failed for '$title' --- the task is still filed"
+    fi
 }
 
 [[ $# -ge 1 ]] || usage
@@ -121,14 +121,14 @@ quiet=""
 always=""
 local_only=""
 while getopts "t:p:qan" opt; do
-	case "$opt" in
-	t) tags="$tags,$OPTARG" ;;
-	p) page_text="$OPTARG" ;;
-	q) quiet=1 ;;
-	a) always=1 ;;
-	n) local_only=1 ;;
-	*) usage ;;
-	esac
+    case "$opt" in
+    t) tags="$tags,$OPTARG" ;;
+    p) page_text="$OPTARG" ;;
+    q) quiet=1 ;;
+    a) always=1 ;;
+    n) local_only=1 ;;
+    *) usage ;;
+    esac
 done
 shift $((OPTIND - 1))
 
@@ -138,21 +138,21 @@ paged="$STATE/$(printf '%s' "$key" | tr '/' '_').paged"
 
 case "$action" in
 clear)
-	[[ $# -eq 1 ]] || usage
-	rm -f "$paged"
-	tasks=()
-	while IFS= read -r task; do
-		[[ -n "$task" ]] && tasks+=("$task")
-	done < <(open_tasks "$key")
-	((${#tasks[@]})) || exit 0
-	if ! wiz remove "${tasks[@]/#/anu:}" >/dev/null 2>>"$LOG"; then
-		say "$key: recovered, but FAILED to delete ${tasks[*]}"
-		exit 0
-	fi
-	say "$key: recovered; deleted ${tasks[*]}"
-	[[ -n "$local_only" ]] || share "oncall: $key recovered" "${tasks[@]}"
-	exit 0
-	;;
+    [[ $# -eq 1 ]] || usage
+    rm -f "$paged"
+    tasks=()
+    while IFS= read -r task; do
+        [[ -n "$task" ]] && tasks+=("$task")
+    done < <(open_tasks "$key")
+    ((${#tasks[@]})) || exit 0
+    if ! wiz remove "${tasks[@]/#/anu:}" >/dev/null 2>>"$LOG"; then
+        say "$key: recovered, but FAILED to delete ${tasks[*]}"
+        exit 0
+    fi
+    say "$key: recovered; deleted ${tasks[*]}"
+    [[ -n "$local_only" ]] || share "oncall: $key recovered" "${tasks[@]}"
+    exit 0
+    ;;
 file) [[ $# -eq 2 ]] || usage ;;
 *) usage ;;
 esac
@@ -161,16 +161,16 @@ title="$2"
 body="$(cat)"
 was_open="$(open_tasks "$key" | head -1)"
 if ! task="$(printf '%s\n' "$body" | wiz add anu task -json \
-	-once "unit == \"$key\" && status == \"open\"" \
-	-title "$title" -set status=open -set "tags=[$tags]" -set "unit=$key" 2>>"$LOG" |
-	jq -r '.paths[0]')" || [[ -z "$task" || "$task" == null ]]; then
-	say "$key: FAILED to file a task --- the caller's log is the only record"
-	exit 1
+    -once "unit == \"$key\" && status == \"open\"" \
+    -title "$title" -set status=open -set "tags=[$tags]" -set "unit=$key" 2>>"$LOG" |
+    jq -r '.paths[0]')" || [[ -z "$task" || "$task" == null ]]; then
+    say "$key: FAILED to file a task --- the caller's log is the only record"
+    exit 1
 fi
 if [[ -n "$was_open" ]]; then
-	say "$key: added to $task"
+    say "$key: added to $task"
 else
-	say "$key: filed $task"
+    say "$key: filed $task"
 fi
 printf '%s\n' "$task"
 
@@ -179,8 +179,8 @@ now="$(date +%s)"
 last="$(cat "$paged" 2>/dev/null || echo 0)"
 [[ "$last" =~ ^[0-9]+$ ]] || last=0
 if [[ -z "$quiet" ]] && { [[ -z "$was_open" || -n "$always" ]] || ((now - last >= REARM_HOURS * 3600)); }; then
-	echo "$now" >"$paged"
-	page "oncall: $key" "${page_text:-$(printf '%s\n' "$body" | tail -3)}"
+    echo "$now" >"$paged"
+    page "oncall: $key" "${page_text:-$(printf '%s\n' "$body" | tail -3)}"
 fi
 
 [[ -n "$local_only" ]] || share "oncall: $title" "$task"
