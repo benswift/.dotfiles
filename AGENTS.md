@@ -70,10 +70,11 @@ the overlay itself (`git -C private add <file>`, `git -C private commit`,
 overlay's goes first when pushing: a public commit that expects a file the
 overlay hasn't pushed breaks `dotfiles update` on every other machine.
 
-`.github/workflows/security.yml` runs ruff, shellcheck, the portable test suite,
-a lock audit (`scripts/audit-locks.py`) and gitleaks on every push. A tool the
-tests call must be installed there too; the helix and `*_wiz` suites stay local
-(see the workflow).
+`.github/workflows/security.yml` runs ruff, shellcheck, shfmt, the portable test
+suite, a lock audit (`scripts/audit-locks.py`) and gitleaks on every push. Its
+actions are pinned in `.github/workflows/actions.lock`: run `gh actions-lock`
+after changing any `uses:` line. A tool the tests call must be installed there
+too; the helix and `*_wiz` suites stay local (see the workflow).
 
 ## Python
 
@@ -116,8 +117,8 @@ When a tool can be installed several ways, prefer in order:
    node, go, rust) and Node CLIs (its `npm:` backend)
 2. **platform package manager** (brew on macOS, apt/dnf on Linux) --- system
    utilities (curl, git, jq) and tools needing OS integration
-3. **language package managers** (`uv tool`, `cargo install`) ---
-   only when the tool's docs say so, or mise doesn't support it
+3. **language package managers** (`uv tool`, `cargo install`) --- only when the
+   tool's docs say so, or mise doesn't support it
 
 Avoid `cargo install` for anything available via mise or brew --- it compiles
 from source. Pick one method per tool and stick to it, so `dotfiles doctor` can

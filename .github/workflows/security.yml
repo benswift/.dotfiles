@@ -28,13 +28,21 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.2
         with:
           enable-cache: false
-      - name: Lint Python and shell scripts
-        # Every tracked file with a sh or bash shebang.
+      - name: Install verified shfmt release
+        run: |
+          curl -fsSL https://github.com/mvdan/sh/releases/download/v3.14.1/shfmt_v3.14.1_linux_amd64 -o "$RUNNER_TEMP/shfmt"
+          echo "76e77641faa025814b77f153b29796b8e6fa2fca03e0c76a691608b86c7ea7bf  $RUNNER_TEMP/shfmt" | sha256sum --check
+          chmod +x "$RUNNER_TEMP/shfmt"
+      - name: Lint and check formatting of Python and shell scripts
+        # shellcheck: every tracked file with a sh or bash shebang. shfmt finds
+        # its own files, by extension or shebang, zsh included.
         run: |
           uvx ruff check .
+          uvx ruff format --check .
           git ls-files -z |
             xargs -0 awk 'FNR == 1 && /^#!.*(\/(ba)?sh|env (ba)?sh)( |$)/ { print FILENAME } { nextfile }' |
             xargs -d '\n' shellcheck -x
+          "$RUNNER_TEMP/shfmt" -i 4 -d .
       - name: Install converters
         # policy-library-sync's tests run pandoc and pdftotext.
         run: sudo apt-get update && sudo apt-get install -y pandoc poppler-utils

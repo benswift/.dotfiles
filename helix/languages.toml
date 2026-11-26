@@ -120,6 +120,18 @@ formatter = { command = "oxfmt-helix", args = [
   "%{file_path_absolute}",
 ] }
 
+# bash also covers sh and zsh files: shfmt picks the dialect from the
+# extension or shebang of the path it is given.
+[[language]]
+name = "bash"
+auto-format = true
+formatter = { command = "shfmt", args = [
+  "-i",
+  "4",
+  "--filename",
+  "%{file_path_absolute}",
+] }
+
 [[language]]
 name = "latex"
 auto-format = true

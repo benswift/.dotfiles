@@ -102,12 +102,14 @@ FORMATTER_SAMPLES = {
     "tsx": "const x = () => <div />;\n",
     "javascript": "const x   =  1;\n",
     "jsx": "const x = () => <div />;\n",
+    "bash": "#!/usr/bin/env bash\nif true; then\n  echo hi\nfi\n",
 }
 
 # Extension to hand the formatter for the %{file_path_absolute} expansion,
 # where the language name isn't the extension.
 FORMATTER_EXTENSIONS = {
     "astromotion-deck": ".deck.mdx",
+    "bash": ".sh",
     "javascript": ".js",
     "jsx": ".jsx",
     "markdown": ".md",

@@ -80,6 +80,18 @@ is_python_shebang() {
     esac
 }
 
+# The same question for shell: bin/ scripts are extensionless too. Matches a
+# sh, bash or zsh interpreter, direct or through env.
+is_shell_shebang() {
+    local first
+    first="$(head -c 200 -- "$f" 2>/dev/null | head -1)"
+    [[ "$first" =~ ^'#!'.*[/\ ](ba|z)?sh([[:space:]]|$) ]]
+}
+
+# --filename tells shfmt which file stdin stands for, so it picks the dialect
+# (bash, sh, zsh) from the extension or shebang as it would for a path.
+fmt_shfmt() { fmt shfmt -i 4 --filename "$f"; }
+
 # --force-exclude makes ruff honour the exclude list in ruff.toml even though
 # the path arrives via --stdin-filename. Without it the hook reformats files
 # the config says to leave alone, such as a file vendored verbatim from
@@ -127,11 +139,14 @@ case "$f" in
 *.ex | *.exs | *.heex) fmt_mix ;;
 *.rs) fmt_rust ;;
 *.xtm) fmt extempore fmt ;;
+*.sh | *.bash | *.zsh) fmt_shfmt ;;
 *)
-    # No extension this table knows. Python hides here; everything else
-    # (bash, swift, plain text) falls through untouched, as before.
+    # No extension this table knows. Python and shell scripts hide here;
+    # everything else (swift, plain text) falls through untouched.
     if is_python_shebang; then
         fmt_ruff
+    elif is_shell_shebang; then
+        fmt_shfmt
     fi
     ;;
 esac
