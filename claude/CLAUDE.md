@@ -107,6 +107,9 @@ The `FLY_API_TOKEN` in my mise env reaches only the
 my `personal` or `anu-school-of-cybernetics` orgs, run
 `env -u FLY_API_TOKEN fly ... -o <slug>` so my own login applies.
 
+To show me a file, run `hx-rex FILE[:LINE]`: it opens helix in a split beside
+your Rex pane.
+
 Use ast-grep (`sg`) for structural code queries: a function, class or method
 definition, its callers, an import, a rename. The `ast-grep` skill carries the
 pattern and rule syntax.

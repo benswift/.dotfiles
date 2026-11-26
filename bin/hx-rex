@@ -1,26 +1,28 @@
 #!/usr/bin/env bash
-# hx-ghostty --- open files in helix, in a tab of the running Ghostty, and be
-# the macOS handler that sends double-clicked documents there.
+# hx-rex --- open files in helix in a new Rex split pane, and be the macOS
+# handler that sends double-clicked documents there.
 #
-#   hx-ghostty FILE...       open FILEs in helix in a new Ghostty tab (a new
-#                            window if Ghostty isn't running yet)
-#   hx-ghostty --register    build the LaunchServices handler and make it the
-#                            default app for every type listed below, so
-#                            Finder and `open` stop routing text at Xcode,
-#                            VLC, GarageBand and friends
-#   hx-ghostty --unregister  remove the handler app again
+#   hx-rex FILE[:LINE[:COL]]...  open FILEs in helix in a pane split to the
+#                                right, in the same tab
+#   hx-rex --register            build the LaunchServices handler and make it
+#                                the default app for every type listed below,
+#                                so Finder and `open` stop routing text at
+#                                Xcode, VLC, GarageBand and friends
+#   hx-rex --unregister          remove the handler app again
 #
-# The tab is created through Ghostty's AppleScript dictionary (1.3+, see
-# Ghostty.app/Contents/Resources/Ghostty.sdef): `ghostty +new-window` refuses
-# to run on macOS. Note `new tab` needs an explicit `in <window>` --- without
-# it Ghostty answers errAEEventNotHandled. The tab closes when helix exits,
-# the same as a shell tab would.
+# Inside a Rex terminal (REX_SESSION and REX_BLOCK set, which is how Claude
+# runs it) the split goes beside that pane, on whichever server the pane
+# lives on. Anywhere else, such as the Finder handler, it goes beside the
+# focused pane of the local server's session that Rex.app shows, or into a new
+# local session when it shows none; then Rex.app is brought to the front on
+# that session. Local matters: a double-clicked file is on this Mac's disk, so
+# helix must run on this Mac's server, never on a remote host Rex.app is
+# viewing. The pane closes when helix exits.
 #
 # macOS hands documents to an .app, never to a script, so --register compiles
 # a tiny AppleScript applet into ~/Applications whose `on open` handler calls
-# this script. It is ad-hoc signed so TCC keys the Automation permission
-# ("Open in Helix" controlling Ghostty, granted once on first open) to a stable
-# identity rather than re-prompting.
+# this script. It is ad-hoc signed so LaunchServices and TCC see a stable
+# identity across re-registrations.
 set -euo pipefail
 
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
@@ -111,23 +113,23 @@ hx_bin() {
     elif command -v hx >/dev/null 2>&1; then
         command -v hx
     else
-        echo "hx-ghostty: no hx found --- run helix-build" >&2
+        echo "hx-rex: no hx found --- run helix-build" >&2
         exit 1
     fi
 }
 
-# Ghostty runs a command with arguments through `/bin/sh -c`, so the command
-# string is shell syntax and the paths in it need shell quoting.
-shq() {
-    local s=${1//\'/\'\\\'\'}
-    printf "'%s'" "$s"
-}
-
-# ... and the command string then goes inside an AppleScript literal.
-as_string() {
-    local s=${1//\\/\\\\}
-    s=${s//\"/\\\"}
-    printf '"%s"' "$s"
+# On macOS the CLI ships inside Rex.app and is not on PATH, the applet's stub
+# PATH included.
+REX_APP_CLI="/Applications/Rex.app/Contents/Helpers/Rex Server.rex/Contents/MacOS/rex"
+rex_bin() {
+    if command -v rex >/dev/null 2>&1; then
+        command -v rex
+    elif [[ -x "$REX_APP_CLI" ]]; then
+        echo "$REX_APP_CLI"
+    else
+        echo "hx-rex: no rex CLI found" >&2
+        exit 1
+    fi
 }
 
 # A JSON array literal, for the plutil -json calls in register().
@@ -140,40 +142,60 @@ json_array() {
 abspath() { printf '%s\n' "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")"; }
 
 open_files() {
-    local hx file paths=() cmd dir
+    local hx rex file paths=() label
     hx="$(hx_bin)"
+    rex="$(rex_bin)"
     for file in "$@"; do paths+=("$(abspath "$file")"); done
-    dir="$(dirname "${paths[0]}")"
+    label="$(basename "${paths[0]}")"
+    label=${label%%:*}
 
-    # `application "X" is running` rather than pgrep: the executable inside
-    # Ghostty.app is lowercase `ghostty`, and unlike a `tell` block this query
-    # does not launch the app.
-    if [[ "$(osascript -e 'application "Ghostty" is running')" != "true" ]]; then
-        # Let the launch itself run helix: opening a tab afterwards would
-        # leave the window Ghostty starts with sitting there as a stray shell.
-        open -na Ghostty.app --args -e "$hx" "${paths[@]}"
+    if [[ -n "${REX_SESSION:-}" && -n "${REX_BLOCK:-}" ]]; then
+        "$rex" split -s "$REX_SESSION" -b "$REX_BLOCK" --split=right \
+            -c "$PWD" --label "$label" -- "$hx" "${paths[@]}"
         return
     fi
 
-    cmd="$(shq "$hx")"
-    for file in "${paths[@]}"; do cmd="$cmd $(shq "$file")"; done
+    open_from_desktop "$rex" "$hx" "$label" "${paths[@]}"
+}
 
-    osascript <<EOF >/dev/null
-tell application "Ghostty"
-  set cfg to new surface configuration from {command:$(as_string "$cmd"), initial working directory:$(as_string "$dir")}
-  if (count of windows) is 0 then
-    new window with configuration cfg
-  else
-    new tab in front window with configuration cfg
-  end if
-  activate
-end tell
-EOF
+# The Finder path: no calling pane, so find what Rex.app is showing on this
+# Mac's server. Polls because a cold launch takes a moment to bring up its
+# server and connect the app.
+open_from_desktop() {
+    local rex=$1 hx=$2 label=$3 dir tries=0 app session
+    shift 3
+    dir="$(dirname "$1")"
+
+    "$rex" --autostart=false whoami >/dev/null 2>&1 || open -a Rex
+    until app="$("$rex" --autostart=false client ls --json 2>/dev/null |
+        jq -r 'first(.clients[] | select(.info.kind == "app")) | .client_id')" &&
+        [[ -n "$app" ]]; do
+        ((tries++ < 20)) || {
+            echo "hx-rex: Rex.app did not connect to the local server" >&2
+            exit 1
+        }
+        sleep 0.5
+    done
+
+    session="$("$rex" --autostart=false client ls --json |
+        jq -r --arg app "$app" \
+            '.clients[] | select(.client_id == $app) | .session_ids[0] // empty')"
+
+    if [[ -n "$session" ]]; then
+        "$rex" --autostart=false split -s "$session" --split=right \
+            -c "$dir" --label "$label" -- "$hx" "$@" >/dev/null
+    else
+        session="$("$rex" --autostart=false new helix -c "$dir" --json \
+            -- "$hx" "$@" | jq -r .session_id)"
+    fi
+
+    "$rex" --autostart=false -C "$app" "do" session.select session_id="$session" >/dev/null
+    open -a Rex
 }
 
 register() {
     command -v duti >/dev/null 2>&1 || {
-        echo "hx-ghostty: duti is required (brew install duti)" >&2
+        echo "hx-rex: duti is required (brew install duti)" >&2
         exit 1
     }
 
@@ -191,7 +213,7 @@ end open
 -- Launched with no document (from Spotlight, say): nothing to edit, so just
 -- bring the terminal up.
 on run
-  do shell script "/usr/bin/open -a Ghostty"
+  do shell script "/usr/bin/open -a Rex"
 end run
 EOF
 
@@ -234,7 +256,7 @@ EOF
     }]" "$plist"
 
     codesign --force --sign - "$APP" >/dev/null 2>&1 ||
-        echo "hx-ghostty: could not ad-hoc sign $APP (TCC may re-prompt)" >&2
+        echo "hx-rex: could not ad-hoc sign $APP (TCC may re-prompt)" >&2
     "$LSREGISTER" -f "$APP"
 
     # lsregister returns before the claim is visible, and a duti -s that
@@ -254,20 +276,20 @@ EOF
     done
 
     if ((${#failed[@]})); then
-        echo "hx-ghostty: could not claim: ${failed[*]}" >&2
+        echo "hx-rex: could not claim: ${failed[*]}" >&2
     fi
-    echo "hx-ghostty: claiming $((${#HANDLED_UTIS[@]} + 1 - ${#failed[@]})) types" \
+    echo "hx-rex: claiming $((${#HANDLED_UTIS[@]} + 1 - ${#failed[@]})) types" \
         "and ${#CLAIMED_EXTENSIONS[@]} extensions"
 }
 
 unregister() {
     [[ -d "$APP" ]] || {
-        echo "hx-ghostty: no handler installed at $APP"
+        echo "hx-rex: no handler installed at $APP"
         return
     }
     "$LSREGISTER" -u "$APP" || true
     rm -rf "$APP"
-    echo "hx-ghostty: removed $APP --- every type it claimed falls back to"
+    echo "hx-rex: removed $APP --- every type it claimed falls back to"
     echo "            the next claimant (Xcode, mostly). Set one by hand with:"
     echo "            duti -s <bundle id> <uti> all"
 }
