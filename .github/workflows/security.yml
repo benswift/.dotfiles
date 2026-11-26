@@ -22,10 +22,10 @@ jobs:
       PYTEST_XDIST_AUTO_NUM_WORKERS: '2'
       UV_PYTHON: '3.12'
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - uses: astral-sh/setup-uv@v10.3.2
         with:
           enable-cache: false
       - name: Lint Python and shell scripts
@@ -50,18 +50,21 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - uses: astral-sh/setup-uv@v10.3.2
         with:
           enable-cache: false
       - run: uv run --script scripts/audit-locks.py
+      # Fails when actions.lock is out of step with the workflows, or a locked
+      # commit no longer matches its tag. Refresh it with `gh actions-lock`.
+      - uses: github/gh-actions-lock@verify/v0.5.1
   secrets:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
