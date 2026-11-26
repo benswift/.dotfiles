@@ -209,10 +209,7 @@ have the detail.
 
 ### Per-agent notes
 
-- **Claude Code** --- `.claude/` (with dot) is machine-local and gitignored;
-  this repo tracks only `.claude/settings.json`, which disables the `impeccable`
-  plugin (its `PostToolUse` hook drops `.impeccable/hook.cache.json` into
-  whatever it thinks the project root is, a package's `src/` included).
+- **Claude Code** --- `.claude/` (with dot) is machine-local and gitignored.
 - **Codex** --- `~/.codex/config.toml` is entirely machine-local and
   deliberately untracked; set `project_doc_fallback_filenames = ["CLAUDE.md"]`
   there on each machine, for repos without an `AGENTS.md`. There is no shared

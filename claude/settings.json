@@ -68,16 +68,8 @@
   },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": false,
-    "code-review@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": false,
-    "claude-code-setup@claude-plugins-official": true,
-    "plugin-dev@claude-plugins-official": false,
     "agent-browser@agent-browser": true,
-    "impeccable@impeccable": false,
     "ast-grep@ast-grep-marketplace": true,
     "modern-web-guidance@googlechrome": true,
     "ben@ben": true,
@@ -88,12 +80,6 @@
       "source": {
         "source": "github",
         "repo": "benswift/claude-plugin-personal"
-      }
-    },
-    "impeccable": {
-      "source": {
-        "source": "github",
-        "repo": "pbakaus/impeccable"
       }
     },
     "agent-browser": {
