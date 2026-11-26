@@ -222,7 +222,7 @@ auto-format = true
 
 [[grammar]]
 name = "extempore"
-source = { git = "https://github.com/extemporelang/tree-sitter-extempore", rev = "a8228d3537fa78fed35a3ba5d836a878f49eb9d8" }
+source = { git = "https://github.com/extemporelang/tree-sitter-extempore", rev = "b5fe5230092a4bf65eb2d37a2d75507d3cf2e320" }
 
 [[grammar]]
 name = "mutt-compose"
