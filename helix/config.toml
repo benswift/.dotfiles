@@ -40,11 +40,16 @@ x = ":write-quit"
 # P = "paste_clipboard_before"
 
 # Evaluate in a running extempore through its language server (extempore lsp).
-# Helix counts lines from 1 and LSP from 0, hence the %sh arithmetic.
+# Helix counts lines from 1 and LSP from 0, hence the %sh arithmetic. `,e` sends
+# the selection's whole lines when it spans several, and otherwise an empty
+# range, which the server takes as the top-level form at the cursor.
 [keys.normal.","]
-e = ':lsp-workspace-command extempore.eval {"uri":"file://%{file_path_absolute}","range":{"start":{"line":%sh{echo $((%{cursor_line}-1))},"character":0},"end":{"line":%sh{echo $((%{cursor_line}-1))},"character":0}}}'
+e = ':lsp-workspace-command extempore.eval {"uri":"file://%{file_path_absolute}","range":{"start":{"line":%sh{echo $((%{selection_line_start}-1))},"character":0},"end":{"line":%sh{echo $((%{selection_line_start}==%{selection_line_end}?%{selection_line_start}-1:%{selection_line_end}))},"character":0}}}'
 b = ':lsp-workspace-command extempore.evalBuffer {"uri":"file://%{file_path_absolute}"}'
 i = ':lsp-workspace-command extempore.interrupt'
+
+[keys.select.","]
+e = ':lsp-workspace-command extempore.eval {"uri":"file://%{file_path_absolute}","range":{"start":{"line":%sh{echo $((%{selection_line_start}-1))},"character":0},"end":{"line":%sh{echo $((%{selection_line_start}==%{selection_line_end}?%{selection_line_start}-1:%{selection_line_end}))},"character":0}}}'
 
 [keys.normal.g]
 o = "jump_forward"
