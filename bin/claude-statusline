@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Claude Code status line: prints "<host> <HH:MM> <dir> <branch>" with colours
+# Claude Code status line: prints "<host> <HH:MM> <dir> <branch> <model>" with colours
 # matching the zsh prompt (the terminal's ANSI palette). Reads the session
 # JSON from stdin --- Claude Code passes session info this way.
 
@@ -7,6 +7,7 @@ set -euo pipefail
 
 input=$(cat)
 cwd=$(jq -r '.workspace.current_dir // .cwd // ""' <<<"$input")
+model=$(jq -r '.model.display_name // ""' <<<"$input")
 
 # Shorten cwd to "~" for $HOME or the basename otherwise (zsh's %1~).
 if [[ "$cwd" == "$HOME" ]]; then
@@ -34,11 +35,13 @@ esac
 reset=$'\e[0m'
 dir_color=$'\e[1;34m'  # blue
 vcs_color=$'\e[1;35m'  # magenta
+model_color=$'\e[2m'   # dim
 
 out=""
 out+="${host_color} ${host} ${reset} "
 out+="$(date +%H:%M) "
 [[ -n "$short_cwd" ]] && out+="${dir_color}${short_cwd}${reset}"
 [[ -n "$branch" ]] && out+=" ${vcs_color}${branch}${reset}"
+[[ -n "$model" ]] && out+=" ${model_color}${model}${reset}"
 
 printf '%s' "$out"
