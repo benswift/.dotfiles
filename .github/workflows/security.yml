@@ -43,6 +43,16 @@ jobs:
             xargs -0 awk 'FNR == 1 && /^#!.*(\/(ba)?sh|env (ba)?sh)( |$)/ { print FILENAME } { nextfile }' |
             xargs -d '\n' shellcheck -x
           "$RUNNER_TEMP/shfmt" -i 4 -d .
+      - name: Type-check the uv scripts
+        # Each script is checked against its own environment. ty is pinned
+        # because its diagnostics still change between 0.0.x releases.
+        run: |
+          grep -rl '^#!/usr/bin/env -S uv run' bin scripts tests | sort |
+            while IFS= read -r script; do
+              uv sync --quiet --script "$script"
+              uvx ty@0.0.111 check --quiet --error-on-warning \
+                --python "$(uv python find --script "$script")" "$script"
+            done
       - name: Install converters
         # policy-library-sync's tests run pandoc and pdftotext.
         run: sudo apt-get update && sudo apt-get install -y pandoc poppler-utils

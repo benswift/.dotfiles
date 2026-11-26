@@ -4,8 +4,6 @@
 # dependencies = ["psutil", "rich"]
 # ///
 
-# ty: ignore[unresolved-import]
-
 import os
 import re
 import select

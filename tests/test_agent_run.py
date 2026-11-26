@@ -199,7 +199,7 @@ def test_child_does_not_inherit_the_dispatcher_script_venv() -> None:
 
     assert "VIRTUAL_ENV" not in child
     assert child["PATH"] == "/usr/bin:/bin"
-    assert environ["VIRTUAL_ENV"]  # caller untouched
+    assert "VIRTUAL_ENV" in environ  # caller untouched
 
 
 def test_registry_default_profile(tmp_path: Path) -> None:
