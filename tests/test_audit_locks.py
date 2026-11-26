@@ -57,3 +57,25 @@ def test_unverifiable_locks_fail_closed(tmp_path: Path, content: str) -> None:
     lock.write_text(content)
     with pytest.raises(ValueError):
         requirements(lock)
+
+
+def test_the_actions_lock_is_not_audited_as_a_uv_lock(tmp_path: Path) -> None:
+    """gh actions-lock writes YAML to a *.lock path; parsing it as a uv lock
+    fails the whole audit."""
+    import subprocess
+
+    uv_locks = runpy.run_path(
+        str(Path(__file__).resolve().parents[1] / "scripts/audit-locks.py")
+    )["uv_locks"]
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "actions.lock").write_text("version: 'v0.0.3'\n")
+    (tmp_path / "uv.lock").write_text("version = 1\n")
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "add", ".github/workflows/actions.lock", "uv.lock"],
+        cwd=tmp_path,
+        check=True,
+    )
+
+    assert uv_locks(tmp_path) == ["uv.lock"]

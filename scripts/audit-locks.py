@@ -45,21 +45,30 @@ def requirements(path: Path) -> str:
     return "\n".join(lines) + "\n" if lines else ""
 
 
+# Tracked *.lock files that are not uv locks. gh actions-lock writes YAML, and
+# CI verifies it with its own step.
+NOT_UV_LOCKS = {".github/workflows/actions.lock"}
+
+
+def uv_locks(root: Path) -> list[str]:
+    tracked = (
+        subprocess.check_output(["git", "ls-files", "-z", "*.lock"], cwd=root)
+        .decode()
+        .split("\0")
+    )
+    return [name for name in tracked if name and name not in NOT_UV_LOCKS]
+
+
 def main() -> int:
     root = (
         Path(sys.argv[1]).resolve()
         if len(sys.argv) > 1
         else Path(__file__).resolve().parents[1]
     )
-    paths = (
-        subprocess.check_output(["git", "ls-files", "-z", "*.lock"], cwd=root)
-        .decode()
-        .split("\0")
-    )
     failed = False
     with tempfile.TemporaryDirectory(prefix="dotfiles-audit-") as directory:
         target = Path(directory) / "requirements.txt"
-        for name in filter(None, paths):
+        for name in uv_locks(root):
             content = requirements(root / name)
             if not content:
                 continue
