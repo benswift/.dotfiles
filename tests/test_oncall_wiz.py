@@ -265,5 +265,25 @@ def test_unit_oncall_rearm_adds_to_the_open_task(
     assert len(pages(tmp_path)) == 2
 
 
+def test_unit_oncall_quiet_first_pages_on_the_second_failure_in_a_row(
+    anu: tuple[Path, dict[str, str]], home: Path, tmp_path: Path
+) -> None:
+    vault, env = anu
+    env = {**env, "HOME": str(home), "QUIET_FIRST": "1"}
+    unit = "mail.service"
+    fail = (str(ROOT / "bin" / "unit-oncall"), "fail", unit)
+    run(env, *fail)
+    assert pages(tmp_path) == []
+    run(env, str(ROOT / "bin" / "unit-oncall"), "clear", unit)
+    run(env, *fail)
+    assert pages(tmp_path) == []
+    run(env, *fail)
+    run(env, *fail)
+    assert len(pages(tmp_path)) == 1
+    tasks = sorted((vault / "tasks").glob("*-mail-service-failed*.md"))
+    assert len(tasks) == 1
+    assert tasks[0].read_text().count("Filed automatically by unit-oncall") == 2
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q", "-n", "auto"]))

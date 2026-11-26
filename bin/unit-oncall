@@ -23,6 +23,11 @@
 # deletes the open task: a recovered failure is machine output, which belongs
 # in the journal and git history, not among Ben's tasks.
 #
+# QUIET_FIRST=1 files the first failure without paging and pages on the second
+# in a row, for a frequent job whose one-off failures recover on the next run
+# (mail-pull). Set it in a drop-in on this unit's instance, e.g.
+# unit-oncall@mail-pull.service.service.d/quiet-first.conf.
+#
 # Filing, paging and deleting are bin/oncall's, shared with launchd-run and the
 # comp4020 sweeps: it appends to the unit's open task rather than filing a
 # second, and caps pages across units. This script finds the failed run.
@@ -33,6 +38,8 @@ STATE="${XDG_STATE_HOME:-$HOME/.local/state}/unit-oncall"
 LOG="$STATE/unit-oncall.log"
 JOURNAL_LINES="${JOURNAL_LINES:-40}"
 REARM_HOURS="${REARM_HOURS:-24}"
+QUIET_FIRST="${QUIET_FIRST:-}"
+second=""
 
 mkdir -p "$STATE"
 
@@ -85,11 +92,16 @@ if [[ -f "$marker" ]]; then
 	fi
 	age_h=$((($(date +%s) - first_s) / 3600))
 	if [[ $age_h -lt $REARM_HOURS ]]; then
-		printf 'repeat failure %s\n' "$(date -Is)" >>"$marker"
-		say "$unit: repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new todo"
-		exit 0
+		if [[ -z "$QUIET_FIRST" ]] || grep -q '^paged ' "$marker"; then
+			printf 'repeat failure %s\n' "$(date -Is)" >>"$marker"
+			say "$unit: repeat failure (${age_h}h since first, under ${REARM_HOURS}h re-arm); no new todo"
+			exit 0
+		fi
+		second=1
+		say "$unit: failed twice in a row; paging"
+	else
+		say "$unit: still failing ${age_h}h on; re-arming"
 	fi
-	say "$unit: still failing ${age_h}h on; re-arming"
 fi
 
 # Which run failed, and how. Neither `systemctl show` nor the MONITOR_* variables
@@ -176,10 +188,18 @@ own_output="$(
 		| tail -3 || true
 )"
 
-if printf '%s\n' "$description" | oncall file -t oncall \
+quiet=()
+[[ -n "$QUIET_FIRST" && ! -f "$marker" ]] && quiet=(-q)
+
+if printf '%s\n' "$description" | oncall file -t oncall "${quiet[@]}" \
 	-p "$(printf 'result=%s exit=%s\n%s' "$result" "$status" "$own_output")" \
 	"$unit" "$title" >/dev/null; then
-	printf 'first failure %s\n' "$(date -Is)" >"$marker"
+	if [[ -z "$second" ]]; then
+		printf 'first failure %s\n' "$(date -Is)" >"$marker"
+	fi
+	if ((${#quiet[@]} == 0)); then
+		printf 'paged %s\n' "$(date -Is)" >>"$marker"
+	fi
 	say "$unit: filed (see oncall.log)"
 else
 	say "$unit: FAILED to file a task --- the journal is the only record"
