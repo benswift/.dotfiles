@@ -1,304 +1,37 @@
 #!/usr/bin/env bash
-# hx-rex --- open files in helix in a new Rex split pane, and be the macOS
-# handler that sends double-clicked documents there.
+# hx-rex --- open files in helix in a new Rex pane, split to the right of the
+# pane this runs in (REX_SESSION/REX_BLOCK), on whichever server that pane
+# lives on. The pane closes when helix exits.
 #
-#   hx-rex FILE[:LINE[:COL]]...  open FILEs in helix in a pane split to the
-#                                right, in the same tab
-#   hx-rex --register            build the LaunchServices handler and make it
-#                                the default app for every type listed below,
-#                                so Finder and `open` stop routing text at
-#                                Xcode, VLC, GarageBand and friends
-#   hx-rex --unregister          remove the handler app again
-#
-# Inside a Rex terminal (REX_SESSION and REX_BLOCK set, which is how Claude
-# runs it) the split goes beside that pane, on whichever server the pane
-# lives on. Anywhere else, such as the Finder handler, it goes beside the
-# focused pane of the local server's session that Rex.app shows, or into a new
-# local session when it shows none; then Rex.app is brought to the front on
-# that session. Local matters: a double-clicked file is on this Mac's disk, so
-# helix must run on this Mac's server, never on a remote host Rex.app is
-# viewing. The pane closes when helix exits.
-#
-# macOS hands documents to an .app, never to a script, so --register compiles
-# a tiny AppleScript applet into ~/Applications whose `on open` handler calls
-# this script. It is ad-hoc signed so LaunchServices and TCC see a stable
-# identity across re-registrations.
+# Usage: hx-rex FILE[:LINE[:COL]]...
 set -euo pipefail
 
-SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+if [[ $# -eq 0 || "$1" == -h || "$1" == --help ]]; then
+    sed -n 's/^# \{0,1\}Usage: /Usage: /p' "$0"
+    exit $(($# == 0))
+fi
 
-APP_NAME="Open in Helix"
-APP="$HOME/Applications/$APP_NAME.app"
-BUNDLE_ID="me.benswift.open-in-helix"
-LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
-
-# Types the handler claims, in two halves.
-#
-# HANDLED_UTIS are the types macOS already knows, each of which had a default
-# that was an accident of what installed last rather than a choice: markdown
-# and most source files to Xcode, `.ts` to VLC (it is also the extension for
-# an MPEG transport stream), `.exs` to GarageBand (a Logic sampler
-# instrument), `.toml` to Kontakt.
-#
-# Deliberately absent: `public.html` (Safari renders it), and the binary
-# formats `com.apple.property-list` and `com.apple.applescript.script`, which
-# helix would show as mojibake.
-HANDLED_UTIS=(
-    net.daringfireball.markdown
-    public.plain-text
-    public.source-code
-    public.script
-    public.json
-    public.yaml
-    public.toml
-    public.xml
-    public.css
-    public.svg-image
-    public.comma-separated-values-text
-    public.tab-separated-values-text
-    com.netscape.javascript-source
-    com.microsoft.typescript
-    public.mpeg-2-transport-stream
-    public.python-script
-    public.ruby-script
-    public.perl-script
-    public.php-script
-    public.shell-script
-    public.bash-script
-    public.zsh-script
-    public.csh-script
-    public.c-source
-    public.c-header
-    public.c-plus-plus-source
-    public.c-plus-plus-header
-    public.objective-c-source
-    public.objective-c-plus-plus-source
-    public.swift-source
-    com.sun.java-source
-    public.make-source
-    org.iso.sql
-    public.patch-file
-    com.apple.log
-    com.microsoft.ini
-    com.apple.logic.exs
-    com.apple.rez-source
-    com.apple.applescript.text
-)
-
-# The other half have no UTI at all: macOS invents a per-extension `dyn.*`
-# type, which cannot be claimed. So the applet exports one type of its own
-# covering the lot --- being the only declaration, it becomes the system's
-# answer for these extensions, and duti then has something to point at.
-OWN_UTI="me.benswift.plain-text-source"
-CLAIMED_EXTENSIONS=(
-    mdx svx qmd rmd rst org
-    typ tex sty cls bib
-    kdl conf env fish jsonc json5 lock properties
-    ex eex heex erl el clj cljs edn
-    rs go lua jsx hs zig nix vim
-    astro svelte vue scss sass less
-    ipynb
-)
-
-usage() {
-    sed -n '3,/^$/p' "$SELF" | sed 's/^# \{0,1\}//' >&2
-    exit 2
+[[ -n "${REX_SESSION:-}" && -n "${REX_BLOCK:-}" ]] || {
+    echo "hx-rex: not in a Rex terminal (REX_SESSION/REX_BLOCK unset)" >&2
+    exit 1
 }
 
-# helix is a source build in ~/.local/bin (see bin/helix-build), which is not
-# on the stub PATH `do shell script` hands the applet.
-hx_bin() {
-    if [[ -x "$HOME/.local/bin/hx" ]]; then
-        echo "$HOME/.local/bin/hx"
-    elif command -v hx >/dev/null 2>&1; then
-        command -v hx
-    else
+# helix is a source build in ~/.local/bin (see bin/helix-build), which the
+# login environment Rex runs the command in may not have on PATH.
+if [[ -x "$HOME/.local/bin/hx" ]]; then
+    hx="$HOME/.local/bin/hx"
+else
+    hx="$(command -v hx)" || {
         echo "hx-rex: no hx found --- run helix-build" >&2
         exit 1
-    fi
-}
-
-# On macOS the CLI ships inside Rex.app and is not on PATH, the applet's stub
-# PATH included.
-REX_APP_CLI="/Applications/Rex.app/Contents/Helpers/Rex Server.rex/Contents/MacOS/rex"
-rex_bin() {
-    if command -v rex >/dev/null 2>&1; then
-        command -v rex
-    elif [[ -x "$REX_APP_CLI" ]]; then
-        echo "$REX_APP_CLI"
-    else
-        echo "hx-rex: no rex CLI found" >&2
-        exit 1
-    fi
-}
-
-# A JSON array literal, for the plutil -json calls in register().
-json_array() {
-    local out="" item
-    for item in "$@"; do out="${out:+$out, }\"$item\""; done
-    printf '[%s]' "$out"
-}
+    }
+fi
 
 abspath() { printf '%s\n' "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")"; }
 
-open_files() {
-    local hx rex file paths=() label
-    hx="$(hx_bin)"
-    rex="$(rex_bin)"
-    for file in "$@"; do paths+=("$(abspath "$file")"); done
-    label="$(basename "${paths[0]}")"
-    label=${label%%:*}
+paths=()
+for file in "$@"; do paths+=("$(abspath "$file")"); done
+label="$(basename "${paths[0]}")"
 
-    if [[ -n "${REX_SESSION:-}" && -n "${REX_BLOCK:-}" ]]; then
-        "$rex" split -s "$REX_SESSION" -b "$REX_BLOCK" --split=right \
-            -c "$PWD" --label "$label" -- "$hx" "${paths[@]}"
-        return
-    fi
-
-    open_from_desktop "$rex" "$hx" "$label" "${paths[@]}"
-}
-
-# The Finder path: no calling pane, so find what Rex.app is showing on this
-# Mac's server. Polls because a cold launch takes a moment to bring up its
-# server and connect the app.
-open_from_desktop() {
-    local rex=$1 hx=$2 label=$3 dir tries=0 app session
-    shift 3
-    dir="$(dirname "$1")"
-
-    "$rex" --autostart=false whoami >/dev/null 2>&1 || open -a Rex
-    until app="$("$rex" --autostart=false client ls --json 2>/dev/null |
-        jq -r 'first(.clients[] | select(.info.kind == "app")) | .client_id')" &&
-        [[ -n "$app" ]]; do
-        ((tries++ < 20)) || {
-            echo "hx-rex: Rex.app did not connect to the local server" >&2
-            exit 1
-        }
-        sleep 0.5
-    done
-
-    session="$("$rex" --autostart=false client ls --json |
-        jq -r --arg app "$app" \
-            '.clients[] | select(.client_id == $app) | .session_ids[0] // empty')"
-
-    if [[ -n "$session" ]]; then
-        "$rex" --autostart=false split -s "$session" --split=right \
-            -c "$dir" --label "$label" -- "$hx" "$@" >/dev/null
-    else
-        session="$("$rex" --autostart=false new helix -c "$dir" --json \
-            -- "$hx" "$@" | jq -r .session_id)"
-    fi
-
-    "$rex" --autostart=false -C "$app" "do" session.select session_id="$session" >/dev/null
-    open -a Rex
-}
-
-register() {
-    command -v duti >/dev/null 2>&1 || {
-        echo "hx-rex: duti is required (brew install duti)" >&2
-        exit 1
-    }
-
-    local work
-    work="$(mktemp -d)"
-    cat >"$work/applet.applescript" <<EOF
-on open theFiles
-  set args to ""
-  repeat with f in theFiles
-    set args to args & " " & quoted form of POSIX path of f
-  end repeat
-  do shell script "$SELF" & args
-end open
-
--- Launched with no document (from Spotlight, say): nothing to edit, so just
--- bring the terminal up.
-on run
-  do shell script "/usr/bin/open -a Rex"
-end run
-EOF
-
-    mkdir -p "$(dirname "$APP")"
-    rm -rf "$APP"
-    osacompile -o "$APP" "$work/applet.applescript"
-    rm -rf "$work"
-
-    local plist="$APP/Contents/Info.plist"
-    plutil -replace CFBundleIdentifier -string "$BUNDLE_ID" "$plist"
-    plutil -replace CFBundleName -string "$APP_NAME" "$plist"
-    # No dock icon or menu bar: this app exists only to forward an odoc event.
-    plutil -replace LSUIElement -bool true "$plist"
-    plutil -replace CFBundleDocumentTypes -json "[
-        {
-            \"CFBundleTypeName\": \"Text file\",
-            \"CFBundleTypeRole\": \"Editor\",
-            \"LSHandlerRank\": \"Owner\",
-            \"LSItemContentTypes\": $(json_array "${HANDLED_UTIS[@]}")
-        },
-        {
-            \"CFBundleTypeName\": \"Plain-text source file\",
-            \"CFBundleTypeRole\": \"Editor\",
-            \"LSHandlerRank\": \"Owner\",
-            \"LSItemContentTypes\": [\"$OWN_UTI\"],
-            \"CFBundleTypeExtensions\": $(json_array "${CLAIMED_EXTENSIONS[@]}")
-        }
-    ]" "$plist"
-
-    # Claiming the extensions above also means declaring what they are. The
-    # extension list here is what makes LaunchServices resolve them to this
-    # type instead of a dyn.* one.
-    plutil -replace UTExportedTypeDeclarations -json "[{
-        \"UTTypeIdentifier\": \"$OWN_UTI\",
-        \"UTTypeDescription\": \"Plain-text source file\",
-        \"UTTypeConformsTo\": [\"public.plain-text\"],
-        \"UTTypeTagSpecification\": {
-            \"public.filename-extension\": $(json_array "${CLAIMED_EXTENSIONS[@]}")
-        }
-    }]" "$plist"
-
-    codesign --force --sign - "$APP" >/dev/null 2>&1 ||
-        echo "hx-rex: could not ad-hoc sign $APP (TCC may re-prompt)" >&2
-    "$LSREGISTER" -f "$APP"
-
-    # lsregister returns before the claim is visible, and a duti -s that
-    # lands in that gap exits 0 having changed nothing --- so set, verify,
-    # and retry rather than trusting the exit status. `duti -d` is the query
-    # that takes a UTI; `duti -x` parses its argument as a filename extension.
-    local uti tries failed=()
-    sleep 1
-    for uti in "${HANDLED_UTIS[@]}" "$OWN_UTI"; do
-        tries=0
-        while ((tries++ < 5)); do
-            duti -s "$BUNDLE_ID" "$uti" all
-            [[ "$(duti -d "$uti" 2>/dev/null)" == "$BUNDLE_ID" ]] && break
-            sleep 1
-        done
-        [[ "$(duti -d "$uti" 2>/dev/null)" == "$BUNDLE_ID" ]] || failed+=("$uti")
-    done
-
-    if ((${#failed[@]})); then
-        echo "hx-rex: could not claim: ${failed[*]}" >&2
-    fi
-    echo "hx-rex: claiming $((${#HANDLED_UTIS[@]} + 1 - ${#failed[@]})) types" \
-        "and ${#CLAIMED_EXTENSIONS[@]} extensions"
-}
-
-unregister() {
-    [[ -d "$APP" ]] || {
-        echo "hx-rex: no handler installed at $APP"
-        return
-    }
-    "$LSREGISTER" -u "$APP" || true
-    rm -rf "$APP"
-    echo "hx-rex: removed $APP --- every type it claimed falls back to"
-    echo "            the next claimant (Xcode, mostly). Set one by hand with:"
-    echo "            duti -s <bundle id> <uti> all"
-}
-
-[[ $# -ge 1 ]] || usage
-case "$1" in
---register) register ;;
---unregister) unregister ;;
--h | --help) usage ;;
--*) usage ;;
-*) open_files "$@" ;;
-esac
+rex split -s "$REX_SESSION" -b "$REX_BLOCK" --split=right \
+    -c "$PWD" --label "${label%%:*}" -- "$hx" "${paths[@]}"
