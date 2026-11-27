@@ -33,6 +33,7 @@ alias y="yazi"
 alias h="hx ."
 alias ay="claude --dangerously-skip-permissions"
 alias aym="claude --dangerously-skip-permissions --effort max"
+alias ayr="claude --dangerously-skip-permissions --remote-control"
 # --setting-sources skips project .claude/settings.json (comp4020 pins the ANU
 # proxy there), so the Max login is used; local/user settings still load.
 alias ayf="claude --setting-sources user,local --dangerously-skip-permissions --model fable --effort high"
