@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # hx-rex --- open files in helix in a new Rex pane, split to the right of the
-# pane this runs in (REX_SESSION/REX_BLOCK), on whichever server that pane
-# lives on. The pane closes when helix exits.
+# pane this runs in (REX_BLOCK), on whichever server that pane lives on. The
+# pane closes when helix exits.
 #
 # Usage: hx-rex FILE[:LINE[:COL]]...
 set -euo pipefail
@@ -11,8 +11,8 @@ if [[ $# -eq 0 || "$1" == -h || "$1" == --help ]]; then
     exit $(($# == 0))
 fi
 
-[[ -n "${REX_SESSION:-}" && -n "${REX_BLOCK:-}" ]] || {
-    echo "hx-rex: not in a Rex terminal (REX_SESSION/REX_BLOCK unset)" >&2
+[[ -n "${REX_BLOCK:-}" ]] || {
+    echo "hx-rex: not in a Rex terminal (REX_BLOCK unset)" >&2
     exit 1
 }
 
@@ -33,5 +33,7 @@ paths=()
 for file in "$@"; do paths+=("$(abspath "$file")"); done
 label="$(basename "${paths[0]}")"
 
-rex split -s "$REX_SESSION" -b "$REX_BLOCK" --split=right \
+# A block ID also names the session that holds it, and Rex sets REX_SESSION
+# only in some panes.
+rex split -s "${REX_SESSION:-$REX_BLOCK}" -b "$REX_BLOCK" --split=right \
     -c "$PWD" --label "${label%%:*}" -- "$hx" "${paths[@]}"
